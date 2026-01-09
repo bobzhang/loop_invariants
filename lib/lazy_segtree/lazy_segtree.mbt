@@ -1,0 +1,687 @@
+// ============================================================================
+// LAZY SEGMENT TREE - Range Updates and Queries in O(log n)
+// ============================================================================
+//
+// Lazy Segment Tree extends regular segment tree to handle range updates
+// efficiently by deferring work using "lazy propagation".
+//
+// KEY INSIGHT: Instead of updating all affected leaves immediately,
+// store pending updates at internal nodes and propagate them only when needed.
+//
+// LAZY PROPAGATION:
+// 1. When updating a range [l, r], if node's range is fully contained,
+//    mark node as lazy and return (don't recurse to children)
+// 2. Before accessing children, "push down" any pending lazy values
+// 3. This defers work until absolutely necessary
+//
+// OPERATIONS:
+// - range_update(l, r, val): Add val to all elements in [l, r]
+// - range_query(l, r): Query sum/min/max of [l, r]
+// - point_query(i): Query single element (special case of range query)
+//
+// EXAMPLE for range add with sum queries:
+// arr = [1, 2, 3, 4, 5]
+//
+// Tree structure (showing sums):
+//          [1,5]=15
+//         /        \
+//     [1,3]=6     [4,5]=9
+//     /    \       /    \
+//  [1,2]=3 [3]=3 [4]=4 [5]=5
+//  /    \
+// [1]=1 [2]=2
+//
+// range_update(2, 4, 10):
+// - Mark nodes with lazy value instead of updating all leaves
+// - Sum updated where needed, lazy propagated on demand
+//
+// INVARIANTS:
+// 1. A node's value + effect of lazy on its range = true value
+// 2. Before accessing children, parent's lazy must be pushed down
+// 3. After any update, ancestors' sums are correctly updated
+//
+// TIME COMPLEXITY:
+// - Build: O(n)
+// - Range update: O(log n)
+// - Range query: O(log n)
+//
+// SPACE COMPLEXITY: O(n)
+
+// ============================================================================
+// LAZY SEGMENT TREE FOR RANGE ADD + RANGE SUM
+// ============================================================================
+
+///|
+/// Lazy Segment Tree with range add and range sum queries
+priv struct LazySegTreeSum {
+  n : Int
+  tree : Array[Int64] // Sum of range
+  pending : Array[Int64] // Pending add value
+}
+
+///|
+fn LazySegTreeSum::new(arr : Array[Int64]) -> LazySegTreeSum {
+  let n = arr.length()
+  if n == 0 {
+    return { n: 0, tree: [], pending: [] }
+  }
+
+  let tree = Array::make(4 * n, 0L)
+  let pending = Array::make(4 * n, 0L)
+
+  build(arr, tree, 1, 0, n - 1)
+
+  { n, tree, pending }
+}
+
+///|
+fn build(arr : Array[Int64], tree : Array[Int64], node : Int, start : Int, end : Int) -> Unit {
+  if start == end {
+    tree[node] = arr[start]
+    return
+  }
+
+  let mid = (start + end) / 2
+  build(arr, tree, 2 * node, start, mid)
+  build(arr, tree, 2 * node + 1, mid + 1, end)
+  tree[node] = tree[2 * node] + tree[2 * node + 1]
+}
+
+///|
+/// Push down lazy value to children
+/// INVARIANT: After push_down, node's lazy is 0 and children are updated
+fn push_down(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int
+) -> Unit {
+  if pending[node] != 0L {
+    let mid = (start + end) / 2
+    let left_len = (mid - start + 1).to_int64()
+    let right_len = (end - mid).to_int64()
+
+    // Update children's values
+    tree[2 * node] = tree[2 * node] + pending[node] * left_len
+    tree[2 * node + 1] = tree[2 * node + 1] + pending[node] * right_len
+
+    // Propagate lazy to children
+    pending[2 * node] = pending[2 * node] + pending[node]
+    pending[2 * node + 1] = pending[2 * node + 1] + pending[node]
+
+    // Clear current lazy
+    pending[node] = 0L
+  }
+}
+
+///|
+/// Range add: add val to all elements in [l, r]
+fn LazySegTreeSum::range_add(self : LazySegTreeSum, l : Int, r : Int, val : Int64) -> Unit {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return
+  }
+  range_add_helper(self.tree, self.pending, 1, 0, self.n - 1, l, r, val)
+}
+
+///|
+fn range_add_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int,
+  val : Int64
+) -> Unit {
+  if r < start || end < l {
+    // No overlap
+    return
+  }
+
+  if l <= start && end <= r {
+    // Complete overlap - apply lazy
+    let len = (end - start + 1).to_int64()
+    tree[node] = tree[node] + val * len
+    pending[node] = pending[node] + val
+    return
+  }
+
+  // Partial overlap - push down and recurse
+  push_down(tree, pending, node, start, end)
+
+  let mid = (start + end) / 2
+  range_add_helper(tree, pending, 2 * node, start, mid, l, r, val)
+  range_add_helper(tree, pending, 2 * node + 1, mid + 1, end, l, r, val)
+
+  // Update current node from children
+  tree[node] = tree[2 * node] + tree[2 * node + 1]
+}
+
+///|
+/// Range sum query for [l, r]
+fn LazySegTreeSum::range_sum(self : LazySegTreeSum, l : Int, r : Int) -> Int64? {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return None
+  }
+  Some(range_sum_helper(self.tree, self.pending, 1, 0, self.n - 1, l, r))
+}
+
+///|
+fn range_sum_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int
+) -> Int64 {
+  if r < start || end < l {
+    return 0L
+  }
+
+  if l <= start && end <= r {
+    return tree[node]
+  }
+
+  push_down(tree, pending, node, start, end)
+
+  let mid = (start + end) / 2
+  let left_sum = range_sum_helper(tree, pending, 2 * node, start, mid, l, r)
+  let right_sum = range_sum_helper(tree, pending, 2 * node + 1, mid + 1, end, l, r)
+  left_sum + right_sum
+}
+
+///|
+/// Point query
+fn LazySegTreeSum::point_query(self : LazySegTreeSum, i : Int) -> Int64? {
+  self.range_sum(i, i)
+}
+
+///|
+/// Point update (set value)
+fn LazySegTreeSum::point_set(self : LazySegTreeSum, i : Int, val : Int64) -> Unit {
+  if i < 0 || i >= self.n {
+    return
+  }
+  // Get current value and add the difference
+  match self.point_query(i) {
+    Some(curr) => self.range_add(i, i, val - curr)
+    None => ()
+  }
+}
+
+///|
+fn LazySegTreeSum::length(self : LazySegTreeSum) -> Int {
+  self.n
+}
+
+// ============================================================================
+// LAZY SEGMENT TREE FOR RANGE SET + RANGE SUM
+// ============================================================================
+
+///|
+/// Lazy Segment Tree with range assignment and sum queries
+priv struct LazySegTreeSetSum {
+  n : Int
+  tree : Array[Int64]
+  pending : Array[Int64]
+  has_pending : Array[Bool] // Whether node has pending assignment
+}
+
+///|
+fn LazySegTreeSetSum::new(arr : Array[Int64]) -> LazySegTreeSetSum {
+  let n = arr.length()
+  if n == 0 {
+    return { n: 0, tree: [], pending: [], has_pending: [] }
+  }
+
+  let tree = Array::make(4 * n, 0L)
+  let pending = Array::make(4 * n, 0L)
+  let has_pending = Array::make(4 * n, false)
+
+  build_set(arr, tree, 1, 0, n - 1)
+
+  { n, tree, pending, has_pending }
+}
+
+///|
+fn build_set(arr : Array[Int64], tree : Array[Int64], node : Int, start : Int, end : Int) -> Unit {
+  if start == end {
+    tree[node] = arr[start]
+    return
+  }
+
+  let mid = (start + end) / 2
+  build_set(arr, tree, 2 * node, start, mid)
+  build_set(arr, tree, 2 * node + 1, mid + 1, end)
+  tree[node] = tree[2 * node] + tree[2 * node + 1]
+}
+
+///|
+fn push_down_set(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  has_pending : Array[Bool],
+  node : Int,
+  start : Int,
+  end : Int
+) -> Unit {
+  if has_pending[node] {
+    let mid = (start + end) / 2
+    let left_len = (mid - start + 1).to_int64()
+    let right_len = (end - mid).to_int64()
+
+    // Set children's values
+    tree[2 * node] = pending[node] * left_len
+    tree[2 * node + 1] = pending[node] * right_len
+
+    // Propagate lazy to children
+    pending[2 * node] = pending[node]
+    pending[2 * node + 1] = pending[node]
+    has_pending[2 * node] = true
+    has_pending[2 * node + 1] = true
+
+    // Clear current lazy
+    has_pending[node] = false
+  }
+}
+
+///|
+/// Range set: set all elements in [l, r] to val
+fn LazySegTreeSetSum::range_set(self : LazySegTreeSetSum, l : Int, r : Int, val : Int64) -> Unit {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return
+  }
+  range_set_helper(self.tree, self.pending, self.has_pending, 1, 0, self.n - 1, l, r, val)
+}
+
+///|
+fn range_set_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  has_pending : Array[Bool],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int,
+  val : Int64
+) -> Unit {
+  if r < start || end < l {
+    return
+  }
+
+  if l <= start && end <= r {
+    let len = (end - start + 1).to_int64()
+    tree[node] = val * len
+    pending[node] = val
+    has_pending[node] = true
+    return
+  }
+
+  push_down_set(tree, pending, has_pending, node, start, end)
+
+  let mid = (start + end) / 2
+  range_set_helper(tree, pending, has_pending, 2 * node, start, mid, l, r, val)
+  range_set_helper(tree, pending, has_pending, 2 * node + 1, mid + 1, end, l, r, val)
+
+  tree[node] = tree[2 * node] + tree[2 * node + 1]
+}
+
+///|
+/// Range sum query
+fn LazySegTreeSetSum::range_sum(self : LazySegTreeSetSum, l : Int, r : Int) -> Int64? {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return None
+  }
+  Some(range_sum_set_helper(self.tree, self.pending, self.has_pending, 1, 0, self.n - 1, l, r))
+}
+
+///|
+fn range_sum_set_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  has_pending : Array[Bool],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int
+) -> Int64 {
+  if r < start || end < l {
+    return 0L
+  }
+
+  if l <= start && end <= r {
+    return tree[node]
+  }
+
+  push_down_set(tree, pending, has_pending, node, start, end)
+
+  let mid = (start + end) / 2
+  let left = range_sum_set_helper(tree, pending, has_pending, 2 * node, start, mid, l, r)
+  let right = range_sum_set_helper(tree, pending, has_pending, 2 * node + 1, mid + 1, end, l, r)
+  left + right
+}
+
+///|
+fn LazySegTreeSetSum::length(self : LazySegTreeSetSum) -> Int {
+  self.n
+}
+
+// ============================================================================
+// LAZY SEGMENT TREE FOR RANGE ADD + RANGE MIN
+// ============================================================================
+
+///|
+/// Lazy Segment Tree with range add and min queries
+priv struct LazySegTreeMin {
+  n : Int
+  tree : Array[Int64] // Min of range
+  pending : Array[Int64] // Pending add value
+}
+
+///|
+const INT64_MAX : Int64 = 9223372036854775807L
+
+///|
+fn LazySegTreeMin::new(arr : Array[Int64]) -> LazySegTreeMin {
+  let n = arr.length()
+  if n == 0 {
+    return { n: 0, tree: [], pending: [] }
+  }
+
+  let tree = Array::make(4 * n, INT64_MAX)
+  let pending = Array::make(4 * n, 0L)
+
+  build_min(arr, tree, 1, 0, n - 1)
+
+  { n, tree, pending }
+}
+
+///|
+fn build_min(arr : Array[Int64], tree : Array[Int64], node : Int, start : Int, end : Int) -> Unit {
+  if start == end {
+    tree[node] = arr[start]
+    return
+  }
+
+  let mid = (start + end) / 2
+  build_min(arr, tree, 2 * node, start, mid)
+  build_min(arr, tree, 2 * node + 1, mid + 1, end)
+  tree[node] = if tree[2 * node] < tree[2 * node + 1] {
+    tree[2 * node]
+  } else {
+    tree[2 * node + 1]
+  }
+}
+
+///|
+fn push_down_min(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int
+) -> Unit {
+  if pending[node] != 0L {
+    tree[2 * node] = tree[2 * node] + pending[node]
+    tree[2 * node + 1] = tree[2 * node + 1] + pending[node]
+    pending[2 * node] = pending[2 * node] + pending[node]
+    pending[2 * node + 1] = pending[2 * node + 1] + pending[node]
+    pending[node] = 0L
+  }
+}
+
+///|
+fn LazySegTreeMin::range_add(self : LazySegTreeMin, l : Int, r : Int, val : Int64) -> Unit {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return
+  }
+  range_add_min_helper(self.tree, self.pending, 1, 0, self.n - 1, l, r, val)
+}
+
+///|
+fn range_add_min_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int,
+  val : Int64
+) -> Unit {
+  if r < start || end < l {
+    return
+  }
+
+  if l <= start && end <= r {
+    tree[node] = tree[node] + val
+    pending[node] = pending[node] + val
+    return
+  }
+
+  push_down_min(tree, pending, node)
+
+  let mid = (start + end) / 2
+  range_add_min_helper(tree, pending, 2 * node, start, mid, l, r, val)
+  range_add_min_helper(tree, pending, 2 * node + 1, mid + 1, end, l, r, val)
+
+  tree[node] = if tree[2 * node] < tree[2 * node + 1] {
+    tree[2 * node]
+  } else {
+    tree[2 * node + 1]
+  }
+}
+
+///|
+fn LazySegTreeMin::range_min(self : LazySegTreeMin, l : Int, r : Int) -> Int64? {
+  if l < 0 || r >= self.n || l > r || self.n == 0 {
+    return None
+  }
+  Some(range_min_helper(self.tree, self.pending, 1, 0, self.n - 1, l, r))
+}
+
+///|
+fn range_min_helper(
+  tree : Array[Int64],
+  pending : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int
+) -> Int64 {
+  if r < start || end < l {
+    return INT64_MAX
+  }
+
+  if l <= start && end <= r {
+    return tree[node]
+  }
+
+  push_down_min(tree, pending, node)
+
+  let mid = (start + end) / 2
+  let left = range_min_helper(tree, pending, 2 * node, start, mid, l, r)
+  let right = range_min_helper(tree, pending, 2 * node + 1, mid + 1, end, l, r)
+  if left < right { left } else { right }
+}
+
+///|
+fn LazySegTreeMin::length(self : LazySegTreeMin) -> Int {
+  self.n
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+///|
+test "lazy segtree sum basic" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let st = LazySegTreeSum::new(arr)
+
+  // Initial sums
+  inspect(st.range_sum(0, 4), content="Some(15)")
+  inspect(st.range_sum(0, 2), content="Some(6)")
+  inspect(st.range_sum(2, 4), content="Some(12)")
+}
+
+///|
+test "lazy segtree sum range add" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let st = LazySegTreeSum::new(arr)
+
+  // Add 10 to [1, 3]
+  st.range_add(1, 3, 10L)
+
+  // arr is now [1, 12, 13, 14, 5]
+  inspect(st.range_sum(0, 4), content="Some(45)") // 1+12+13+14+5
+  inspect(st.range_sum(1, 3), content="Some(39)") // 12+13+14
+  inspect(st.point_query(0), content="Some(1)")
+  inspect(st.point_query(2), content="Some(13)")
+}
+
+///|
+test "lazy segtree sum multiple updates" {
+  let arr : Array[Int64] = [0L, 0L, 0L, 0L, 0L]
+  let st = LazySegTreeSum::new(arr)
+
+  st.range_add(0, 4, 1L) // [1,1,1,1,1]
+  st.range_add(1, 3, 2L) // [1,3,3,3,1]
+  st.range_add(2, 2, 5L) // [1,3,8,3,1]
+
+  inspect(st.range_sum(0, 4), content="Some(16)")
+  inspect(st.point_query(2), content="Some(8)")
+}
+
+///|
+test "lazy segtree sum point set" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let st = LazySegTreeSum::new(arr)
+
+  st.point_set(2, 10L)
+
+  inspect(st.range_sum(0, 4), content="Some(22)") // 1+2+10+4+5
+  inspect(st.point_query(2), content="Some(10)")
+}
+
+///|
+test "lazy segtree set sum basic" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let st = LazySegTreeSetSum::new(arr)
+
+  inspect(st.range_sum(0, 4), content="Some(15)")
+
+  // Set [1, 3] to 10
+  st.range_set(1, 3, 10L)
+
+  // arr is now [1, 10, 10, 10, 5]
+  inspect(st.range_sum(0, 4), content="Some(36)") // 1+10+10+10+5
+  inspect(st.range_sum(1, 3), content="Some(30)") // 10+10+10
+}
+
+///|
+test "lazy segtree set sum overwrite" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let st = LazySegTreeSetSum::new(arr)
+
+  st.range_set(0, 4, 1L) // All 1s
+  inspect(st.range_sum(0, 4), content="Some(5)")
+
+  st.range_set(2, 3, 100L) // [1, 1, 100, 100, 1]
+  inspect(st.range_sum(0, 4), content="Some(203)")
+}
+
+///|
+test "lazy segtree min basic" {
+  let arr : Array[Int64] = [5L, 2L, 8L, 1L, 9L]
+  let st = LazySegTreeMin::new(arr)
+
+  inspect(st.range_min(0, 4), content="Some(1)")
+  inspect(st.range_min(0, 2), content="Some(2)")
+  inspect(st.range_min(2, 4), content="Some(1)")
+}
+
+///|
+test "lazy segtree min range add" {
+  let arr : Array[Int64] = [5L, 2L, 8L, 1L, 9L]
+  let st = LazySegTreeMin::new(arr)
+
+  // Add 10 to [0, 2]
+  st.range_add(0, 2, 10L)
+
+  // arr is now [15, 12, 18, 1, 9]
+  inspect(st.range_min(0, 4), content="Some(1)")
+  inspect(st.range_min(0, 2), content="Some(12)")
+}
+
+///|
+test "lazy segtree sum empty" {
+  let arr : Array[Int64] = []
+  let st = LazySegTreeSum::new(arr)
+
+  inspect(st.length(), content="0")
+  inspect(st.range_sum(0, 0), content="None")
+}
+
+///|
+test "lazy segtree sum single" {
+  let arr : Array[Int64] = [42L]
+  let st = LazySegTreeSum::new(arr)
+
+  inspect(st.range_sum(0, 0), content="Some(42)")
+  st.range_add(0, 0, 8L)
+  inspect(st.range_sum(0, 0), content="Some(50)")
+}
+
+///|
+test "lazy segtree invalid range" {
+  let arr : Array[Int64] = [1L, 2L, 3L]
+  let st = LazySegTreeSum::new(arr)
+
+  inspect(st.range_sum(-1, 0), content="None")
+  inspect(st.range_sum(0, 10), content="None")
+  inspect(st.range_sum(2, 1), content="None")
+}
+
+///|
+test "lazy segtree min negative values" {
+  let arr : Array[Int64] = [-5L, -2L, -8L, -1L, -9L]
+  let st = LazySegTreeMin::new(arr)
+
+  inspect(st.range_min(0, 4), content="Some(-9)")
+  inspect(st.range_min(0, 2), content="Some(-8)")
+
+  st.range_add(4, 4, 20L) // -9 + 20 = 11
+  inspect(st.range_min(0, 4), content="Some(-8)")
+}
+
+///|
+test "lazy segtree length" {
+  let st1 = LazySegTreeSum::new([1L, 2L, 3L])
+  let st2 = LazySegTreeSetSum::new([1L, 2L])
+  let st3 = LazySegTreeMin::new([1L])
+
+  inspect(st1.length(), content="3")
+  inspect(st2.length(), content="2")
+  inspect(st3.length(), content="1")
+}
+
+///|
+test "lazy segtree large updates" {
+  let arr : Array[Int64] = [0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L]
+  let st = LazySegTreeSum::new(arr)
+
+  // Multiple overlapping updates
+  st.range_add(0, 7, 1L)
+  st.range_add(0, 3, 1L)
+  st.range_add(4, 7, 1L)
+  st.range_add(2, 5, 1L)
+
+  // [2, 2, 3, 3, 3, 3, 2, 2]
+  inspect(st.range_sum(0, 7), content="Some(20)")
+}
