@@ -18,7 +18,7 @@
 // structure equivalent to a random BST built by inserting in a random order.
 
 ///|
-struct TreapNode {
+priv struct TreapNode {
   key : Int
   priority : Int // random priority for balancing
   mut left : TreapNode?
@@ -45,7 +45,7 @@ fn update_size(node : TreapNode) -> Unit {
 }
 
 ///|
-struct Treap {
+priv struct Treap {
   mut root : TreapNode?
   mut rand_state : Int // simple LCG random state
 }
@@ -364,7 +364,7 @@ fn Treap::merge(left : TreapNode?, right : TreapNode?) -> TreapNode? {
 // ============================================================================
 
 ///|
-struct ImplicitTreapNode {
+priv struct ImplicitTreapNode {
   value : Int
   priority : Int
   mut left : ImplicitTreapNode?
@@ -413,7 +413,7 @@ fn push_down(node : ImplicitTreapNode) -> Unit {
 }
 
 ///|
-struct ImplicitTreap {
+priv struct ImplicitTreap {
   mut root : ImplicitTreapNode?
   mut rand_state : Int
 }
