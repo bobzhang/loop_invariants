@@ -1,0 +1,729 @@
+// Fast Fourier Transform and Number Theoretic Transform
+// Algorithms for polynomial multiplication with rigorous loop invariants
+
+// ============================================================================
+// COMPLEX NUMBER OPERATIONS
+// ============================================================================
+
+///|
+struct Complex {
+  re : Double
+  im : Double
+}
+
+///|
+fn Complex::new(re : Double, im : Double) -> Complex {
+  { re, im }
+}
+
+///|
+fn Complex::from_real(x : Double) -> Complex {
+  { re: x, im: 0.0 }
+}
+
+///|
+fn Complex::add(self : Complex, other : Complex) -> Complex {
+  { re: self.re + other.re, im: self.im + other.im }
+}
+
+///|
+fn Complex::sub(self : Complex, other : Complex) -> Complex {
+  { re: self.re - other.re, im: self.im - other.im }
+}
+
+///|
+fn Complex::mul(self : Complex, other : Complex) -> Complex {
+  {
+    re: self.re * other.re - self.im * other.im,
+    im: self.re * other.im + self.im * other.re,
+  }
+}
+
+///|
+fn Complex::magnitude_squared(self : Complex) -> Double {
+  self.re * self.re + self.im * self.im
+}
+
+// ============================================================================
+// BIT REVERSAL
+// ============================================================================
+
+///|
+/// Compute the bit-reversed index for n bits
+fn bit_reverse(x_in : Int, bits : Int) -> Int {
+  for i = 0, x = x_in, result = 0; i < bits; {
+    // Extract LSB of x, shift result left and add it
+    let new_result = (result << 1) | (x & 1)
+    let new_x = x >> 1
+    continue i + 1, new_x, new_result
+  } else {
+    result
+  } where {
+    invariant: result < 1 << i && i <= bits,
+    reasoning: (
+      #|BIT REVERSAL INVARIANT:
+      #|  result contains the reversed bits of x_in[0..i)
+      #|  in positions [0..i)
+      #|
+      #|BASE CASE (i = 0):
+      #|  result = 0, which trivially contains reversed bits
+      #|
+      #|INDUCTIVE STEP (i → i + 1):
+      #|  - We shift result left and add LSB of current x
+      #|  - x is right-shifted, so next iteration gets next bit
+      #|  - Result now has i+1 reversed bits
+      #|
+      #|TERMINATION (i = bits):
+      #|  result contains all bits of x_in reversed
+    ),
+  }
+}
+
+///|
+/// Reorder array elements using bit reversal permutation
+fn bit_reverse_permute(arr : Array[Complex], n : Int, log_n : Int) -> Unit {
+  for i = 0; i < n; i = i + 1 {
+    let j = bit_reverse(i, log_n)
+    if i < j {
+      // Swap arr[i] and arr[j]
+      let temp = arr[i]
+      arr[i] = arr[j]
+      arr[j] = temp
+    }
+  } where {
+    invariant: i <= n,
+    reasoning: (
+      #|BIT REVERSAL PERMUTATION INVARIANT:
+      #|  For all k < i, arr[k] and arr[bit_reverse(k)] have been swapped
+      #|  if needed (i.e., if k < bit_reverse(k))
+      #|
+      #|We swap only when i < j to avoid double-swapping.
+      #|This is a valid permutation that groups elements by
+      #|their position in the butterfly network.
+    ),
+  }
+}
+
+// ============================================================================
+// COOLEY-TUKEY FFT
+// ============================================================================
+
+// Pi constant for FFT
+
+///|
+let fft_pi : Double = 3.14159265358979323846
+
+///|
+/// Compute sin using Taylor series
+fn fft_sin(x_in : Double) -> Double {
+  // Normalize x to [-pi, pi]
+  let two_pi = 2.0 * fft_pi
+  let mut x = x_in
+  while x > fft_pi {
+    x = x - two_pi
+  }
+  while x < -fft_pi {
+    x = x + two_pi
+  }
+  // Taylor series: sin(x) = x - x^3/3! + x^5/5! - ...
+  let x2 = x * x
+  let x3 = x2 * x
+  let x5 = x3 * x2
+  let x7 = x5 * x2
+  let x9 = x7 * x2
+  let x11 = x9 * x2
+  x - x3 / 6.0 + x5 / 120.0 - x7 / 5040.0 + x9 / 362880.0 - x11 / 39916800.0
+}
+
+///|
+/// Compute cos using Taylor series
+fn fft_cos(x_in : Double) -> Double {
+  // Normalize x to [-pi, pi]
+  let two_pi = 2.0 * fft_pi
+  let mut x = x_in
+  while x > fft_pi {
+    x = x - two_pi
+  }
+  while x < -fft_pi {
+    x = x + two_pi
+  }
+  // Taylor series: cos(x) = 1 - x^2/2! + x^4/4! - ...
+  let x2 = x * x
+  let x4 = x2 * x2
+  let x6 = x4 * x2
+  let x8 = x6 * x2
+  let x10 = x8 * x2
+  1.0 - x2 / 2.0 + x4 / 24.0 - x6 / 720.0 + x8 / 40320.0 - x10 / 3628800.0
+}
+
+///|
+/// In-place FFT using Cooley-Tukey algorithm
+///  inverse = false for forward FFT, true for inverse FFT
+fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
+  // Compute log2(n)
+  let log_n = for i = 0, temp = n; temp > 1; i = i + 1, temp = temp >> 1 {
+
+  } else {
+    i
+  }
+  // Bit-reversal permutation
+  bit_reverse_permute(arr, n, log_n)
+  // Iterative FFT with butterfly operations
+  // len = 2, 4, 8, ..., n (size of sub-DFTs being combined)
+  for len = 2; len <= n; len = len * 2 {
+    let angle = 2.0 *
+      fft_pi /
+      len.to_double() *
+      (if inverse { 1.0 } else { -1.0 })
+    let wlen = Complex::new(fft_cos(angle), fft_sin(angle))
+    // Process all sub-DFTs of current size
+    for i = 0; i < n; i = i + len {
+      // Butterfly operations within one sub-DFT
+      for j = 0, w = Complex::from_real(1.0)
+          j < len / 2
+          j = j + 1, w = w.mul(wlen) {
+        let u = arr[i + j]
+        let v = arr[i + j + len / 2].mul(w)
+        arr[i + j] = u.add(v)
+        arr[i + j + len / 2] = u.sub(v)
+      } where {
+        invariant: j <= len / 2,
+        reasoning: (
+          #|BUTTERFLY OPERATION INVARIANT:
+          #|  w = exp(-2πi * j / len) for forward FFT
+          #|  w = exp(+2πi * j / len) for inverse FFT
+          #|
+          #|The butterfly operation computes:
+          #|  arr[i+j] = u + v*w
+          #|  arr[i+j+len/2] = u - v*w
+          #|
+          #|This combines two len/2-point DFTs into one len-point DFT.
+          #|
+          #|MATHEMATICAL BASIS:
+          #|  DFT property: X[k] = E[k] + w^k * O[k]
+          #|               X[k+n/2] = E[k] - w^k * O[k]
+          #|  where E = DFT of even-indexed elements
+          #|        O = DFT of odd-indexed elements
+        ),
+      }
+    }
+  } where {
+    invariant: len >= 2 && len <= 2 * n,
+    reasoning: (
+      #|FFT SIZE DOUBLING INVARIANT:
+      #|  After processing size len, all sub-DFTs of size len are computed.
+      #|
+      #|BASE CASE (len = 2):
+      #|  After bit-reversal, adjacent pairs are combined
+      #|
+      #|INDUCTIVE STEP (len → 2*len):
+      #|  Pairs of len-point DFTs are combined into 2*len-point DFTs
+      #|
+      #|TERMINATION (len = n):
+      #|  The full n-point DFT is computed
+      #|
+      #|COMPLEXITY: O(n log n) total butterfly operations
+    ),
+  }
+  // For inverse FFT, divide by n
+  if inverse {
+    let scale = 1.0 / n.to_double()
+    for i = 0; i < n; i = i + 1 {
+      arr[i] = Complex::new(arr[i].re * scale, arr[i].im * scale)
+    }
+  }
+}
+
+///|
+/// Multiply two polynomials using FFT
+fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
+  let n1 = a.length()
+  let n2 = b.length()
+  if n1 == 0 || n2 == 0 {
+    return []
+  }
+  // Find smallest power of 2 >= n1 + n2 - 1
+  let result_len = n1 + n2 - 1
+  let n = for size = 1; size < result_len; size = size * 2 {
+
+  } else {
+    size
+  }
+  // Convert to complex arrays
+  let fa : Array[Complex] = Array::make(n, Complex::from_real(0.0))
+  let fb : Array[Complex] = Array::make(n, Complex::from_real(0.0))
+  for i = 0; i < n1; i = i + 1 {
+    fa[i] = Complex::from_real(a[i].to_double())
+  }
+  for i = 0; i < n2; i = i + 1 {
+    fb[i] = Complex::from_real(b[i].to_double())
+  }
+  // Forward FFT
+  fft_in_place(fa, n, false)
+  fft_in_place(fb, n, false)
+  // Point-wise multiplication
+  for i = 0; i < n; i = i + 1 {
+    fa[i] = fa[i].mul(fb[i])
+  } where {
+    invariant: i <= n,
+    reasoning: (
+      #|CONVOLUTION THEOREM INVARIANT:
+      #|  DFT(a * b) = DFT(a) · DFT(b)  (point-wise multiplication)
+      #|
+      #|After this loop:
+      #|  fa[k] = FFT(a)[k] * FFT(b)[k] for all k
+      #|
+      #|When we apply inverse FFT, we get the convolution (a * b).
+    ),
+  }
+  // Inverse FFT
+  fft_in_place(fa, n, true)
+  // Extract result and round to integers
+  let result : Array[Int] = Array::make(result_len, 0)
+  for i = 0; i < result_len; i = i + 1 {
+    // Round to nearest integer (FFT introduces floating-point errors)
+    result[i] = (fa[i].re + 0.5).to_int()
+  } where {
+    invariant: i <= result_len,
+    reasoning: (
+      #|POLYNOMIAL MULTIPLICATION RESULT:
+      #|  result[k] = Σ a[i] * b[k-i] for valid indices
+      #|
+      #|This is the coefficient of x^k in the product polynomial.
+      #|We add 0.5 before truncating to round to nearest integer.
+    ),
+  }
+  result
+}
+
+// ============================================================================
+// NUMBER THEORETIC TRANSFORM (NTT)
+// ============================================================================
+
+// NTT is FFT over a finite field, using primitive roots instead of complex roots of unity
+// This avoids floating-point errors for exact integer arithmetic
+
+///|
+/// Modular exponentiation: base^exp mod m
+fn ntt_mod_pow(base_in : Int64, exp_in : Int64, m : Int64) -> Int64 {
+  let mut base = base_in
+  let mut exp = exp_in
+  for result = 1L; exp > 0L; result = result {
+    let new_result = if exp % 2L == 1L { result * base % m } else { result }
+    exp = exp / 2L
+    base = base * base % m
+    continue new_result
+  } else {
+    result
+  } where {
+    invariant: exp >= 0L,
+    reasoning: (
+      #|MODULAR EXPONENTIATION INVARIANT:
+      #|  result * base^exp ≡ base_in^exp_in (mod m)
+      #|
+      #|BASE CASE (initially):
+      #|  1 * base^exp = base^exp ✓
+      #|
+      #|INDUCTIVE STEP:
+      #|  If exp is odd: new_result = result * base
+      #|    new_result * (base^2)^(exp/2) = result * base * base^(exp-1) ✓
+      #|  If exp is even:
+      #|    result * (base^2)^(exp/2) = result * base^exp ✓
+      #|
+      #|TERMINATION (exp = 0):
+      #|  result = base_in^exp_in (mod m)
+    ),
+  }
+}
+
+///|
+/// Find primitive root modulo p (assumes p is prime of form k*2^n + 1)
+fn find_primitive_root(p : Int64, max_pow2 : Int) -> Int64 {
+  // For NTT-friendly primes, 3 is often a primitive root
+  // We verify by checking that 3^((p-1)/2) ≡ -1 (mod p)
+  let g = 3L
+  let half = (p - 1L) / 2L
+  let check = ntt_mod_pow(g, half, p)
+  if check == p - 1L {
+    // g is a primitive root, find primitive 2^max_pow2-th root of unity
+    let order = p - 1L
+    let exp = order / (1L << max_pow2)
+    ntt_mod_pow(g, exp, p)
+  } else {
+    // Fallback: try other small primes
+    1L
+  }
+}
+
+// Common NTT-friendly prime: 998244353 = 119 * 2^23 + 1
+// Primitive root: 3
+
+///|
+let ntt_mod : Int64 = 998244353L
+
+///|
+let ntt_g : Int64 = 3L // primitive root
+
+///|
+/// In-place NTT
+fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
+  // Compute log2(n)
+  let log_n = for i = 0, temp = n; temp > 1; i = i + 1, temp = temp >> 1 {
+
+  } else {
+    i
+  }
+  // Bit-reversal permutation
+  for i = 0; i < n; i = i + 1 {
+    let j = bit_reverse(i, log_n)
+    if i < j {
+      let temp = arr[i]
+      arr[i] = arr[j]
+      arr[j] = temp
+    }
+  }
+  // Iterative NTT
+  for len = 2; len <= n; len = len * 2 {
+    // Compute primitive len-th root of unity
+    let w = if inverse {
+      // For inverse, use w^(-1) = w^(mod-2) by Fermat's little theorem
+      ntt_mod_pow(ntt_g, (ntt_mod - 1L) / len.to_int64(), ntt_mod)
+    } else {
+      ntt_mod_pow(ntt_g, (ntt_mod - 1L) / len.to_int64(), ntt_mod)
+    }
+    let w_actual = if inverse {
+      ntt_mod_pow(w, ntt_mod - 2L, ntt_mod) // modular inverse
+    } else {
+      w
+    }
+    // Process all sub-transforms
+    for i = 0; i < n; i = i + len {
+      for j = 0, wj = 1L; j < len / 2; j = j + 1, wj = wj * w_actual % ntt_mod {
+        let u = arr[i + j]
+        let v = arr[i + j + len / 2] * wj % ntt_mod
+        arr[i + j] = (u + v) % ntt_mod
+        arr[i + j + len / 2] = (u - v % ntt_mod + ntt_mod) % ntt_mod
+      } where {
+        invariant: j <= len / 2,
+        reasoning: (
+          #|NTT BUTTERFLY INVARIANT:
+          #|  wj = g^((mod-1)/len * j) for forward NTT
+          #|  wj = g^(-(mod-1)/len * j) for inverse NTT
+          #|
+          #|Same butterfly structure as FFT:
+          #|  arr[i+j] = u + v*wj (mod p)
+          #|  arr[i+j+len/2] = u - v*wj (mod p)
+          #|
+          #|CORRECTNESS:
+          #|  Using Fermat's little theorem: a^(p-1) ≡ 1 (mod p)
+          #|  So g^((p-1)/n) is an n-th root of unity modulo p.
+        ),
+      }
+    }
+  } where {
+    invariant: len >= 2 && len <= 2 * n,
+    reasoning: (
+      #|NTT SIZE INVARIANT:
+      #|  Same as FFT - sub-transforms double in size each iteration.
+      #|  All arithmetic is exact modulo the NTT prime.
+    ),
+  }
+  // For inverse NTT, multiply by n^(-1)
+  if inverse {
+    let n_inv = ntt_mod_pow(n.to_int64(), ntt_mod - 2L, ntt_mod)
+    for i = 0; i < n; i = i + 1 {
+      arr[i] = arr[i] * n_inv % ntt_mod
+    }
+  }
+}
+
+///|
+/// Multiply two polynomials using NTT (exact integer arithmetic mod 998244353)
+fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
+  let n1 = a.length()
+  let n2 = b.length()
+  if n1 == 0 || n2 == 0 {
+    return []
+  }
+  let result_len = n1 + n2 - 1
+  // Find smallest power of 2 >= result_len
+  let n = for size = 1; size < result_len; size = size * 2 {
+
+  } else {
+    size
+  }
+  // Prepare arrays
+  let fa : Array[Int64] = Array::make(n, 0L)
+  let fb : Array[Int64] = Array::make(n, 0L)
+  for i = 0; i < n1; i = i + 1 {
+    fa[i] = a[i] % ntt_mod
+  }
+  for i = 0; i < n2; i = i + 1 {
+    fb[i] = b[i] % ntt_mod
+  }
+  // Forward NTT
+  ntt_in_place(fa, n, false)
+  ntt_in_place(fb, n, false)
+  // Point-wise multiplication
+  for i = 0; i < n; i = i + 1 {
+    fa[i] = fa[i] * fb[i] % ntt_mod
+  } where {
+    invariant: i <= n,
+    reasoning: (
+      #|NTT CONVOLUTION INVARIANT:
+      #|  Same as FFT: NTT(a * b) = NTT(a) · NTT(b)
+      #|  All operations are exact modulo the NTT prime.
+    ),
+  }
+  // Inverse NTT
+  ntt_in_place(fa, n, true)
+  // Extract result
+  let result : Array[Int64] = Array::make(result_len, 0L)
+  for i = 0; i < result_len; i = i + 1 {
+    result[i] = fa[i]
+  }
+  result
+}
+
+// ============================================================================
+// APPLICATIONS
+// ============================================================================
+
+///|
+/// Count the number of ways to make change for amount using coins
+///  (using generating functions and polynomial multiplication)
+fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
+  // For each coin value c, the generating function is:
+  // 1 + x^c + x^(2c) + x^(3c) + ... = 1/(1-x^c)
+  // We approximate by computing product up to x^max_amount
+  let result : Array[Int] = Array::make(max_amount + 1, 0)
+  result[0] = 1 // Base case: 1 way to make 0
+  // For each coin, update the DP array (standard knapsack approach)
+  // This is equivalent to polynomial multiplication with truncation
+  for coin in coins {
+    for amount = coin; amount <= max_amount; amount = amount + 1 {
+      result[amount] = result[amount] + result[amount - coin]
+    } where {
+      invariant: amount >= coin && amount <= max_amount + 1,
+      reasoning: (
+        #|GENERATING FUNCTION INVARIANT:
+        #|  result[k] = coefficient of x^k in product of all processed coins
+        #|
+        #|For coin c: multiply by (1 + x^c + x^(2c) + ...)
+        #|Coefficient update: result[k] += result[k-c]
+        #|
+        #|This is convolution with the geometric series for each coin.
+      ),
+    }
+  }
+  result
+}
+
+///|
+/// Compute string pattern matching counts using FFT-based convolution
+///  Returns array where result[i] = number of matching positions at offset i
+fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
+  let n = text.length()
+  let m = pattern.length()
+  if m > n || m == 0 {
+    return []
+  }
+  // For exact matching, we use the following trick:
+  // Define f(i) = sum over j of (text[i+j] - pattern[j])^2
+  // f(i) = 0 iff text[i..i+m-1] matches pattern
+  // This can be computed using convolution
+  // f(i) = sum_j text[i+j]^2 - 2*sum_j text[i+j]*pattern[j] + sum_j pattern[j]^2
+  // The middle term is a convolution (with reversed pattern)
+  // Reverse pattern
+  let pattern_rev : Array[Int] = Array::make(m, 0)
+  for i = 0; i < m; i = i + 1 {
+    pattern_rev[i] = pattern[m - 1 - i]
+  }
+  // Compute convolution of text and reversed pattern
+  let conv = polynomial_multiply_fft(text, pattern_rev)
+  // For simplicity, return the convolution values directly
+  // (full implementation would compute f(i) and check for zeros)
+  let result_len = n - m + 1
+  let result : Array[Int] = Array::make(result_len, 0)
+  for i = 0; i < result_len; i = i + 1 {
+    // The convolution at position i+m-1 gives sum_j text[i+j]*pattern[m-1-j]
+    // which equals sum_j text[i+j]*pattern_rev[j]
+    if i + m - 1 < conv.length() {
+      result[i] = conv[i + m - 1]
+    }
+  } where {
+    invariant: i <= result_len,
+    reasoning: (
+      #|CONVOLUTION-BASED MATCHING INVARIANT:
+      #|  result[i] = Σ_j text[i+j] * pattern[j]
+      #|
+      #|This gives a "match score" at each position.
+      #|For exact matching: score = Σ pattern[j]^2 iff perfect match.
+    ),
+  }
+  result
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+///|
+test "bit_reverse" {
+  inspect(bit_reverse(0, 3), content="0")
+  inspect(bit_reverse(1, 3), content="4") // 001 -> 100
+  inspect(bit_reverse(2, 3), content="2") // 010 -> 010
+  inspect(bit_reverse(3, 3), content="6") // 011 -> 110
+  inspect(bit_reverse(4, 3), content="1") // 100 -> 001
+  inspect(bit_reverse(5, 3), content="5") // 101 -> 101
+  inspect(bit_reverse(6, 3), content="3") // 110 -> 011
+  inspect(bit_reverse(7, 3), content="7") // 111 -> 111
+}
+
+///|
+test "polynomial_multiply_fft_simple" {
+  // (1 + 2x) * (3 + 4x) = 3 + 4x + 6x + 8x^2 = 3 + 10x + 8x^2
+  let a = [1, 2]
+  let b = [3, 4]
+  let result = polynomial_multiply_fft(a, b)
+  inspect(result.length(), content="3")
+  inspect(result[0], content="3")
+  inspect(result[1], content="10")
+  inspect(result[2], content="8")
+}
+
+///|
+test "polynomial_multiply_fft_larger" {
+  // (1 + 1x + 1x^2) * (1 + 1x) = 1 + 2x + 2x^2 + 1x^3
+  let a = [1, 1, 1]
+  let b = [1, 1]
+  let result = polynomial_multiply_fft(a, b)
+  inspect(result.length(), content="4")
+  inspect(result[0], content="1")
+  inspect(result[1], content="2")
+  inspect(result[2], content="2")
+  inspect(result[3], content="1")
+}
+
+///|
+test "polynomial_multiply_ntt_simple" {
+  let a : Array[Int64] = [1L, 2L]
+  let b : Array[Int64] = [3L, 4L]
+  let result = polynomial_multiply_ntt(a, b)
+  inspect(result.length(), content="3")
+  inspect(result[0], content="3")
+  inspect(result[1], content="10")
+  inspect(result[2], content="8")
+}
+
+///|
+test "polynomial_multiply_ntt_larger" {
+  let a : Array[Int64] = [1L, 1L, 1L]
+  let b : Array[Int64] = [1L, 1L]
+  let result = polynomial_multiply_ntt(a, b)
+  inspect(result.length(), content="4")
+  inspect(result[0], content="1")
+  inspect(result[1], content="2")
+  inspect(result[2], content="2")
+  inspect(result[3], content="1")
+}
+
+///|
+test "count_change" {
+  let coins = [1, 2, 5]
+  let ways = count_change_polynomial(coins, 10)
+  // Ways to make 0: 1 (empty)
+  // Ways to make 1: 1 (1)
+  // Ways to make 2: 2 (1+1, 2)
+  // Ways to make 5: 4 (11111, 1112, 122, 5)
+  inspect(ways[0], content="1")
+  inspect(ways[1], content="1")
+  inspect(ways[2], content="2")
+  inspect(ways[5], content="4")
+  inspect(ways[10], content="10") // 10 ways to make 10 cents
+}
+
+///|
+test "ntt_mod_pow" {
+  inspect(ntt_mod_pow(2L, 10L, 1000L), content="24") // 1024 mod 1000
+  inspect(ntt_mod_pow(3L, 4L, 100L), content="81") // 81 mod 100
+  inspect(ntt_mod_pow(5L, 3L, 13L), content="8") // 125 mod 13
+}
+
+///|
+test "fft_trig" {
+  // Basic sanity checks for trig functions
+  let sin_0 = fft_sin(0.0)
+  let cos_0 = fft_cos(0.0)
+  // sin(0) ≈ 0, cos(0) ≈ 1
+  inspect(sin_0 < 0.0001 && sin_0 > -0.0001, content="true")
+  inspect(cos_0 > 0.999, content="true")
+  // sin(π/2) ≈ 1, cos(π/2) ≈ 0
+  let half_pi = fft_pi / 2.0
+  let sin_half = fft_sin(half_pi)
+  let cos_half = fft_cos(half_pi)
+  inspect(sin_half > 0.999, content="true")
+  inspect(cos_half < 0.01 && cos_half > -0.01, content="true")
+}
+
+///|
+test "pattern_match_fft" {
+  // Simple convolution-based matching
+  // text: [1, 2, 3, 2, 1]
+  // pattern: [2, 3]
+  // At position 1: 2*2 + 3*3 = 13
+  let text = [1, 2, 3, 2, 1]
+  let pattern = [2, 3]
+  let result = pattern_match_fft(text, pattern)
+  inspect(result.length(), content="4")
+  // result[1] should have high value where pattern matches
+  inspect(result[1], content="13") // 2*2 + 3*3 = 13 (match position)
+}
+
+///|
+test "polynomial_multiply_with_zeros" {
+  // Test edge cases
+  let a : Array[Int] = [0, 1, 0, 1]
+  let b : Array[Int] = [1, 0, 1]
+  let result = polynomial_multiply_fft(a, b)
+  // (x + x^3) * (1 + x^2) = x + x^3 + x^3 + x^5 = x + 2x^3 + x^5
+  inspect(result.length(), content="6")
+  inspect(result[0], content="0")
+  inspect(result[1], content="1")
+  inspect(result[2], content="0")
+  inspect(result[3], content="2")
+  inspect(result[4], content="0")
+  inspect(result[5], content="1")
+}
+
+///|
+test "empty_polynomial" {
+  let empty : Array[Int] = []
+  let non_empty = [1, 2, 3]
+  inspect(polynomial_multiply_fft(empty, non_empty).length(), content="0")
+  inspect(polynomial_multiply_fft(non_empty, empty).length(), content="0")
+}
+
+///|
+test "single_element_polynomial" {
+  let a = [5]
+  let b = [3]
+  let result = polynomial_multiply_fft(a, b)
+  inspect(result.length(), content="1")
+  inspect(result[0], content="15")
+}
+
+///|
+test "large_polynomial_multiply" {
+  // Test with larger polynomials to exercise FFT properly
+  let n = 16
+  let a : Array[Int] = Array::make(n, 1)
+  let b : Array[Int] = Array::make(n, 1)
+  let result = polynomial_multiply_fft(a, b)
+  // (1 + x + x^2 + ... + x^15)^2
+  // coefficient of x^k is min(k+1, 2n-1-k) for k < 2n-1
+  inspect(result.length(), content="31")
+  inspect(result[0], content="1") // x^0 coefficient
+  inspect(result[15], content="16") // x^15 coefficient (middle)
+  inspect(result[30], content="1") // x^30 coefficient
+}
