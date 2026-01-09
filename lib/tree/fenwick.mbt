@@ -33,7 +33,7 @@
 ///         -x = 0100₂ (in 4-bit two's complement: ~1100 + 1 = 0011 + 1 = 0100)
 ///         x & -x = 0100₂ = 4
 fn lowbit(x : Int) -> Int {
-  x & (-x)
+  x & -x
 }
 
 ///|
@@ -151,14 +151,14 @@ test "fenwick_basic" {
   ft.update(7, 2)
   ft.update(8, 6)
   // Test prefix sums
-  assert_eq!(ft.prefix_sum(1), 3) // 3
-  assert_eq!(ft.prefix_sum(2), 4) // 3 + 1
-  assert_eq!(ft.prefix_sum(3), 8) // 3 + 1 + 4
-  assert_eq!(ft.prefix_sum(4), 9) // 3 + 1 + 4 + 1
-  assert_eq!(ft.prefix_sum(8), 31) // 3 + 1 + 4 + 1 + 5 + 9 + 2 + 6
+  assert_eq(ft.prefix_sum(1), 3) // 3
+  assert_eq(ft.prefix_sum(2), 4) // 3 + 1
+  assert_eq(ft.prefix_sum(3), 8) // 3 + 1 + 4
+  assert_eq(ft.prefix_sum(4), 9) // 3 + 1 + 4 + 1
+  assert_eq(ft.prefix_sum(8), 31) // 3 + 1 + 4 + 1 + 5 + 9 + 2 + 6
   // Test range sums
-  assert_eq!(ft.range_sum(2, 5), 11) // 1 + 4 + 1 + 5
-  assert_eq!(ft.range_sum(3, 7), 21) // 4 + 1 + 5 + 9 + 2
+  assert_eq(ft.range_sum(2, 5), 11) // 1 + 4 + 1 + 5
+  assert_eq(ft.range_sum(3, 7), 21) // 4 + 1 + 5 + 9 + 2
 }
 
 // ============================================================================
@@ -227,9 +227,9 @@ fn FenwickTree::from_array(arr : ArrayView[Int]) -> FenwickTree {
 test "fenwick_from_array" {
   let arr : Array[Int] = [3, 1, 4, 1, 5, 9, 2, 6]
   let ft = FenwickTree::from_array(arr[:])
-  assert_eq!(ft.prefix_sum(4), 9)
-  assert_eq!(ft.prefix_sum(8), 31)
-  assert_eq!(ft.range_sum(2, 5), 11)
+  assert_eq(ft.prefix_sum(4), 9)
+  assert_eq(ft.prefix_sum(8), 31)
+  assert_eq(ft.range_sum(2, 5), 11)
 }
 
 // ============================================================================
@@ -312,17 +312,17 @@ test "fenwick_find_kth" {
   // Total: 10 elements
   // Sorted: 1, 1, 2, 2, 2, 3, 4, 4, 4, 4
   // 1st element: 1
-  assert_eq!(ft.find_kth(1), 1)
+  assert_eq(ft.find_kth(1), 1)
   // 2nd element: 1
-  assert_eq!(ft.find_kth(2), 1)
+  assert_eq(ft.find_kth(2), 1)
   // 3rd element: 2
-  assert_eq!(ft.find_kth(3), 2)
+  assert_eq(ft.find_kth(3), 2)
   // 5th element: 2
-  assert_eq!(ft.find_kth(5), 2)
+  assert_eq(ft.find_kth(5), 2)
   // 6th element: 3
-  assert_eq!(ft.find_kth(6), 3)
+  assert_eq(ft.find_kth(6), 3)
   // 7th element: 4
-  assert_eq!(ft.find_kth(7), 4)
+  assert_eq(ft.find_kth(7), 4)
 }
 
 // ============================================================================
@@ -348,7 +348,12 @@ fn FenwickTree2D::new(n : Int, m : Int) -> FenwickTree2D {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn FenwickTree2D::update(self : FenwickTree2D, i : Int, j : Int, delta : Int) -> Unit {
+fn FenwickTree2D::update(
+  self : FenwickTree2D,
+  i : Int,
+  j : Int,
+  delta : Int,
+) -> Unit {
   for x = i {
     if x > self.n {
       break
@@ -427,12 +432,13 @@ fn FenwickTree2D::range_sum(
   r1 : Int,
   c1 : Int,
   r2 : Int,
-  c2 : Int
+  c2 : Int,
 ) -> Int {
   // Inclusion-exclusion principle
-  self.prefix_sum(r2, c2) - self.prefix_sum(r1 - 1, c2) - self.prefix_sum(
-    r2, c1 - 1,
-  ) + self.prefix_sum(r1 - 1, c1 - 1)
+  self.prefix_sum(r2, c2) -
+  self.prefix_sum(r1 - 1, c2) -
+  self.prefix_sum(r2, c1 - 1) +
+  self.prefix_sum(r1 - 1, c1 - 1)
 }
 
 ///|
@@ -455,13 +461,13 @@ test "fenwick_2d" {
   ft.update(3, 3, 11)
   ft.update(3, 4, 12)
   // Test prefix sums
-  assert_eq!(ft.prefix_sum(1, 1), 1)
-  assert_eq!(ft.prefix_sum(1, 4), 10) // 1+2+3+4
-  assert_eq!(ft.prefix_sum(2, 2), 14) // 1+2+5+6
-  assert_eq!(ft.prefix_sum(3, 4), 78) // sum of all
+  assert_eq(ft.prefix_sum(1, 1), 1)
+  assert_eq(ft.prefix_sum(1, 4), 10) // 1+2+3+4
+  assert_eq(ft.prefix_sum(2, 2), 14) // 1+2+5+6
+  assert_eq(ft.prefix_sum(3, 4), 78) // sum of all
   // Test range sums
-  assert_eq!(ft.range_sum(2, 2, 3, 3), 34) // 6+7+10+11
-  assert_eq!(ft.range_sum(1, 1, 3, 4), 78) // all
+  assert_eq(ft.range_sum(2, 2, 3, 3), 34) // 6+7+10+11
+  assert_eq(ft.range_sum(1, 1, 3, 4), 78) // all
 }
 
 // ============================================================================
@@ -495,7 +501,7 @@ fn FenwickTreeRangeUpdate::range_add(
   self : FenwickTreeRangeUpdate,
   l : Int,
   r : Int,
-  delta : Int
+  delta : Int,
 ) -> Unit {
   self.diff.update(l, delta)
   if r + 1 <= self.diff.n {
@@ -507,7 +513,7 @@ fn FenwickTreeRangeUpdate::range_add(
 /// Query value at position i.
 fn FenwickTreeRangeUpdate::point_query(
   self : FenwickTreeRangeUpdate,
-  i : Int
+  i : Int,
 ) -> Int {
   self.diff.prefix_sum(i)
 }
@@ -517,16 +523,16 @@ test "fenwick_range_update" {
   let ft = FenwickTreeRangeUpdate::new(8)
   // Add 5 to positions 2-5
   ft.range_add(2, 5, 5)
-  assert_eq!(ft.point_query(1), 0)
-  assert_eq!(ft.point_query(2), 5)
-  assert_eq!(ft.point_query(5), 5)
-  assert_eq!(ft.point_query(6), 0)
+  assert_eq(ft.point_query(1), 0)
+  assert_eq(ft.point_query(2), 5)
+  assert_eq(ft.point_query(5), 5)
+  assert_eq(ft.point_query(6), 0)
   // Add 3 to positions 4-7
   ft.range_add(4, 7, 3)
-  assert_eq!(ft.point_query(3), 5)
-  assert_eq!(ft.point_query(4), 8) // 5 + 3
-  assert_eq!(ft.point_query(6), 3)
-  assert_eq!(ft.point_query(8), 0)
+  assert_eq(ft.point_query(3), 5)
+  assert_eq(ft.point_query(4), 8) // 5 + 3
+  assert_eq(ft.point_query(6), 3)
+  assert_eq(ft.point_query(8), 0)
 }
 
 // ============================================================================
@@ -574,7 +580,7 @@ fn FenwickTreeRangeRange::range_add(
   self : FenwickTreeRangeRange,
   l : Int,
   r : Int,
-  delta : Int
+  delta : Int,
 ) -> Unit {
   // Update D[l] += delta
   self.tree1.update(l, delta)
@@ -588,7 +594,10 @@ fn FenwickTreeRangeRange::range_add(
 
 ///|
 /// Query prefix sum from 1 to i.
-fn FenwickTreeRangeRange::prefix_sum(self : FenwickTreeRangeRange, i : Int) -> Int {
+fn FenwickTreeRangeRange::prefix_sum(
+  self : FenwickTreeRangeRange,
+  i : Int,
+) -> Int {
   // sum(1, i) = (i+1) × prefix_D(i) - prefix_iD(i)
   (i + 1) * self.tree1.prefix_sum(i) - self.tree2.prefix_sum(i)
 }
@@ -598,7 +607,7 @@ fn FenwickTreeRangeRange::prefix_sum(self : FenwickTreeRangeRange, i : Int) -> I
 fn FenwickTreeRangeRange::range_sum(
   self : FenwickTreeRangeRange,
   l : Int,
-  r : Int
+  r : Int,
 ) -> Int {
   self.prefix_sum(r) - self.prefix_sum(l - 1)
 }
@@ -609,15 +618,15 @@ test "fenwick_range_range" {
   // Add 2 to positions 1-4
   ft.range_add(1, 4, 2)
   // Array: [2, 2, 2, 2, 0, 0, 0, 0]
-  assert_eq!(ft.range_sum(1, 4), 8)
-  assert_eq!(ft.range_sum(1, 8), 8)
-  assert_eq!(ft.range_sum(3, 5), 4) // 2 + 2 + 0
+  assert_eq(ft.range_sum(1, 4), 8)
+  assert_eq(ft.range_sum(1, 8), 8)
+  assert_eq(ft.range_sum(3, 5), 4) // 2 + 2 + 0
   // Add 3 to positions 3-6
   ft.range_add(3, 6, 3)
   // Array: [2, 2, 5, 5, 3, 3, 0, 0]
-  assert_eq!(ft.range_sum(1, 8), 20)
-  assert_eq!(ft.range_sum(3, 4), 10) // 5 + 5
-  assert_eq!(ft.range_sum(5, 6), 6) // 3 + 3
+  assert_eq(ft.range_sum(1, 8), 20)
+  assert_eq(ft.range_sum(3, 4), 10) // 5 + 5
+  assert_eq(ft.range_sum(5, 6), 6) // 3 + 3
 }
 
 // ============================================================================
@@ -677,16 +686,16 @@ fn count_inversions(arr : ArrayView[Int], max_val : Int) -> Int {
 test "count_inversions" {
   // [3, 1, 2]: inversions are (3,1), (3,2) = 2
   let arr1 : Array[Int] = [3, 1, 2]
-  assert_eq!(count_inversions(arr1[:], 3), 2)
+  assert_eq(count_inversions(arr1[:], 3), 2)
   // [1, 2, 3, 4]: no inversions
   let arr2 : Array[Int] = [1, 2, 3, 4]
-  assert_eq!(count_inversions(arr2[:], 4), 0)
+  assert_eq(count_inversions(arr2[:], 4), 0)
   // [4, 3, 2, 1]: all pairs are inversions = 4×3/2 = 6
   let arr3 : Array[Int] = [4, 3, 2, 1]
-  assert_eq!(count_inversions(arr3[:], 4), 6)
+  assert_eq(count_inversions(arr3[:], 4), 6)
   // [2, 4, 1, 3, 5]: inversions (2,1), (4,1), (4,3) = 3
   let arr4 : Array[Int] = [2, 4, 1, 3, 5]
-  assert_eq!(count_inversions(arr4[:], 5), 3)
+  assert_eq(count_inversions(arr4[:], 5), 3)
 }
 
 // ============================================================================

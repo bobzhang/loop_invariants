@@ -16,7 +16,6 @@
 fn z_algorithm(s : ArrayView[Char]) -> Array[Int] {
   let n = s.length()
   guard n > 0 else { return [] }
-
   let z : Array[Int] = Array::make(n, 0)
   z[0] = n // By convention, entire string matches itself
 
@@ -41,7 +40,6 @@ fn z_algorithm(s : ArrayView[Char]) -> Array[Int] {
       // s[i..r) == s[i-l..r-l) because we're in the Z-box
       let k = i - l // Corresponding position in prefix
       let remaining = r - i // How much of Z-box is left
-
       if z[k] < remaining {
         // Case 2a: Z[k] fits entirely within remaining Z-box
         z[i] = z[k]
@@ -149,7 +147,6 @@ fn manacher(s : ArrayView[Char]) -> Array[Int] {
     } else {
       // Mirror position of i with respect to center c
       let mirror = 2 * c - i
-
       if i < r && mirror >= 0 {
         // Use mirror's palindrome radius as starting point
         let min_radius = if p[mirror] < r - i { p[mirror] } else { r - i }
@@ -226,7 +223,6 @@ fn manacher(s : ArrayView[Char]) -> Array[Int] {
 fn longest_palindrome(s : ArrayView[Char]) -> (Int, Int) {
   let n = s.length()
   guard n > 0 else { return (0, 0) }
-
   let p = manacher(s)
 
   // Find position with maximum radius
@@ -277,14 +273,10 @@ test "manacher" {
 /// Rabin-Karp string matching using rolling hash.
 /// Returns all starting positions where pattern occurs in text.
 #warnings("+missing_invariant+missing_reasoning")
-fn rabin_karp(
-  text : ArrayView[Char],
-  pattern : ArrayView[Char]
-) -> Array[Int] {
+fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
   let n = text.length()
   let m = pattern.length()
   guard m > 0 && n >= m else { return [] }
-
   let base = 256 // Number of characters in alphabet
   let modulus = 1000000007 // Large prime for hashing
 
@@ -315,7 +307,12 @@ fn rabin_karp(
       continue i + 1, new_ph, new_th
     }
   } where {
-    invariant: i >= 0 && i <= m && ph >= 0 && ph < modulus && th >= 0 && th < modulus,
+    invariant: i >= 0 &&
+    i <= m &&
+    ph >= 0 &&
+    ph < modulus &&
+    th >= 0 &&
+    th < modulus,
     reasoning: (
       #|INVARIANT (Polynomial hash):
       #|hash(s[0..i)) = Σ(s[j] * base^(i-1-j)) mod modulus
@@ -324,7 +321,6 @@ fn rabin_karp(
       #|Each character contributes to the hash weighted by its position.
     ),
   }
-
   let results : Array[Int] = []
 
   // Slide the pattern over text
@@ -399,13 +395,10 @@ fn rabin_karp(
 
 ///|
 test "rabin_karp" {
-  let text : Array[Char] = [
-    'a', 'b', 'c', 'a', 'b', 'c', 'a', 'b', 'd',
-  ]
+  let text : Array[Char] = ['a', 'b', 'c', 'a', 'b', 'c', 'a', 'b', 'd']
   let pattern : Array[Char] = ['a', 'b', 'c']
   let matches = rabin_karp(text[:], pattern[:])
   assert_eq(matches, [0, 3])
-
   let text2 : Array[Char] = ['a', 'a', 'a', 'a', 'a']
   let pattern2 : Array[Char] = ['a', 'a']
   let matches2 = rabin_karp(text2[:], pattern2[:])
@@ -424,10 +417,8 @@ fn lcs_length(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
   let m = s1.length()
   let n = s2.length()
   guard m > 0 && n > 0 else { return 0 }
-
   let mut prev : Array[Int] = Array::make(n + 1, 0)
   let mut curr : Array[Int] = Array::make(n + 1, 0)
-
   for i = 1 {
     if i > m {
       break prev[n]
@@ -505,11 +496,9 @@ test "lcs_length" {
   let s1 : Array[Char] = ['A', 'B', 'C', 'D', 'E', 'F']
   let s2 : Array[Char] = ['A', 'C', 'B', 'C', 'F']
   assert_eq(lcs_length(s1[:], s2[:]), 4) // "ABCF" or "ACDF" etc.
-
   let s3 : Array[Char] = ['A', 'B', 'C']
   let s4 : Array[Char] = ['D', 'E', 'F']
   assert_eq(lcs_length(s3[:], s4[:]), 0) // No common subsequence
-
   let s5 : Array[Char] = ['A', 'A', 'A']
   let s6 : Array[Char] = ['A', 'A']
   assert_eq(lcs_length(s5[:], s6[:]), 2)
@@ -535,7 +524,6 @@ fn booth_smallest_rotation(s : ArrayView[Char]) -> Int {
 
   // failure[i] similar to KMP failure function for doubled string
   let failure : Array[Int] = Array::make(2 * n, -1)
-
   for i = 1, k = 0 {
     if i >= 2 * n {
       break k
@@ -560,7 +548,6 @@ fn booth_smallest_rotation(s : ArrayView[Char]) -> Int {
           #|Following failure links to find match length.
         ),
       }
-
       if new_j == -2 {
         // Found a smaller rotation, restart from here
         continue i + 1, i - j - 1

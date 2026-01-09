@@ -7,7 +7,7 @@ fn mo_isqrt(n : Int) -> Int {
   if n <= 0 {
     return 1
   }
-  for x = n; ; {
+  for x = n {
     let next = (x + n / x) / 2
     if next >= x {
       break x
@@ -35,13 +35,15 @@ fn mo_isqrt(n : Int) -> Int {
 /// 2. Right endpoint (within same block)
 ///
 /// TIME COMPLEXITY: O((n + q) × √n) for q queries on array of size n
-fn mos_algorithm_range_sum(arr : ArrayView[Int], queries : Array[(Int, Int)]) -> Array[Int] {
+fn mos_algorithm_range_sum(
+  arr : ArrayView[Int],
+  queries : Array[(Int, Int)],
+) -> Array[Int] {
   let n = arr.length()
   let q = queries.length()
   if n == 0 || q == 0 {
     return Array::make(q, 0)
   }
-
   let block_size = mo_isqrt(n)
 
   // Create and sort query indices using bubble sort
@@ -49,7 +51,6 @@ fn mos_algorithm_range_sum(arr : ArrayView[Int], queries : Array[(Int, Int)]) ->
   for i = 0; i < q; i = i + 1 {
     query_order.push(i)
   }
-
   for i = 0; i < q - 1; i = i + 1 {
     for j = 0; j < q - 1 - i; j = j + 1 {
       let idx1 = query_order[j]
@@ -58,22 +59,14 @@ fn mos_algorithm_range_sum(arr : ArrayView[Int], queries : Array[(Int, Int)]) ->
       let (l2, r2) = queries[idx2]
       let block1 = l1 / block_size
       let block2 = l2 / block_size
-
-      let should_swap = if block1 != block2 {
-        block1 > block2
-      } else {
-        r1 > r2
-      }
-
+      let should_swap = if block1 != block2 { block1 > block2 } else { r1 > r2 }
       if should_swap {
         query_order[j] = idx2
         query_order[j + 1] = idx1
       }
     }
   }
-
   let results : Array[Int] = Array::make(q, 0)
-
   for i = 0, curr_l = 0, curr_r = 0, curr_sum = 0; i < q; {
     let query_idx = query_order[i]
     let (ql, qr) = queries[query_idx]
@@ -125,7 +118,6 @@ fn mos_algorithm_range_sum(arr : ArrayView[Int], queries : Array[(Int, Int)]) ->
         #|Adding elements to left increases sum.
       ),
     }
-
     results[query_idx] = sum5
     continue i + 1, curr_l3, curr_r3, sum5
   } else {
@@ -141,7 +133,6 @@ fn mos_algorithm_range_sum(arr : ArrayView[Int], queries : Array[(Int, Int)]) ->
       #|Total: O((n + q) × √n)
     ),
   }
-
   results
 }
 
@@ -150,9 +141,9 @@ test "mos algorithm range sum" {
   let arr = [1, 2, 3, 4, 5]
   let queries = [(0, 3), (1, 4), (0, 5)]
   let results = mos_algorithm_range_sum(arr[:], queries)
-  assert_eq!(results[0], 6) // 1+2+3 = 6
-  assert_eq!(results[1], 9) // 2+3+4 = 9
-  assert_eq!(results[2], 15) // 1+2+3+4+5 = 15
+  assert_eq(results[0], 6) // 1+2+3 = 6
+  assert_eq(results[1], 9) // 2+3+4 = 9
+  assert_eq(results[2], 15) // 1+2+3+4+5 = 15
 }
 
 ///|
@@ -175,11 +166,9 @@ fn SqrtDecomposition::new(arr : Array[Int]) -> SqrtDecomposition {
   if n == 0 {
     return { arr, block_mins: [], block_size: 1 }
   }
-
   let block_size = mo_isqrt(n)
   let num_blocks = (n + block_size - 1) / block_size
   let block_mins : Array[Int] = Array::make(num_blocks, 2147483647)
-
   for i = 0; i < n; i = i + 1 {
     let block_idx = i / block_size
     if arr[i] < block_mins[block_idx] {
@@ -192,21 +181,23 @@ fn SqrtDecomposition::new(arr : Array[Int]) -> SqrtDecomposition {
       #|for all fully processed blocks.
     ),
   }
-
   { arr, block_mins, block_size }
 }
 
 ///|
-fn query_min(self : SqrtDecomposition, l : Int, r : Int) -> Int {
+fn SqrtDecomposition::query_min(
+  self : SqrtDecomposition,
+  l : Int,
+  r : Int,
+) -> Int {
   if l >= r || l < 0 || r > self.arr.length() {
     return 2147483647
   }
-
   for i = l, result = 2147483647; i < r; {
     let block_idx = i / self.block_size
     let block_end = @math.minimum((block_idx + 1) * self.block_size, r)
-
-    if i == block_idx * self.block_size && block_end == (block_idx + 1) * self.block_size {
+    if i == block_idx * self.block_size &&
+      block_end == (block_idx + 1) * self.block_size {
       // Full block
       let new_result = @math.minimum(result, self.block_mins[block_idx])
       continue block_end, new_result
@@ -231,17 +222,21 @@ fn query_min(self : SqrtDecomposition, l : Int, r : Int) -> Int {
 }
 
 ///|
-fn update_sqrt(self : SqrtDecomposition, idx : Int, val : Int) -> Unit {
+fn SqrtDecomposition::update_sqrt(
+  self : SqrtDecomposition,
+  idx : Int,
+  val : Int,
+) -> Unit {
   if idx < 0 || idx >= self.arr.length() {
     return
   }
-
   self.arr[idx] = val
   let block_idx = idx / self.block_size
-
   let block_start = block_idx * self.block_size
-  let block_end = @math.minimum(block_start + self.block_size, self.arr.length())
-
+  let block_end = @math.minimum(
+    block_start + self.block_size,
+    self.arr.length(),
+  )
   self.block_mins[block_idx] = 2147483647
   for i = block_start; i < block_end; i = i + 1 {
     if self.arr[i] < self.block_mins[block_idx] {
@@ -259,15 +254,13 @@ fn update_sqrt(self : SqrtDecomposition, idx : Int, val : Int) -> Unit {
 test "sqrt decomposition rmq" {
   let arr = [3, 1, 4, 1, 5, 9, 2, 6]
   let sd = SqrtDecomposition::new(arr)
-  assert_eq!(sd.query_min(0, 4), 1)
-  assert_eq!(sd.query_min(4, 8), 2)
-  assert_eq!(sd.query_min(2, 6), 1)
-
+  assert_eq(sd.query_min(0, 4), 1)
+  assert_eq(sd.query_min(4, 8), 2)
+  assert_eq(sd.query_min(2, 6), 1)
   sd.update_sqrt(1, 10)
-  assert_eq!(sd.query_min(0, 4), 1)
-
+  assert_eq(sd.query_min(0, 4), 1)
   sd.update_sqrt(3, 10)
-  assert_eq!(sd.query_min(0, 4), 3)
+  assert_eq(sd.query_min(0, 4), 3)
 }
 
 ///|
@@ -280,11 +273,9 @@ fn range_mode(arr : ArrayView[Int], queries : Array[(Int, Int)]) -> Array[Int] {
   if n == 0 || q == 0 {
     return Array::make(q, 0)
   }
-
   let results : Array[Int] = Array::make(q, 0)
   let max_val = 1000
   let freq : Array[Int] = Array::make(max_val + 1, 0)
-
   for qi = 0; qi < q; qi = qi + 1 {
     let (l, r) = queries[qi]
 
@@ -320,7 +311,6 @@ fn range_mode(arr : ArrayView[Int], queries : Array[(Int, Int)]) -> Array[Int] {
         #|best = most frequent value in [0..i)
       ),
     }
-
     results[qi] = mode
   } where {
     invariant: qi >= 0 && qi <= q,
@@ -328,7 +318,6 @@ fn range_mode(arr : ArrayView[Int], queries : Array[(Int, Int)]) -> Array[Int] {
       #|Processing queries one by one.
     ),
   }
-
   results
 }
 
@@ -337,9 +326,9 @@ test "range mode query" {
   let arr = [1, 2, 1, 1, 2, 3, 2, 2]
   let queries = [(0, 4), (4, 8), (0, 8)]
   let results = range_mode(arr[:], queries)
-  assert_eq!(results[0], 1) // [1,2,1,1] -> mode is 1
-  assert_eq!(results[1], 2) // [2,3,2,2] -> mode is 2
-  assert_eq!(results[2], 2) // full array -> mode is 2
+  assert_eq(results[0], 1) // [1,2,1,1] -> mode is 1
+  assert_eq(results[1], 2) // [2,3,2,2] -> mode is 2
+  assert_eq(results[2], 2) // full array -> mode is 2
 }
 
 ///|
@@ -358,11 +347,9 @@ fn BlockSum::new(arr : Array[Int]) -> BlockSum {
   if n == 0 {
     return { arr, block_sums: [], block_size: 1 }
   }
-
   let block_size = mo_isqrt(n)
   let num_blocks = (n + block_size - 1) / block_size
   let block_sums : Array[Int] = Array::make(num_blocks, 0)
-
   for i = 0; i < n; i = i + 1 {
     block_sums[i / block_size] = block_sums[i / block_size] + arr[i]
   } where {
@@ -371,22 +358,21 @@ fn BlockSum::new(arr : Array[Int]) -> BlockSum {
       #|Computing block sums during initialization.
     ),
   }
-
   { arr, block_sums, block_size }
 }
 
 ///|
-fn query_sum(self : BlockSum, l : Int, r : Int) -> Int {
+fn BlockSum::query_sum(self : BlockSum, l : Int, r : Int) -> Int {
   if l >= r || l < 0 || r > self.arr.length() {
     return 0
   }
-
   for i = l, result = 0; i < r; {
     let block_idx = i / self.block_size
     let block_start = block_idx * self.block_size
     let block_end = @math.minimum(block_start + self.block_size, r)
-
-    if i == block_start && block_end == block_start + self.block_size && block_end <= r {
+    if i == block_start &&
+      block_end == block_start + self.block_size &&
+      block_end <= r {
       // Full block
       continue block_end, result + self.block_sums[block_idx]
     } else {
@@ -405,25 +391,24 @@ fn query_sum(self : BlockSum, l : Int, r : Int) -> Int {
 }
 
 ///|
-fn update_block_sum(self : BlockSum, idx : Int, val : Int) -> Unit {
+fn BlockSum::update_block_sum(self : BlockSum, idx : Int, val : Int) -> Unit {
   if idx < 0 || idx >= self.arr.length() {
     return
   }
-
   let diff = val - self.arr[idx]
   self.arr[idx] = val
-  self.block_sums[idx / self.block_size] = self.block_sums[idx / self.block_size] + diff
+  self.block_sums[idx / self.block_size] = self.block_sums[idx / self.block_size] +
+    diff
 }
 
 ///|
 test "block sum" {
   let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9]
   let bs = BlockSum::new(arr)
-  assert_eq!(bs.query_sum(0, 5), 15) // 1+2+3+4+5
-  assert_eq!(bs.query_sum(3, 7), 22) // 4+5+6+7
-
+  assert_eq(bs.query_sum(0, 5), 15) // 1+2+3+4+5
+  assert_eq(bs.query_sum(3, 7), 22) // 4+5+6+7
   bs.update_block_sum(4, 10) // Change 5 to 10
-  assert_eq!(bs.query_sum(0, 5), 20) // 1+2+3+4+10
+  assert_eq(bs.query_sum(0, 5), 20) // 1+2+3+4+10
 }
 
 ///|
@@ -447,7 +432,7 @@ fn MoUnionFind::new(n : Int) -> MoUnionFind {
 }
 
 ///|
-fn find_mo(self : MoUnionFind, x : Int) -> Int {
+fn MoUnionFind::find_mo(self : MoUnionFind, x : Int) -> Int {
   for curr = x; curr != self.parent[curr]; {
     let grandparent = self.parent[self.parent[curr]]
     self.parent[curr] = grandparent
@@ -464,13 +449,12 @@ fn find_mo(self : MoUnionFind, x : Int) -> Int {
 }
 
 ///|
-fn union_mo(self : MoUnionFind, x : Int, y : Int) -> Bool {
+fn MoUnionFind::union_mo(self : MoUnionFind, x : Int, y : Int) -> Bool {
   let px = self.find_mo(x)
   let py = self.find_mo(y)
   if px == py {
     return false
   }
-
   if self.rank[px] < self.rank[py] {
     self.parent[px] = py
   } else if self.rank[px] > self.rank[py] {
@@ -485,15 +469,13 @@ fn union_mo(self : MoUnionFind, x : Int, y : Int) -> Bool {
 ///|
 test "mo union find" {
   let uf = MoUnionFind::new(5)
-  assert_true!(uf.union_mo(0, 1))
-  assert_true!(uf.union_mo(2, 3))
-  assert_eq!(uf.find_mo(0), uf.find_mo(1))
-  assert_true!(uf.find_mo(0) != uf.find_mo(2))
-
-  assert_true!(uf.union_mo(1, 3))
-  assert_eq!(uf.find_mo(0), uf.find_mo(3))
-
-  assert_false!(uf.union_mo(0, 2)) // Already connected
+  assert_true(uf.union_mo(0, 1))
+  assert_true(uf.union_mo(2, 3))
+  assert_eq(uf.find_mo(0), uf.find_mo(1))
+  assert_true(uf.find_mo(0) != uf.find_mo(2))
+  assert_true(uf.union_mo(1, 3))
+  assert_eq(uf.find_mo(0), uf.find_mo(3))
+  assert_false(uf.union_mo(0, 2)) // Already connected
 }
 
 ///|
@@ -503,12 +485,11 @@ test "mo union find" {
 fn offline_lca_simple(
   adj : Array[Array[Int]],
   queries : Array[(Int, Int)],
-  root : Int
+  root : Int,
 ) -> Array[Int] {
   let n = adj.length()
   let q = queries.length()
   let results : Array[Int] = Array::make(q, -1)
-
   let parent : Array[Int] = Array::make(n, -1)
   let depth : Array[Int] = Array::make(n, 0)
 
@@ -517,7 +498,6 @@ fn offline_lca_simple(
   let visited : Array[Bool] = Array::make(n, false)
   queue.push(root)
   visited[root] = true
-
   for front = 0; front < queue.length(); front = front + 1 {
     let node = queue[front]
     for i = 0; i < adj[node].length(); i = i + 1 {
@@ -536,19 +516,16 @@ fn offline_lca_simple(
     let (u, v) = queries[qi]
     let mut u_curr = u
     let mut v_curr = v
-
     while depth[u_curr] > depth[v_curr] {
       u_curr = parent[u_curr]
     }
     while depth[v_curr] > depth[u_curr] {
       v_curr = parent[v_curr]
     }
-
     while u_curr != v_curr {
       u_curr = parent[u_curr]
       v_curr = parent[v_curr]
     }
-
     results[qi] = u_curr
   } where {
     invariant: qi >= 0 && qi <= q,
@@ -561,7 +538,6 @@ fn offline_lca_simple(
       #|3. Meeting point is LCA
     ),
   }
-
   results
 }
 
@@ -570,9 +546,9 @@ test "offline lca simple" {
   let adj : Array[Array[Int]] = [[1, 2], [0, 3, 4], [0], [1], [1]]
   let queries = [(3, 4), (3, 2), (1, 2)]
   let results = offline_lca_simple(adj, queries, 0)
-  assert_eq!(results[0], 1) // LCA(3,4) = 1
-  assert_eq!(results[1], 0) // LCA(3,2) = 0
-  assert_eq!(results[2], 0) // LCA(1,2) = 0
+  assert_eq(results[0], 1) // LCA(3,4) = 1
+  assert_eq(results[1], 0) // LCA(3,2) = 0
+  assert_eq(results[2], 0) // LCA(1,2) = 0
 }
 
 ///|
@@ -583,11 +559,9 @@ fn find_tree_centroid(adj : Array[Array[Int]], root : Int) -> Int {
   let n = adj.length()
   let subtree_size : Array[Int] = Array::make(n, 0)
   let parent : Array[Int] = Array::make(n, -1)
-
   let stack : Array[(Int, Int)] = []
   let order : Array[Int] = []
   stack.push((root, -1))
-
   while stack.length() > 0 {
     let (node, par) = stack.pop().unwrap()
     parent[node] = par
@@ -599,7 +573,6 @@ fn find_tree_centroid(adj : Array[Array[Int]], root : Int) -> Int {
       }
     }
   }
-
   for i = order.length() - 1; i >= 0; i = i - 1 {
     let node = order[i]
     subtree_size[node] = 1
@@ -610,13 +583,10 @@ fn find_tree_centroid(adj : Array[Array[Int]], root : Int) -> Int {
       }
     }
   }
-
   let tree_size = subtree_size[root]
-
   for i = 0, centroid = root; i < n; {
     let node = order[i]
     let mut is_centroid = true
-
     for j = 0; j < adj[node].length(); j = j + 1 {
       let neighbor = adj[node][j]
       let subtree = if neighbor == parent[node] {
@@ -628,7 +598,6 @@ fn find_tree_centroid(adj : Array[Array[Int]], root : Int) -> Int {
         is_centroid = false
       }
     }
-
     if is_centroid {
       continue n, node
     }
@@ -650,7 +619,7 @@ fn find_tree_centroid(adj : Array[Array[Int]], root : Int) -> Int {
 test "find tree centroid" {
   let adj : Array[Array[Int]] = [[1], [0, 2], [1, 3], [2, 4], [3]]
   let centroid = find_tree_centroid(adj, 0)
-  assert_eq!(centroid, 2) // Middle node
+  assert_eq(centroid, 2) // Middle node
 }
 
 ///|
@@ -669,20 +638,16 @@ fn build_euler_tour(adj : Array[Array[Int]], root : Int) -> EulerTour {
   let enter : Array[Int] = Array::make(n, 0)
   let exit : Array[Int] = Array::make(n, 0)
   let tour : Array[Int] = []
-
   let stack : Array[(Int, Int, Int)] = []
   stack.push((root, -1, 0))
   let time = Array::make(1, 0)
-
   while stack.length() > 0 {
     let (node, par, state) = stack.pop().unwrap()
-
     if state == 0 {
       enter[node] = time[0]
       tour.push(node)
       time[0] = time[0] + 1
       stack.push((node, par, 1))
-
       for i = adj[node].length() - 1; i >= 0; i = i - 1 {
         let child = adj[node][i]
         if child != par {
@@ -693,7 +658,6 @@ fn build_euler_tour(adj : Array[Array[Int]], root : Int) -> EulerTour {
       exit[node] = time[0]
     }
   }
-
   { enter, exit, tour }
 }
 
@@ -701,9 +665,8 @@ fn build_euler_tour(adj : Array[Array[Int]], root : Int) -> EulerTour {
 test "euler tour" {
   let adj : Array[Array[Int]] = [[1, 2], [0, 3], [0], [1]]
   let et = build_euler_tour(adj, 0)
-
-  assert_true!(et.enter[1] < et.enter[3])
-  assert_true!(et.enter[3] < et.exit[1])
+  assert_true(et.enter[1] < et.enter[3])
+  assert_true(et.enter[3] < et.exit[1])
 }
 
 ///|
@@ -722,17 +685,14 @@ fn build_binary_lifting(adj : Array[Array[Int]], root : Int) -> BinaryLifting {
   let log_n = 20
   let up : Array[Array[Int]] = []
   let depth : Array[Int] = Array::make(n, 0)
-
   for i = 0; i < n; i = i + 1 {
     up.push(Array::make(log_n, -1))
   }
-
   let queue : Array[Int] = []
   let visited : Array[Bool] = Array::make(n, false)
   queue.push(root)
   visited[root] = true
   up[root][0] = root
-
   for front = 0; front < queue.length(); front = front + 1 {
     let node = queue[front]
     for i = 0; i < adj[node].length(); i = i + 1 {
@@ -745,7 +705,6 @@ fn build_binary_lifting(adj : Array[Array[Int]], root : Int) -> BinaryLifting {
       }
     }
   }
-
   for k = 1; k < log_n; k = k + 1 {
     for v = 0; v < n; v = v + 1 {
       let half_ancestor = up[v][k - 1]
@@ -762,32 +721,31 @@ fn build_binary_lifting(adj : Array[Array[Int]], root : Int) -> BinaryLifting {
       #|The 2^k ancestor is the 2^(k-1) ancestor of the 2^(k-1) ancestor.
     ),
   }
-
   { up, depth, log_n }
 }
 
 ///|
-fn lca_binary_lifting(self : BinaryLifting, u_in : Int, v_in : Int) -> Int {
+fn BinaryLifting::lca_binary_lifting(
+  self : BinaryLifting,
+  u_in : Int,
+  v_in : Int,
+) -> Int {
   let mut u = u_in
   let mut v = v_in
-
   if self.depth[u] < self.depth[v] {
     let temp = u
     u = v
     v = temp
   }
-
   let diff = self.depth[u] - self.depth[v]
   for k = 0; k < self.log_n; k = k + 1 {
     if ((diff >> k) & 1) == 1 {
       u = self.up[u][k]
     }
   }
-
   if u == v {
     return u
   }
-
   for k = self.log_n - 1; k >= 0; k = k - 1 {
     if self.up[u][k] != self.up[v][k] {
       u = self.up[u][k]
@@ -801,7 +759,6 @@ fn lca_binary_lifting(self : BinaryLifting, u_in : Int, v_in : Int) -> Int {
       #|After all jumps, u and v are children of LCA.
     ),
   }
-
   self.up[u][0]
 }
 
@@ -809,9 +766,8 @@ fn lca_binary_lifting(self : BinaryLifting, u_in : Int, v_in : Int) -> Int {
 test "binary lifting lca" {
   let adj : Array[Array[Int]] = [[1, 2], [0, 3, 4], [0], [1], [1]]
   let bl = build_binary_lifting(adj, 0)
-
-  assert_eq!(bl.lca_binary_lifting(3, 4), 1)
-  assert_eq!(bl.lca_binary_lifting(3, 2), 0)
-  assert_eq!(bl.lca_binary_lifting(1, 2), 0)
-  assert_eq!(bl.lca_binary_lifting(3, 1), 1)
+  assert_eq(bl.lca_binary_lifting(3, 4), 1)
+  assert_eq(bl.lca_binary_lifting(3, 2), 0)
+  assert_eq(bl.lca_binary_lifting(1, 2), 0)
+  assert_eq(bl.lca_binary_lifting(3, 1), 1)
 }

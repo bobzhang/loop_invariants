@@ -53,7 +53,6 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
           queue.push(neighbor)
         }
       }
-
       continue head + 1
     }
   } where {
@@ -99,7 +98,6 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       #|v's in-degree, u appears in result before v. ✓
     ),
   }
-
   if result.length() == n {
     Some(result)
   } else {
@@ -113,8 +111,8 @@ test "topological_sort" {
   let dag : Array[Array[Int]] = [
     [1, 2], // 0's neighbors
     [2], // 1's neighbors
-    [], // 2's neighbors
-  ]
+    [],
+  ] // 2's neighbors
   match topological_sort(dag) {
     Some(order) => {
       assert_eq(order.length(), 3)
@@ -150,7 +148,6 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
   let inf = 0x7FFFFFFF
   let dist : Array[Int] = Array::make(n, inf)
   let visited : Array[Bool] = Array::make(n, false)
-
   dist[source] = 0
 
   // Process n vertices
@@ -174,12 +171,10 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
           #|Total: O(V²). Can be improved to O(E log V) with heap.
         ),
       }
-
       if u == -1 {
         // All remaining vertices are unreachable
         break dist
       }
-
       visited[u] = true
 
       // Relax all edges from u
@@ -189,7 +184,6 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
           dist[v] = dist[u] + weight
         }
       }
-
       continue count + 1
     }
   } where {
@@ -253,7 +247,6 @@ test "dijkstra" {
     [(3, 1)], // 2 → 3 (weight 1)
     [], // 3 has no outgoing edges
   ]
-
   let dist = dijkstra(graph, 0)
   assert_eq(dist[0], 0) // source
   assert_eq(dist[1], 1) // 0 → 1
@@ -300,7 +293,6 @@ fn uf_find(uf : UnionFind, x : Int) -> Int {
 fn uf_union(uf : UnionFind, x : Int, y : Int) -> Unit {
   let root_x = uf_find(uf, x)
   let root_y = uf_find(uf, y)
-
   if root_x == root_y {
     return // Already in same set
   }
@@ -355,7 +347,7 @@ test "union_find" {
 fn bellman_ford(
   n : Int,
   edges : ArrayView[(Int, Int, Int)],
-  source : Int
+  source : Int,
 ) -> Array[Int]? {
   let inf = 0x7FFFFFFF
   let dist : Array[Int] = Array::make(n, inf)
@@ -420,7 +412,6 @@ fn bellman_ford(
       return None // Negative cycle detected
     }
   }
-
   Some(dist)
 }
 
@@ -452,7 +443,10 @@ test "bellman_ford" {
 /// Floyd-Warshall algorithm for all-pairs shortest paths.
 /// dist[i][j] = shortest path from i to j (0x7FFFFFFF = no path).
 #warnings("+missing_invariant+missing_reasoning")
-fn floyd_warshall(n : Int, edges : ArrayView[(Int, Int, Int)]) -> Array[Array[Int]] {
+fn floyd_warshall(
+  n : Int,
+  edges : ArrayView[(Int, Int, Int)],
+) -> Array[Array[Int]] {
   let inf = 0x7FFFFFFF
   let dist : Array[Array[Int]] = Array::make(n, [])
   for i = 0; i < n; i = i + 1 {
@@ -526,7 +520,6 @@ test "floyd_warshall" {
   // Triangle: 0 --1--> 1 --2--> 2, with shortcut 0 --4--> 2
   let edges : Array[(Int, Int, Int)] = [(0, 1, 1), (1, 2, 2), (0, 2, 4)]
   let dist = floyd_warshall(3, edges[:])
-
   assert_eq(dist[0][0], 0)
   assert_eq(dist[0][1], 1)
   assert_eq(dist[0][2], 3) // 0 → 1 → 2 is shorter than 0 → 2
@@ -562,12 +555,14 @@ fn sort_edge_tuples(edges : Array[(Int, Int, Int)]) -> Unit {
 /// Kruskal's algorithm for Minimum Spanning Tree.
 /// Returns list of edges in MST and total weight.
 #warnings("+missing_invariant+missing_reasoning")
-fn kruskal(n : Int, edges : Array[(Int, Int, Int)]) -> (Array[(Int, Int, Int)], Int) {
+fn kruskal(
+  n : Int,
+  edges : Array[(Int, Int, Int)],
+) -> (Array[(Int, Int, Int)], Int) {
   sort_edge_tuples(edges)
   let uf = make_union_find(n)
   let mst : Array[(Int, Int, Int)] = []
   let mut total_weight = 0
-
   for i = 0 {
     if i >= edges.length() || mst.length() >= n - 1 {
       break (mst, total_weight)
@@ -581,7 +576,6 @@ fn kruskal(n : Int, edges : Array[(Int, Int, Int)]) -> (Array[(Int, Int, Int)], 
         mst.push(edge)
         total_weight = total_weight + w
       }
-
       continue i + 1
     }
   } where {
@@ -629,7 +623,6 @@ test "kruskal" {
     (0, 2, 3),
     (2, 3, 4),
   ]
-
   let (mst, weight) = kruskal(4, edges)
   assert_eq(mst.length(), 3)
   assert_eq(weight, 6) // 1 + 2 + 3 = 6

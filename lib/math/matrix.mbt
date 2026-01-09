@@ -40,7 +40,7 @@
 fn matrix_mult_2x2(
   a : (Int64, Int64, Int64, Int64),
   b : (Int64, Int64, Int64, Int64),
-  modulo : Int64
+  modulo : Int64,
 ) -> (Int64, Int64, Int64, Int64) {
   let (a11, a12, a21, a22) = a
   let (b11, b12, b21, b22) = b
@@ -73,16 +73,16 @@ fn matrix_mult_2x2(
 fn matrix_pow_2x2(
   m : (Int64, Int64, Int64, Int64),
   p : Int64,
-  modulo : Int64
+  modulo : Int64,
 ) -> (Int64, Int64, Int64, Int64) {
   let identity : (Int64, Int64, Int64, Int64) = (1L, 0L, 0L, 1L)
   for matrix = m, result = identity, power = p {
     if power <= 0L {
       break result
     } else if power % 2L == 1L {
-      continue matrix_mult_2x2(matrix, matrix, modulo), matrix_mult_2x2(
-        result, matrix, modulo,
-      ), power / 2L
+      continue matrix_mult_2x2(matrix, matrix, modulo),
+        matrix_mult_2x2(result, matrix, modulo),
+        power / 2L
     } else {
       continue matrix_mult_2x2(matrix, matrix, modulo), result, power / 2L
     }
@@ -164,14 +164,14 @@ fn fibonacci_matrix(n : Int64, modulo : Int64) -> Int64 {
 test "fibonacci_matrix" {
   let modulo = 1000000007L
   // F(0)=0, F(1)=1, F(2)=1, F(3)=2, F(4)=3, F(5)=5, F(6)=8, F(7)=13, F(8)=21
-  assert_eq!(fibonacci_matrix(0L, modulo), 0L)
-  assert_eq!(fibonacci_matrix(1L, modulo), 1L)
-  assert_eq!(fibonacci_matrix(2L, modulo), 1L)
-  assert_eq!(fibonacci_matrix(5L, modulo), 5L)
-  assert_eq!(fibonacci_matrix(10L, modulo), 55L)
-  assert_eq!(fibonacci_matrix(20L, modulo), 6765L)
+  assert_eq(fibonacci_matrix(0L, modulo), 0L)
+  assert_eq(fibonacci_matrix(1L, modulo), 1L)
+  assert_eq(fibonacci_matrix(2L, modulo), 1L)
+  assert_eq(fibonacci_matrix(5L, modulo), 5L)
+  assert_eq(fibonacci_matrix(10L, modulo), 55L)
+  assert_eq(fibonacci_matrix(20L, modulo), 6765L)
   // F(50) = 12586269025
-  assert_eq!(fibonacci_matrix(50L, modulo), 12586269025L % modulo)
+  assert_eq(fibonacci_matrix(50L, modulo), 12586269025L % modulo)
 }
 
 // ============================================================================
@@ -192,7 +192,7 @@ test "fibonacci_matrix" {
 fn matrix_mult_3x3(
   a : Array[Int64],
   b : Array[Int64],
-  modulo : Int64
+  modulo : Int64,
 ) -> Array[Int64] {
   let result : Array[Int64] = Array::make(9, 0L)
   for i = 0 {
@@ -244,9 +244,9 @@ fn matrix_pow_3x3(m : Array[Int64], p : Int64, modulo : Int64) -> Array[Int64] {
     if power <= 0L {
       break result
     } else if power % 2L == 1L {
-      continue matrix_mult_3x3(matrix, matrix, modulo), matrix_mult_3x3(
-        result, matrix, modulo,
-      ), power / 2L
+      continue matrix_mult_3x3(matrix, matrix, modulo),
+        matrix_mult_3x3(result, matrix, modulo),
+        power / 2L
     } else {
       continue matrix_mult_3x3(matrix, matrix, modulo), result, power / 2L
     }
@@ -286,14 +286,14 @@ fn tribonacci_matrix(n : Int64, modulo : Int64) -> Int64 {
 test "tribonacci_matrix" {
   let modulo = 1000000007L
   // T(0)=0, T(1)=1, T(2)=1, T(3)=2, T(4)=4, T(5)=7, T(6)=13, T(7)=24
-  assert_eq!(tribonacci_matrix(0L, modulo), 0L)
-  assert_eq!(tribonacci_matrix(1L, modulo), 1L)
-  assert_eq!(tribonacci_matrix(2L, modulo), 1L)
-  assert_eq!(tribonacci_matrix(3L, modulo), 2L)
-  assert_eq!(tribonacci_matrix(4L, modulo), 4L)
-  assert_eq!(tribonacci_matrix(5L, modulo), 7L)
-  assert_eq!(tribonacci_matrix(6L, modulo), 13L)
-  assert_eq!(tribonacci_matrix(7L, modulo), 24L)
+  assert_eq(tribonacci_matrix(0L, modulo), 0L)
+  assert_eq(tribonacci_matrix(1L, modulo), 1L)
+  assert_eq(tribonacci_matrix(2L, modulo), 1L)
+  assert_eq(tribonacci_matrix(3L, modulo), 2L)
+  assert_eq(tribonacci_matrix(4L, modulo), 4L)
+  assert_eq(tribonacci_matrix(5L, modulo), 7L)
+  assert_eq(tribonacci_matrix(6L, modulo), 13L)
+  assert_eq(tribonacci_matrix(7L, modulo), 24L)
 }
 
 // ============================================================================
@@ -323,7 +323,7 @@ fn count_paths(
   adj_matrix : Array[Int64],
   n : Int,
   k : Int64,
-  modulo : Int64
+  modulo : Int64,
 ) -> Array[Int64] {
   fn matrix_mult_nxn(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     let result : Array[Int64] = Array::make(n * n, 0L)
@@ -387,8 +387,9 @@ fn count_paths(
     if power <= 0L {
       break result
     } else if power % 2L == 1L {
-      continue matrix_mult_nxn(matrix, matrix), matrix_mult_nxn(result, matrix), power /
-        2L
+      continue matrix_mult_nxn(matrix, matrix),
+        matrix_mult_nxn(result, matrix),
+        power / 2L
     } else {
       continue matrix_mult_nxn(matrix, matrix), result, power / 2L
     }
@@ -415,20 +416,20 @@ test "count_paths" {
   //     2
   let adj : Array[Int64] = [
     0L, 1L, 1L, // Row 0: edges to 1, 2
-    1L, 0L, 1L, // Row 1: edges to 0, 2
-    1L, 1L, 0L, // Row 2: edges to 0, 1
-  ]
+     1L, 0L, 1L, // Row 1: edges to 0, 2
+     1L, 1L, 0L,
+  ] // Row 2: edges to 0, 1
   let modulo = 1000000007L
   // Paths of length 1: just the adjacency matrix
   let paths1 = count_paths(adj, 3, 1L, modulo)
-  assert_eq!(paths1[0 * 3 + 1], 1L) // 0→1
-  assert_eq!(paths1[0 * 3 + 0], 0L) // 0→0 (no self-loop of length 1)
+  assert_eq(paths1[0 * 3 + 1], 1L) // 0→1
+  assert_eq(paths1[0 * 3 + 0], 0L) // 0→0 (no self-loop of length 1)
   // Paths of length 2 from 0 to 0: 0→1→0 and 0→2→0
   let paths2 = count_paths(adj, 3, 2L, modulo)
-  assert_eq!(paths2[0 * 3 + 0], 2L) // Two paths: 0→1→0 and 0→2→0
+  assert_eq(paths2[0 * 3 + 0], 2L) // Two paths: 0→1→0 and 0→2→0
   // Paths of length 3 from 0 to 1: 0→1→0→1, 0→1→2→1, 0→2→0→1
   let paths3 = count_paths(adj, 3, 3L, modulo)
-  assert_eq!(paths3[0 * 3 + 1], 3L)
+  assert_eq(paths3[0 * 3 + 1], 3L)
 }
 
 // ============================================================================
@@ -473,8 +474,9 @@ fn matrix_chain_order(dims : ArrayView[Int]) -> Int {
             if k >= j {
               break
             } else {
-              let cost = m[i * n + k] + m[(k + 1) * n + j] + dims[i] * dims[k + 1] *
-                dims[j + 1]
+              let cost = m[i * n + k] +
+                m[(k + 1) * n + j] +
+                dims[i] * dims[k + 1] * dims[j + 1]
               if cost < m[i * n + j] {
                 m[i * n + j] = cost
               }
@@ -528,11 +530,11 @@ test "matrix_chain_order" {
   // Option 2: A1·(A2·A3) = 30·5·60 + 10·30·60 = 9000 + 18000 = 27000
   // Optimal: Option 1 with cost 4500
   let dims : Array[Int] = [10, 30, 5, 60]
-  assert_eq!(matrix_chain_order(dims[:]), 4500)
+  assert_eq(matrix_chain_order(dims[:]), 4500)
   // Another example: [40, 20, 30, 10, 30]
   // Matrices: 40×20, 20×30, 30×10, 10×30
   let dims2 : Array[Int] = [40, 20, 30, 10, 30]
-  assert_eq!(matrix_chain_order(dims2[:]), 26000)
+  assert_eq(matrix_chain_order(dims2[:]), 26000)
 }
 
 // ============================================================================
@@ -574,7 +576,7 @@ fn strassen_2x2(
   e : Int,
   f : Int,
   g : Int,
-  h : Int
+  h : Int,
 ) -> (Int, Int, Int, Int) {
   // 7 multiplications (the key insight!)
   let m1 = (a + d) * (e + h)
@@ -598,10 +600,10 @@ test "strassen_2x2" {
   let (c11, c12, c21, c22) = strassen_2x2(1, 2, 3, 4, 5, 6, 7, 8)
   // Standard: [[1,2],[3,4]] × [[5,6],[7,8]] = [[1·5+2·7, 1·6+2·8], [3·5+4·7, 3·6+4·8]]
   //         = [[5+14, 6+16], [15+28, 18+32]] = [[19, 22], [43, 50]]
-  assert_eq!(c11, 19)
-  assert_eq!(c12, 22)
-  assert_eq!(c21, 43)
-  assert_eq!(c22, 50)
+  assert_eq(c11, 19)
+  assert_eq(c12, 22)
+  assert_eq(c21, 43)
+  assert_eq(c22, 50)
 }
 
 // ============================================================================
@@ -686,12 +688,15 @@ fn fibonacci_fast_doubling(n : Int64, modulo : Int64) -> (Int64, Int64) {
 ///|
 test "fibonacci_fast_doubling" {
   let modulo = 1000000007L
-  assert_eq!(fibonacci_fast_doubling(0L, modulo), (0L, 1L))
-  assert_eq!(fibonacci_fast_doubling(1L, modulo).0, 1L)
-  assert_eq!(fibonacci_fast_doubling(10L, modulo).0, 55L)
-  assert_eq!(fibonacci_fast_doubling(50L, modulo).0, 12586269025L % modulo)
+  assert_eq(fibonacci_fast_doubling(0L, modulo), (0L, 1L))
+  assert_eq(fibonacci_fast_doubling(1L, modulo).0, 1L)
+  assert_eq(fibonacci_fast_doubling(10L, modulo).0, 55L)
+  assert_eq(fibonacci_fast_doubling(50L, modulo).0, 12586269025L % modulo)
   // Verify consistency with matrix method
-  assert_eq!(fibonacci_fast_doubling(100L, modulo).0, fibonacci_matrix(100L, modulo))
+  assert_eq(
+    fibonacci_fast_doubling(100L, modulo).0,
+    fibonacci_matrix(100L, modulo),
+  )
 }
 
 // ============================================================================
@@ -735,11 +740,11 @@ fn lucas_matrix(n : Int64, modulo : Int64) -> Int64 {
 test "lucas_matrix" {
   let modulo = 1000000007L
   // L(0)=2, L(1)=1, L(2)=3, L(3)=4, L(4)=7, L(5)=11, L(6)=18
-  assert_eq!(lucas_matrix(0L, modulo), 2L)
-  assert_eq!(lucas_matrix(1L, modulo), 1L)
-  assert_eq!(lucas_matrix(2L, modulo), 3L)
-  assert_eq!(lucas_matrix(3L, modulo), 4L)
-  assert_eq!(lucas_matrix(4L, modulo), 7L)
-  assert_eq!(lucas_matrix(5L, modulo), 11L)
-  assert_eq!(lucas_matrix(6L, modulo), 18L)
+  assert_eq(lucas_matrix(0L, modulo), 2L)
+  assert_eq(lucas_matrix(1L, modulo), 1L)
+  assert_eq(lucas_matrix(2L, modulo), 3L)
+  assert_eq(lucas_matrix(3L, modulo), 4L)
+  assert_eq(lucas_matrix(4L, modulo), 7L)
+  assert_eq(lucas_matrix(5L, modulo), 11L)
+  assert_eq(lucas_matrix(6L, modulo), 18L)
 }

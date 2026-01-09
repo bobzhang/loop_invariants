@@ -17,7 +17,11 @@
 /// Recurrence: dp[i][w] = max(dp[i-1][w], dp[i-1][w-w[i]] + v[i]) if w >= w[i]
 ///
 /// Space-optimized to O(W) by processing weights in reverse.
-fn knapsack_01(weights : ArrayView[Int], values : ArrayView[Int], capacity : Int) -> Int {
+fn knapsack_01(
+  weights : ArrayView[Int],
+  values : ArrayView[Int],
+  capacity : Int,
+) -> Int {
   let n = weights.length()
   if n == 0 || capacity == 0 {
     return 0
@@ -25,7 +29,6 @@ fn knapsack_01(weights : ArrayView[Int], values : ArrayView[Int], capacity : Int
 
   // dp[w] = max value achievable with capacity w using items considered so far
   let dp = Array::make(capacity + 1, 0)
-
   for i = 0; i < n; i = i + 1 {
     let weight = weights[i]
     let value = values[i]
@@ -61,7 +64,6 @@ fn knapsack_01(weights : ArrayView[Int], values : ArrayView[Int], capacity : Int
       #|TERMINATION: dp[capacity] = optimal value using all n items.
     ),
   }
-
   dp[capacity]
 }
 
@@ -69,7 +71,7 @@ fn knapsack_01(weights : ArrayView[Int], values : ArrayView[Int], capacity : Int
 test "knapsack 01" {
   let weights = [1, 2, 3, 4]
   let values = [1, 4, 5, 7]
-  assert_eq!(knapsack_01(weights[:], values[:], 7), 12) // items 1,3 (4+7=11, wait let me recalc)
+  assert_eq(knapsack_01(weights[:], values[:], 7), 12) // items 1,3 (4+7=11, wait let me recalc)
   // weights: 1,2,3,4  values: 1,4,5,7
   // capacity 7: take items with w=2,3 -> v=4+5=9, or w=3,4 -> 5+7=12, or w=1,2,4 -> 1+4+7=12
   // Actually w=1+2+4=7, v=1+4+7=12
@@ -79,12 +81,15 @@ test "knapsack 01" {
 /// Unbounded Knapsack - Can use items multiple times
 ///
 /// Recurrence: dp[w] = max(dp[w], dp[w-w[i]] + v[i]) for all i where w >= w[i]
-fn knapsack_unbounded(weights : ArrayView[Int], values : ArrayView[Int], capacity : Int) -> Int {
+fn knapsack_unbounded(
+  weights : ArrayView[Int],
+  values : ArrayView[Int],
+  capacity : Int,
+) -> Int {
   let n = weights.length()
   if n == 0 || capacity == 0 {
     return 0
   }
-
   let dp = Array::make(capacity + 1, 0)
 
   // Process weights in forward direction (allows reusing items)
@@ -107,7 +112,6 @@ fn knapsack_unbounded(weights : ArrayView[Int], values : ArrayView[Int], capacit
       #|computed, we can use the same item multiple times.
     ),
   }
-
   dp[capacity]
 }
 
@@ -117,7 +121,7 @@ test "knapsack unbounded" {
   let values = [1, 4, 5]
   // Capacity 7: best is 2 items of weight 3 (value 8) + 1 item of weight 1 (value 1) = 9
   // Or: 1 item of weight 4 (5) + 1 item of weight 3 (4) = 9
-  assert_eq!(knapsack_unbounded(weights[:], values[:], 7), 9)
+  assert_eq(knapsack_unbounded(weights[:], values[:], 7), 9)
 }
 
 ///|
@@ -136,7 +140,6 @@ fn lis_binary_search(nums : ArrayView[Int]) -> Int {
 
   // tails[i] = smallest tail of all increasing subsequences of length i+1
   let tails : Array[Int] = []
-
   for i = 0; i < n; i = i + 1 {
     let num = nums[i]
     // Binary search for the position to insert/replace
@@ -164,7 +167,6 @@ fn lis_binary_search(nums : ArrayView[Int]) -> Int {
       #|TERMINATION: tails.length() is the LIS length
     ),
   }
-
   tails.length()
 }
 
@@ -190,10 +192,9 @@ fn lower_bound_lis(arr : ArrayView[Int], target : Int) -> Int {
 ///|
 test "LIS binary search" {
   let nums = [10, 9, 2, 5, 3, 7, 101, 18]
-  assert_eq!(lis_binary_search(nums[:]), 4) // [2, 3, 7, 101] or [2, 3, 7, 18]
-
+  assert_eq(lis_binary_search(nums[:]), 4) // [2, 3, 7, 101] or [2, 3, 7, 18]
   let nums2 = [0, 1, 0, 3, 2, 3]
-  assert_eq!(lis_binary_search(nums2[:]), 4) // [0, 1, 2, 3]
+  assert_eq(lis_binary_search(nums2[:]), 4) // [0, 1, 2, 3]
 }
 
 ///|
@@ -204,11 +205,9 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
   if amount == 0 {
     return 0
   }
-
   let inf = amount + 1 // Represents impossible
   let dp = Array::make(amount + 1, inf)
   dp[0] = 0
-
   for a = 1; a <= amount; a = a + 1 {
     for i = 0; i < coins.length(); i = i + 1 {
       let coin = coins[i]
@@ -230,17 +229,19 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
       #|If dp[a] remains inf, amount a is unreachable.
     ),
   }
-
-  if dp[amount] > amount { -1 } else { dp[amount] }
+  if dp[amount] > amount {
+    -1
+  } else {
+    dp[amount]
+  }
 }
 
 ///|
 test "coin change min" {
   let coins = [1, 2, 5]
-  assert_eq!(coin_change_min(coins[:], 11), 3) // 5 + 5 + 1
-
+  assert_eq(coin_change_min(coins[:], 11), 3) // 5 + 5 + 1
   let coins2 = [2]
-  assert_eq!(coin_change_min(coins2[:], 3), -1) // impossible
+  assert_eq(coin_change_min(coins2[:], 3), -1) // impossible
 }
 
 ///|
@@ -272,14 +273,13 @@ fn coin_change_ways(coins : ArrayView[Int], amount : Int) -> Int {
       #|Each coin is either used 0, 1, 2, ... times.
     ),
   }
-
   dp[amount]
 }
 
 ///|
 test "coin change ways" {
   let coins = [1, 2, 5]
-  assert_eq!(coin_change_ways(coins[:], 5), 4) // [5], [2,2,1], [2,1,1,1], [1,1,1,1,1]
+  assert_eq(coin_change_ways(coins[:], 5), 4) // [5], [2,2,1], [2,1,1,1], [1,1,1,1,1]
 }
 
 ///|
@@ -295,7 +295,6 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
   let chars2 = s2.to_array()
   let m = chars1.length()
   let n = chars2.length()
-
   if m == 0 || n == 0 {
     return 0
   }
@@ -303,7 +302,6 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
   // Space optimization: only need two rows
   let prev = Array::make(n + 1, 0)
   let curr = Array::make(n + 1, 0)
-
   for i = 1; i <= m; i = i + 1 {
     for j = 1; j <= n; j = j + 1 {
       if chars1[i - 1] == chars2[j - 1] {
@@ -332,15 +330,14 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
       #|This correctly implements the recurrence relation.
     ),
   }
-
   prev[n]
 }
 
 ///|
 test "longest common subsequence" {
-  assert_eq!(longest_common_subsequence("abcde", "ace"), 3) // "ace"
-  assert_eq!(longest_common_subsequence("abc", "abc"), 3)
-  assert_eq!(longest_common_subsequence("abc", "def"), 0)
+  assert_eq(longest_common_subsequence("abcde", "ace"), 3) // "ace"
+  assert_eq(longest_common_subsequence("abc", "abc"), 3)
+  assert_eq(longest_common_subsequence("abc", "def"), 0)
 }
 
 ///|
@@ -354,7 +351,6 @@ fn max_subarray_dp(nums : ArrayView[Int]) -> Int {
   if n == 0 {
     return 0
   }
-
   for i = 1, max_ending_here = nums[0], max_so_far = nums[0]; i < n; i = i + 1 {
     // Either start fresh at nums[i] or extend previous subarray
     let extend = max_ending_here + nums[i]
@@ -383,7 +379,7 @@ fn max_subarray_dp(nums : ArrayView[Int]) -> Int {
 ///|
 test "max subarray dp" {
   let nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
-  assert_eq!(max_subarray_dp(nums[:]), 6) // [4, -1, 2, 1]
+  assert_eq(max_subarray_dp(nums[:]), 6) // [4, -1, 2, 1]
 }
 
 ///|
@@ -398,11 +394,20 @@ fn house_robber(nums : ArrayView[Int]) -> Int {
   if n == 1 {
     return nums[0]
   }
-
-  for i = 2, prev2 = nums[0], prev1 = if nums[1] > nums[0] { nums[1] } else { nums[0] }; i < n; i = i + 1 {
+  for i = 2, prev2 = nums[0], prev1 = (if nums[1] > nums[0] {
+          nums[1]
+        } else {
+          nums[0]
+        })
+      i < n
+      i = i + 1 {
     let rob_current = prev2 + nums[i]
     let skip_current = prev1
-    let current = if rob_current > skip_current { rob_current } else { skip_current }
+    let current = if rob_current > skip_current {
+      rob_current
+    } else {
+      skip_current
+    }
     continue i + 1, prev1, current
   } else {
     prev1
@@ -425,10 +430,9 @@ fn house_robber(nums : ArrayView[Int]) -> Int {
 ///|
 test "house robber" {
   let nums = [2, 7, 9, 3, 1]
-  assert_eq!(house_robber(nums[:]), 12) // 2 + 9 + 1
-
+  assert_eq(house_robber(nums[:]), 12) // 2 + 9 + 1
   let nums2 = [1, 2, 3, 1]
-  assert_eq!(house_robber(nums2[:]), 4) // 1 + 3
+  assert_eq(house_robber(nums2[:]), 4) // 1 + 3
 }
 
 ///|
@@ -442,7 +446,6 @@ fn unique_paths(m : Int, n : Int) -> Int {
 
   // Space optimization: only need one row
   let dp = Array::make(n, 1)
-
   for i = 1; i < m; i = i + 1 {
     for j = 1; j < n; j = j + 1 {
       dp[j] = dp[j] + dp[j - 1]
@@ -463,14 +466,13 @@ fn unique_paths(m : Int, n : Int) -> Int {
       #|Other cells: sum of paths from above and left
     ),
   }
-
   dp[n - 1]
 }
 
 ///|
 test "unique paths" {
-  assert_eq!(unique_paths(3, 7), 28)
-  assert_eq!(unique_paths(3, 2), 3)
+  assert_eq(unique_paths(3, 7), 28)
+  assert_eq(unique_paths(3, 2), 3)
 }
 
 ///|
@@ -502,7 +504,8 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
     for j = 1; j < n; j = j + 1 {
       let from_above = dp[j]
       let from_left = dp[j - 1]
-      dp[j] = grid[i][j] + (if from_above < from_left { from_above } else { from_left })
+      dp[j] = grid[i][j] +
+        (if from_above < from_left { from_above } else { from_left })
     } where {
       invariant: j >= 1 && j <= n,
       reasoning: (
@@ -517,14 +520,13 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
       #|Each cell's min path = its value + min(path from above, path from left)
     ),
   }
-
   dp[n - 1]
 }
 
 ///|
 test "min path sum" {
   let grid = [[1, 3, 1], [1, 5, 1], [4, 2, 1]]
-  assert_eq!(min_path_sum(grid), 7) // 1→3→1→1→1
+  assert_eq(min_path_sum(grid), 7) // 1→3→1→1→1
 }
 
 ///|
@@ -540,10 +542,8 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
   for i = 0; i < word_dict.length(); i = i + 1 {
     words.push(word_dict[i].to_array())
   }
-
   let dp = Array::make(n + 1, false)
   dp[0] = true // Empty string can be segmented
-
   for i = 1; i <= n; i = i + 1 {
     for w = 0; w < words.length(); w = w + 1 {
       let word = words[w]
@@ -568,7 +568,6 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
       #|  then dp[i] = true
     ),
   }
-
   dp[n]
 }
 
@@ -593,11 +592,10 @@ fn matches_word(chars : Array[Char], start : Int, word : Array[Char]) -> Bool {
 test "word break" {
   let s = "leetcode"
   let dict = ["leet", "code"]
-  assert_eq!(word_break(s, dict), true)
-
+  assert_eq(word_break(s, dict), true)
   let s2 = "applepenapple"
   let dict2 = ["apple", "pen"]
-  assert_eq!(word_break(s2, dict2), true)
+  assert_eq(word_break(s2, dict2), true)
 }
 
 ///|
@@ -625,7 +623,8 @@ fn min_palindrome_cuts(s : String) -> Int {
       if length == 2 {
         is_palindrome[i][j] = chars[i] == chars[j]
       } else {
-        is_palindrome[i][j] = chars[i] == chars[j] && is_palindrome[i + 1][j - 1]
+        is_palindrome[i][j] = chars[i] == chars[j] &&
+          is_palindrome[i + 1][j - 1]
       }
     }
   }
@@ -635,7 +634,6 @@ fn min_palindrome_cuts(s : String) -> Int {
   for i = 0; i <= n; i = i + 1 {
     dp[i] = i - 1 // Maximum cuts = i - 1
   }
-
   for i = 1; i <= n; i = i + 1 {
     if is_palindrome[0][i - 1] {
       dp[i] = 0 // Entire prefix is palindrome
@@ -663,15 +661,14 @@ fn min_palindrome_cuts(s : String) -> Int {
       #|Or 0 if entire s[0..i) is palindrome
     ),
   }
-
   dp[n]
 }
 
 ///|
 test "min palindrome cuts" {
-  assert_eq!(min_palindrome_cuts("aab"), 1) // "aa" | "b"
-  assert_eq!(min_palindrome_cuts("a"), 0)
-  assert_eq!(min_palindrome_cuts("ab"), 1)
+  assert_eq(min_palindrome_cuts("aab"), 1) // "aa" | "b"
+  assert_eq(min_palindrome_cuts("a"), 0)
+  assert_eq(min_palindrome_cuts("ab"), 1)
 }
 
 ///|
@@ -694,7 +691,6 @@ fn egg_drop(eggs : Int, floors : Int) -> Int {
   // dp[k] = max floors we can check with k eggs and t trials
   // We find minimum t such that dp[eggs] >= floors
   let dp = Array::make(eggs + 1, 0)
-
   for trials = 1; dp[eggs] < floors; trials = trials + 1 {
     // Update dp in reverse to avoid using updated values
     for k = eggs; k >= 1; k = k - 1 {
@@ -730,9 +726,9 @@ fn egg_drop(eggs : Int, floors : Int) -> Int {
 
 ///|
 test "egg drop" {
-  assert_eq!(egg_drop(1, 10), 10) // With 1 egg, need 10 trials worst case
-  assert_eq!(egg_drop(2, 10), 4) // With 2 eggs, 4 trials suffice
-  assert_eq!(egg_drop(2, 100), 14) // With 2 eggs, 14 trials for 100 floors
+  assert_eq(egg_drop(1, 10), 10) // With 1 egg, need 10 trials worst case
+  assert_eq(egg_drop(2, 10), 4) // With 2 eggs, 4 trials suffice
+  assert_eq(egg_drop(2, 100), 14) // With 2 eggs, 14 trials for 100 floors
 }
 
 ///|
@@ -781,14 +777,13 @@ fn longest_palindromic_subsequence(s : String) -> Int {
       #|Otherwise: LPS(i,j) = max(LPS(i+1,j), LPS(i,j-1))
     ),
   }
-
   dp[0][n - 1]
 }
 
 ///|
 test "longest palindromic subsequence" {
-  assert_eq!(longest_palindromic_subsequence("bbbab"), 4) // "bbbb"
-  assert_eq!(longest_palindromic_subsequence("cbbd"), 2) // "bb"
+  assert_eq(longest_palindromic_subsequence("bbbab"), 4) // "bbbb"
+  assert_eq(longest_palindromic_subsequence("cbbd"), 2) // "bb"
 }
 
 ///|
@@ -818,7 +813,8 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
 
       // Try all split points
       for k = i; k < j; k = k + 1 {
-        let cost = dp[i][k] + dp[k + 1][j] +
+        let cost = dp[i][k] +
+          dp[k + 1][j] +
           dimensions[i - 1] * dimensions[k] * dimensions[j]
         if cost < dp[i][j] {
           dp[i][j] = cost
@@ -846,7 +842,6 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
       #|This tries all ways to split the product into two subchains.
     ),
   }
-
   dp[1][n]
 }
 
@@ -856,5 +851,5 @@ test "matrix chain multiplication" {
   let dims = [10, 30, 5, 60]
   // Option 1: (AB)C = 10*30*5 + 10*5*60 = 1500 + 3000 = 4500
   // Option 2: A(BC) = 30*5*60 + 10*30*60 = 9000 + 18000 = 27000
-  assert_eq!(matrix_chain_mult(dims[:]), 4500)
+  assert_eq(matrix_chain_mult(dims[:]), 4500)
 }

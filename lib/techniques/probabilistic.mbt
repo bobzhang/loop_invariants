@@ -118,7 +118,6 @@ test "reservoir_sample" {
 fn fisher_yates_shuffle(arr : Array[Int], rng : RNG) -> Unit {
   let n = arr.length()
   guard n > 1 else { return }
-
   for i = n - 1 {
     if i <= 0 {
       break
@@ -216,7 +215,6 @@ fn weighted_select(weights : ArrayView[Int], rng : RNG) -> Int {
       #|This builds the cumulative distribution function (CDF).
     ),
   }
-
   let total = prefix_sum[weights.length() - 1]
   guard total > 0 else { return 0 }
 
@@ -330,7 +328,11 @@ fn hash1(x : Int, size : Int) -> Int {
   // Simple multiplicative hash
   let h = x * 31337 + 12345
   let result = if h < 0 { -h } else { h }
-  if size == 0 { result } else { result % size }
+  if size == 0 {
+    result
+  } else {
+    result % size
+  }
 }
 
 ///|
@@ -372,7 +374,9 @@ fn bloom_add(bf : BloomFilter, x : Int) -> Unit {
 /// Returns false if definitely absent (no false negatives).
 #warnings("+missing_invariant+missing_reasoning")
 fn bloom_maybe_contains(bf : BloomFilter, x : Int) -> Bool {
-  bf.bits[hash1(x, bf.size)] && bf.bits[hash2(x, bf.size)] && bf.bits[hash3(x, bf.size)]
+  bf.bits[hash1(x, bf.size)] &&
+  bf.bits[hash2(x, bf.size)] &&
+  bf.bits[hash3(x, bf.size)]
 }
 
 ///|
@@ -482,7 +486,6 @@ priv struct SkipList {
 #warnings("+missing_invariant+missing_reasoning")
 fn skip_list_search(list : SkipList, target : Int) -> Int {
   guard list.nodes.length() > 0 else { return -1 }
-
   for level = list.max_level - 1, current = list.head {
     if level < 0 {
       break -1
@@ -528,7 +531,6 @@ fn skip_list_search(list : SkipList, target : Int) -> Int {
           #|probabilistic structure (no complex rebalancing like AVL/Red-Black).
         ),
       }
-
       if next != current && list.nodes[next].value == target {
         break next
       }
@@ -554,7 +556,6 @@ test "skip_list_search" {
     { value: 7, forward: [-1, -1] }, // 7 is last
   ]
   let list : SkipList = { nodes, head: 0, max_level: 2 }
-
   assert_eq(skip_list_search(list, 5), 3)
   assert_eq(skip_list_search(list, 1), 1)
   assert_eq(skip_list_search(list, 10), -1)

@@ -50,7 +50,6 @@ fn build_suffix_array_simple(s : String) -> Array[Int] {
       #|lexicographically i-th smallest suffix.
     ),
   }
-
   sa
 }
 
@@ -66,7 +65,7 @@ fn compare_suffixes(chars : Array[Char], i : Int, j : Int) -> Int {
     }
   } else {
     // Shorter suffix is smaller
-    (n - i) - (n - j)
+    n - i - (n - j)
   } where {
     invariant: k >= 0,
     reasoning: (
@@ -78,12 +77,12 @@ fn compare_suffixes(chars : Array[Char], i : Int, j : Int) -> Int {
 ///|
 test "suffix array simple" {
   let sa = build_suffix_array_simple("banana")
-  assert_eq!(sa[0], 5) // "a"
-  assert_eq!(sa[1], 3) // "ana"
-  assert_eq!(sa[2], 1) // "anana"
-  assert_eq!(sa[3], 0) // "banana"
-  assert_eq!(sa[4], 4) // "na"
-  assert_eq!(sa[5], 2) // "nana"
+  assert_eq(sa[0], 5) // "a"
+  assert_eq(sa[1], 3) // "ana"
+  assert_eq(sa[2], 1) // "anana"
+  assert_eq(sa[3], 0) // "banana"
+  assert_eq(sa[4], 4) // "na"
+  assert_eq(sa[5], 2) // "nana"
 }
 
 ///|
@@ -110,7 +109,6 @@ fn build_lcp_array(s : String, sa : ArrayView[Int]) -> Array[Int] {
   for i = 0; i < n; i = i + 1 {
     rank[sa[i]] = i
   }
-
   let lcp = Array::make(n, 0)
   let mut k = 0
 
@@ -133,7 +131,6 @@ fn build_lcp_array(s : String, sa : ArrayView[Int]) -> Array[Int] {
         #|Extend matching prefix between suffixes at i and j
       ),
     }
-
     lcp[rank[i]] = k
 
     // Key insight: next suffix can have LCP at most k-1 less
@@ -157,7 +154,6 @@ fn build_lcp_array(s : String, sa : ArrayView[Int]) -> Array[Int] {
       #|and decreases by 1 at most n times.
     ),
   }
-
   lcp
 }
 
@@ -170,12 +166,12 @@ test "lcp array" {
   // Suffixes in order: a, ana, anana, banana, na, nana
   // LCP: [0, 1, 3, 0, 0, 2]
   //      (-, a/ana=1, ana/anana=3, anana/banana=0, banana/na=0, na/nana=2)
-  assert_eq!(lcp[0], 0) // No predecessor
-  assert_eq!(lcp[1], 1) // "a" vs "ana" = 1
-  assert_eq!(lcp[2], 3) // "ana" vs "anana" = 3
-  assert_eq!(lcp[3], 0) // "anana" vs "banana" = 0
-  assert_eq!(lcp[4], 0) // "banana" vs "na" = 0
-  assert_eq!(lcp[5], 2) // "na" vs "nana" = 2
+  assert_eq(lcp[0], 0) // No predecessor
+  assert_eq(lcp[1], 1) // "a" vs "ana" = 1
+  assert_eq(lcp[2], 3) // "ana" vs "anana" = 3
+  assert_eq(lcp[3], 0) // "anana" vs "banana" = 0
+  assert_eq(lcp[4], 0) // "banana" vs "na" = 0
+  assert_eq(lcp[5], 2) // "na" vs "nana" = 2
 }
 
 ///|
@@ -193,7 +189,6 @@ fn count_distinct_substrings(s : String) -> Int {
   if n == 0 {
     return 0
   }
-
   let sa = build_suffix_array_simple(s)
   let lcp = build_lcp_array(s, sa[:])
 
@@ -222,9 +217,9 @@ fn count_distinct_substrings(s : String) -> Int {
 
 ///|
 test "count distinct substrings" {
-  assert_eq!(count_distinct_substrings("ab"), 3) // "a", "b", "ab"
-  assert_eq!(count_distinct_substrings("aa"), 2) // "a", "aa"
-  assert_eq!(count_distinct_substrings("abc"), 6) // "a", "b", "c", "ab", "bc", "abc"
+  assert_eq(count_distinct_substrings("ab"), 3) // "a", "b", "ab"
+  assert_eq(count_distinct_substrings("aa"), 2) // "a", "aa"
+  assert_eq(count_distinct_substrings("abc"), 6) // "a", "b", "c", "ab", "bc", "abc"
 }
 
 ///|
@@ -238,7 +233,6 @@ fn longest_repeated_substring(s : String) -> String {
   if n <= 1 {
     return ""
   }
-
   let sa = build_suffix_array_simple(s)
   let lcp = build_lcp_array(s, sa[:])
 
@@ -275,9 +269,9 @@ fn longest_repeated_substring(s : String) -> String {
 
 ///|
 test "longest repeated substring" {
-  assert_eq!(longest_repeated_substring("banana"), "ana")
-  assert_eq!(longest_repeated_substring("abcd"), "")
-  assert_eq!(longest_repeated_substring("aaa"), "aa")
+  assert_eq(longest_repeated_substring("banana"), "ana")
+  assert_eq(longest_repeated_substring("abcd"), "")
+  assert_eq(longest_repeated_substring("aaa"), "aa")
 }
 
 ///|
@@ -291,11 +285,9 @@ fn search_pattern(s : String, pattern : String) -> Array[Int] {
   let p_chars = pattern.to_array()
   let n = s_chars.length()
   let m = p_chars.length()
-
   if n == 0 || m == 0 || m > n {
     return []
   }
-
   let sa = build_suffix_array_simple(s)
 
   // Binary search for lower bound
@@ -308,7 +300,6 @@ fn search_pattern(s : String, pattern : String) -> Array[Int] {
   for i = lo; i < hi; i = i + 1 {
     result.push(sa[i])
   }
-
   result
 }
 
@@ -316,7 +307,7 @@ fn search_pattern(s : String, pattern : String) -> Array[Int] {
 fn search_lower_bound(
   s : Array[Char],
   sa : ArrayView[Int],
-  p : Array[Char]
+  p : Array[Char],
 ) -> Int {
   let n = sa.length()
   for lo = 0, hi = n; lo < hi; {
@@ -340,7 +331,7 @@ fn search_lower_bound(
 fn search_upper_bound(
   s : Array[Char],
   sa : ArrayView[Int],
-  p : Array[Char]
+  p : Array[Char],
 ) -> Int {
   let n = sa.length()
   for lo = 0, hi = n; lo < hi; {
@@ -364,7 +355,6 @@ fn search_upper_bound(
 fn compare_with_pattern(s : Array[Char], start : Int, p : Array[Char]) -> Int {
   let n = s.length()
   let m = p.length()
-
   for i = 0; i < m && start + i < n; i = i + 1 {
     if s[start + i] < p[i] {
       return -1
@@ -375,7 +365,11 @@ fn compare_with_pattern(s : Array[Char], start : Int, p : Array[Char]) -> Int {
   } else {
     // All compared characters match
     // If suffix is shorter than pattern, it's "less"
-    if start + m > n { -1 } else { 0 }
+    if start + m > n {
+      -1
+    } else {
+      0
+    }
   } where {
     invariant: i >= 0 && i <= m,
     reasoning: (
@@ -389,11 +383,10 @@ fn compare_with_pattern(s : Array[Char], start : Int, p : Array[Char]) -> Int {
 test "pattern search" {
   let s = "banana"
   let matches = search_pattern(s, "ana")
-  assert_eq!(matches.length(), 2) // positions 1 and 3
-
+  assert_eq(matches.length(), 2) // positions 1 and 3
   let matches2 = search_pattern(s, "ban")
-  assert_eq!(matches2.length(), 1)
-  assert_eq!(matches2[0], 0)
+  assert_eq(matches2.length(), 1)
+  assert_eq(matches2[0], 0)
 }
 
 ///|
@@ -406,7 +399,6 @@ fn longest_common_substring_sa(s1 : String, s2 : String) -> String {
   let c2 = s2.to_array()
   let n1 = c1.length()
   let n2 = c2.length()
-
   if n1 == 0 || n2 == 0 {
     return ""
   }
@@ -420,7 +412,6 @@ fn longest_common_substring_sa(s1 : String, s2 : String) -> String {
   for i = 0; i < n2; i = i + 1 {
     combined.push(c2[i])
   }
-
   let combined_str = String::from_array(combined)
   let n = combined.length()
   let sa = build_suffix_array_simple(combined_str)
@@ -466,8 +457,8 @@ fn longest_common_substring_sa(s1 : String, s2 : String) -> String {
 
 ///|
 test "longest common substring sa" {
-  assert_eq!(longest_common_substring_sa("abcdef", "zbcdf"), "bcd")
-  assert_eq!(longest_common_substring_sa("abc", "xyz"), "")
+  assert_eq(longest_common_substring_sa("abcdef", "zbcdf"), "bcd")
+  assert_eq(longest_common_substring_sa("abc", "xyz"), "")
 }
 
 ///|
@@ -480,7 +471,6 @@ fn count_substrings_by_char(s : String) -> Array[Int] {
 
   // Count for each character (assuming lowercase a-z)
   let count = Array::make(26, 0)
-
   for i = 0; i < n; i = i + 1 {
     let c = chars[i].to_int() - 'a'.to_int()
     if c >= 0 && c < 26 {
@@ -497,16 +487,15 @@ fn count_substrings_by_char(s : String) -> Array[Int] {
       #|We add this to the count for the starting character.
     ),
   }
-
   count
 }
 
 ///|
 test "count substrings by char" {
   let counts = count_substrings_by_char("abc")
-  assert_eq!(counts[0], 3) // "a", "ab", "abc"
-  assert_eq!(counts[1], 2) // "b", "bc"
-  assert_eq!(counts[2], 1) // "c"
+  assert_eq(counts[0], 3) // "a", "ab", "abc"
+  assert_eq(counts[1], 2) // "b", "bc"
+  assert_eq(counts[2], 1) // "c"
 }
 
 ///|
@@ -523,10 +512,8 @@ fn burrows_wheeler_transform(s : String) -> String {
   if n == 0 {
     return ""
   }
-
   let sa = build_suffix_array_simple(s)
   let bwt : Array[Char] = []
-
   for i = 0; i < n; i = i + 1 {
     // Character before the suffix (with wraparound)
     let idx = (sa[i] - 1 + n) % n
@@ -543,7 +530,6 @@ fn burrows_wheeler_transform(s : String) -> String {
       #|making it highly compressible.
     ),
   }
-
   String::from_array(bwt)
 }
 
@@ -552,7 +538,7 @@ test "burrows wheeler transform" {
   let bwt = burrows_wheeler_transform("banana")
   // SA: [5, 3, 1, 0, 4, 2] (sorted: "a", "ana", "anana", "banana", "na", "nana")
   // BWT[i] = chars[(SA[i]-1+n) % n]: indices [4,2,0,5,3,1] -> chars: [n,n,b,a,a,a]
-  assert_eq!(bwt, "nnbaaa")
+  assert_eq(bwt, "nnbaaa")
 }
 
 ///|
@@ -574,7 +560,6 @@ fn smallest_rotation(s : String) -> String {
   for i = 0; i < n; i = i + 1 {
     doubled.push(chars[i])
   }
-
   let doubled_str = String::from_array(doubled)
   let sa = build_suffix_array_simple(doubled_str)
 
@@ -604,7 +589,7 @@ fn smallest_rotation(s : String) -> String {
 
 ///|
 test "smallest rotation" {
-  assert_eq!(smallest_rotation("bca"), "abc")
-  assert_eq!(smallest_rotation("cba"), "acb")
-  assert_eq!(smallest_rotation("abc"), "abc")
+  assert_eq(smallest_rotation("bca"), "abc")
+  assert_eq(smallest_rotation("cba"), "acb")
+  assert_eq(smallest_rotation("abc"), "abc")
 }

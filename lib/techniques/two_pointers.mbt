@@ -53,9 +53,9 @@ fn two_sum_two_pointer(arr : ArrayView[Int], target : Int) -> (Int, Int)? {
 ///|
 test "two sum sorted" {
   let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-  assert_eq!(two_sum_two_pointer(arr[:], 10), Some((0, 8))) // 1 + 9
-  assert_eq!(two_sum_two_pointer(arr[:], 7), Some((0, 5))) // 1 + 6
-  assert_eq!(two_sum_two_pointer(arr[:], 100), None)
+  assert_eq(two_sum_two_pointer(arr[:], 10), Some((0, 8))) // 1 + 9
+  assert_eq(two_sum_two_pointer(arr[:], 7), Some((0, 5))) // 1 + 6
+  assert_eq(two_sum_two_pointer(arr[:], 100), None)
 }
 
 ///|
@@ -73,7 +73,6 @@ fn three_sum(arr : Array[Int], target : Int) -> Array[(Int, Int, Int)] {
   // Sort the array first
   let sorted = arr.copy()
   sorted.sort()
-
   for i = 0; i < n - 2; i = i + 1 {
     // Skip duplicates for first element
     if i > 0 && sorted[i] == sorted[i - 1] {
@@ -105,12 +104,15 @@ fn three_sum(arr : Array[Int], target : Int) -> Array[(Int, Int, Int)] {
       #|Skipping duplicates ensures each unique triplet is found exactly once.
     ),
   }
-
   result
 }
 
 ///|
-fn skip_duplicates_forward(arr : ArrayView[Int], left : Int, right : Int) -> Int {
+fn skip_duplicates_forward(
+  arr : ArrayView[Int],
+  left : Int,
+  right : Int,
+) -> Int {
   for l = left + 1; l < right && arr[l] == arr[left]; {
     continue l + 1
   } else {
@@ -124,7 +126,11 @@ fn skip_duplicates_forward(arr : ArrayView[Int], left : Int, right : Int) -> Int
 }
 
 ///|
-fn skip_duplicates_backward(arr : ArrayView[Int], left : Int, right : Int) -> Int {
+fn skip_duplicates_backward(
+  arr : ArrayView[Int],
+  left : Int,
+  right : Int,
+) -> Int {
   for r = right - 1; r > left && arr[r] == arr[right]; {
     continue r - 1
   } else {
@@ -141,7 +147,7 @@ fn skip_duplicates_backward(arr : ArrayView[Int], left : Int, right : Int) -> In
 test "three sum" {
   let arr = [-1, 0, 1, 2, -1, -4]
   let result = three_sum(arr, 0)
-  assert_eq!(result.length(), 2)
+  assert_eq(result.length(), 2)
 }
 
 ///|
@@ -191,7 +197,7 @@ fn max_water_container(heights : ArrayView[Int]) -> Int {
 ///|
 test "max water container" {
   let heights = [1, 8, 6, 2, 5, 4, 8, 3, 7]
-  assert_eq!(max_water_container(heights[:]), 49) // indices 1 and 8: min(8,7) * 7
+  assert_eq(max_water_container(heights[:]), 49) // indices 1 and 8: min(8,7) * 7
 }
 
 ///|
@@ -207,8 +213,8 @@ fn trap_water_two_pointer(height : ArrayView[Int]) -> Int {
   if n < 3 {
     return 0
   }
-
-  for left = 0, right = n - 1, left_max = 0, right_max = 0, water = 0; left < right; {
+  for left = 0, right = n - 1, left_max = 0, right_max = 0, water = 0; left <
+     right; {
     if height[left] < height[right] {
       // Left side is limiting
       let new_left_max = if height[left] > left_max {
@@ -251,7 +257,7 @@ fn trap_water_two_pointer(height : ArrayView[Int]) -> Int {
 ///|
 test "trap rain water" {
   let height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
-  assert_eq!(trap_water_two_pointer(height[:]), 6)
+  assert_eq(trap_water_two_pointer(height[:]), 6)
 }
 
 ///|
@@ -270,7 +276,6 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
 
   // Deque stores indices, front is maximum
   let deque : Array[Int] = []
-
   for i = 0; i < n; i = i + 1 {
     // Remove elements outside window
     for {
@@ -291,7 +296,6 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
         break
       }
     }
-
     deque.push(i)
 
     // Add to result once we have a full window
@@ -318,7 +322,6 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
       #|TERMINATION: After processing all elements, result has n-k+1 maximums.
     ),
   }
-
   result
 }
 
@@ -326,13 +329,13 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
 test "sliding window maximum" {
   let nums = [1, 3, -1, -3, 5, 3, 6, 7]
   let result = sliding_window_max_deque(nums[:], 3)
-  assert_eq!(result.length(), 6)
-  assert_eq!(result[0], 3)
-  assert_eq!(result[1], 3)
-  assert_eq!(result[2], 5)
-  assert_eq!(result[3], 5)
-  assert_eq!(result[4], 6)
-  assert_eq!(result[5], 7)
+  assert_eq(result.length(), 6)
+  assert_eq(result[0], 3)
+  assert_eq(result[1], 3)
+  assert_eq(result[2], 5)
+  assert_eq(result[3], 5)
+  assert_eq(result[4], 6)
+  assert_eq(result[5], 7)
 }
 
 ///|
@@ -345,7 +348,6 @@ fn min_window_substring(s : String, t : String) -> String {
   if t.length() == 0 || s.length() < t.length() {
     return ""
   }
-
   let s_chars = s.to_array()
   let t_chars = t.to_array()
   let s_len = s_chars.length()
@@ -367,8 +369,8 @@ fn min_window_substring(s : String, t : String) -> String {
 
   // Window character counts
   let window : Array[Int] = Array::make(128, 0)
-
-  for left = 0, right = 0, formed = 0, min_len = s_len + 1, min_left = 0; right < s_len; {
+  for left = 0, right = 0, formed = 0, min_len = s_len + 1, min_left = 0; right <
+     s_len; {
     // Expand window by including s[right]
     let c = s_chars[right].to_int()
     window[c] = window[c] + 1
@@ -384,8 +386,8 @@ fn min_window_substring(s : String, t : String) -> String {
     if new_formed == required_count {
       // Try to minimize window
       let (new_left, final_formed, new_min_len, new_min_left) = contract_window(
-        s_chars, required, window, left, right, new_formed, required_count,
-        min_len, min_left,
+        s_chars, required, window, left, right, new_formed, required_count, min_len,
+        min_left,
       )
       continue new_left, right + 1, final_formed, new_min_len, new_min_left
     } else {
@@ -428,9 +430,10 @@ fn contract_window(
   formed : Int,
   required_count : Int,
   min_len : Int,
-  min_left : Int
+  min_left : Int,
 ) -> (Int, Int, Int, Int) {
-  for l = left, f = formed, mlen = min_len, mleft = min_left; f == required_count; {
+  for l = left, f = formed, mlen = min_len, mleft = min_left; f ==
+     required_count; {
     // Update minimum if current window is smaller
     let window_len = right - l + 1
     let (new_mlen, new_mleft) = if window_len < mlen {
@@ -449,7 +452,6 @@ fn contract_window(
     } else {
       f
     }
-
     continue l + 1, new_f, new_mlen, new_mleft
   } else {
     (l, f, mlen, mleft)
@@ -463,9 +465,9 @@ fn contract_window(
 
 ///|
 test "min window substring" {
-  assert_eq!(min_window_substring("ADOBECODEBANC", "ABC"), "BANC")
-  assert_eq!(min_window_substring("a", "a"), "a")
-  assert_eq!(min_window_substring("a", "aa"), "")
+  assert_eq(min_window_substring("ADOBECODEBANC", "ABC"), "BANC")
+  assert_eq(min_window_substring("a", "a"), "a")
+  assert_eq(min_window_substring("a", "aa"), "")
 }
 
 ///|
@@ -481,15 +483,10 @@ fn longest_unique_substring(s : String) -> Int {
 
   // Last seen position of each character
   let last_seen : Array[Int] = Array::make(128, -1)
-
   for i = 0, start = 0, max_len = 0; i < n; i = i + 1 {
     let c = chars[i].to_int()
     // If character seen in current window, move start past it
-    let new_start = if last_seen[c] >= start {
-      last_seen[c] + 1
-    } else {
-      start
-    }
+    let new_start = if last_seen[c] >= start { last_seen[c] + 1 } else { start }
     last_seen[c] = i
     let current_len = i - new_start + 1
     let new_max = if current_len > max_len { current_len } else { max_len }
@@ -515,9 +512,9 @@ fn longest_unique_substring(s : String) -> Int {
 
 ///|
 test "longest unique substring" {
-  assert_eq!(longest_unique_substring("abcabcbb"), 3) // "abc"
-  assert_eq!(longest_unique_substring("bbbbb"), 1) // "b"
-  assert_eq!(longest_unique_substring("pwwkew"), 3) // "wke"
+  assert_eq(longest_unique_substring("abcabcbb"), 3) // "abc"
+  assert_eq(longest_unique_substring("bbbbb"), 1) // "b"
+  assert_eq(longest_unique_substring("pwwkew"), 3) // "wke"
 }
 
 ///|
@@ -535,7 +532,6 @@ fn subarray_sum_equals_k(nums : ArrayView[Int], k : Int) -> Int {
   let offset = 10000 // Handle negative sums
   let count : Array[Int] = Array::make(20001, 0)
   count[offset] = 1 // Empty prefix has sum 0
-
   for i = 0, prefix = 0, result = 0; i < n; i = i + 1 {
     let new_prefix = prefix + nums[i]
     // Count subarrays ending at i with sum = k
@@ -568,10 +564,9 @@ fn subarray_sum_equals_k(nums : ArrayView[Int], k : Int) -> Int {
 ///|
 test "subarray sum equals k" {
   let nums = [1, 1, 1]
-  assert_eq!(subarray_sum_equals_k(nums[:], 2), 2)
-
+  assert_eq(subarray_sum_equals_k(nums[:], 2), 2)
   let nums2 = [1, 2, 3]
-  assert_eq!(subarray_sum_equals_k(nums2[:], 3), 2)
+  assert_eq(subarray_sum_equals_k(nums2[:], 3), 2)
 }
 
 ///|
@@ -588,7 +583,6 @@ fn character_replacement(s : String, k : Int) -> Int {
 
   // Count of each character in current window
   let count : Array[Int] = Array::make(26, 0)
-
   for left = 0, right = 0, max_count = 0, max_len = 0; right < n; {
     // Add right character to window
     let c = chars[right].to_int() - 'A'.to_int()
@@ -604,7 +598,11 @@ fn character_replacement(s : String, k : Int) -> Int {
       continue left + 1, right + 1, new_max_count, max_len
     } else {
       // Valid window
-      let new_max_len = if window_size > max_len { window_size } else { max_len }
+      let new_max_len = if window_size > max_len {
+        window_size
+      } else {
+        max_len
+      }
       continue left, right + 1, new_max_count, new_max_len
     }
   } else {
@@ -629,8 +627,8 @@ fn character_replacement(s : String, k : Int) -> Int {
 
 ///|
 test "character replacement" {
-  assert_eq!(character_replacement("ABAB", 2), 4)
-  assert_eq!(character_replacement("AABABBA", 1), 4)
+  assert_eq(character_replacement("ABAB", 2), 4)
+  assert_eq(character_replacement("AABABBA", 1), 4)
 }
 
 ///|
@@ -647,14 +645,12 @@ fn fruit_into_baskets(fruits : ArrayView[Int]) -> Int {
 
   // Use a simpler approach: track last occurrence of each fruit type
   let last_seen : Array[Int] = Array::make(40001, -1) // Assume fruit types 0-40000
-
   for left = 0, right = 0, distinct = 0, max_len = 0; right < n; {
     let fruit = fruits[right]
     let was_seen = last_seen[fruit] >= left
 
     // Update last seen position
     last_seen[fruit] = right
-
     if was_seen {
       // Fruit already in window
       let new_max = if right - left + 1 > max_len {
@@ -727,9 +723,9 @@ fn remove_duplicates(nums : Array[Int]) -> Int {
 ///|
 test "remove duplicates" {
   let nums = [1, 1, 2]
-  assert_eq!(remove_duplicates(nums), 2)
-  assert_eq!(nums[0], 1)
-  assert_eq!(nums[1], 2)
+  assert_eq(remove_duplicates(nums), 2)
+  assert_eq(nums[0], 1)
+  assert_eq(nums[1], 2)
 }
 
 ///|
@@ -765,11 +761,11 @@ fn move_zeroes(nums : Array[Int]) -> Unit {
 test "move zeroes" {
   let nums = [0, 1, 0, 3, 12]
   move_zeroes(nums)
-  assert_eq!(nums[0], 1)
-  assert_eq!(nums[1], 3)
-  assert_eq!(nums[2], 12)
-  assert_eq!(nums[3], 0)
-  assert_eq!(nums[4], 0)
+  assert_eq(nums[0], 1)
+  assert_eq(nums[1], 3)
+  assert_eq(nums[2], 12)
+  assert_eq(nums[3], 0)
+  assert_eq(nums[4], 0)
 }
 
 ///|
@@ -783,7 +779,6 @@ fn sort_colors(nums : Array[Int]) -> Unit {
   if n == 0 {
     return
   }
-
   for low = 0, mid = 0, high = n - 1; mid <= high; {
     if nums[mid] == 0 {
       // Swap with low, advance both
@@ -826,12 +821,12 @@ fn sort_colors(nums : Array[Int]) -> Unit {
 test "sort colors" {
   let nums = [2, 0, 2, 1, 1, 0]
   sort_colors(nums)
-  assert_eq!(nums[0], 0)
-  assert_eq!(nums[1], 0)
-  assert_eq!(nums[2], 1)
-  assert_eq!(nums[3], 1)
-  assert_eq!(nums[4], 2)
-  assert_eq!(nums[5], 2)
+  assert_eq(nums[0], 0)
+  assert_eq(nums[1], 0)
+  assert_eq(nums[2], 1)
+  assert_eq(nums[3], 1)
+  assert_eq(nums[4], 2)
+  assert_eq(nums[5], 2)
 }
 
 ///|
@@ -841,7 +836,6 @@ test "sort colors" {
 /// Returns the partition index.
 fn partition(arr : Array[Int], lo : Int, hi : Int) -> Int {
   let pivot = arr[hi]
-
   for i = lo, j = lo; j < hi; {
     if arr[j] < pivot {
       // Swap arr[i] and arr[j]
@@ -882,9 +876,9 @@ test "partition" {
   // All elements before p should be < arr[p]
   // All elements after p should be >= arr[p]
   for i = 0; i < p; i = i + 1 {
-    assert_true!(arr[i] < arr[p])
+    assert_true(arr[i] < arr[p])
   }
   for i = p + 1; i < 8; i = i + 1 {
-    assert_true!(arr[i] >= arr[p])
+    assert_true(arr[i] >= arr[p])
   }
 }

@@ -34,9 +34,7 @@ fn mod_exp(base : Int64, exp : Int64, m : Int64) -> Int64 {
 /// Uses the decomposition n-1 = d × 2^r where d is odd.
 #warnings("+missing_invariant+missing_reasoning")
 fn is_strong_probable_prime(n : Int64, a : Int64) -> Bool {
-  guard n > 2L && n % 2L != 0L else {
-    return n == 2L
-  }
+  guard n > 2L && n % 2L != 0L else { return n == 2L }
 
   // Factor out powers of 2 from n-1
   // Write n-1 = d × 2^r where d is odd
@@ -124,11 +122,9 @@ fn is_prime_32(n : Int) -> Bool {
   if n % 2 == 0 {
     return false
   }
-
   let n64 = n.to_int64()
   // These witnesses are proven sufficient for all n < 2^32
   let witnesses : Array[Int64] = [2L, 7L, 61L]
-
   for i = 0 {
     if i >= witnesses.length() {
       break true
@@ -193,7 +189,12 @@ fn extended_gcd_64(a : Int64, b : Int64) -> (Int64, Int64, Int64) {
 ///|
 /// Solve x ≡ a1 (mod m1), x ≡ a2 (mod m2) where gcd(m1, m2) = 1.
 /// Returns (solution, combined_modulus).
-fn solve_crt_pair(a1 : Int64, m1 : Int64, a2 : Int64, m2 : Int64) -> (Int64, Int64) {
+fn solve_crt_pair(
+  a1 : Int64,
+  m1 : Int64,
+  a2 : Int64,
+  m2 : Int64,
+) -> (Int64, Int64) {
   let (g, p, _) = extended_gcd_64(m1, m2)
   // By CRT construction: x = a1 + m1 * p * (a2 - a1) / g
   // When g = 1: x = a1 + m1 * p * (a2 - a1)
@@ -215,7 +216,6 @@ fn solve_crt_pair(a1 : Int64, m1 : Int64, a2 : Int64, m2 : Int64) -> (Int64, Int
 fn chinese_remainder(congruences : ArrayView[(Int64, Int64)]) -> (Int64, Int64) {
   guard congruences.length() > 0 else { return (0L, 1L) }
   let (a0, m0) = congruences[0]
-
   for i = 1, acc_a = a0, acc_m = m0 {
     if i >= congruences.length() {
       break (acc_a, acc_m)
@@ -293,9 +293,7 @@ test "chinese_remainder" {
 ///   gcd(a, b) = gcd(|a-b|, min(a,b)) when both odd
 #warnings("+missing_invariant+missing_reasoning")
 fn binary_gcd(a : Int, b : Int) -> Int {
-  guard a > 0 && b > 0 else {
-    return if a > 0 { a } else { b }
-  }
+  guard a > 0 && b > 0 else { return if a > 0 { a } else { b } }
 
   // Count common factors of 2
   let shift = for k = 0, x = a | b {
@@ -324,7 +322,8 @@ fn binary_gcd(a : Int, b : Int) -> Int {
       continue x / 2
     }
   } where {
-    invariant: x >= 1 && gcd_spec(x, b / (1 << shift)) == gcd_spec(a, b) / (1 << shift),
+    invariant: x >= 1 &&
+    gcd_spec(x, b / (1 << shift)) == gcd_spec(a, b) / (1 << shift),
     reasoning: (
       #|Since b has factor 2^shift, and we're looking for gcd after extracting
       #|common 2s, removing extra 2s from a doesn't change the odd part of gcd.
@@ -419,8 +418,8 @@ let de_bruijn_32 : Int = 0x077CB531
 ///|
 /// Lookup table: de_bruijn_table[((x & -x) * de_bruijn_32) >> 27] = ctz(x & -x)
 let de_bruijn_table : Array[Int] = [
-  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21,
-  19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9,
+  0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
+  16, 7, 26, 12, 18, 6, 11, 5, 10, 9,
 ]
 
 ///|
@@ -439,7 +438,6 @@ fn count_trailing_zeros(n : Int) -> Int {
 
   // Use top 5 bits as index
   let index = (hash >> 27) & 0x1F
-
   de_bruijn_table[index]
 }
 
@@ -465,7 +463,6 @@ test "count_trailing_zeros" {
 #warnings("+missing_invariant+missing_reasoning")
 fn ilog2(n : Int) -> Int {
   guard n > 0 else { return -1 }
-
   for x = n, log = 0 {
     if x <= 1 {
       break log
@@ -475,7 +472,10 @@ fn ilog2(n : Int) -> Int {
       continue x >> 1, log + 1
     }
   } where {
-    invariant: x >= 1 && log >= 0 && n >= x * (1 << log) && n < (x + 1) * (1 << log),
+    invariant: x >= 1 &&
+    log >= 0 &&
+    n >= x * (1 << log) &&
+    n < (x + 1) * (1 << log),
     reasoning: (
       #|INVARIANT (Logarithm bounds):
       #|x × 2^log ≤ n < (x+1) × 2^log
@@ -560,7 +560,6 @@ fn is_perfect_power(n : Int) -> Bool {
 
   // Try each possible exponent b from 2 to log2(n)
   let max_exp = ilog2(n)
-
   for b = 2 {
     if b > max_exp {
       break false
@@ -617,7 +616,11 @@ fn int_pow_checked(a : Int, b : Int, max_val : Int) -> Int {
     if exp == 0 {
       break acc
     } else if exp % 2 == 0 {
-      let new_base = if base > max_val / base { max_val + 1 } else { base * base }
+      let new_base = if base > max_val / base {
+        max_val + 1
+      } else {
+        base * base
+      }
       continue new_base, exp / 2, acc
     } else {
       let new_acc = if acc > max_val / base { max_val + 1 } else { acc * base }

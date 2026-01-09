@@ -15,7 +15,7 @@
 fn bellman_ford_with_neg_cycle(
   n : Int,
   edges : ArrayView[(Int, Int, Int)], // (from, to, weight)
-  source : Int
+  source : Int,
 ) -> (Array[Int], Bool) {
   // Bool indicates if negative cycle exists
   let inf = 2147483647
@@ -63,7 +63,6 @@ fn bellman_ford_with_neg_cycle(
       break
     }
   }
-
   (dist, has_negative_cycle)
 }
 
@@ -72,11 +71,11 @@ test "bellman ford" {
   // Graph: 0 -> 1 (4), 0 -> 2 (5), 1 -> 2 (-3), 2 -> 3 (4)
   let edges = [(0, 1, 4), (0, 2, 5), (1, 2, -3), (2, 3, 4)]
   let (dist, has_neg) = bellman_ford_with_neg_cycle(4, edges[:], 0)
-  assert_eq!(has_neg, false)
-  assert_eq!(dist[0], 0)
-  assert_eq!(dist[1], 4)
-  assert_eq!(dist[2], 1) // 0 -> 1 -> 2 = 4 + (-3) = 1
-  assert_eq!(dist[3], 5) // 0 -> 1 -> 2 -> 3 = 1 + 4 = 5
+  assert_eq(has_neg, false)
+  assert_eq(dist[0], 0)
+  assert_eq(dist[1], 4)
+  assert_eq(dist[2], 1) // 0 -> 1 -> 2 = 4 + (-3) = 1
+  assert_eq(dist[3], 5) // 0 -> 1 -> 2 -> 3 = 1 + 4 = 5
 }
 
 ///|
@@ -84,7 +83,7 @@ test "bellman ford negative cycle" {
   // Graph with negative cycle: 0 -> 1 (1), 1 -> 2 (1), 2 -> 0 (-3)
   let edges = [(0, 1, 1), (1, 2, 1), (2, 0, -3)]
   let (_, has_neg) = bellman_ford_with_neg_cycle(3, edges[:], 0)
-  assert_eq!(has_neg, true)
+  assert_eq(has_neg, true)
 }
 
 ///|
@@ -150,7 +149,6 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
       #|TERMINATION: After all vertices, dist[i][j] = true shortest path.
     ),
   }
-
   dist
 }
 
@@ -159,19 +157,13 @@ test "floyd warshall" {
   // Graph: 0 -> 1 (3), 0 -> 3 (7), 1 -> 0 (8), 1 -> 2 (2)
   //        2 -> 0 (5), 2 -> 3 (1), 3 -> 0 (2)
   let inf = 2147483647 / 2
-  let adj = [
-    [0, 3, inf, 7],
-    [8, 0, 2, inf],
-    [5, inf, 0, 1],
-    [2, inf, inf, 0],
-  ]
+  let adj = [[0, 3, inf, 7], [8, 0, 2, inf], [5, inf, 0, 1], [2, inf, inf, 0]]
   let dist = floyd_warshall_all_pairs(adj)
-
-  assert_eq!(dist[0][0], 0)
-  assert_eq!(dist[0][1], 3)
-  assert_eq!(dist[0][2], 5) // 0 -> 1 -> 2
-  assert_eq!(dist[0][3], 6) // 0 -> 1 -> 2 -> 3
-  assert_eq!(dist[3][1], 5) // 3 -> 0 -> 1
+  assert_eq(dist[0][0], 0)
+  assert_eq(dist[0][1], 3)
+  assert_eq(dist[0][2], 5) // 0 -> 1 -> 2
+  assert_eq(dist[0][3], 6) // 0 -> 1 -> 2 -> 3
+  assert_eq(dist[3][1], 5) // 3 -> 0 -> 1
 }
 
 ///|
@@ -186,7 +178,6 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
   for i = 0; i < n; i = i + 1 {
     adj.push([])
   }
-
   for e = 0; e < edges.length(); e = e + 1 {
     let (u, v) = edges[e]
     adj[u].push(v)
@@ -200,9 +191,7 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
       queue.push(i)
     }
   }
-
   let result : Array[Int] = []
-
   for front = 0; front < queue.length(); {
     let u = queue[front]
     result.push(u)
@@ -217,7 +206,11 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
     }
     continue front + 1
   } else {
-    if result.length() == n { Some(result) } else { None }
+    if result.length() == n {
+      Some(result)
+    } else {
+      None
+    }
   } where {
     invariant: front >= 0 && front <= queue.length(),
     reasoning: (
@@ -240,7 +233,7 @@ test "topological sort kahn" {
   // DAG: 0 -> 1, 0 -> 2, 1 -> 3, 2 -> 3
   let edges = [(0, 1), (0, 2), (1, 3), (2, 3)]
   let result = topological_sort_kahn(4, edges[:])
-  assert_true!(result is Some(_))
+  assert_true(result is Some(_))
 }
 
 ///|
@@ -257,7 +250,6 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
       // BFS from this vertex
       let queue : Array[Int] = [start]
       color[start] = 0
-
       for front = 0; front < queue.length(); {
         let u = queue[front]
         for i = 0; i < adj[u].length(); i = i + 1 {
@@ -285,7 +277,6 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
       #|Components visited so far are all bipartite
     ),
   }
-
   true
 }
 
@@ -293,11 +284,11 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
 test "bipartite" {
   // Bipartite graph: 0 -- 1, 0 -- 3, 1 -- 2, 2 -- 3
   let adj = [[1, 3], [0, 2], [1, 3], [0, 2]]
-  assert_eq!(is_bipartite(4, adj), true)
+  assert_eq(is_bipartite(4, adj), true)
 
   // Non-bipartite: triangle 0 -- 1 -- 2 -- 0
   let adj2 = [[1, 2], [0, 2], [0, 1]]
-  assert_eq!(is_bipartite(3, adj2), false)
+  assert_eq(is_bipartite(3, adj2), false)
 }
 
 ///|
@@ -310,7 +301,6 @@ fn has_cycle_directed(n : Int, adj : Array[Array[Int]]) -> Bool {
   let gray = 1
   let black = 2
   let state = Array::make(n, white)
-
   for start = 0; start < n; start = start + 1 {
     if state[start] == white {
       if dfs_has_cycle(adj, state, start, gray, black) {
@@ -324,7 +314,6 @@ fn has_cycle_directed(n : Int, adj : Array[Array[Int]]) -> Bool {
       #|Vertices in BLACK state have been fully explored.
     ),
   }
-
   false
 }
 
@@ -334,10 +323,9 @@ fn dfs_has_cycle(
   state : Array[Int],
   u : Int,
   gray : Int,
-  black : Int
+  black : Int,
 ) -> Bool {
   state[u] = gray // Mark as in-progress
-
   for i = 0; i < adj[u].length(); i = i + 1 {
     let v = adj[u][i]
     if state[v] == gray {
@@ -352,7 +340,6 @@ fn dfs_has_cycle(
       #|Explore all neighbors. If we see a GRAY vertex, we found a back edge (cycle).
     ),
   }
-
   state[u] = black // Mark as finished
   false
 }
@@ -361,11 +348,11 @@ fn dfs_has_cycle(
 test "cycle detection directed" {
   // Acyclic: 0 -> 1 -> 2
   let adj = [[1], [2], []]
-  assert_eq!(has_cycle_directed(3, adj), false)
+  assert_eq(has_cycle_directed(3, adj), false)
 
   // Cyclic: 0 -> 1 -> 2 -> 0
   let adj2 = [[1], [2], [0]]
-  assert_eq!(has_cycle_directed(3, adj2), true)
+  assert_eq(has_cycle_directed(3, adj2), true)
 }
 
 ///|
@@ -378,7 +365,6 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
   // First pass: get finish order
   let visited = Array::make(n, false)
   let order : Array[Int] = []
-
   for i = 0; i < n; i = i + 1 {
     if not(visited[i]) {
       dfs_order(adj, visited, order, i)
@@ -399,7 +385,6 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
   // Second pass: count SCCs
   let visited2 = Array::make(n, false)
   let mut scc_count = 0
-
   for i = n - 1; i >= 0; i = i - 1 {
     let v = order[i]
     if not(visited2[v]) {
@@ -413,7 +398,6 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
       #|Each DFS in reverse graph finds one SCC
     ),
   }
-
   scc_count
 }
 
@@ -422,7 +406,7 @@ fn dfs_order(
   adj : Array[Array[Int]],
   visited : Array[Bool],
   order : Array[Int],
-  u : Int
+  u : Int,
 ) -> Unit {
   visited[u] = true
   for i = 0; i < adj[u].length(); i = i + 1 {
@@ -450,7 +434,7 @@ test "count sccs" {
   // Graph with 3 SCCs: {0,1,2}, {3}, {4}
   // 0 <-> 1, 1 -> 2, 2 -> 0, 2 -> 3, 3 -> 4
   let adj = [[1], [0, 2], [0, 3], [4], []]
-  assert_eq!(count_sccs(5, adj), 3)
+  assert_eq(count_sccs(5, adj), 3)
 }
 
 ///|
@@ -463,14 +447,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
   if n == 0 {
     return 0
   }
-
   let inf = 2147483647
   let in_mst = Array::make(n, false)
   let key = Array::make(n, inf) // Minimum edge weight to connect to MST
   key[0] = 0
-
   let mut total_weight = 0
-
   for count = 0; count < n; count = count + 1 {
     // Find minimum key vertex not in MST
     let mut min_key = inf
@@ -481,11 +462,9 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
         u = v
       }
     }
-
     if u == -1 {
       break // Disconnected graph
     }
-
     in_mst[u] = true
     total_weight = total_weight + key[u]
 
@@ -508,7 +487,6 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
       #|This is the cut property: minimum edge crossing any cut is in some MST.
     ),
   }
-
   total_weight
 }
 
@@ -530,7 +508,7 @@ test "prim mst" {
     [(2, 2), (6, 6), (7, 7)], // 8
   ]
   // MST weight = 4 + 8 + 2 + 4 + 2 + 1 + 7 + 9 = 37
-  assert_eq!(prim_mst(9, adj), 37)
+  assert_eq(prim_mst(9, adj), 37)
 }
 
 ///|
@@ -560,15 +538,12 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
   }
-
   let mut total_weight = 0
   let mut edges_added = 0
-
   for i = 0; i < sorted_edges.length() && edges_added < n - 1; {
     let (u, v, w) = sorted_edges[i]
     let root_u = find_root(parent, u)
     let root_v = find_root(parent, v)
-
     if root_u != root_v {
       // Union
       if rank[root_u] < rank[root_v] {
@@ -622,10 +597,20 @@ fn find_root(parent : Array[Int], x : Int) -> Int {
 test "kruskal mst" {
   // Same graph as Prim test
   let edges = [
-    (0, 1, 4), (0, 7, 8), (1, 2, 8), (1, 7, 11),
-    (2, 3, 7), (2, 5, 4), (2, 8, 2), (3, 4, 9),
-    (3, 5, 14), (4, 5, 10), (5, 6, 2), (6, 7, 1),
-    (6, 8, 6), (7, 8, 7),
+    (0, 1, 4),
+    (0, 7, 8),
+    (1, 2, 8),
+    (1, 7, 11),
+    (2, 3, 7),
+    (2, 5, 4),
+    (2, 8, 2),
+    (3, 4, 9),
+    (3, 5, 14),
+    (4, 5, 10),
+    (5, 6, 2),
+    (6, 7, 1),
+    (6, 8, 6),
+    (7, 8, 7),
   ]
-  assert_eq!(kruskal_mst(9, edges), 37)
+  assert_eq(kruskal_mst(9, edges), 37)
 }

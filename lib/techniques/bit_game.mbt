@@ -33,10 +33,10 @@ fn count_set_bits(n : Int) -> Int {
 
 ///|
 test "count set bits" {
-  assert_eq!(count_set_bits(0), 0)
-  assert_eq!(count_set_bits(1), 1)
-  assert_eq!(count_set_bits(7), 3) // 111
-  assert_eq!(count_set_bits(255), 8) // 11111111
+  assert_eq(count_set_bits(0), 0)
+  assert_eq(count_set_bits(1), 1)
+  assert_eq(count_set_bits(7), 3) // 111
+  assert_eq(count_set_bits(255), 8) // 11111111
 }
 
 ///|
@@ -50,11 +50,11 @@ fn is_power_of_two(n : Int) -> Bool {
 
 ///|
 test "power of two" {
-  assert_eq!(is_power_of_two(1), true) // 2^0
-  assert_eq!(is_power_of_two(2), true) // 2^1
-  assert_eq!(is_power_of_two(3), false)
-  assert_eq!(is_power_of_two(16), true) // 2^4
-  assert_eq!(is_power_of_two(0), false)
+  assert_eq(is_power_of_two(1), true) // 2^0
+  assert_eq(is_power_of_two(2), true) // 2^1
+  assert_eq(is_power_of_two(3), false)
+  assert_eq(is_power_of_two(16), true) // 2^4
+  assert_eq(is_power_of_two(0), false)
 }
 
 ///|
@@ -82,10 +82,9 @@ fn single_number(nums : ArrayView[Int]) -> Int {
 ///|
 test "single number" {
   let nums = [2, 2, 1]
-  assert_eq!(single_number(nums[:]), 1)
-
+  assert_eq(single_number(nums[:]), 1)
   let nums2 = [4, 1, 2, 1, 2]
-  assert_eq!(single_number(nums2[:]), 4)
+  assert_eq(single_number(nums2[:]), 4)
 }
 
 ///|
@@ -94,7 +93,6 @@ test "single number" {
 /// If array contains [0, n] with one missing, XOR all values and indices.
 fn missing_number(nums : ArrayView[Int]) -> Int {
   let n = nums.length()
-
   for i = 0, result = n; i < n; i = i + 1 {
     continue i + 1, result ^ i ^ nums[i]
   } else {
@@ -114,13 +112,11 @@ fn missing_number(nums : ArrayView[Int]) -> Int {
 ///|
 test "missing number" {
   let nums = [3, 0, 1]
-  assert_eq!(missing_number(nums[:]), 2)
-
+  assert_eq(missing_number(nums[:]), 2)
   let nums2 = [0, 1]
-  assert_eq!(missing_number(nums2[:]), 2)
-
+  assert_eq(missing_number(nums2[:]), 2)
   let nums3 = [9, 6, 4, 2, 3, 5, 7, 0, 1]
-  assert_eq!(missing_number(nums3[:]), 8)
+  assert_eq(missing_number(nums3[:]), 8)
 }
 
 ///|
@@ -153,7 +149,7 @@ fn reverse_bits(n : Int) -> Int {
 test "reverse bits" {
   // 0b00000010100101000001111010011100 = 43261596
   // reversed = 0b00111001011110000010100101000000 = 964176192
-  assert_eq!(reverse_bits(43261596), 964176192)
+  assert_eq(reverse_bits(43261596), 964176192)
 }
 
 ///|
@@ -164,7 +160,7 @@ fn hamming_distance(x : Int, y : Int) -> Int {
 
 ///|
 test "hamming distance" {
-  assert_eq!(hamming_distance(1, 4), 2) // 001 vs 100
+  assert_eq(hamming_distance(1, 4), 2) // 001 vs 100
 }
 
 ///|
@@ -176,7 +172,6 @@ fn generate_subsets(elements : ArrayView[Int]) -> Array[Array[Int]] {
   let n = elements.length()
   let total = 1 << n // 2^n
   let result : Array[Array[Int]] = []
-
   for mask = 0; mask < total; mask = mask + 1 {
     let subset : Array[Int] = []
     for i = 0; i < n; i = i + 1 {
@@ -194,7 +189,6 @@ fn generate_subsets(elements : ArrayView[Int]) -> Array[Array[Int]] {
       #|This generates all 2^n possible combinations.
     ),
   }
-
   result
 }
 
@@ -202,7 +196,7 @@ fn generate_subsets(elements : ArrayView[Int]) -> Array[Array[Int]] {
 test "generate subsets" {
   let elements = [1, 2, 3]
   let subsets = generate_subsets(elements[:])
-  assert_eq!(subsets.length(), 8) // 2^3 = 8
+  assert_eq(subsets.length(), 8) // 2^3 = 8
 }
 
 ///|
@@ -214,7 +208,6 @@ test "generate subsets" {
 fn gray_code(n : Int) -> Array[Int] {
   let total = 1 << n
   let result : Array[Int] = []
-
   for i = 0; i < total; i = i + 1 {
     result.push(i ^ (i >> 1))
   } where {
@@ -229,17 +222,16 @@ fn gray_code(n : Int) -> Array[Int] {
       #|causes exactly one bit change in the XOR result.
     ),
   }
-
   result
 }
 
 ///|
 test "gray code" {
   let codes = gray_code(3)
-  assert_eq!(codes.length(), 8)
+  assert_eq(codes.length(), 8)
   // Verify adjacent codes differ by one bit
   for i = 0; i < 7; i = i + 1 {
-    assert_eq!(count_set_bits(codes[i] ^ codes[i + 1]), 1)
+    assert_eq(count_set_bits(codes[i] ^ codes[i + 1]), 1)
   }
 }
 
@@ -252,7 +244,11 @@ test "gray code" {
 /// a non-zero XOR position, and vice versa.
 fn nim_winner(piles : ArrayView[Int]) -> String {
   let xor_sum = nim_xor(piles)
-  if xor_sum == 0 { "Second" } else { "First" }
+  if xor_sum == 0 {
+    "Second"
+  } else {
+    "First"
+  }
 }
 
 ///|
@@ -279,9 +275,9 @@ fn nim_xor(piles : ArrayView[Int]) -> Int {
 
 ///|
 test "nim winner" {
-  assert_eq!(nim_winner([1, 2, 3][:]), "Second") // XOR = 0
-  assert_eq!(nim_winner([1, 2, 4][:]), "First") // XOR = 7
-  assert_eq!(nim_winner([3, 3][:]), "Second") // XOR = 0
+  assert_eq(nim_winner([1, 2, 3][:]), "Second") // XOR = 0
+  assert_eq(nim_winner([1, 2, 4][:]), "First") // XOR = 7
+  assert_eq(nim_winner([3, 3][:]), "Second") // XOR = 0
 }
 
 ///|
@@ -308,14 +304,13 @@ fn nim_winning_move(piles : ArrayView[Int]) -> (Int, Int)? {
       #|bit of xor_sum must appear in some pile.
     ),
   }
-
   None
 }
 
 ///|
 test "nim winning move" {
   let result = nim_winning_move([1, 2, 4][:])
-  assert_true!(result is Some(_))
+  assert_true(result is Some(_))
 }
 
 ///|
@@ -329,9 +324,7 @@ fn sprague_grundy_simple(n : Int) -> Int {
   if n == 0 {
     return 0 // Losing position (can't move)
   }
-
   let sg = Array::make(n + 1, 0)
-
   for i = 1; i <= n; i = i + 1 {
     // Collect SG values of positions reachable in one move
     let reachable : Array[Int] = []
@@ -364,7 +357,6 @@ fn sprague_grundy_simple(n : Int) -> Int {
       #|  Pattern: sg(n) = n mod 4
     ),
   }
-
   sg[n]
 }
 
@@ -377,7 +369,6 @@ fn mex(values : ArrayView[Int]) -> Int {
       present[values[i]] = true
     }
   }
-
   for i = 0; i < present.length(); i = i + 1 {
     if not(present[i]) {
       return i
@@ -395,10 +386,10 @@ fn mex(values : ArrayView[Int]) -> Int {
 ///|
 test "sprague grundy simple" {
   // Pattern: sg(n) = n mod 4
-  assert_eq!(sprague_grundy_simple(0), 0)
-  assert_eq!(sprague_grundy_simple(1), 1)
-  assert_eq!(sprague_grundy_simple(4), 0)
-  assert_eq!(sprague_grundy_simple(5), 1)
+  assert_eq(sprague_grundy_simple(0), 0)
+  assert_eq(sprague_grundy_simple(1), 1)
+  assert_eq(sprague_grundy_simple(4), 0)
+  assert_eq(sprague_grundy_simple(5), 1)
 }
 
 ///|
@@ -410,7 +401,11 @@ test "sprague grundy simple" {
 /// This allows solving complex games by computing SG for each independent part.
 fn combined_game_winner(sg_values : ArrayView[Int]) -> String {
   let xor_sum = nim_xor(sg_values)
-  if xor_sum == 0 { "Second" } else { "First" }
+  if xor_sum == 0 {
+    "Second"
+  } else {
+    "First"
+  }
 }
 
 ///|
@@ -418,7 +413,7 @@ test "combined game" {
   // Game 1: 3 stones (sg=3), Game 2: 5 stones (sg=1), Game 3: 4 stones (sg=0)
   let sg_values = [3, 1, 0]
   // XOR = 3 ^ 1 ^ 0 = 2 != 0, so First wins
-  assert_eq!(combined_game_winner(sg_values[:]), "First")
+  assert_eq(combined_game_winner(sg_values[:]), "First")
 }
 
 ///|
@@ -436,7 +431,6 @@ fn maximum_xor_pair(nums : ArrayView[Int]) -> Int {
   // Build a simple set of all numbers for lookup
   // (In production, use a trie for efficiency)
   let mut max_xor = 0
-
   for i = 0; i < n; i = i + 1 {
     for j = i + 1; j < n; j = j + 1 {
       let xor_val = nums[i] ^ nums[j]
@@ -452,14 +446,13 @@ fn maximum_xor_pair(nums : ArrayView[Int]) -> Int {
       #|This brute force is O(n^2). A trie-based solution achieves O(n * 32).
     ),
   }
-
   max_xor
 }
 
 ///|
 test "maximum xor pair" {
   let nums = [3, 10, 5, 25, 2, 8]
-  assert_eq!(maximum_xor_pair(nums[:]), 28) // 25 ^ 5 = 28
+  assert_eq(maximum_xor_pair(nums[:]), 28) // 25 ^ 5 = 28
 }
 
 ///|
@@ -473,13 +466,10 @@ fn divide_bit(dividend : Int, divisor : Int) -> Int {
   if dividend == 0 {
     return 0
   }
-
   let negative = (dividend < 0) != (divisor < 0)
   let mut dvd = if dividend < 0 { 0 - dividend } else { dividend }
   let dvs = if divisor < 0 { 0 - divisor } else { divisor }
-
   let mut quotient = 0
-
   for ; dvd >= dvs; {
     // Find the largest multiple of divisor that fits
     let mut temp = dvs
@@ -496,7 +486,11 @@ fn divide_bit(dividend : Int, divisor : Int) -> Int {
     dvd = dvd - temp
     quotient = quotient + multiple
   } else {
-    if negative { 0 - quotient } else { quotient }
+    if negative {
+      0 - quotient
+    } else {
+      quotient
+    }
   } where {
     invariant: dvd >= 0,
     reasoning: (
@@ -510,20 +504,20 @@ fn divide_bit(dividend : Int, divisor : Int) -> Int {
 
 ///|
 test "divide bit" {
-  assert_eq!(divide_bit(10, 3), 3)
-  assert_eq!(divide_bit(7, -3), -2)
+  assert_eq(divide_bit(10, 3), 3)
+  assert_eq(divide_bit(7, -3), -2)
 }
 
 ///|
 /// Lowest Set Bit
 fn lowest_set_bit(n : Int) -> Int {
-  n & (-n)
+  n & -n
 }
 
 ///|
 test "lowest set bit" {
-  assert_eq!(lowest_set_bit(12), 4) // 1100 -> lowest is 100 = 4
-  assert_eq!(lowest_set_bit(10), 2) // 1010 -> lowest is 10 = 2
+  assert_eq(lowest_set_bit(12), 4) // 1100 -> lowest is 100 = 4
+  assert_eq(lowest_set_bit(10), 2) // 1010 -> lowest is 10 = 2
 }
 
 ///|
@@ -531,17 +525,17 @@ test "lowest set bit" {
 ///
 /// Useful for enumerating combinations in lexicographic order.
 fn next_with_same_bits(n : Int) -> Int {
-  let c = n & (-n) // Lowest set bit
+  let c = n & -n // Lowest set bit
   let r = n + c // Add to propagate carry
   // ((r XOR n) >> 2) / c gives the trailing bits to add
-  let trailing = (((r ^ n) >> 2) / c)
+  let trailing = ((r ^ n) >> 2) / c
   r | trailing
 }
 
 ///|
 test "next with same bits" {
   // 0b0111 (7) -> 0b1011 (11) -> 0b1101 (13) -> 0b1110 (14)
-  assert_eq!(next_with_same_bits(7), 11)
-  assert_eq!(next_with_same_bits(11), 13)
-  assert_eq!(next_with_same_bits(13), 14)
+  assert_eq(next_with_same_bits(7), 11)
+  assert_eq(next_with_same_bits(11), 13)
+  assert_eq(next_with_same_bits(13), 14)
 }

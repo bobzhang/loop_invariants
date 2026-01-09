@@ -15,10 +15,8 @@
 fn next_greater_element(arr : ArrayView[Int]) -> Array[Int] {
   let n = arr.length()
   guard n > 0 else { return [] }
-
   let result : Array[Int] = Array::make(n, -1)
   let stack : Array[Int] = [] // Indices of elements waiting for their NGE
-
   for i = 0 {
     if i >= n {
       break result
@@ -95,11 +93,9 @@ test "next_greater_element" {
 fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
   let n = arr.length()
   guard n >= k && k > 0 else { return [] }
-
   let result : Array[Int] = []
   // Deque stores indices; values at these indices are monotonic decreasing
   let deque : Array[Int] = []
-
   for i = 0 {
     if i >= n {
       break result
@@ -107,11 +103,13 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
       // Remove elements outside current window from front
       while deque.length() > 0 && deque[0] <= i - k {
         let _ = deque.remove(0)
+
       }
 
       // Remove elements smaller than current from back (they can't be max)
       while deque.length() > 0 && arr[deque[deque.length() - 1]] < arr[i] {
         let _ = deque.pop()
+
       }
 
       // Add current element
@@ -121,7 +119,6 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
       if i >= k - 1 {
         result.push(arr[deque[0]])
       }
-
       continue i + 1
     }
   } where {
@@ -208,7 +205,8 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
       let curr_height = if i == n { 0 } else { heights[i] }
 
       // Pop bars taller than current - they can't extend further right
-      while stack.length() > 0 && heights[stack[stack.length() - 1]] > curr_height {
+      while stack.length() > 0 &&
+            heights[stack[stack.length() - 1]] > curr_height {
         let h_idx = stack.pop().unwrap()
         let height = heights[h_idx]
 
@@ -218,13 +216,11 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
         } else {
           i - stack[stack.length() - 1] - 1
         }
-
         let area = height * width
         if area > max_area {
           max_area = area
         }
       }
-
       stack.push(i)
       continue i + 1
     }
@@ -280,10 +276,8 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
 test "largest_rectangle_histogram" {
   let heights : Array[Int] = [2, 1, 5, 6, 2, 3]
   assert_eq(largest_rectangle_histogram(heights[:]), 10) // 5*2 = 10 (bars 5,6)
-
   let heights2 : Array[Int] = [2, 4]
   assert_eq(largest_rectangle_histogram(heights2[:]), 4) // 2*2 or 4*1
-
   let heights3 : Array[Int] = [6, 2, 5, 4, 5, 1, 6]
   assert_eq(largest_rectangle_histogram(heights3[:]), 12) // 4*3 = 12
 }
@@ -304,22 +298,18 @@ fn trap_rain_water(heights : ArrayView[Int]) -> Int {
   for lo = 0, hi = n - 1, left_max = 0, right_max = 0, water = 0 {
     if lo >= hi {
       break water
-    } else {
-      if heights[lo] < heights[hi] {
-        if heights[lo] >= left_max {
-          continue lo + 1, hi, heights[lo], right_max, water
-        } else {
-          let trapped = left_max - heights[lo]
-          continue lo + 1, hi, left_max, right_max, water + trapped
-        }
+    } else if heights[lo] < heights[hi] {
+      if heights[lo] >= left_max {
+        continue lo + 1, hi, heights[lo], right_max, water
       } else {
-        if heights[hi] >= right_max {
-          continue lo, hi - 1, left_max, heights[hi], water
-        } else {
-          let trapped = right_max - heights[hi]
-          continue lo, hi - 1, left_max, right_max, water + trapped
-        }
+        let trapped = left_max - heights[lo]
+        continue lo + 1, hi, left_max, right_max, water + trapped
       }
+    } else if heights[hi] >= right_max {
+      continue lo, hi - 1, left_max, heights[hi], water
+    } else {
+      let trapped = right_max - heights[hi]
+      continue lo, hi - 1, left_max, right_max, water + trapped
     }
   } where {
     invariant: 0 <= lo && lo <= hi + 1 && hi < n && water >= 0,
@@ -376,7 +366,6 @@ fn trap_rain_water(heights : ArrayView[Int]) -> Int {
 test "trap_rain_water" {
   let heights : Array[Int] = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
   assert_eq(trap_rain_water(heights[:]), 6)
-
   let heights2 : Array[Int] = [4, 2, 0, 3, 2, 5]
   assert_eq(trap_rain_water(heights2[:]), 9)
 }
@@ -393,7 +382,6 @@ test "trap_rain_water" {
 fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
   let n = arr.length()
   guard n > 0 else { return 0 }
-
   let modulus = 1000000007
 
   // For each element, find how many subarrays have it as minimum
@@ -408,8 +396,13 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
   for i = 0; i < n; i = i + 1 {
     while stack.length() > 0 && arr[stack[stack.length() - 1]] >= arr[i] {
       let _ = stack.pop()
+
     }
-    left[i] = if stack.length() == 0 { i + 1 } else { i - stack[stack.length() - 1] }
+    left[i] = if stack.length() == 0 {
+      i + 1
+    } else {
+      i - stack[stack.length() - 1]
+    }
     stack.push(i)
   }
 
@@ -418,8 +411,13 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
   for i = n - 1; i >= 0; i = i - 1 {
     while stack.length() > 0 && arr[stack[stack.length() - 1]] > arr[i] {
       let _ = stack.pop()
+
     }
-    right[i] = if stack.length() == 0 { n - i } else { stack[stack.length() - 1] - i }
+    right[i] = if stack.length() == 0 {
+      n - i
+    } else {
+      stack[stack.length() - 1] - i
+    }
     stack.push(i)
   }
 
@@ -485,10 +483,8 @@ test "sum_subarray_minimums" {
 fn stock_span(prices : ArrayView[Int]) -> Array[Int] {
   let n = prices.length()
   guard n > 0 else { return [] }
-
   let spans : Array[Int] = Array::make(n, 0)
   let stack : Array[Int] = [] // Indices of "dominant" prices
-
   for i = 0 {
     if i >= n {
       break spans
@@ -496,11 +492,15 @@ fn stock_span(prices : ArrayView[Int]) -> Array[Int] {
       // Pop prices smaller than current
       while stack.length() > 0 && prices[stack[stack.length() - 1]] <= prices[i] {
         let _ = stack.pop()
+
       }
 
       // Span extends back to previous larger price (or to start)
-      spans[i] = if stack.length() == 0 { i + 1 } else { i - stack[stack.length() - 1] }
-
+      spans[i] = if stack.length() == 0 {
+        i + 1
+      } else {
+        i - stack[stack.length() - 1]
+      }
       stack.push(i)
       continue i + 1
     }

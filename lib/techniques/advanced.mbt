@@ -38,7 +38,6 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
     let next_slow = get_next(nodes, slow)
     let next_fast_1 = get_next(nodes, fast)
     let next_fast = get_next(nodes, next_fast_1)
-
     if next_fast < 0 || next_fast_1 < 0 {
       // Fast pointer reached end - no cycle
       break None
@@ -88,7 +87,6 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|where k = λ - (μ mod λ). This equals λ - μ mod λ from cycle start.
     ),
   }
-
   guard meet_point is Some(meeting) else { return (false, -1) }
 
   // Phase 2: Find cycle start using the beautiful mathematical property
@@ -136,7 +134,6 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|  From meeting: walk (λ-k) + (n-1)λ = μ steps → reach cycle start
     ),
   }
-
   (true, cycle_start)
 }
 
@@ -253,7 +250,6 @@ fn kmp_search(text : ArrayView[Char], pattern : ArrayView[Char]) -> Int {
     return -1
   }
   let failure = build_kmp_failure(pattern)
-
   for i = 0, j = 0 {
     if i >= text.length() {
       break -1 // Pattern not found
@@ -320,11 +316,9 @@ test "kmp_search" {
   ]
   let pattern : Array[Char] = ['A', 'B', 'A', 'B', 'C', 'A', 'B', 'A', 'B']
   assert_eq(kmp_search(text[:], pattern[:]), 10)
-
   let text2 : Array[Char] = ['A', 'A', 'A', 'A', 'A', 'B']
   let pattern2 : Array[Char] = ['A', 'A', 'A', 'B']
   assert_eq(kmp_search(text2[:], pattern2[:]), 2)
-
   let text3 : Array[Char] = ['H', 'E', 'L', 'L', 'O']
   let pattern3 : Array[Char] = ['W', 'O', 'R', 'L', 'D']
   assert_eq(kmp_search(text3[:], pattern3[:]), -1)
@@ -341,7 +335,7 @@ fn edit_dist_spec(
   s1 : ArrayView[Char],
   i : Int,
   s2 : ArrayView[Char],
-  j : Int
+  j : Int,
 ) -> Int {
   if i == 0 {
     j // Insert j characters
@@ -390,14 +384,12 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       #|empty string to s2[0..j) requires j insertions.
     ),
   }
-
   for i = 1 {
     if i > m {
       break prev[n]
     } else {
       // First column: edit distance from s1[0..i) to empty string
       curr[0] = i
-
       for j = 1 {
         if j > n {
           break
@@ -496,11 +488,9 @@ test "edit_distance" {
   let kitten : Array[Char] = ['k', 'i', 't', 't', 'e', 'n']
   let sitting : Array[Char] = ['s', 'i', 't', 't', 'i', 'n', 'g']
   assert_eq(edit_distance(kitten[:], sitting[:]), 3)
-
   let abc : Array[Char] = ['a', 'b', 'c']
   let abc2 : Array[Char] = ['a', 'b', 'c']
   assert_eq(edit_distance(abc[:], abc2[:]), 0)
-
   let empty : Array[Char] = []
   let hello : Array[Char] = ['h', 'e', 'l', 'l', 'o']
   assert_eq(edit_distance(empty[:], hello[:]), 5)
@@ -558,7 +548,6 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
 
   // Sort points lexicographically (by x, then by y)
   sort_points(points)
-
   let hull : Array[Point] = []
 
   // Build lower hull (left to right)
@@ -619,7 +608,6 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
       #| * hull[k-2]
     ),
   }
-
   let lower_size = hull.length()
 
   // Build upper hull (right to left)
