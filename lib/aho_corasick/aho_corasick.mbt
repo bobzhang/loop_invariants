@@ -1,0 +1,461 @@
+// ============================================================================
+// AHO-CORASICK AUTOMATON - Multi-Pattern String Matching
+// ============================================================================
+//
+// The Aho-Corasick algorithm efficiently finds all occurrences of multiple
+// patterns in a text in O(n + m + z) time, where n is text length, m is total
+// pattern length, and z is number of matches.
+//
+// KEY INSIGHT: We build a trie of all patterns, then add "failure links" that
+// allow us to efficiently transition when a mismatch occurs, similar to KMP
+// but generalized to multiple patterns.
+//
+// STRUCTURE:
+// 1. Trie: A tree where each path from root represents a prefix of some pattern
+// 2. Failure links: Point to longest proper suffix that is also a prefix of some pattern
+// 3. Output links: Chain to find all patterns ending at current position
+//
+// EXAMPLE:
+// Patterns: ["he", "she", "his", "hers"]
+// Text: "ushers"
+//
+// Trie structure:
+//        root
+//       /    \
+//      h      s
+//     / \      \
+//    e   i      h
+//    |   |      |
+//    r   s      e
+//    |
+//    s
+//
+// Failure links allow jumping to 'h' when 'she' fails to extend.
+//
+// INVARIANTS:
+// 1. Trie property: Each node represents a unique prefix of some pattern
+// 2. Failure link: Points to longest proper suffix that exists in trie
+// 3. Output function: Returns all patterns ending at current state
+//
+// TIME COMPLEXITY:
+// - Build: O(m * alphabet_size) where m is total pattern length
+// - Search: O(n + z) where n is text length, z is number of matches
+
+///|
+/// A state in the Aho-Corasick automaton
+priv struct ACState {
+  children : Array[Int] // Transitions for each character (size 256)
+  mut failure : Int // Failure link (-1 for root)
+  output : Array[Int] // Pattern indices that end at this state
+  depth : Int // Depth in trie (length of string reaching this state)
+}
+
+///|
+fn ACState::new(depth : Int) -> ACState {
+  {
+    children: Array::make(256, -1),
+    failure: -1,
+    output: [],
+    depth,
+  }
+}
+
+///|
+/// Aho-Corasick Automaton
+priv struct AhoCorasick {
+  states : Array[ACState]
+  patterns : Array[String]
+}
+
+///|
+fn AhoCorasick::new() -> AhoCorasick {
+  // Initialize with root state
+  let states : Array[ACState] = [ACState::new(0)]
+  { states, patterns: [] }
+}
+
+///|
+/// Add a pattern to the automaton
+/// Must be called before build()
+fn AhoCorasick::add_pattern(self : AhoCorasick, pattern : String) -> Unit {
+  let pattern_idx = self.patterns.length()
+  self.patterns.push(pattern)
+
+  // INVARIANT: state points to the node representing the current prefix
+  // After processing character i, state represents pattern[0..i]
+  let mut state = 0
+  for i = 0; i < pattern.length(); i = i + 1 {
+    let c = pattern[i].to_int()
+    if self.states[state].children[c] < 0 {
+      // Create new state for this character
+      let new_state = self.states.length()
+      self.states.push(ACState::new(i + 1))
+      self.states[state].children[c] = new_state
+    }
+    state = self.states[state].children[c]
+  }
+
+  // Mark this state as accepting for this pattern
+  self.states[state].output.push(pattern_idx)
+}
+
+///|
+/// Build failure links using BFS
+/// REASONING: We process states in BFS order (by depth) because:
+/// - Failure link of state at depth d points to state at depth < d
+/// - So all failure link targets are processed before their sources
+fn AhoCorasick::build(self : AhoCorasick) -> Unit {
+  // BFS queue
+  let queue : Array[Int] = []
+
+  // Initialize: children of root have failure link to root
+  for c = 0; c < 256; c = c + 1 {
+    let child = self.states[0].children[c]
+    if child >= 0 {
+      self.states[child].failure = 0
+      queue.push(child)
+    }
+  }
+
+  // BFS to compute failure links
+  // INVARIANT: When processing state s, all states with depth < depth(s)
+  // have their failure links correctly computed
+  for front = 0; front < queue.length(); front = front + 1 {
+    let state = queue[front]
+
+    for c = 0; c < 256; c = c + 1 {
+      let child = self.states[state].children[c]
+      if child < 0 {
+        continue
+      }
+
+      queue.push(child)
+
+      // Find failure link for child
+      // Follow failure links from parent until we find a state with
+      // transition on c, or reach root
+      //
+      // INVARIANT: f represents suffix of child's string (without last char)
+      // We're looking for longest suffix that also has transition on c
+      let failure = for f = self.states[state].failure; f >= 0; {
+        if self.states[f].children[c] >= 0 {
+          break self.states[f].children[c]
+        }
+        continue self.states[f].failure
+      } else {
+        // Reached root, check if root has transition on c
+        let root_child = self.states[0].children[c]
+        if root_child >= 0 && root_child != child {
+          root_child
+        } else {
+          0
+        }
+      }
+
+      self.states[child].failure = failure
+
+      // Merge output: patterns ending at failure state also end here
+      // (they are suffixes of current string)
+      let failure_output = self.states[failure].output.copy()
+      for i = 0; i < failure_output.length(); i = i + 1 {
+        self.states[child].output.push(failure_output[i])
+      }
+    }
+  } where {
+    invariant: front >= 0 && front <= queue.length(),
+    reasoning: "BFS processes each state once; failure links point to shallower states",
+  }
+}
+
+///|
+/// Search for all pattern occurrences in text
+/// Returns array of (position, pattern_index) pairs
+fn AhoCorasick::search(self : AhoCorasick, text : String) -> Array[(Int, Int)] {
+  let matches : Array[(Int, Int)] = []
+
+  // INVARIANT: state represents the longest suffix of text[0..i] that is
+  // a prefix of some pattern
+  let mut state = 0
+
+  for i = 0; i < text.length(); i = i + 1 {
+    let c = text[i].to_int()
+
+    // Follow failure links until we find a transition on c or reach root
+    // INVARIANT: Each iteration moves to a shorter suffix
+    while state > 0 && self.states[state].children[c] < 0 {
+      state = self.states[state].failure
+    }
+
+    // Take transition if possible
+    if self.states[state].children[c] >= 0 {
+      state = self.states[state].children[c]
+    }
+
+    // Report all patterns ending at current position
+    // Output contains indices of all patterns that are suffixes of current match
+    let outputs = self.states[state].output
+    for j = 0; j < outputs.length(); j = j + 1 {
+      let pattern_idx = outputs[j]
+      let pattern_len = self.patterns[pattern_idx].length()
+      let match_start = i - pattern_len + 1
+      matches.push((match_start, pattern_idx))
+    }
+  }
+
+  matches
+}
+
+///|
+/// Get pattern by index
+fn AhoCorasick::get_pattern(self : AhoCorasick, idx : Int) -> String {
+  self.patterns[idx]
+}
+
+///|
+/// Get number of patterns
+fn AhoCorasick::pattern_count(self : AhoCorasick) -> Int {
+  self.patterns.length()
+}
+
+///|
+/// Get number of states in automaton
+fn AhoCorasick::state_count(self : AhoCorasick) -> Int {
+  self.states.length()
+}
+
+// ============================================================================
+// CONVENIENCE FUNCTIONS
+// ============================================================================
+
+///|
+/// Build automaton from array of patterns
+fn AhoCorasick::from_patterns(patterns : Array[String]) -> AhoCorasick {
+  let ac = AhoCorasick::new()
+  for i = 0; i < patterns.length(); i = i + 1 {
+    ac.add_pattern(patterns[i])
+  }
+  ac.build()
+  ac
+}
+
+///|
+/// Check if text contains any of the patterns
+fn AhoCorasick::contains_any(self : AhoCorasick, text : String) -> Bool {
+  let mut state = 0
+
+  for i = 0; i < text.length(); i = i + 1 {
+    let c = text[i].to_int()
+
+    while state > 0 && self.states[state].children[c] < 0 {
+      state = self.states[state].failure
+    }
+
+    if self.states[state].children[c] >= 0 {
+      state = self.states[state].children[c]
+    }
+
+    if self.states[state].output.length() > 0 {
+      return true
+    }
+  }
+
+  false
+}
+
+///|
+/// Count total number of matches
+fn AhoCorasick::count_matches(self : AhoCorasick, text : String) -> Int {
+  let matches = self.search(text)
+  matches.length()
+}
+
+///|
+/// Find all matches and return as (start, end, pattern) tuples
+fn AhoCorasick::find_all(
+  self : AhoCorasick,
+  text : String
+) -> Array[(Int, Int, String)] {
+  let raw_matches = self.search(text)
+  let result : Array[(Int, Int, String)] = []
+
+  for i = 0; i < raw_matches.length(); i = i + 1 {
+    let (start, pattern_idx) = raw_matches[i]
+    let pattern = self.patterns[pattern_idx]
+    let end = start + pattern.length()
+    result.push((start, end, pattern))
+  }
+
+  result
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+///|
+test "aho corasick basic" {
+  let ac = AhoCorasick::from_patterns(["he", "she", "his", "hers"])
+
+  // Test pattern_count and get_pattern
+  inspect(ac.pattern_count(), content="4")
+  inspect(ac.get_pattern(0), content="he")
+  inspect(ac.get_pattern(1), content="she")
+
+  // Test count_matches
+  inspect(ac.count_matches("ushers"), content="3")
+
+  let matches = ac.search("ushers")
+  // "she" at position 1, "he" at position 2, "hers" at position 2
+  inspect(matches.length(), content="3")
+
+  // Verify matches
+  let found_she = matches.filter(fn(m) { m.1 == 1 }).length() > 0 // "she"
+  let found_he = matches.filter(fn(m) { m.1 == 0 }).length() > 0 // "he"
+  let found_hers = matches.filter(fn(m) { m.1 == 3 }).length() > 0 // "hers"
+  inspect(found_she, content="true")
+  inspect(found_he, content="true")
+  inspect(found_hers, content="true")
+}
+
+///|
+test "aho corasick single pattern" {
+  let ac = AhoCorasick::from_patterns(["abc"])
+
+  let matches = ac.search("abcabcabc")
+  inspect(matches.length(), content="3")
+
+  // Positions: 0, 3, 6
+  inspect(matches[0].0, content="0")
+  inspect(matches[1].0, content="3")
+  inspect(matches[2].0, content="6")
+}
+
+///|
+test "aho corasick overlapping patterns" {
+  let ac = AhoCorasick::from_patterns(["a", "ab", "abc"])
+
+  let matches = ac.search("abc")
+  // "a" at 0, "ab" at 0, "abc" at 0
+  inspect(matches.length(), content="3")
+}
+
+///|
+test "aho corasick no match" {
+  let ac = AhoCorasick::from_patterns(["xyz", "uvw"])
+
+  let matches = ac.search("abcdef")
+  inspect(matches.length(), content="0")
+  inspect(ac.contains_any("abcdef"), content="false")
+}
+
+///|
+test "aho corasick contains any" {
+  let ac = AhoCorasick::from_patterns(["error", "warning", "fatal"])
+
+  inspect(ac.contains_any("this is an error message"), content="true")
+  inspect(ac.contains_any("fatal error occurred"), content="true")
+  inspect(ac.contains_any("all good here"), content="false")
+}
+
+///|
+test "aho corasick repeated pattern" {
+  let ac = AhoCorasick::from_patterns(["aa"])
+
+  let matches = ac.search("aaaa")
+  // Overlapping matches at positions 0, 1, 2
+  inspect(matches.length(), content="3")
+}
+
+///|
+test "aho corasick find all" {
+  let ac = AhoCorasick::from_patterns(["cat", "dog"])
+
+  let results = ac.find_all("the cat and the dog")
+  inspect(results.length(), content="2")
+
+  // First match: "cat" at position 4
+  inspect(results[0].0, content="4")
+  inspect(results[0].1, content="7")
+  inspect(results[0].2, content="cat")
+
+  // Second match: "dog" at position 16
+  inspect(results[1].0, content="16")
+  inspect(results[1].1, content="19")
+  inspect(results[1].2, content="dog")
+}
+
+///|
+test "aho corasick prefix patterns" {
+  // Patterns where one is prefix of another
+  let ac = AhoCorasick::from_patterns(["a", "ab", "abc", "abcd"])
+
+  let matches = ac.search("abcd")
+  // All patterns match at position 0
+  inspect(matches.length(), content="4")
+
+  // All should start at position 0
+  for i = 0; i < matches.length(); i = i + 1 {
+    guard matches[i].0 == 0 else {
+      fail("Expected all matches at position 0")
+    }
+  }
+}
+
+///|
+test "aho corasick suffix patterns" {
+  // Patterns where one is suffix of another
+  let ac = AhoCorasick::from_patterns(["d", "cd", "bcd", "abcd"])
+
+  let matches = ac.search("abcd")
+  // "d" at 3, "cd" at 2, "bcd" at 1, "abcd" at 0
+  inspect(matches.length(), content="4")
+}
+
+///|
+test "aho corasick state count" {
+  let ac = AhoCorasick::from_patterns(["abc", "abd", "abe"])
+  // Shared prefix "ab" means fewer states than 3*3=9
+  // States: root, a, ab, abc, abd, abe = 6
+  inspect(ac.state_count(), content="6")
+}
+
+///|
+test "aho corasick empty text" {
+  let ac = AhoCorasick::from_patterns(["a", "b"])
+
+  let matches = ac.search("")
+  inspect(matches.length(), content="0")
+}
+
+///|
+test "aho corasick long text" {
+  let ac = AhoCorasick::from_patterns(["needle"])
+
+  // Build text with multiple needles
+  let text = "haystackneedlehaystackneedlehaystack"
+  let matches = ac.search(text)
+  inspect(matches.length(), content="2")
+  inspect(matches[0].0, content="8")
+  inspect(matches[1].0, content="22")
+}
+
+///|
+test "aho corasick failure links" {
+  // Test that failure links work correctly
+  // Pattern "aba" should find both occurrences in "ababa"
+  let ac = AhoCorasick::from_patterns(["aba"])
+
+  let matches = ac.search("ababa")
+  // "aba" at position 0 and position 2 (overlapping)
+  inspect(matches.length(), content="2")
+  inspect(matches[0].0, content="0")
+  inspect(matches[1].0, content="2")
+}
+
+///|
+test "aho corasick case sensitive" {
+  let ac = AhoCorasick::from_patterns(["ABC"])
+
+  inspect(ac.contains_any("abc"), content="false")
+  inspect(ac.contains_any("ABC"), content="true")
+}
