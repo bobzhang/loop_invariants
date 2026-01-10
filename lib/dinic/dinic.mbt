@@ -46,10 +46,7 @@ priv struct Dinic {
 
 ///|
 fn Dinic::new(n : Int) -> Dinic {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  }
+  let adj = Array::makei(n, (_) => [])
   { n, adj, level: Array::make(n, 0), iter: Array::make(n, 0) }
 }
 
@@ -66,6 +63,11 @@ fn Dinic::add_edge(self : Dinic, from : Int, to : Int, cap : Int64) -> Unit {
 fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.level[i] = -1
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: (
+      #|level[0..i) have been reset to -1 before BFS.
+    ),
   }
 
   self.level[source] = 0
@@ -82,6 +84,12 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
         self.level[e.to] = self.level[u] + 1
         queue.push(e.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Edges adj[u][0..i) have been scanned; newly reachable nodes
+        #|are assigned the next BFS level and enqueued.
+      ),
     }
   }
 
@@ -123,6 +131,11 @@ fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
     // Reset edge pointers
     for i = 0; i < self.n; i = i + 1 {
       self.iter[i] = 0
+    } where {
+      invariant: i >= 0 && i <= self.n,
+      reasoning: (
+        #|iter[0..i) cleared for the next blocking-flow DFS phase.
+      ),
     }
 
     // Find blocking flow
@@ -143,6 +156,11 @@ fn Dinic::get_flow(self : Dinic, u : Int, v : Int) -> Int64 {
     if self.adj[u][i].to == v {
       return self.adj[u][i].flow
     }
+  } where {
+    invariant: i >= 0 && i <= self.adj[u].length(),
+    reasoning: (
+      #|All edges in adj[u][0..i) have been checked for destination v.
+    ),
   }
   0L
 }
@@ -153,7 +171,17 @@ fn Dinic::reset(self : Dinic) -> Unit {
   for u = 0; u < self.n; u = u + 1 {
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       self.adj[u][i].flow = 0L
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Flows in adj[u][0..i) have been reset to 0.
+      ),
     }
+  } where {
+    invariant: u >= 0 && u <= self.n,
+    reasoning: (
+      #|All vertices in [0..u) have their incident flows reset.
+    ),
   }
 }
 
@@ -182,6 +210,12 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
         visited[e.to] = true
         queue.push(e.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Edges adj[u][0..i) have been checked for residual capacity;
+        #|reachable nodes are marked visited and enqueued.
+      ),
     }
   }
 
@@ -211,6 +245,7 @@ test "dinic simple" {
   dinic.add_edge(0, 1, 5L)
 
   inspect(dinic.max_flow(0, 1), content="5")
+  inspect(dinic.get_flow(0, 1), content="5")
 }
 
 ///|

@@ -17,3 +17,23 @@ for i = 0; i < n; i = i + 1 {
     #|sum equals the prefix sum of arr[0..i).
   ),
 }
+
+## 2026-01-11: Block Prefix/Suffix Invariants
+- Problem: Nested loops building disjoint sparse tables lacked clear loop specs.
+- Change: Add invariants that describe block progression and prefix/suffix accumulation.
+- Result: Build steps are checkable and warnings removed.
+- Example:
+// Before
+for i = mid - 1; i >= block_start; i = i - 1 {
+  row[i] = arr[i] + row[i + 1]
+}
+
+// After
+for i = mid - 1; i >= block_start; i = i - 1 {
+  row[i] = arr[i] + row[i + 1]
+} where {
+  invariant: i >= block_start - 1 && i < mid,
+  reasoning: (
+    #|row[i+1..mid] already holds suffix sums to mid.
+  ),
+}

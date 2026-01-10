@@ -70,6 +70,12 @@ fn highest_bit(x : Int) -> Int {
     continue result + 1, val / 2
   } else {
     result
+  } where {
+    invariant: result >= 0 && val >= 1,
+    reasoning: (
+      #|Each iteration halves val and increments result, so val equals
+      #|floor(x / 2^result). When val <= 1, result is floor(log2(x)).
+    ),
   }
 }
 
@@ -103,6 +109,12 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         row[mid] = arr[mid]
         for i = mid - 1; i >= block_start; i = i - 1 {
           row[i] = arr[i] + row[i + 1]
+        } where {
+          invariant: i >= block_start - 1 && i < mid,
+          reasoning: (
+            #|row[i+1..mid] already holds suffix sums to mid;
+            #|row[i] extends the suffix by one element.
+          ),
         }
       }
 
@@ -118,11 +130,28 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         row[mid + 1] = arr[mid + 1]
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] + arr[i]
+        } where {
+          invariant: i >= mid + 2 && i <= right_end + 1,
+          reasoning: (
+            #|row[mid+1..i-1] stores prefix sums from mid+1;
+            #|row[i] extends the prefix to the right.
+          ),
         }
       }
+    } where {
+      invariant: block_start >= 0 && block_start <= n,
+      reasoning: (
+        #|All blocks in [0..block_start) have their suffix/prefix sums computed.
+      ),
     }
 
     table.push(row)
+  } where {
+    invariant: k >= 0 && k <= log_n,
+    reasoning: (
+      #|Levels [0..k) are built; level k uses block size 2^(k+1) and
+      #|stores suffix/prefix aggregates around each block mid.
+    ),
   }
 
   { table, arr, n }
@@ -188,6 +217,12 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         row[mid] = arr[mid]
         for i = mid - 1; i >= block_start; i = i - 1 {
           row[i] = arr[i] ^ row[i + 1]
+        } where {
+          invariant: i >= block_start - 1 && i < mid,
+          reasoning: (
+            #|row[i+1..mid] already holds suffix XORs to mid;
+            #|row[i] extends the suffix by one element.
+          ),
         }
       }
 
@@ -202,11 +237,27 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         row[mid + 1] = arr[mid + 1]
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] ^ arr[i]
+        } where {
+          invariant: i >= mid + 2 && i <= right_end + 1,
+          reasoning: (
+            #|row[mid+1..i-1] stores prefix XORs from mid+1;
+            #|row[i] extends the prefix to the right.
+          ),
         }
       }
+    } where {
+      invariant: block_start >= 0 && block_start <= n,
+      reasoning: (
+        #|All blocks in [0..block_start) have their suffix/prefix XORs computed.
+      ),
     }
 
     table.push(row)
+  } where {
+    invariant: k >= 0 && k <= log_n,
+    reasoning: (
+      #|Levels [0..k) are built; level k stores XOR aggregates around each mid.
+    ),
   }
 
   { table, arr, n }
@@ -267,6 +318,12 @@ fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparse
         row[mid] = arr[mid] % modulo
         for i = mid - 1; i >= block_start; i = i - 1 {
           row[i] = arr[i] * row[i + 1] % modulo
+        } where {
+          invariant: i >= block_start - 1 && i < mid,
+          reasoning: (
+            #|row[i+1..mid] already holds suffix products to mid;
+            #|row[i] extends the suffix by one element.
+          ),
         }
       }
 
@@ -281,11 +338,27 @@ fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparse
         row[mid + 1] = arr[mid + 1] % modulo
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] * arr[i] % modulo
+        } where {
+          invariant: i >= mid + 2 && i <= right_end + 1,
+          reasoning: (
+            #|row[mid+1..i-1] stores prefix products from mid+1;
+            #|row[i] extends the prefix to the right.
+          ),
         }
       }
+    } where {
+      invariant: block_start >= 0 && block_start <= n,
+      reasoning: (
+        #|All blocks in [0..block_start) have their suffix/prefix products computed.
+      ),
     }
 
     table.push(row)
+  } where {
+    invariant: k >= 0 && k <= log_n,
+    reasoning: (
+      #|Levels [0..k) are built; level k stores product aggregates around each mid.
+    ),
   }
 
   { table, arr, n, modulo }
