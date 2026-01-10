@@ -101,6 +101,11 @@ fn knapsack_unbounded(
           dp[w] = candidate
         }
       }
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|dp[w] is the best value for capacity w using items[0..i).
+      ),
     }
   } where {
     invariant: w >= 1 && w <= capacity + 1,
@@ -217,6 +222,11 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
           dp[a] = candidate
         }
       }
+    } where {
+      invariant: i >= 0 && i <= coins.length(),
+      reasoning: (
+        #|dp[a] is the minimum coin count using coins[0..i).
+      ),
     }
   } where {
     invariant: a >= 1 && a <= amount + 1,
@@ -318,6 +328,11 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
     // Swap rows
     for k = 0; k <= n; k = k + 1 {
       prev[k] = curr[k]
+    } where {
+      invariant: k >= 0 && k <= n + 1,
+      reasoning: (
+        #|prev[0..k) has been copied from curr[0..k).
+      ),
     }
   } where {
     invariant: i >= 1 && i <= m + 1,
@@ -496,6 +511,11 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
   // Initialize first row
   for j = 1; j < n; j = j + 1 {
     dp[j] = dp[j - 1] + grid[0][j]
+  } where {
+    invariant: j >= 1 && j <= n,
+    reasoning: (
+      #|dp[0..j] stores prefix sums along the top row.
+    ),
   }
 
   // Fill remaining rows
@@ -541,6 +561,11 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
   let words : Array[Array[Char]] = []
   for i = 0; i < word_dict.length(); i = i + 1 {
     words.push(word_dict[i].to_array())
+  } where {
+    invariant: i >= 0 && i <= word_dict.length(),
+    reasoning: (
+      #|words[0..i) holds the dictionary prefixes as char arrays.
+    ),
   }
   let dp = Array::make(n + 1, false)
   dp[0] = true // Empty string can be segmented
@@ -555,6 +580,12 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
           break
         }
       }
+    } where {
+      invariant: w >= 0 && w <= words.length(),
+      reasoning: (
+        #|If dp[i] is true, a matching word exists in words[0..w);
+        #|otherwise no processed word completes the prefix.
+      ),
     }
   } where {
     invariant: i >= 1 && i <= n + 1,
@@ -614,6 +645,11 @@ fn min_palindrome_cuts(s : String) -> Int {
   for i = 0; i < n; i = i + 1 {
     is_palindrome.push(Array::make(n, false))
     is_palindrome[i][i] = true
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Rows 0..i are allocated and the diagonal entries are true.
+    ),
   }
 
   // Fill palindrome table
@@ -626,13 +662,28 @@ fn min_palindrome_cuts(s : String) -> Int {
         is_palindrome[i][j] = chars[i] == chars[j] &&
           is_palindrome[i + 1][j - 1]
       }
+    } where {
+      invariant: i >= 0 && i <= n - length + 1,
+      reasoning: (
+        #|All substrings of current length with start < i are classified.
+      ),
     }
+  } where {
+    invariant: length >= 2 && length <= n + 1,
+    reasoning: (
+      #|All palindrome statuses for lengths < length are finalized.
+    ),
   }
 
   // dp[i] = min cuts for s[0..i)
   let dp = Array::make(n + 1, 0)
   for i = 0; i <= n; i = i + 1 {
     dp[i] = i - 1 // Maximum cuts = i - 1
+  } where {
+    invariant: i >= 0 && i <= n + 1,
+    reasoning: (
+      #|dp[0..i) initialized to the worst-case cut count.
+    ),
   }
   for i = 1; i <= n; i = i + 1 {
     if is_palindrome[0][i - 1] {
@@ -747,6 +798,11 @@ fn longest_palindromic_subsequence(s : String) -> Int {
   for i = 0; i < n; i = i + 1 {
     dp.push(Array::make(n, 0))
     dp[i][i] = 1 // Single character is palindrome of length 1
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Rows 0..i are allocated and dp[k][k] set to 1 for k < i.
+    ),
   }
 
   // Fill for lengths 2 to n
@@ -803,6 +859,11 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
   let dp : Array[Array[Int]] = []
   for i = 0; i <= n; i = i + 1 {
     dp.push(Array::make(n + 1, 0))
+  } where {
+    invariant: i >= 0 && i <= n + 1,
+    reasoning: (
+      #|dp rows 0..i are allocated with zeros.
+    ),
   }
 
   // Chain length from 2 to n

@@ -13,7 +13,7 @@
 /// If lines are added with decreasing slope, we can use a deque.
 ///
 /// TIME: O(1) amortized per insert, O(log n) or O(1) per query
-struct ConvexHullTrick {
+priv struct ConvexHullTrick {
   lines : Array[(Int64, Int64)] // (slope, intercept)
 }
 
@@ -120,7 +120,7 @@ test "convex hull trick basic" {
 /// Monotonic Convex Hull Trick
 ///
 /// When queries are also monotonic, we can answer in O(1) amortized.
-struct MonotonicCHT {
+priv struct MonotonicCHT {
   lines : Array[(Int64, Int64)]
   ptr : Array[Int] // Current pointer for monotonic queries
 }
@@ -191,14 +191,14 @@ test "monotonic cht" {
 ///
 /// Supports arbitrary order of line insertion and queries.
 /// O(log C) per operation where C is the coordinate range.
-struct LiChaoNode {
+priv struct LiChaoNode {
   line : (Int64, Int64)?
   left : LiChaoNode?
   right : LiChaoNode?
 }
 
 ///|
-struct LiChaoTree {
+priv struct LiChaoTree {
   mut root : LiChaoNode?
   lo : Int64
   hi : Int64
@@ -329,10 +329,7 @@ fn divide_conquer_dp(
   cost : (Int, Int) -> Int64,
   initial : Array[Int64],
 ) -> Array[Int64] {
-  let dp : Array[Int64] = []
-  for i = 0; i < n; i = i + 1 {
-    dp.push(initial[i])
-  }
+  let dp = Array::makei(n, (i) => initial[i])
 
   // Divide and conquer helper
   // Computes dp[lo..hi] given that opt is in [opt_lo, opt_hi]
@@ -358,6 +355,12 @@ fn divide_conquer_dp(
         best_val = val
         best_opt = j
       }
+    } where {
+      invariant: j >= opt_lo && j <= opt_hi + 1,
+      reasoning: (
+        #|best_val tracks the minimum cost among candidates in [opt_lo, j).
+        #|best_opt stores the argmin for the current midpoint.
+      ),
     }
     if best_val < dp[mid] {
       dp[mid] = best_val
@@ -403,13 +406,12 @@ fn knuth_optimization(
   n : Int,
   cost : (Int, Int) -> Int64,
 ) -> Array[Array[Int64]] {
-  let dp : Array[Array[Int64]] = []
-  let opt : Array[Array[Int]] = []
-  for i = 0; i < n; i = i + 1 {
-    dp.push(Array::make(n, 0L))
-    opt.push(Array::make(n, 0))
-    opt[i][i] = i
-  }
+  let dp = Array::makei(n, (_) => Array::make(n, 0L))
+  let opt = Array::makei(n, (i) => {
+    let row = Array::make(n, 0)
+    row[i] = i
+    row
+  })
 
   // Process by increasing length
   for len = 2; len <= n; len = len + 1 {
@@ -435,6 +437,11 @@ fn knuth_optimization(
           #|from O(n³) to O(n²) because sum of ranges is O(n²).
         ),
       }
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|Processing all intervals of length len in increasing start index.
+      ),
     }
   } where {
     invariant: len >= 2 && len <= n + 1,
@@ -450,7 +457,6 @@ fn knuth_optimization(
 test "knuth optimization" {
   // Matrix chain multiplication-like cost
   let n = 4
-  let dims = [10, 30, 5, 60] // Matrix dimensions
   let cost = fn(i : Int, j : Int) -> Int64 {
     if i >= j || i < 0 || j >= n {
       0L
@@ -481,6 +487,11 @@ fn sliding_window_dp(arr : ArrayView[Int64], k : Int) -> Array[Int64] {
       // Remove front
       for j = 0; j < deque.length() - 1; j = j + 1 {
         deque[j] = deque[j + 1]
+      } where {
+        invariant: j >= 0 && j <= deque.length() - 1,
+        reasoning: (
+          #|deque[0..j) has been shifted left by one position.
+        ),
       }
       let _ = deque.pop()
 
@@ -536,13 +547,14 @@ fn aliens_trick(
   target_k : Int,
   compute_dp : (Int64) -> (Int64, Int),
 ) -> Int64 {
+  let _ = n
   let mut lo = -1000000000L
   let mut hi = 1000000000L
 
   // Binary search for the right penalty
   for iter = 0; iter < 100; iter = iter + 1 {
     let mid = (lo + hi) / 2L
-    let (cost, k) = compute_dp(mid)
+    let (_, k) = compute_dp(mid)
     if k <= target_k {
       hi = mid
     } else {
@@ -586,7 +598,7 @@ test "aliens trick structure" {
 /// efficiently using priority queues.
 ///
 /// This implementation shows the concept with arrays.
-struct SlopeTrick {
+priv struct SlopeTrick {
   left_slopes : Array[Int64] // Max-heap of x where slope increases
   right_slopes : Array[Int64] // Min-heap of x where slope decreases
   mut base_cost : Int64
