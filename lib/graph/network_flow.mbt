@@ -3,7 +3,7 @@
 
 ///|
 /// Edge in a flow network
-struct FlowEdge {
+priv struct FlowEdge {
   to : Int
   capacity : Int
   mut flow : Int
@@ -12,7 +12,7 @@ struct FlowEdge {
 
 ///|
 /// Flow Network using adjacency list
-struct FlowNetwork {
+priv struct FlowNetwork {
   adj : Array[Array[FlowEdge]]
   n : Int
 }
@@ -22,6 +22,11 @@ fn FlowNetwork::new(n : Int) -> FlowNetwork {
   let adj : Array[Array[FlowEdge]] = []
   for i = 0; i < n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|adj[0..i) initialized as empty adjacency lists.
+    ),
   }
   { adj, n }
 }
@@ -65,6 +70,11 @@ fn FlowNetwork::bfs_find_path(
         parent[edge.to] = Some((u, i))
         queue.push(edge.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Neighbors adj[u][0..i) checked for residual capacity.
+      ),
     }
   } where {
     invariant: front >= 0 && front <= queue.length(),
@@ -152,7 +162,7 @@ test "edmonds karp basic" {
 ///
 /// Uses level graph (BFS levels) and blocking flows.
 /// TIME: O(V²E) - at most V phases, each phase is O(VE)
-struct DinicNetwork {
+priv struct DinicNetwork {
   adj : Array[Array[FlowEdge]]
   level : Array[Int]
   iter : Array[Int]
@@ -164,6 +174,11 @@ fn DinicNetwork::new(n : Int) -> DinicNetwork {
   let adj : Array[Array[FlowEdge]] = []
   for i = 0; i < n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|adj[0..i) initialized as empty adjacency lists.
+    ),
   }
   { adj, level: Array::make(n, -1), iter: Array::make(n, 0), n }
 }
@@ -189,6 +204,11 @@ fn DinicNetwork::bfs_dinic(
 ) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.level[i] = -1
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: (
+      #|level[0..i) reset to -1.
+    ),
   }
   self.level[source] = 0
   let queue : Array[Int] = []
@@ -202,6 +222,11 @@ fn DinicNetwork::bfs_dinic(
         self.level[edge.to] = self.level[u] + 1
         queue.push(edge.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Neighbors adj[u][0..i) explored for level graph edges.
+      ),
     }
   } where {
     invariant: front >= 0 && front <= queue.length(),
@@ -252,6 +277,11 @@ fn DinicNetwork::dinic_max_flow(
   while self.bfs_dinic(source, sink) {
     for i = 0; i < self.n; i = i + 1 {
       self.iter[i] = 0
+    } where {
+      invariant: i >= 0 && i <= self.n,
+      reasoning: (
+        #|iter[0..i) reset before DFS phase.
+      ),
     }
     let mut pushed = self.dfs_dinic(source, sink, 2147483647)
     while pushed > 0 {
@@ -278,7 +308,7 @@ test "dinic basic" {
 
 ///|
 /// Minimum Cost Maximum Flow
-struct MCMFEdge {
+priv struct MCMFEdge {
   to : Int
   capacity : Int
   cost : Int
@@ -287,7 +317,7 @@ struct MCMFEdge {
 }
 
 ///|
-struct MCMFNetwork {
+priv struct MCMFNetwork {
   adj : Array[Array[MCMFEdge]]
   n : Int
 }
@@ -297,6 +327,11 @@ fn MCMFNetwork::new(n : Int) -> MCMFNetwork {
   let adj : Array[Array[MCMFEdge]] = []
   for i = 0; i < n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|adj[0..i) initialized as empty adjacency lists.
+    ),
   }
   { adj, n }
 }
@@ -333,6 +368,11 @@ fn MCMFNetwork::spfa_mcmf(
   for i = 0; i < self.n; i = i + 1 {
     dist[i] = inf
     parent[i] = None
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: (
+      #|dist/parent initialized for indices [0..i).
+    ),
   }
   dist[source] = 0
   let in_queue : Array[Bool] = Array::make(self.n, false)
@@ -353,6 +393,11 @@ fn MCMFNetwork::spfa_mcmf(
           in_queue[edge.to] = true
         }
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Edges adj[u][0..i) relaxed for current SPFA iteration.
+      ),
     }
   } where {
     invariant: front >= 0,
@@ -436,9 +481,19 @@ fn bipartite_matching(
   let network = FlowNetwork::new(n)
   for i = 0; i < left_size; i = i + 1 {
     network.add_edge(source, i + 1, 1)
+  } where {
+    invariant: i >= 0 && i <= left_size,
+    reasoning: (
+      #|Source edges added for left vertices [0..i).
+    ),
   }
   for i = 0; i < right_size; i = i + 1 {
     network.add_edge(left_size + 1 + i, sink, 1)
+  } where {
+    invariant: i >= 0 && i <= right_size,
+    reasoning: (
+      #|Sink edges added for right vertices [0..i).
+    ),
   }
   for i = 0; i < edges.length(); i = i + 1 {
     let (left, right) = edges[i]
@@ -503,6 +558,11 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
             j1 = j
           }
         }
+      } where {
+        invariant: j >= 1 && j <= m + 1,
+        reasoning: (
+          #|Scanned columns [1..j) to update minv/way and track best delta.
+        ),
       }
 
       // Update potentials
@@ -513,6 +573,11 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
         } else {
           minv[j] = minv[j] - delta
         }
+      } where {
+        invariant: j >= 0 && j <= m + 1,
+        reasoning: (
+          #|Potentials and minv updated for columns [0..j).
+        ),
       }
       j0 = j1
       done = p[j0] == 0
@@ -542,6 +607,11 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
     if p[j] > 0 && p[j] <= n {
       total_cost = total_cost + cost[p[j] - 1][j - 1]
     }
+  } where {
+    invariant: j >= 1 && j <= m + 1,
+    reasoning: (
+      #|total_cost accumulates assigned column costs for [1..j).
+    ),
   }
   total_cost
 }
