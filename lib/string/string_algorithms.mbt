@@ -233,6 +233,12 @@ fn longest_palindrome(s : ArrayView[Char]) -> (Int, Int) {
       max_radius = p[i]
       max_center = i
     }
+  } where {
+    invariant: i >= 0 && i <= p.length(),
+    reasoning: (
+      #|Scan all centers; max_radius/max_center track the best palindrome seen so far.
+      #|Each iteration considers one candidate center i.
+    ),
   }
 
   // Convert back to original string indices
@@ -337,6 +343,12 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
             match_found = false
             break
           }
+        } where {
+          invariant: j >= 0 && j <= m,
+          reasoning: (
+            #|match_found is true iff text[i..i+j) equals pattern[0..j).
+            #|A mismatch flips match_found to false and exits early.
+          ),
         }
         if match_found {
           results.push(i)

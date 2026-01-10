@@ -26,10 +26,7 @@ fn build_suffix_array_simple(s : String) -> Array[Int] {
   }
 
   // Create array of suffix indices
-  let sa : Array[Int] = []
-  for i = 0; i < n; i = i + 1 {
-    sa.push(i)
-  }
+  let sa = Array::makei(n, (i) => i)
 
   // Sort using bubble sort with suffix comparison
   // (In production, use radix sort for O(n log n))
@@ -40,6 +37,12 @@ fn build_suffix_array_simple(s : String) -> Array[Int] {
         sa[i] = sa[j]
         sa[j] = temp
       }
+    } where {
+      invariant: j >= i + 1 && j <= n,
+      reasoning: (
+        #|Scan candidates in (i, n) to place the smallest suffix at sa[i].
+        #|After each step, sa[i] is the minimum among indices i..j.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,
@@ -106,9 +109,9 @@ fn build_lcp_array(s : String, sa : ArrayView[Int]) -> Array[Int] {
 
   // Build rank array: rank[i] = position of suffix i in sorted order
   let rank = Array::make(n, 0)
-  for i = 0; i < n; i = i + 1 {
-    rank[sa[i]] = i
-  }
+  sa.eachi(fn(i, pos) {
+    rank[pos] = i
+  })
   let lcp = Array::make(n, 0)
   let mut k = 0
 
@@ -249,10 +252,7 @@ fn longest_repeated_substring(s : String) -> String {
     } else {
       // Extract substring
       let start = sa[max_idx]
-      let result : Array[Char] = []
-      for k = 0; k < max_lcp; k = k + 1 {
-        result.push(chars[start + k])
-      }
+      let result = Array::makei(max_lcp, (k) => chars[start + k])
       String::from_array(result)
     }
   } where {
@@ -296,11 +296,7 @@ fn search_pattern(s : String, pattern : String) -> Array[Int] {
   let hi = search_upper_bound(s_chars, sa[:], p_chars)
 
   // Collect all matches
-  let result : Array[Int] = []
-  for i = lo; i < hi; i = i + 1 {
-    result.push(sa[i])
-  }
-  result
+  sa[lo:hi].to_array()
 }
 
 ///|
@@ -405,13 +401,9 @@ fn longest_common_substring_sa(s1 : String, s2 : String) -> String {
 
   // Concatenate with separator (use '$' which is less than lowercase letters)
   let combined : Array[Char] = []
-  for i = 0; i < n1; i = i + 1 {
-    combined.push(c1[i])
-  }
+  combined.append(c1[:])
   combined.push('$')
-  for i = 0; i < n2; i = i + 1 {
-    combined.push(c2[i])
-  }
+  combined.append(c2[:])
   let combined_str = String::from_array(combined)
   let n = combined.length()
   let sa = build_suffix_array_simple(combined_str)
@@ -433,10 +425,7 @@ fn longest_common_substring_sa(s1 : String, s2 : String) -> String {
       ""
     } else {
       let start = sa[max_idx]
-      let result : Array[Char] = []
-      for k = 0; k < max_lcp; k = k + 1 {
-        result.push(combined[start + k])
-      }
+      let result = Array::makei(max_lcp, (k) => combined[start + k])
       String::from_array(result)
     }
   } where {
@@ -554,12 +543,8 @@ fn smallest_rotation(s : String) -> String {
 
   // Double the string
   let doubled : Array[Char] = []
-  for i = 0; i < n; i = i + 1 {
-    doubled.push(chars[i])
-  }
-  for i = 0; i < n; i = i + 1 {
-    doubled.push(chars[i])
-  }
+  doubled.append(chars[:])
+  doubled.append(chars[:])
   let doubled_str = String::from_array(doubled)
   let sa = build_suffix_array_simple(doubled_str)
 
@@ -567,10 +552,7 @@ fn smallest_rotation(s : String) -> String {
   for i = 0; i < 2 * n; i = i + 1 {
     if sa[i] < n {
       // This is the smallest rotation starting point
-      let result : Array[Char] = []
-      for j = 0; j < n; j = j + 1 {
-        result.push(chars[(sa[i] + j) % n])
-      }
+      let result = Array::makei(n, (j) => chars[(sa[i] + j) % n])
       return String::from_array(result)
     }
   } else {
