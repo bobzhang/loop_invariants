@@ -74,6 +74,9 @@ fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
     if parent <= n {
       tree[parent] = tree[parent] + tree[i]
     }
+  } where {
+    invariant: i >= 1 && i <= n + 1,
+    reasoning: "Each element propagates to parent; parent > i ensures no revisits, O(n) total",
   }
 
   { n, tree }

@@ -84,6 +84,9 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
     if disc[v] == -1 {
       tarjan_dfs(v, adj, disc, low, on_stack, stack, component, timer, scc_count, scc_sizes)
     }
+  } where {
+    invariant: v >= 0 && v <= n,
+    reasoning: "Each vertex visited exactly once; DFS explores all reachable vertices; after loop all vertices assigned to SCCs",
   }
 
   // Build condensation graph (DAG of SCCs)
@@ -162,6 +165,9 @@ fn tarjan_dfs(
       }
     }
     // Cross edge to finished vertex - ignore
+  } where {
+    invariant: i >= 0 && i <= adj[v].length(),
+    reasoning: "low[v] tracks min disc[] reachable via back/tree edges; tree edges propagate low from children; back edges update to ancestor's disc",
   }
 
   // If v is root of SCC (disc[v] == low[v])
@@ -212,6 +218,9 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
     if not(visited[v]) {
       dfs_order(v, adj, visited, order)
     }
+  } where {
+    invariant: v >= 0 && v <= n,
+    reasoning: "First pass computes finish times; vertices added to order when DFS completes; later finish = earlier in reverse order",
   }
 
   // Transpose graph
@@ -239,6 +248,9 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       scc_sizes.push(size.val)
       scc_count = scc_count + 1
     }
+  } where {
+    invariant: i >= -1 && i <= n - 1,
+    reasoning: "Reverse finish order on transposed graph visits SCCs in topological order; each DFS on radj finds one complete SCC",
   }
 
   // Build condensation graph

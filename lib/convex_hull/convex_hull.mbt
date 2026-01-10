@@ -104,6 +104,9 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
       }
     }
     hull.push(sorted[i])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "Hull maintains convexity: each triple makes right turn; popping removes non-convex points; after processing sorted[i], hull[0..len] is convex chain",
   }
 
   // Build upper hull
@@ -120,6 +123,9 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
       }
     }
     hull.push(sorted[i])
+  } where {
+    invariant: i >= -1 && i <= n - 2,
+    reasoning: "Upper hull is built right-to-left; cross product test ensures convexity; combined with lower hull forms complete convex boundary",
   }
 
   // Remove last point (duplicate of first)
@@ -200,6 +206,9 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
       }
     }
     hull.push(rest[i])
+  } where {
+    invariant: i >= 0 && i <= rest.length(),
+    reasoning: "Points processed in polar angle order from pivot; cross product removes right turns; maintains CCW convex chain from pivot",
   }
 
   hull
@@ -297,6 +306,7 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
 
   // Shoelace formula
   // INVARIANT: area accumulates signed areas of triangles from origin
+  // Shoelace formula sums cross products of adjacent edges; total equals 2x signed area
   for i = 0, area = 0L; i < n; {
     let j = (i + 1) % n
     let delta = hull[i].x * hull[j].y - hull[j].x * hull[i].y
@@ -390,6 +400,9 @@ pub fn hull_diameter_squared(hull : Array[Point]) -> Int64 {
     }
 
     continue i + 1, curr_j
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "Rotating calipers: j tracks antipodal vertex for edge (i,i+1); j only advances (amortized O(n)); max_dist tracks maximum pairwise distance seen",
   }
 
   max_dist

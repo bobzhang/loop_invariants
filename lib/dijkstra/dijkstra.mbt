@@ -196,10 +196,7 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
   let pq = MinHeap::new()
   pq.push({ dist: 0L, vertex: source })
 
-  // LOOP INVARIANT:
-  // 1. dist[v] is the shortest known distance from source to v
-  // 2. For visited vertices, dist[v] is the true shortest distance
-  // 3. PQ contains (tentative_dist, v) for unvisited vertices reachable so far
+  // Main Dijkstra loop - process vertices in order of increasing distance
   for {
     match pq.pop() {
       None => break
@@ -214,7 +211,6 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
         visited[u] = true
 
         // Relax all outgoing edges
-        // RELAXATION: If dist[u] + w < dist[v], we found a shorter path
         for i = 0; i < graph.adj[u].length(); i = i + 1 {
           let edge = graph.adj[u][i]
           let v = edge.to
@@ -225,9 +221,15 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
             parent[v] = u
             pq.push({ dist: new_dist, vertex: v })
           }
+        } where {
+          invariant: i >= 0 && i <= graph.adj[u].length(),
+          reasoning: "Relaxation: if dist[u] + w < dist[v], update dist[v]; greedy choice is optimal for non-negative weights",
         }
       }
     }
+  } where {
+    invariant: true,
+    reasoning: "For visited v, dist[v] = true shortest path; PQ selects min-dist unvisited vertex",
   }
 
   { dist, parent }

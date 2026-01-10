@@ -92,6 +92,9 @@ fn Trie::insert(self : Trie, word : String) -> Unit {
       Some(child) => current = child
     }
     current.prefix_count = current.prefix_count + 1
+  } where {
+    invariant: i >= 0 && i <= word.length(),
+    reasoning: "current points to node for prefix word[0..i]; each iteration extends path by one char; prefix_count updated at each node",
   }
 
   current.is_end = true
@@ -151,6 +154,9 @@ fn Trie::find_node(self : Trie, s : String) -> TrieNode? {
       None => return None
       Some(child) => current = child
     }
+  } where {
+    invariant: i >= 0 && i <= s.length(),
+    reasoning: "current is node for prefix s[0..i]; None returned early if char not found; if loop completes, current is node for full string",
   }
 
   Some(current)
@@ -180,6 +186,9 @@ fn Trie::delete(self : Trie, word : String) -> Bool {
         current.prefix_count = current.prefix_count - 1
       }
     }
+  } where {
+    invariant: i >= 0 && i <= word.length(),
+    reasoning: "Mirrors insert path; decrements prefix_count at each node; word existence pre-verified so path exists",
   }
 
   current.count = current.count - 1
@@ -426,6 +435,9 @@ fn common_prefix_len(a : String, b : String) -> Int {
     if a[i] != b[i] {
       return i
     }
+  } where {
+    invariant: i >= 0 && i <= min_len,
+    reasoning: "a[0..i] == b[0..i] at each iteration; first mismatch returns i; if no mismatch, min_len is common prefix length",
   }
   min_len
 }

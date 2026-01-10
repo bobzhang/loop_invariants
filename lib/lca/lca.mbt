@@ -91,14 +91,15 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
   dfs_build(0, -1, 0, adj, depth, up, visited)
 
   // Build sparse table for binary lifting
-  // INVARIANT: After processing level k, up[v][k] is the 2^k-th ancestor
-  // REASONING: up[v][k] = up[up[v][k-1]][k-1], combining two 2^(k-1) jumps
   for k = 1; k < log_n; k = k + 1 {
     for v = 0; v < n; v = v + 1 {
       if up[v][k - 1] != -1 {
         up[v][k] = up[up[v][k - 1]][k - 1]
       }
     }
+  } where {
+    invariant: k >= 1 && k <= log_n,
+    reasoning: "After level k, up[v][k] = 2^k-th ancestor via up[v][k] = up[up[v][k-1]][k-1]",
   }
 
   { n, log_n, up, depth, adj }
@@ -151,25 +152,28 @@ fn LCA::query(self : LCA, u : Int, v : Int) -> Int {
   let diff = self.depth[curr_u] - self.depth[curr_v]
 
   // Bring u to same level as v
-  // INVARIANT: After processing bit k, u has moved up by all set bits <= k in diff
   for k = 0; k < self.log_n; k = k + 1 {
     if ((diff >> k) & 1) == 1 {
       curr_u = self.up[curr_u][k]
     }
+  } where {
+    invariant: k >= 0 && k <= self.log_n,
+    reasoning: "After bit k, u moved up by sum of 2^i for all set bits i <= k in diff",
   }
 
   if curr_u == curr_v {
     return curr_u
   }
 
-  // Binary search for LCA
-  // INVARIANT: LCA is ancestor of both curr_u and curr_v
-  // Jump both nodes while their 2^k ancestors are different
+  // Binary search for LCA - jump both nodes while their 2^k ancestors are different
   for k = self.log_n - 1; k >= 0; k = k - 1 {
     if self.up[curr_u][k] != self.up[curr_v][k] {
       curr_u = self.up[curr_u][k]
       curr_v = self.up[curr_v][k]
     }
+  } where {
+    invariant: k >= -1 && k < self.log_n,
+    reasoning: "LCA is always ancestor of both; after k, curr_u and curr_v are at most 2^k below LCA",
   }
 
   // Parent of final position is LCA
