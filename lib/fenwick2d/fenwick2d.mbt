@@ -42,6 +42,11 @@ fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
   let tree : Array[Array[Int64]] = []
   for i = 0; i <= rows; i = i + 1 {
     tree.push(Array::make(cols + 1, 0L))
+  } where {
+    invariant: i >= 0 && i <= rows + 1,
+    reasoning: (
+      #|tree has been allocated for rows 0..i) with cols+1 entries each.
+    ),
   }
   { tree, rows, cols }
 }
@@ -100,10 +105,20 @@ fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
       continue j - lowbit(j), row_sum + self.tree[i][j]
     } else {
       row_sum
+    } where {
+      invariant: j >= 0 && j <= y_clamped,
+      reasoning: (
+        #|row_sum accumulates contributions from processed column indices.
+      ),
     }
     continue i - lowbit(i), sum + row_sum
   } else {
     sum
+  } where {
+    invariant: i >= 0 && i <= x_clamped,
+    reasoning: (
+      #|sum aggregates contributions from processed row indices in the BIT path.
+    ),
   }
 }
 
@@ -181,6 +196,11 @@ fn Fenwick2DRange::new(rows : Int, cols : Int) -> Fenwick2DRange {
   let tree : Array[Array[Int64]] = []
   for i = 0; i <= rows; i = i + 1 {
     tree.push(Array::make(cols + 1, 0L))
+  } where {
+    invariant: i >= 0 && i <= rows + 1,
+    reasoning: (
+      #|tree has been allocated for rows 0..i) with cols+1 entries each.
+    ),
   }
   { tree, rows, cols }
 }
@@ -200,7 +220,17 @@ fn Fenwick2DRange::internal_update(
   for i = x; i <= self.rows; i = i + lowbit(i) {
     for j = y; j <= self.cols; j = j + lowbit(j) {
       self.tree[i][j] = self.tree[i][j] + delta
+    } where {
+      invariant: j > 0 && j <= self.cols + 1,
+      reasoning: (
+        #|j traverses all column indices that cover y in the BIT structure.
+      ),
     }
+  } where {
+    invariant: i > 0 && i <= self.rows + 1,
+    reasoning: (
+      #|i traverses all row indices that cover x in the BIT structure.
+    ),
   }
 }
 
@@ -219,10 +249,20 @@ fn Fenwick2DRange::internal_prefix(self : Fenwick2DRange, x : Int, y : Int) -> I
       continue j - lowbit(j), row_sum + self.tree[i][j]
     } else {
       row_sum
+    } where {
+      invariant: j >= 0 && j <= y_clamped,
+      reasoning: (
+        #|row_sum accumulates contributions from processed column indices.
+      ),
     }
     continue i - lowbit(i), sum + row_sum
   } else {
     sum
+  } where {
+    invariant: i >= 0 && i <= x_clamped,
+    reasoning: (
+      #|sum aggregates contributions from processed row indices in the BIT path.
+    ),
   }
 }
 
@@ -346,6 +386,11 @@ test "fenwick2d larger grid" {
   // Fill diagonal
   for i = 1; i <= 5; i = i + 1 {
     ft.update(i, i, i.to_int64())
+  } where {
+    invariant: i >= 1 && i <= 6,
+    reasoning: (
+      #|Diagonal entries [1..i) have been updated.
+    ),
   }
 
   // Sum of diagonal: 1 + 2 + 3 + 4 + 5 = 15

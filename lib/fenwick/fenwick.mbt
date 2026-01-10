@@ -66,6 +66,11 @@ fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
   // Copy array values (convert to 1-indexed)
   for i = 0; i < n; i = i + 1 {
     tree[i + 1] = arr[i]
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|tree[1..i] equals arr[0..i) in 1-indexed form.
+    ),
   }
 
   // Build tree in O(n) by propagating each element to its parent
@@ -127,6 +132,13 @@ fn FenwickTree::prefix_sum(self : FenwickTree, i : Int) -> Int64 {
     continue idx - lowbit(idx), sum + self.tree[idx]
   } else {
     sum
+  } where {
+    invariant: idx >= 0 && idx <= idx_start,
+    reasoning: (
+      #|sum accumulates tree nodes already visited along the BIT path from
+      #|idx_start down to idx; the remaining idx positions still cover the
+      #|unaccounted prefix ranges.
+    ),
   }
 }
 
@@ -179,6 +191,11 @@ fn FenwickTree2D::new(rows : Int, cols : Int) -> FenwickTree2D {
   let tree : Array[Array[Int64]] = []
   for i = 0; i <= rows; i = i + 1 {
     tree.push(Array::make(cols + 1, 0L))
+  } where {
+    invariant: i >= 0 && i <= rows + 1,
+    reasoning: (
+      #|tree has been allocated for rows 0..i) with cols+1 entries each.
+    ),
   }
   { rows, cols, tree }
 }
@@ -545,6 +562,11 @@ test "fenwick tree large updates" {
   // Add large values
   for i = 0; i < 10; i = i + 1 {
     ft.add(i, 1000000000L)
+  } where {
+    invariant: i >= 0 && i <= 10,
+    reasoning: (
+      #|All indices in [0..i) have been updated with the large delta.
+    ),
   }
 
   inspect(ft.prefix_sum(9), content="10000000000")

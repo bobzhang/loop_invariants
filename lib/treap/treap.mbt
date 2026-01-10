@@ -414,6 +414,11 @@ test "treap sorted insertion" {
   let t = Treap::new()
   for i = 0; i < 10; i = i + 1 {
     t.insert(i.to_int64())
+  } where {
+    invariant: i >= 0 && i <= 10,
+    reasoning: (
+      #|Values 0..i-1 have been inserted.
+    ),
   }
 
   inspect(t.size(), content="10")
@@ -426,11 +431,21 @@ test "treap reverse sorted insertion" {
   let t = Treap::new()
   for i = 9; i >= 0; i = i - 1 {
     t.insert(i.to_int64())
+  } where {
+    invariant: i >= -1 && i <= 9,
+    reasoning: (
+      #|Values (i+1)..9 have been inserted in reverse order.
+    ),
   }
 
   inspect(t.size(), content="10")
   let arr = t.to_array()
   for i = 0; i < 10; i = i + 1 {
     inspect(arr[i] == i.to_int64(), content="true")
+  } where {
+    invariant: i >= 0 && i <= 10,
+    reasoning: (
+      #|arr[0..i) has been verified to equal 0..i-1.
+    ),
   }
 }

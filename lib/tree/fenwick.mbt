@@ -39,7 +39,7 @@ fn lowbit(x : Int) -> Int {
 ///|
 /// Fenwick Tree structure.
 /// tree[i] stores partial sum for range ending at i.
-struct FenwickTree {
+priv struct FenwickTree {
   tree : Array[Int]
   n : Int
 }
@@ -335,7 +335,7 @@ test "fenwick_find_kth" {
 // Each dimension uses the same lowbit traversal independently.
 
 ///|
-struct FenwickTree2D {
+priv struct FenwickTree2D {
   tree : Array[Int]
   n : Int
   m : Int
@@ -486,7 +486,7 @@ test "fenwick_2d" {
 //   D[r+1] -= delta (end of increase)
 
 ///|
-struct FenwickTreeRangeUpdate {
+priv struct FenwickTreeRangeUpdate {
   diff : FenwickTree // Stores differences
 }
 
@@ -563,7 +563,7 @@ test "fenwick_range_update" {
 //   tree2: stores i × D[i]
 
 ///|
-struct FenwickTreeRangeRange {
+priv struct FenwickTreeRangeRange {
   tree1 : FenwickTree // D[i]
   tree2 : FenwickTree // i * D[i]
   n : Int

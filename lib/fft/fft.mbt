@@ -60,6 +60,12 @@ fn bit_reverse(x : Int, bits : Int) -> Int {
   for i = 0; i < bits; i = i + 1 {
     result = (result << 1) | (v & 1)
     v = v >> 1
+  } where {
+    invariant: i >= 0 && i <= bits,
+    reasoning: (
+      #|result holds the reverse of the lowest i bits of x; v has been shifted
+      #|right by i bits so the next bit to consume is at position 0.
+    ),
   }
   result
 }
@@ -122,7 +128,19 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
         a[i + j] = (u + v) % self.mod_val
         a[i + j + len / 2] = ((u - v) % self.mod_val + self.mod_val) % self.mod_val
         wn = wn * w % self.mod_val
+      } where {
+        invariant: j >= 0 && j <= len / 2,
+        reasoning: (
+          #|Within the current block, all butterflies for positions [0..j)
+          #|are applied; wn equals w^j.
+        ),
       }
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|All blocks starting at indices < i have been combined for this stage
+        #|of length len.
+      ),
     }
     len = len * 2
   }
@@ -132,6 +150,11 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
     let n_inv = mod_pow(n.to_int64(), self.mod_val - 2L, self.mod_val)
     for i = 0; i < n; i = i + 1 {
       a[i] = a[i] * n_inv % self.mod_val
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|a[0..i) has been scaled by n_inv to complete the inverse transform.
+      ),
     }
   }
 }
@@ -150,9 +173,19 @@ fn NTT::multiply(
   let pb = Array::make(n, 0L)
   for i = 0; i < a.length() && i < n; i = i + 1 {
     pa[i] = a[i] % self.mod_val
+  } where {
+    invariant: i >= 0 && i <= a.length() && i <= n,
+    reasoning: (
+      #|pa[0..i) holds the reduced coefficients from a[0..i).
+    ),
   }
   for i = 0; i < b.length() && i < n; i = i + 1 {
     pb[i] = b[i] % self.mod_val
+  } where {
+    invariant: i >= 0 && i <= b.length() && i <= n,
+    reasoning: (
+      #|pb[0..i) holds the reduced coefficients from b[0..i).
+    ),
   }
 
   // Transform both
@@ -187,7 +220,17 @@ fn poly_multiply_naive(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   for i = 0; i < a.length(); i = i + 1 {
     for j = 0; j < b.length(); j = j + 1 {
       result[i + j] = (result[i + j] + a[i] * b[j]) % NTT_MOD
+    } where {
+      invariant: j >= 0 && j <= b.length(),
+      reasoning: (
+        #|All pairs (i, 0..j) have contributed to result[i + *].
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= a.length(),
+    reasoning: (
+      #|All pairs (0..i, *) have been accumulated into result.
+    ),
   }
   result
 }
@@ -219,6 +262,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     } else {
       a_high.push(a[i])
     }
+  } where {
+    invariant: i >= 0 && i <= a.length(),
+    reasoning: (
+      #|a_low contains a[0..min(i,half)); a_high contains a[half..i) when i > half.
+    ),
   }
 
   let b_low : Array[Int64] = []
@@ -229,6 +277,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     } else {
       b_high.push(b[i])
     }
+  } where {
+    invariant: i >= 0 && i <= b.length(),
+    reasoning: (
+      #|b_low contains b[0..min(i,half)); b_high contains b[half..i) when i > half.
+    ),
   }
 
   // Recursive multiplications
@@ -247,6 +300,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     let av = if i < a_low.length() { a_low[i] } else { 0L }
     let ah = if i < a_high.length() { a_high[i] } else { 0L }
     a_sum.push((av + ah) % NTT_MOD)
+  } where {
+    invariant: i >= 0 && i <= max_low,
+    reasoning: (
+      #|a_sum[0..i) equals (a_low + a_high) coefficient-wise.
+    ),
   }
   let max_low_b = if b_low.length() > b_high.length() {
     b_low.length()
@@ -257,6 +315,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     let bv = if i < b_low.length() { b_low[i] } else { 0L }
     let bh = if i < b_high.length() { b_high[i] } else { 0L }
     b_sum.push((bv + bh) % NTT_MOD)
+  } where {
+    invariant: i >= 0 && i <= max_low_b,
+    reasoning: (
+      #|b_sum[0..i) equals (b_low + b_high) coefficient-wise.
+    ),
   }
 
   let z1_full = poly_multiply_karatsuba(a_sum, b_sum)
@@ -267,6 +330,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
 
   for i = 0; i < z0.length(); i = i + 1 {
     result[i] = (result[i] + z0[i]) % NTT_MOD
+  } where {
+    invariant: i >= 0 && i <= z0.length(),
+    reasoning: (
+      #|result[0..i) contains the z0 contribution.
+    ),
   }
   for i = 0; i < z1_full.length(); i = i + 1 {
     if i + half < result_len {
@@ -276,11 +344,21 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
         NTT_MOD) %
         NTT_MOD
     }
+  } where {
+    invariant: i >= 0 && i <= z1_full.length(),
+    reasoning: (
+      #|result[half..half+i) has been adjusted with z1_full and subtracted z0/z2.
+    ),
   }
   for i = 0; i < z2.length(); i = i + 1 {
     if i + 2 * half < result_len {
       result[i + 2 * half] = (result[i + 2 * half] + z2[i]) % NTT_MOD
     }
+  } where {
+    invariant: i >= 0 && i <= z2.length(),
+    reasoning: (
+      #|result[2*half..2*half+i) includes the z2 contribution.
+    ),
   }
 
   result
@@ -326,6 +404,11 @@ test "ntt vs naive" {
 
   for i = 0; i < naive_result.length(); i = i + 1 {
     inspect(ntt_result[i] == naive_result[i], content="true")
+  } where {
+    invariant: i >= 0 && i <= naive_result.length(),
+    reasoning: (
+      #|Results match for indices [0..i).
+    ),
   }
 }
 
@@ -339,6 +422,11 @@ test "karatsuba vs naive" {
   inspect(karatsuba_result.length() == naive_result.length(), content="true")
   for i = 0; i < naive_result.length(); i = i + 1 {
     inspect(karatsuba_result[i] == naive_result[i], content="true")
+  } where {
+    invariant: i >= 0 && i <= naive_result.length(),
+    reasoning: (
+      #|Results match for indices [0..i).
+    ),
   }
 }
 

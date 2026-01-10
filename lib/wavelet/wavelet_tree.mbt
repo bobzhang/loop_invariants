@@ -141,6 +141,11 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
   let indices : Array[Int] = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     indices[i] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|indices[0..i) equals 0..i-1.
+    ),
   }
 
   let root = build_node(nodes, arr.copy(), indices, 0, sigma)
@@ -372,6 +377,12 @@ fn WaveletTree::select(
     } else {
       None
     }
+  } where {
+    invariant: lo >= l && hi <= r && lo <= hi,
+    reasoning: (
+      #|The k-th occurrence (if it exists) remains within [lo, hi];
+      #|counts guide the narrowing of the search interval.
+    ),
   }
 }
 
@@ -718,6 +729,11 @@ test "wavelet tree stress" {
   let arr : Array[Int] = []
   for i = 0; i < 100; i = i + 1 {
     arr.push(i % 10)
+  } where {
+    invariant: i >= 0 && i <= 100,
+    reasoning: (
+      #|arr[0..i) filled with repeating 0..9 pattern.
+    ),
   }
   let wt = WaveletTree::build(arr, 10)
 
@@ -725,6 +741,11 @@ test "wavelet tree stress" {
   for v = 0; v < 10; v = v + 1 {
     let cnt = wt.count(0, 100, v)
     guard cnt is 10 else { fail("Expected count 10 for value \{v}") }
+  } where {
+    invariant: v >= 0 && v <= 10,
+    reasoning: (
+      #|Counts verified for values [0..v).
+    ),
   }
 
   // Quantile checks
