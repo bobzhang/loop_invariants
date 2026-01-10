@@ -31,6 +31,11 @@ fn bellman_ford_with_neg_cycle(
         dist[v] = dist[u] + w
         changed = true
       }
+    } where {
+      invariant: e >= 0 && e <= edges.length(),
+      reasoning: (
+        #|All edges in edges[0..e) have been relaxed in this iteration.
+      ),
     }
     // Early termination if no changes
     if not(changed) {
@@ -62,6 +67,11 @@ fn bellman_ford_with_neg_cycle(
       has_negative_cycle = true
       break
     }
+  } where {
+    invariant: e >= 0 && e <= edges.length(),
+    reasoning: (
+      #|All edges in edges[0..e) satisfy the no-further-relaxation check.
+    ),
   }
   (dist, has_negative_cycle)
 }
@@ -109,8 +119,18 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
       if adj[i][j] != 0 || i == j {
         row[j] = adj[i][j]
       }
+    } where {
+      invariant: j >= 0 && j <= n,
+      reasoning: (
+        #|row[0..j) has been initialized from adj[i][0..j).
+      ),
     }
     dist.push(row)
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|dist[0..i) rows have been initialized with direct edge weights.
+    ),
   }
 
   // Main algorithm: consider each vertex as intermediate
@@ -177,11 +197,21 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
   let adj : Array[Array[Int]] = []
   for i = 0; i < n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|adj[0..i) initialized as empty adjacency lists.
+    ),
   }
   for e = 0; e < edges.length(); e = e + 1 {
     let (u, v) = edges[e]
     adj[u].push(v)
     in_degree[v] = in_degree[v] + 1
+  } where {
+    invariant: e >= 0 && e <= edges.length(),
+    reasoning: (
+      #|Edges[0..e) have been added; in_degree reflects those edges.
+    ),
   }
 
   // Queue of vertices with in-degree 0
@@ -190,6 +220,11 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
     if in_degree[i] == 0 {
       queue.push(i)
     }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|queue contains zero in-degree vertices in [0..i).
+    ),
   }
   let result : Array[Int] = []
   for front = 0; front < queue.length(); {
@@ -203,6 +238,11 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
       if in_degree[v] == 0 {
         queue.push(v)
       }
+    } where {
+      invariant: i >= 0 && i <= adj[u].length(),
+      reasoning: (
+        #|Neighbors adj[u][0..i) have had in_degree updated and enqueued if needed.
+      ),
     }
     continue front + 1
   } else {
@@ -260,6 +300,11 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
           } else if color[v] == color[u] {
             return false // Same color = odd cycle = not bipartite
           }
+        } where {
+          invariant: i >= 0 && i <= adj[u].length(),
+          reasoning: (
+            #|Neighbors adj[u][0..i) have been checked for coloring consistency.
+          ),
         }
         continue front + 1
       } where {
@@ -369,17 +414,37 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
     if not(visited[i]) {
       dfs_order(adj, visited, order, i)
     }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|All vertices in [0..i) have been considered for the first DFS pass.
+    ),
   }
 
   // Build reverse graph
   let rev_adj : Array[Array[Int]] = []
   for i = 0; i < n; i = i + 1 {
     rev_adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|rev_adj[0..i) initialized as empty adjacency lists.
+    ),
   }
   for u = 0; u < n; u = u + 1 {
     for i = 0; i < adj[u].length(); i = i + 1 {
       rev_adj[adj[u][i]].push(u)
+    } where {
+      invariant: i >= 0 && i <= adj[u].length(),
+      reasoning: (
+        #|Reverse edges added for adj[u][0..i).
+      ),
     }
+  } where {
+    invariant: u >= 0 && u <= n,
+    reasoning: (
+      #|Reverse edges built for vertices [0..u).
+    ),
   }
 
   // Second pass: count SCCs
@@ -414,6 +479,11 @@ fn dfs_order(
     if not(visited[v]) {
       dfs_order(adj, visited, order, v)
     }
+  } where {
+    invariant: i >= 0 && i <= adj[u].length(),
+    reasoning: (
+      #|Neighbors adj[u][0..i) have been explored for finish order.
+    ),
   }
   order.push(u)
 }
@@ -426,6 +496,11 @@ fn dfs_mark(adj : Array[Array[Int]], visited : Array[Bool], u : Int) -> Unit {
     if not(visited[v]) {
       dfs_mark(adj, visited, v)
     }
+  } where {
+    invariant: i >= 0 && i <= adj[u].length(),
+    reasoning: (
+      #|Neighbors adj[u][0..i) have been visited in this SCC/component.
+    ),
   }
 }
 
@@ -461,6 +536,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
         min_key = key[v]
         u = v
       }
+    } where {
+      invariant: v >= 0 && v <= n,
+      reasoning: (
+        #|min_key/u track the best candidate among vertices [0..v).
+      ),
     }
     if u == -1 {
       break // Disconnected graph
@@ -474,6 +554,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
       if not(in_mst[v]) && weight < key[v] {
         key[v] = weight
       }
+    } where {
+      invariant: i >= 0 && i <= adj[u].length(),
+      reasoning: (
+        #|Neighbors adj[u][0..i) have had their key values updated if improved.
+      ),
     }
   } where {
     invariant: count >= 0 && count <= n,
@@ -529,7 +614,17 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
         sorted_edges[i] = sorted_edges[j]
         sorted_edges[j] = temp
       }
+    } where {
+      invariant: j >= i + 1 && j <= sorted_edges.length(),
+      reasoning: (
+        #|sorted_edges[i] is the minimum among indices [i..j) seen so far.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= sorted_edges.length(),
+    reasoning: (
+      #|sorted_edges[0..i) contains the i smallest edges in non-decreasing order.
+    ),
   }
 
   // Union-Find
@@ -537,6 +632,11 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
   let rank = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|parent[0..i) initialized so each vertex is its own root.
+    ),
   }
   let mut total_weight = 0
   let mut edges_added = 0

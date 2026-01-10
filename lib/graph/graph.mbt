@@ -14,9 +14,20 @@ fn compute_in_degrees(graph : Array[Array[Int]]) -> Array[Int] {
   let n = graph.length()
   let in_degree : Array[Int] = Array::make(n, 0)
   for u = 0; u < n; u = u + 1 {
-    for neighbor in graph[u] {
+    for i = 0; i < graph[u].length(); i = i + 1 {
+      let neighbor = graph[u][i]
       in_degree[neighbor] = in_degree[neighbor] + 1
+    } where {
+      invariant: i >= 0 && i <= graph[u].length(),
+      reasoning: (
+        #|Processed edges from u to neighbors graph[u][0..i).
+      ),
     }
+  } where {
+    invariant: u >= 0 && u <= n,
+    reasoning: (
+      #|in_degree reflects all edges originating from vertices [0..u).
+    ),
   }
   in_degree
 }
@@ -36,6 +47,11 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
     if in_degree[v] == 0 {
       queue.push(v)
     }
+  } where {
+    invariant: v >= 0 && v <= n,
+    reasoning: (
+      #|queue contains exactly the zero in-degree vertices in [0..v).
+    ),
   }
 
   // Process vertices in topological order
@@ -47,11 +63,17 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       result.push(u)
 
       // "Remove" u by decrementing in-degrees of its neighbors
-      for neighbor in graph[u] {
+      for i = 0; i < graph[u].length(); i = i + 1 {
+        let neighbor = graph[u][i]
         in_degree[neighbor] = in_degree[neighbor] - 1
         if in_degree[neighbor] == 0 {
           queue.push(neighbor)
         }
+      } where {
+        invariant: i >= 0 && i <= graph[u].length(),
+        reasoning: (
+          #|Neighbors graph[u][0..i) have been processed and enqueued if needed.
+        ),
       }
       continue head + 1
     }
@@ -120,6 +142,11 @@ test "topological_sort" {
       let pos : Array[Int] = Array::make(3, 0)
       for i = 0; i < order.length(); i = i + 1 {
         pos[order[i]] = i
+      } where {
+        invariant: i >= 0 && i <= order.length(),
+        reasoning: (
+          #|pos has been filled for order[0..i).
+        ),
       }
       assert_true(pos[0] < pos[1])
       assert_true(pos[0] < pos[2])
@@ -178,11 +205,16 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       visited[u] = true
 
       // Relax all edges from u
-      for edge in graph[u] {
-        let (v, weight) = edge
+      for i = 0; i < graph[u].length(); i = i + 1 {
+        let (v, weight) = graph[u][i]
         if dist[u] + weight < dist[v] {
           dist[v] = dist[u] + weight
         }
+      } where {
+        invariant: i >= 0 && i <= graph[u].length(),
+        reasoning: (
+          #|Edges graph[u][0..i) have been relaxed using dist[u].
+        ),
       }
       continue count + 1
     }
@@ -271,6 +303,11 @@ fn make_union_find(n : Int) -> UnionFind {
   let parent : Array[Int] = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|parent[0..i) initialized so each element is its own root.
+    ),
   }
   { parent, rank: Array::make(n, 0) }
 }
@@ -359,12 +396,17 @@ fn bellman_ford(
       break
     } else {
       let mut changed = false
-      for edge in edges {
-        let (u, v, w) = edge
+      for e = 0; e < edges.length(); e = e + 1 {
+        let (u, v, w) = edges[e]
         if dist[u] != inf && dist[u] + w < dist[v] {
           dist[v] = dist[u] + w
           changed = true
         }
+      } where {
+        invariant: e >= 0 && e <= edges.length(),
+        reasoning: (
+          #|Edges[0..e) have been relaxed for this iteration.
+        ),
       }
       if not(changed) {
         break // Early termination if no changes
@@ -406,11 +448,16 @@ fn bellman_ford(
   }
 
   // Check for negative cycles: if any edge can still be relaxed
-  for edge in edges {
-    let (u, v, w) = edge
+  for e = 0; e < edges.length(); e = e + 1 {
+    let (u, v, w) = edges[e]
     if dist[u] != inf && dist[u] + w < dist[v] {
       return None // Negative cycle detected
     }
+  } where {
+    invariant: e >= 0 && e <= edges.length(),
+    reasoning: (
+      #|Edges[0..e) satisfy the no-further-relaxation check.
+    ),
   }
   Some(dist)
 }
@@ -452,14 +499,24 @@ fn floyd_warshall(
   for i = 0; i < n; i = i + 1 {
     dist[i] = Array::make(n, inf)
     dist[i][i] = 0
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Rows 0..i are initialized with inf and 0 on the diagonal.
+    ),
   }
 
   // Initialize with direct edges
-  for edge in edges {
-    let (u, v, w) = edge
+  for e = 0; e < edges.length(); e = e + 1 {
+    let (u, v, w) = edges[e]
     if w < dist[u][v] {
       dist[u][v] = w
     }
+  } where {
+    invariant: e >= 0 && e <= edges.length(),
+    reasoning: (
+      #|Edges[0..e) have been applied to the direct-distance matrix.
+    ),
   }
 
   // Main DP: consider each vertex k as intermediate
@@ -475,7 +532,17 @@ fn floyd_warshall(
               dist[i][j] = through_k
             }
           }
+        } where {
+          invariant: j >= 0 && j <= n,
+          reasoning: (
+            #|Row i has been updated for columns [0..j) using intermediate k.
+          ),
         }
+      } where {
+        invariant: i >= 0 && i <= n,
+        reasoning: (
+          #|Rows [0..i) have been updated using intermediate k.
+        ),
       }
       continue k + 1
     }
@@ -548,6 +615,11 @@ fn sort_edge_tuples(edges : Array[(Int, Int, Int)]) -> Unit {
       }
     }
     edges[j + 1] = key
+  } where {
+    invariant: i >= 1 && i <= edges.length(),
+    reasoning: (
+      #|edges[0..i) is sorted by weight after each insertion step.
+    ),
   }
 }
 
