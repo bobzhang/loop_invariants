@@ -43,7 +43,6 @@ priv struct LCA {
   log_n : Int
   up : Array[Array[Int]] // up[v][k] = 2^k-th ancestor
   depth : Array[Int]
-  adj : Array[Array[Int]]
 }
 
 ///|
@@ -61,13 +60,18 @@ fn compute_log(n : Int) -> Int {
 /// Create LCA structure from adjacency list (tree rooted at 0)
 fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
   if n == 0 {
-    return { n: 0, log_n: 0, up: [], depth: [], adj: [] }
+    return { n: 0, log_n: 0, up: [], depth: [] }
   }
 
   let log_n = compute_log(n)
   let adj : Array[Array[Int]] = []
   for i = 0; i < n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Initialize adjacency list slots for each vertex.
+    ),
   }
 
   // Build adjacency list
@@ -77,6 +81,11 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
       adj[u].push(v)
       adj[v].push(u)
     }
+  } where {
+    invariant: i >= 0 && i <= edges.length(),
+    reasoning: (
+      #|Add each undirected edge to both adjacency lists.
+    ),
   }
 
   // Initialize arrays
@@ -84,6 +93,11 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
   let up : Array[Array[Int]] = []
   for i = 0; i < n; i = i + 1 {
     up.push(Array::make(log_n, -1))
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Allocate ancestor table rows with -1 placeholders.
+    ),
   }
 
   // DFS to compute depth and immediate parent
@@ -96,13 +110,18 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
       if up[v][k - 1] != -1 {
         up[v][k] = up[up[v][k - 1]][k - 1]
       }
+    } where {
+      invariant: v >= 0 && v <= n,
+      reasoning: (
+        #|Fill the 2^k ancestor for every vertex.
+      ),
     }
   } where {
     invariant: k >= 1 && k <= log_n,
     reasoning: "I: After DFS, up[v][0] = parent[v] for all v (base case: 2^0 = 1st ancestor). M: For level k, up[v][k] = up[up[v][k-1]][k-1]. This computes the 2^k-th ancestor by jumping to the 2^(k-1)-th ancestor, then jumping another 2^(k-1) steps. Proof: 2^(k-1) + 2^(k-1) = 2^k. If either jump is invalid (-1), up[v][k] remains -1. T: After k=log_n-1, up[v][k] correctly stores 2^k-th ancestor for all k in [0, log_n), enabling O(log n) ancestor queries.",
   }
 
-  { n, log_n, up, depth, adj }
+  { n, log_n, up, depth }
 }
 
 ///|
@@ -124,6 +143,11 @@ fn dfs_build(
     if not(visited[u]) {
       dfs_build(u, v, d + 1, adj, depth, up, visited)
     }
+  } where {
+    invariant: i >= 0 && i <= adj[v].length(),
+    reasoning: (
+      #|DFS explores each neighbor once, recursing into unvisited nodes.
+    ),
   }
 }
 
@@ -211,6 +235,12 @@ fn LCA::kth_ancestor(self : LCA, v : Int, k : Int) -> Int {
     if ((k >> bit) & 1) == 1 {
       curr = self.up[curr][bit]
     }
+  } where {
+    invariant: bit >= 0 && bit <= self.log_n,
+    invariant: curr >= 0 && curr < self.n,
+    reasoning: (
+      #|Process k's bits from low to high, jumping 2^bit when the bit is set.
+    ),
   }
   curr
 }
@@ -251,9 +281,19 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
   let result : Array[Int] = []
   for i = 0; i < path_u.length(); i = i + 1 {
     result.push(path_u[i])
+  } where {
+    invariant: i >= 0 && i <= path_u.length(),
+    reasoning: (
+      #|Append the u -> LCA path in forward order.
+    ),
   }
   for i = path_v.length() - 1; i >= 0; i = i - 1 {
     result.push(path_v[i])
+  } where {
+    invariant: i >= -1 && i < path_v.length(),
+    reasoning: (
+      #|Append the v -> LCA path in reverse, skipping the LCA already included.
+    ),
   }
   result
 }
@@ -279,6 +319,11 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   for i = 0; i < edges.length(); i = i + 1 {
     let (u, v, _) = edges[i]
     unweighted_edges.push((u, v))
+  } where {
+    invariant: i >= 0 && i <= edges.length(),
+    reasoning: (
+      #|Strip weights to build the plain LCA structure.
+    ),
   }
 
   let lca = LCA::new(n, unweighted_edges)
@@ -287,6 +332,11 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   let wadj : Array[Array[(Int, Int64)]] = []
   for i = 0; i < n; i = i + 1 {
     wadj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Initialize weighted adjacency lists.
+    ),
   }
   for i = 0; i < edges.length(); i = i + 1 {
     let (u, v, w) = edges[i]
@@ -294,6 +344,11 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
       wadj[u].push((v, w))
       wadj[v].push((u, w))
     }
+  } where {
+    invariant: i >= 0 && i <= edges.length(),
+    reasoning: (
+      #|Add weighted edges in both directions.
+    ),
   }
 
   // DFS to compute distances
@@ -320,6 +375,11 @@ fn dfs_dist(
     if not(visited[u]) {
       dfs_dist(u, d + w, wadj, dist, visited)
     }
+  } where {
+    invariant: i >= 0 && i <= wadj[v].length(),
+    reasoning: (
+      #|DFS visits each neighbor once to accumulate root distances.
+    ),
   }
 }
 

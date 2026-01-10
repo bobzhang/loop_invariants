@@ -293,6 +293,18 @@ fn ImplicitTreap::get(self : ImplicitTreap, pos : Int) -> Int64? {
     }
   } else {
     None
+  } where {
+    invariant: node >= 0 && node < self.nodes.length(),
+    invariant: target >= 0 && target < self.get_size(node),
+    reasoning: (
+      #|SEARCH INVARIANT:
+      #|At each step, (node, target) describes the target position inside the
+      #|subtree rooted at node. If target < left_size we move left; if
+      #|target > left_size we move right and subtract left_size + 1.
+      #|
+      #|Thus target always stays within the new subtree size, and each step
+      #|moves down one level toward the requested index.
+    ),
   }
 }
 
@@ -421,6 +433,11 @@ fn ImplicitTreap::from_array(arr : Array[Int64]) -> ImplicitTreap {
   let treap = ImplicitTreap::new()
   for i = 0; i < arr.length(); i = i + 1 {
     treap.insert(i, arr[i])
+  } where {
+    invariant: i >= 0 && i <= arr.length(),
+    reasoning: (
+      #|Insert elements in order so array index matches treap position.
+    ),
   }
   treap
 }
@@ -605,6 +622,11 @@ test "implicit treap stress" {
   // Build sequence 0..99
   for i = 0; i < 100; i = i + 1 {
     treap.push_back(i.to_int64())
+  } where {
+    invariant: i >= 0 && i <= 100,
+    reasoning: (
+      #|Append sequential values to build a length-100 sequence.
+    ),
   }
 
   inspect(treap.size(), content="100")
@@ -648,6 +670,11 @@ test "implicit treap rope operations" {
       Some(v) => treap1.push_back(v)
       None => ()
     }
+  } where {
+    invariant: i >= 0 && i <= treap2.size(),
+    reasoning: (
+      #|Read each element of treap2 and append it to treap1.
+    ),
   }
 
   inspect(treap1.to_array(), content="[1, 2, 3, 4, 5, 6]")
@@ -655,6 +682,11 @@ test "implicit treap rope operations" {
   // Split simulation: delete elements
   for i = 0; i < 3; i = i + 1 {
     let _ = treap1.pop_front()
+  } where {
+    invariant: i >= 0 && i <= 3,
+    reasoning: (
+      #|Remove the first three elements after concatenation.
+    ),
   }
   inspect(treap1.to_array(), content="[4, 5, 6]")
 }
