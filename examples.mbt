@@ -415,19 +415,16 @@ test "dutch_flag" {
   let arr1 : Array[Int] = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
   dutch_flag(arr1, 5)
   // All elements < 5, then == 5, then > 5
-  let mut seen_equal = false
-  let mut seen_greater = false
-  for x in arr1 {
-    if x == 5 {
-      seen_equal = true
-    } else if x > 5 {
-      seen_greater = true
-    }
+  let _ = arr1.fold(init=(false, false), fn(state, x) {
+    let (seen_equal, seen_greater) = state
+    let seen_equal2 = seen_equal || x == 5
+    let seen_greater2 = seen_greater || x > 5
     // Once we see ==5, no more <5
-    assert_true(not(seen_equal) || x >= 5)
+    assert_true(not(seen_equal2) || x >= 5)
     // Once we see >5, no more <=5
-    assert_true(not(seen_greater) || x > 5)
-  }
+    assert_true(not(seen_greater2) || x > 5)
+    (seen_equal2, seen_greater2)
+  })
 }
 
 // ============================================================================
@@ -1155,6 +1152,21 @@ fn reverse_range(arr : Array[Int], lo : Int, hi : Int) -> Unit {
       arr[h] = tmp
       continue l + 1, h - 1
     }
+  } where {
+    invariant: 0 <= lo && lo <= l && h <= hi && hi < arr.length(),
+    reasoning: (
+      #|Bounds: l and h stay within the provided range.
+      #|
+      #|Base: l=lo, h=hi and 0 <= lo <= hi < n by caller contract.
+      #|Update: l increases and h decreases, so they remain in [lo, hi].
+    ),
+    invariant: l + h == lo + hi,
+    reasoning: (
+      #|Symmetry: the distance moved from both ends is the same.
+      #|
+      #|Each step does (l, h) -> (l+1, h-1), preserving l+h.
+      #|This ensures we swap mirrored positions while shrinking inward.
+    ),
   }
 }
 
@@ -1189,6 +1201,24 @@ fn lower_bound(arr : Array[Int], len : Int, target : Int) -> Int {
         continue lo, mid
       }
     }
+  } where {
+    invariant: 0 <= lo && lo <= hi && hi <= len,
+    reasoning: (
+      #|Bounds: lo and hi always stay within [0, len].
+      #|
+      #|Base: lo=0, hi=len. Updates use mid in [lo, hi), so bounds hold.
+    ),
+    invariant: lo == 0 || arr[lo - 1] < target,
+    reasoning: (
+      #|Left exclusion: all indices < lo are strictly < target.
+      #|
+      #|We only move lo to mid+1 when arr[mid] < target.
+    ),
+    invariant: hi == len || arr[hi] >= target,
+    reasoning: (
+      #|Right candidate: hi is the first known index with arr[hi] >= target,
+      #|or hi=len when none is known yet.
+    ),
   }
 }
 

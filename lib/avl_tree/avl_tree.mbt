@@ -389,9 +389,9 @@ test "avl size" {
 ///|
 test "avl many insertions" {
   let tree = AVLTree::new()
-  for i = 0; i < 100; i = i + 1 {
+  Array::makei(100, fn(i) { i }).each(fn(i) {
     tree.insert(i.to_int64())
-  }
+  })
   inspect(tree.is_balanced(), content="true")
   inspect(tree.size(), content="100")
   // Height should be around log2(100) ≈ 7
