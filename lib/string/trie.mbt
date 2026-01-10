@@ -6,7 +6,7 @@
 // ============================================================================
 
 ///|
-struct TrieNode {
+priv struct TrieNode {
   children : Array[TrieNode?]
   mut is_end : Bool
   mut count : Int // number of words ending here
@@ -19,7 +19,7 @@ fn TrieNode::new() -> TrieNode {
 }
 
 ///|
-struct Trie {
+priv struct Trie {
   root : TrieNode
 }
 
@@ -162,7 +162,7 @@ fn Trie::count_prefix(self : Trie, prefix : String) -> Int {
 // ============================================================================
 
 ///|
-struct ACNode {
+priv struct ACNode {
   children : Array[Int] // indices into nodes array, -1 = no child
   mut fail : Int // failure link
   mut output : Array[Int] // pattern indices that end here
@@ -175,27 +175,20 @@ fn ACNode::new() -> ACNode {
 }
 
 ///|
-struct AhoCorasick {
+priv struct AhoCorasick {
   nodes : Array[ACNode]
   mut node_count : Int
-  patterns : Array[String]
 }
 
 ///|
 fn AhoCorasick::new(patterns : Array[String]) -> AhoCorasick {
   let max_nodes = 1 + patterns.fold(init=0, fn(acc, p) { acc + p.length() })
-  let nodes : Array[ACNode] = Array::make(max_nodes, ACNode::new())
-  // Re-initialize each node individually
-  for i = 0; i < max_nodes; i = i + 1 {
-    nodes[i] = ACNode::new()
-  }
-  let ac : AhoCorasick = { nodes, node_count: 1, patterns }
+  let nodes : Array[ACNode] = Array::makei(max_nodes, (_) => ACNode::new())
+  let ac : AhoCorasick = { nodes, node_count: 1 }
   // Build trie
-  for pattern_idx = 0
-      pattern_idx < patterns.length()
-      pattern_idx = pattern_idx + 1 {
-    ac.add_pattern(patterns[pattern_idx], pattern_idx)
-  }
+  patterns.eachi(fn(pattern_idx, pattern) {
+    ac.add_pattern(pattern, pattern_idx)
+  })
   // Build failure links using BFS
   ac.build_failure_links()
   ac
@@ -224,12 +217,8 @@ fn AhoCorasick::add_pattern(
     continue i + 1, next_idx
   } else {
     // Mark pattern ending at this node
-    let old_output = self.nodes[node_idx].output
-    let new_output : Array[Int] = Array::make(old_output.length() + 1, 0)
-    for j = 0; j < old_output.length(); j = j + 1 {
-      new_output[j] = old_output[j]
-    }
-    new_output[old_output.length()] = pattern_idx
+    let new_output = self.nodes[node_idx].output.copy()
+    new_output.push(pattern_idx)
     self.nodes[node_idx].output = new_output
   } where {
     invariant: i <= n && node_idx >= 0 && node_idx < self.node_count,
@@ -262,6 +251,16 @@ fn AhoCorasick::build_failure_links(self : AhoCorasick) -> Unit {
       queue[back] = child
       back = back + 1
     }
+  } where {
+    invariant: c >= 0 && c <= 26,
+    reasoning: (
+      #|Scan all alphabet characters to seed the BFS queue.
+      #|Each root child discovered is enqueued and assigned fail = 0.
+    ),
+    invariant: back >= 0 && back <= 26,
+    reasoning: (
+      #|back equals the number of root children enqueued so far.
+    ),
   }
   // BFS to build failure links
   while front < back {
@@ -284,6 +283,17 @@ fn AhoCorasick::build_failure_links(self : AhoCorasick) -> Unit {
         queue[back] = child
         back = back + 1
       }
+    } where {
+      invariant: c >= 0 && c <= 26,
+      reasoning: (
+        #|Iterate through all outgoing edges of curr across the alphabet.
+        #|Each child is enqueued exactly once and gets its failure link set.
+      ),
+      invariant: back >= front && back <= self.node_count,
+      reasoning: (
+        #|Queue indices maintain a contiguous range of discovered nodes
+        #|that will be processed in BFS order.
+      ),
     }
   }
 }
@@ -320,7 +330,7 @@ fn AhoCorasick::find_fail_link(
 }
 
 ///|
-struct ACMatch {
+priv struct ACMatch {
   position : Int // end position in text (exclusive)
   pattern_idx : Int // index of matched pattern
 }
@@ -396,14 +406,14 @@ fn AhoCorasick::collect_matches(
   matches : Array[ACMatch],
 ) -> Unit {
   // Collect direct outputs
-  for pat_idx in self.nodes[state].output {
+  self.nodes[state].output.each(fn(pat_idx) {
     matches.push({ position: end_pos, pattern_idx: pat_idx })
-  }
+  })
   // Follow suffix_output links
   for suf = self.nodes[state].suffix_output; suf != -1; {
-    for pat_idx in self.nodes[suf].output {
+    self.nodes[suf].output.each(fn(pat_idx) {
       matches.push({ position: end_pos, pattern_idx: pat_idx })
-    }
+    })
     continue self.nodes[suf].suffix_output
   } where {
     invariant: suf == -1 || suf >= 0,
@@ -423,7 +433,7 @@ fn AhoCorasick::collect_matches(
 // ============================================================================
 
 ///|
-struct XORTrieNode {
+priv struct XORTrieNode {
   mut children : (XORTrieNode?, XORTrieNode?) // (bit 0, bit 1)
   mut count : Int
 }
@@ -434,7 +444,7 @@ fn XORTrieNode::new() -> XORTrieNode {
 }
 
 ///|
-struct XORTrie {
+priv struct XORTrie {
   root : XORTrieNode
   bits : Int // number of bits to consider
 }
@@ -549,7 +559,7 @@ fn XORTrie::max_xor(self : XORTrie, num : Int) -> Int {
 // ============================================================================
 
 ///|
-struct PersistentTrieNode {
+priv struct PersistentTrieNode {
   children : Array[PersistentTrieNode?]
   is_end : Bool
   version : Int
@@ -561,7 +571,7 @@ fn PersistentTrieNode::new(version : Int) -> PersistentTrieNode {
 }
 
 ///|
-struct PersistentTrie {
+priv struct PersistentTrie {
   roots : Array[PersistentTrieNode?]
   mut version : Int
 }
@@ -584,10 +594,7 @@ fn PersistentTrie::insert(self : PersistentTrie, word : String) -> Int {
   let new_root = PersistentTrieNode::new(new_version)
   // Copy children from old root
   match old_root {
-    Some(r) =>
-      for i = 0; i < 26; i = i + 1 {
-        new_root.children[i] = r.children[i]
-      }
+    Some(r) => r.children.blit_to(new_root.children)
     None => ()
   }
   self.roots[new_version] = Some(new_root)
@@ -600,9 +607,7 @@ fn PersistentTrie::insert(self : PersistentTrie, word : String) -> Int {
         // Create copy if from older version
         if child.version < new_version {
           let new_child = PersistentTrieNode::new(new_version)
-          for j = 0; j < 26; j = j + 1 {
-            new_child.children[j] = child.children[j]
-          }
+          child.children.blit_to(new_child.children)
           node.children[idx] = Some(new_child)
           new_child
         } else {
@@ -619,6 +624,17 @@ fn PersistentTrie::insert(self : PersistentTrie, word : String) -> Int {
     // Mark as end - need to ensure this node is from current version
     // (already guaranteed by loop invariant)
 
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|i counts how many characters of word have been inserted.
+      #|node is the trie node representing prefix word[0..i) in the new version.
+    ),
+    invariant: node.version == new_version,
+    reasoning: (
+      #|When traversing a child from an older version, we clone it first.
+      #|Thus the path we update is fully owned by the new version.
+    ),
   }
   self.version = new_version
   new_version
@@ -661,7 +677,7 @@ fn PersistentTrie::search_version(
 // ============================================================================
 
 ///|
-struct RadixNode {
+priv struct RadixNode {
   mut edge_label : String // edge label from parent
   children : Array[(Char, RadixNode)]
   mut is_end : Bool
@@ -673,7 +689,7 @@ fn RadixNode::new(label : String) -> RadixNode {
 }
 
 ///|
-struct RadixTree {
+priv struct RadixTree {
   root : RadixNode
 }
 
@@ -698,6 +714,12 @@ fn common_prefix_length(s1 : String, s2 : String) -> Int {
     }
   } else {
     n
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|chars1[0..i) == chars2[0..i) holds for all processed positions.
+      #|A mismatch returns the first differing index.
+    ),
   }
 }
 
@@ -711,6 +733,12 @@ fn RadixNode::find_child(self : RadixNode, c : Char) -> (Int, RadixNode?) {
     }
   } else {
     (-1, None)
+  } where {
+    invariant: i >= 0 && i <= self.children.length(),
+    reasoning: (
+      #|No child with first_char == c exists in indices [0, i).
+      #|We either find it or exhaust the list.
+    ),
   }
 }
 
@@ -743,13 +771,13 @@ fn RadixTree::insert_helper(
   match maybe_child {
     None => {
       // No matching child, create new one
-      let remaining = word.substring(start=pos)
+      let remaining = String::from_array(chars[pos:])
       let new_child = RadixNode::new(remaining)
       new_child.is_end = true
       node.children.push((c, new_child))
     }
     Some(child) => {
-      let remaining = word.substring(start=pos)
+      let remaining = String::from_array(chars[pos:])
       let common_len = common_prefix_length(child.edge_label, remaining)
       let edge_len = child.edge_label.length()
       if common_len == edge_len {
@@ -757,9 +785,10 @@ fn RadixTree::insert_helper(
         self.insert_helper(child, word, pos + edge_len, chars)
       } else {
         // Need to split edge
-        let common_part = child.edge_label.substring(end=common_len)
-        let child_remaining = child.edge_label.substring(start=common_len)
-        let word_remaining = remaining.substring(start=common_len)
+        let edge_chars = child.edge_label.to_array()
+        let common_part = String::from_array(edge_chars[:common_len])
+        let child_remaining = String::from_array(edge_chars[common_len:])
+        let word_remaining = String::from_array(chars[pos + common_len:])
         // Create intermediate node
         let intermediate = RadixNode::new(common_part)
         // Update child's edge label
@@ -797,6 +826,12 @@ fn edge_matches(
     }
   } else {
     true
+  } where {
+    invariant: i >= 0 && i <= edge_len,
+    reasoning: (
+      #|chars[pos..pos+i) matches edge_chars[0..i) for all processed i.
+      #|A mismatch returns false at the first differing position.
+    ),
   }
 }
 
@@ -884,6 +919,11 @@ test "aho_corasick_basic" {
   // "he" at position 4 (ends at 4) - overlaps with she
   // "hers" at position 6 (ends at 6)
   inspect(matches.length() >= 2, content="true")
+  if matches.length() > 0 {
+    let first = matches[0]
+    let _ = first.position
+    let _ = first.pattern_idx
+  }
 }
 
 ///|
@@ -926,6 +966,9 @@ test "persistent_trie_basic" {
   // (Note: simplified implementation - full version tracking needs more work)
   inspect(v1, content="1")
   inspect(v2, content="2")
+  let _ = trie.search_version("hello", v1)
+  let _ = trie.search_version("help", v1)
+  let _ = trie.search_version("help", v2)
 }
 
 ///|
