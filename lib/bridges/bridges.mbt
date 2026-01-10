@@ -1,0 +1,238 @@
+// ============================================================================
+// ARTICULATION POINTS AND BRIDGES - Graph Connectivity
+// ============================================================================
+//
+// Articulation points (cut vertices) are vertices whose removal disconnects
+// the graph. Bridges (cut edges) are edges whose removal disconnects the graph.
+//
+// ALGORITHM (Tarjan's):
+// Use DFS with discovery times and low values:
+// - disc[u] = discovery time of vertex u
+// - low[u] = minimum disc reachable from subtree of u via back edges
+//
+// ARTICULATION POINT RULES:
+// 1. Root is articulation point if it has ≥ 2 children in DFS tree
+// 2. Non-root u is articulation point if it has child v with low[v] >= disc[u]
+//    (no back edge from v's subtree goes above u)
+//
+// BRIDGE RULE:
+// Edge (u, v) is bridge if low[v] > disc[u]
+// (no back edge from v's subtree reaches u or above)
+//
+// INVARIANTS:
+// 1. low[u] = min(disc[u], disc[w]) for all back edges (u,w) and min(low[v]) for tree edges
+// 2. disc values are unique and increasing
+// 3. In DFS tree, parent edge is not counted in low calculation for bridges
+//
+// TIME COMPLEXITY: O(V + E)
+// SPACE COMPLEXITY: O(V)
+
+///|
+priv struct BridgeFinder {
+  n : Int
+  adj : Array[Array[Int]]
+  disc : Array[Int]
+  low : Array[Int]
+  parent : Array[Int]
+  mut timer : Int
+  articulation_points : Array[Bool]
+  bridges : Array[(Int, Int)]
+}
+
+///|
+fn BridgeFinder::new(n : Int) -> BridgeFinder {
+  let adj = Array::make(n, [])
+  for i = 0; i < n; i = i + 1 {
+    adj[i] = []
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: adj uninitialized. M: Create empty list for each vertex. T: All vertices have independent adjacency lists.",
+  }
+  {
+    n,
+    adj,
+    disc: Array::make(n, -1),
+    low: Array::make(n, -1),
+    parent: Array::make(n, -1),
+    timer: 0,
+    articulation_points: Array::make(n, false),
+    bridges: [],
+  }
+}
+
+///|
+fn BridgeFinder::add_edge(self : BridgeFinder, u : Int, v : Int) -> Unit {
+  self.adj[u].push(v)
+  self.adj[v].push(u)
+}
+
+///|
+fn BridgeFinder::dfs(self : BridgeFinder, u : Int, p : Int) -> Unit {
+  self.disc[u] = self.timer
+  self.low[u] = self.timer
+  self.timer = self.timer + 1
+  self.parent[u] = p
+
+  let mut children = 0
+
+  for i = 0; i < self.adj[u].length(); i = i + 1 {
+    let v = self.adj[u][i]
+
+    if self.disc[v] < 0 {
+      // Tree edge
+      children = children + 1
+      self.dfs(v, u)
+
+      // Update low[u] from child
+      if self.low[v] < self.low[u] {
+        self.low[u] = self.low[v]
+      }
+
+      // Check for articulation point (non-root case)
+      if p >= 0 && self.low[v] >= self.disc[u] {
+        self.articulation_points[u] = true
+      }
+
+      // Check for bridge
+      if self.low[v] > self.disc[u] {
+        self.bridges.push((u, v))
+      }
+    } else if v != p {
+      // Back edge (not to parent)
+      if self.disc[v] < self.low[u] {
+        self.low[u] = self.disc[v]
+      }
+    }
+  } where {
+    invariant: i >= 0 && i <= self.adj[u].length(),
+    reasoning: "I: disc[u], low[u] set to timer. M: For each neighbor v: if unvisited (tree edge), recurse and update low[u] = min(low[u], low[v]); if visited and not parent (back edge), update low[u] = min(low[u], disc[v]). Check articulation/bridge conditions. T: low[u] = minimum reachable disc value from u's subtree.",
+  }
+
+  // Root articulation point check
+  if p < 0 && children > 1 {
+    self.articulation_points[u] = true
+  }
+}
+
+///|
+fn BridgeFinder::find(self : BridgeFinder) -> Unit {
+  for i = 0; i < self.n; i = i + 1 {
+    if self.disc[i] < 0 {
+      self.dfs(i, -1)
+    }
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: "I: All vertices unvisited. M: For each unvisited vertex, start DFS. T: All connected components processed.",
+  }
+}
+
+///|
+fn BridgeFinder::get_articulation_points(self : BridgeFinder) -> Array[Int] {
+  let result : Array[Int] = []
+  for i = 0; i < self.n; i = i + 1 {
+    if self.articulation_points[i] {
+      result.push(i)
+    }
+  }
+  result
+}
+
+///|
+fn BridgeFinder::get_bridges(self : BridgeFinder) -> Array[(Int, Int)] {
+  self.bridges
+}
+
+///|
+fn BridgeFinder::is_articulation_point(self : BridgeFinder, u : Int) -> Bool {
+  if u < 0 || u >= self.n {
+    return false
+  }
+  self.articulation_points[u]
+}
+
+// ============================================================================
+// TESTS
+// ============================================================================
+
+///|
+test "bridges basic" {
+  //     0
+  //    /|\
+  //   1-2-3
+  //       |
+  //       4
+  let bf = BridgeFinder::new(5)
+  bf.add_edge(0, 1)
+  bf.add_edge(0, 2)
+  bf.add_edge(1, 2)
+  bf.add_edge(2, 3)
+  bf.add_edge(3, 4)
+  bf.find()
+
+  // Bridges: (2,3) and (3,4)
+  inspect(bf.get_bridges().length(), content="2")
+
+  // Articulation points: 2 and 3
+  let aps = bf.get_articulation_points()
+  inspect(aps.length(), content="2")
+}
+
+///|
+test "bridges cycle" {
+  // Complete cycle: no bridges, no articulation points
+  let bf = BridgeFinder::new(4)
+  bf.add_edge(0, 1)
+  bf.add_edge(1, 2)
+  bf.add_edge(2, 3)
+  bf.add_edge(3, 0)
+  bf.find()
+
+  inspect(bf.get_bridges().length(), content="0")
+  inspect(bf.get_articulation_points().length(), content="0")
+}
+
+///|
+test "bridges linear" {
+  // Linear: 0 - 1 - 2 - 3
+  // All edges are bridges, 1 and 2 are articulation points
+  let bf = BridgeFinder::new(4)
+  bf.add_edge(0, 1)
+  bf.add_edge(1, 2)
+  bf.add_edge(2, 3)
+  bf.find()
+
+  inspect(bf.get_bridges().length(), content="3")
+  inspect(bf.get_articulation_points().length(), content="2")
+}
+
+///|
+test "bridges star" {
+  // Star: center is articulation point
+  let bf = BridgeFinder::new(5)
+  bf.add_edge(0, 1)
+  bf.add_edge(0, 2)
+  bf.add_edge(0, 3)
+  bf.add_edge(0, 4)
+  bf.find()
+
+  inspect(bf.is_articulation_point(0), content="true")
+  inspect(bf.get_bridges().length(), content="4")
+}
+
+///|
+test "bridges single" {
+  let bf = BridgeFinder::new(1)
+  bf.find()
+  inspect(bf.get_bridges().length(), content="0")
+  inspect(bf.get_articulation_points().length(), content="0")
+}
+
+///|
+test "bridges two components" {
+  let bf = BridgeFinder::new(4)
+  bf.add_edge(0, 1)
+  bf.add_edge(2, 3)
+  bf.find()
+
+  inspect(bf.get_bridges().length(), content="2")
+}
