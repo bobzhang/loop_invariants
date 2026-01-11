@@ -46,7 +46,14 @@ fn BridgeFinder::new(n : Int) -> BridgeFinder {
     adj[i] = []
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: adj uninitialized. M: Create empty list for each vertex. T: All vertices have independent adjacency lists.",
+    reasoning: (
+      #|INVARIANT (adj init):
+      #|adjacency lists for vertices in [0, i) are initialized and independent.
+      #|MAINTENANCE:
+      #|Assign a fresh empty list to adj[i].
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
+    ),
   }
   {
     n,
@@ -102,7 +109,17 @@ fn BridgeFinder::dfs(self : BridgeFinder, u : Int, p : Int) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: "I: disc[u], low[u] set to timer. M: For each neighbor v: if unvisited (tree edge), recurse and update low[u] = min(low[u], low[v]); if visited and not parent (back edge), update low[u] = min(low[u], disc[v]). Check articulation/bridge conditions. T: low[u] = minimum reachable disc value from u's subtree.",
+    reasoning: (
+      #|INVARIANT (Tarjan DFS):
+      #|disc[u] and low[u] are set, and neighbors in adj[u][0..i) have been
+      #|processed with low[u] updated accordingly.
+      #|MAINTENANCE:
+      #|For tree edges, recurse and propagate low values; for back edges, update
+      #|low[u] using disc[v]. Check articulation and bridge conditions per child.
+      #|TERMINATION:
+      #|At i = deg(u), low[u] reflects the minimum reachable discovery time from
+      #|u's subtree, enabling correct bridge/articulation detection.
+    ),
   }
 
   // Root articulation point check
@@ -119,7 +136,14 @@ fn BridgeFinder::find(self : BridgeFinder) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= self.n,
-    reasoning: "I: All vertices unvisited. M: For each unvisited vertex, start DFS. T: All connected components processed.",
+    reasoning: (
+      #|INVARIANT (component scan):
+      #|All vertices in [0, i) have been assigned to a DFS tree.
+      #|MAINTENANCE:
+      #|If vertex i is unvisited, start a DFS to cover its component.
+      #|TERMINATION:
+      #|At i = n, all connected components have been processed.
+    ),
   }
 }
 
@@ -132,7 +156,14 @@ fn BridgeFinder::get_articulation_points(self : BridgeFinder) -> Array[Int] {
     }
   } where {
     invariant: i >= 0 && i <= self.n,
-    reasoning: "Scan all vertices to collect articulation points.",
+    reasoning: (
+      #|INVARIANT (collect APs):
+      #|result contains articulation points among vertices in [0, i).
+      #|MAINTENANCE:
+      #|Append i if it is marked as an articulation point.
+      #|TERMINATION:
+      #|At i = n, result lists all articulation points.
+    ),
   }
   result
 }

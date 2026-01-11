@@ -43,7 +43,14 @@ fn CentroidTree::new(n : Int) -> CentroidTree {
     adj[i] = []
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: adj uninitialized. M: Create fresh array at each position. T: All vertices have independent adjacency lists.",
+    reasoning: (
+      #|INVARIANT (adj init):
+      #|Adjacency lists for vertices in [0, i) are initialized and independent.
+      #|MAINTENANCE:
+      #|Assign a fresh empty list to adj[i].
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
+    ),
   }
   {
     n,
@@ -76,7 +83,15 @@ fn CentroidTree::compute_size(
     }
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: "Accumulate subtree sizes by scanning all neighbors of u.",
+    reasoning: (
+      #|INVARIANT (compute size):
+      #|subtree_size[u] equals 1 plus sizes of processed child subtrees among
+      #|neighbors in adj[u][0..i).
+      #|MAINTENANCE:
+      #|Recurse into an unremoved child v and add its subtree size.
+      #|TERMINATION:
+      #|At i = deg(u), subtree_size[u] is the full size of the component at u.
+    ),
   }
   self.subtree_size[u]
 }
@@ -98,7 +113,15 @@ fn CentroidTree::find_centroid(
     }
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: "Search neighbors to find a child subtree larger than half.",
+    reasoning: (
+      #|INVARIANT (find centroid):
+      #|All neighbors in adj[u][0..i) have been checked; if any had subtree
+      #|size > tree_size/2, we would have recursed into it.
+      #|MAINTENANCE:
+      #|Check neighbor v and recurse if its subtree is too large.
+      #|TERMINATION:
+      #|If no neighbor exceeds half, u is the centroid.
+    ),
   }
   u
 }
@@ -124,7 +147,15 @@ fn CentroidTree::decompose(
     }
   } where {
     invariant: i >= 0 && i <= self.adj[centroid].length(),
-    reasoning: "I: centroid found and marked removed. M: For each non-removed neighbor, recursively decompose its subtree. Since centroid is removed, neighbor's subtree has size ≤ tree_size/2. T: All subtrees decomposed, depth increases by 1 each level, giving O(log n) total depth.",
+    reasoning: (
+      #|INVARIANT (decompose step):
+      #|centroid is removed and assigned its centroid parent/depth. Neighbors
+      #|in adj[centroid][0..i) have been recursively decomposed.
+      #|MAINTENANCE:
+      #|Recurse on each non-removed neighbor subtree; each has size <= tree_size/2.
+      #|TERMINATION:
+      #|At i = deg(centroid), all subtrees are decomposed and depth increases.
+    ),
   }
   centroid
 }

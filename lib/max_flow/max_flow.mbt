@@ -61,7 +61,14 @@ fn MaxFlow::new(n : Int) -> MaxFlow {
     adj[i] = []
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: adj filled with default empty array. M: Create fresh empty array at each position to avoid aliasing. T: All n vertices have independent adjacency lists.",
+    reasoning: (
+      #|INVARIANT (adj init):
+      #|Adjacency lists for vertices in [0, i) are initialized and independent.
+      #|MAINTENANCE:
+      #|Assign a fresh empty list to adj[i].
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
+    ),
   }
   { n, adj, level: Array::make(n, -1), iter: Array::make(n, 0) }
 }
