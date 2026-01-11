@@ -66,7 +66,12 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
   } where {
     invariant: i >= 0 && i <= self.n,
     reasoning: (
+      #|INVARIANT (level reset):
       #|level[0..i) have been reset to -1 before BFS.
+      #|MAINTENANCE:
+      #|Set level[i] to -1 to clear previous BFS distances.
+      #|TERMINATION:
+      #|At i = n, all levels are reset.
     ),
   }
   self.level[source] = 0
@@ -84,8 +89,13 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Edges adj[u][0..i) have been scanned; newly reachable nodes
-        #|are assigned the next BFS level and enqueued.
+        #|INVARIANT (BFS edges):
+        #|Edges adj[u][0..i) have been scanned; any newly reachable nodes have
+        #|been assigned the next BFS level and enqueued.
+        #|MAINTENANCE:
+        #|Process edge i, assign level to e.to when residual capacity exists.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing edges from u are processed.
       ),
     }
   }
@@ -130,7 +140,12 @@ fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
     } where {
       invariant: i >= 0 && i <= self.n,
       reasoning: (
+        #|INVARIANT (iter reset):
         #|iter[0..i) cleared for the next blocking-flow DFS phase.
+        #|MAINTENANCE:
+        #|Set iter[i] = 0 to restart scanning edges in DFS.
+        #|TERMINATION:
+        #|At i = n, all iter pointers are reset.
       ),
     }
 
@@ -154,7 +169,12 @@ fn Dinic::get_flow(self : Dinic, u : Int, v : Int) -> Int64 {
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
     reasoning: (
+      #|INVARIANT (get_flow scan):
       #|All edges in adj[u][0..i) have been checked for destination v.
+      #|MAINTENANCE:
+      #|Compare edge i's destination against v.
+      #|TERMINATION:
+      #|At i = deg(u), no edge to v exists if not found.
     ),
   }
   0L
@@ -169,13 +189,23 @@ fn Dinic::reset(self : Dinic) -> Unit {
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
+        #|INVARIANT (reset flows inner):
         #|Flows in adj[u][0..i) have been reset to 0.
+        #|MAINTENANCE:
+        #|Set flow for edge i to 0.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing flows from u are reset.
       ),
     }
   } where {
     invariant: u >= 0 && u <= self.n,
     reasoning: (
+      #|INVARIANT (reset flows outer):
       #|All vertices in [0..u) have their incident flows reset.
+      #|MAINTENANCE:
+      #|Reset all flows for vertex u.
+      #|TERMINATION:
+      #|At u = n, all flows are reset.
     ),
   }
 }
@@ -206,8 +236,14 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Edges adj[u][0..i) have been checked for residual capacity;
-        #|reachable nodes are marked visited and enqueued.
+        #|INVARIANT (min-cut BFS edges):
+        #|Edges adj[u][0..i) are processed; each residual edge to an unvisited
+        #|vertex marks it visited and enqueues it, so visited contains exactly
+        #|the residual-reachable nodes discovered from the queue prefix.
+        #|MAINTENANCE:
+        #|Inspect edge i and enqueue e.to when residual capacity exists.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing residual edges from u are handled.
       ),
     }
   }

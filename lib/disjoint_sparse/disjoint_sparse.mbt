@@ -73,8 +73,12 @@ fn highest_bit(x : Int) -> Int {
   } where {
     invariant: result >= 0 && val >= 1,
     reasoning: (
-      #|Each iteration halves val and increments result, so val equals
-      #|floor(x / 2^result). When val <= 1, result is floor(log2(x)).
+      #|INVARIANT (highest_bit loop):
+      #|val == floor(x / 2^result) and val >= 1 while looping.
+      #|MAINTENANCE:
+      #|Divide val by 2 and increment result, preserving the relation.
+      #|TERMINATION:
+      #|When val <= 1, result is floor(log2(x)).
     ),
   }
 }
@@ -111,8 +115,12 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         } where {
           invariant: i >= block_start - 1 && i < mid,
           reasoning: (
-            #|row[i+1..mid] already holds suffix sums to mid;
-            #|row[i] extends the suffix by one element.
+            #|INVARIANT (sum suffix):
+            #|row[i+1..mid] stores sums arr[j..mid] for each j in [i+1..mid].
+            #|MAINTENANCE:
+            #|Set row[i] = arr[i] + row[i+1], extending one step left.
+            #|TERMINATION:
+            #|At i = block_start - 1, suffix sums for [block_start..mid] exist.
           ),
         }
       }
@@ -131,23 +139,36 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         } where {
           invariant: i >= mid + 2 && i <= right_end + 1,
           reasoning: (
-            #|row[mid+1..i-1] stores prefix sums from mid+1;
-            #|row[i] extends the prefix to the right.
+            #|INVARIANT (sum prefix):
+            #|row[mid+1..i-1] stores sums arr[mid+1..j] for j in [mid+1..i-1].
+            #|MAINTENANCE:
+            #|Set row[i] = row[i-1] + arr[i], extending one step right.
+            #|TERMINATION:
+            #|At i = right_end + 1, prefixes for [mid+1..right_end] exist.
           ),
         }
       }
     } where {
       invariant: block_start >= 0 && block_start <= n,
       reasoning: (
-        #|All blocks in [0..block_start) have their suffix/prefix sums computed.
+        #|INVARIANT (sum blocks):
+        #|Blocks in [0..block_start) already have correct suffix/prefix sums.
+        #|MAINTENANCE:
+        #|Compute suffixes and prefixes for the block starting at block_start.
+        #|TERMINATION:
+        #|At block_start = n, all blocks at this level are processed.
       ),
     }
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
     reasoning: (
-      #|Levels [0..k) are built; level k uses block size 2^(k+1) and
-      #|stores suffix/prefix aggregates around each block mid.
+      #|INVARIANT (sum levels):
+      #|Levels [0..k) are built with block size 2^(lvl+1) for level lvl.
+      #|MAINTENANCE:
+      #|Build level k by computing block-wise suffix/prefix sums around mids.
+      #|TERMINATION:
+      #|At k = log_n, all levels are constructed.
     ),
   }
   { table, arr, n }
@@ -215,8 +236,12 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         } where {
           invariant: i >= block_start - 1 && i < mid,
           reasoning: (
-            #|row[i+1..mid] already holds suffix XORs to mid;
-            #|row[i] extends the suffix by one element.
+            #|INVARIANT (xor suffix):
+            #|row[i+1..mid] stores XORs arr[j..mid] for each j in [i+1..mid].
+            #|MAINTENANCE:
+            #|Set row[i] = arr[i] ^ row[i+1], extending one step left.
+            #|TERMINATION:
+            #|At i = block_start - 1, suffix XORs for [block_start..mid] exist.
           ),
         }
       }
@@ -234,22 +259,36 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         } where {
           invariant: i >= mid + 2 && i <= right_end + 1,
           reasoning: (
-            #|row[mid+1..i-1] stores prefix XORs from mid+1;
-            #|row[i] extends the prefix to the right.
+            #|INVARIANT (xor prefix):
+            #|row[mid+1..i-1] stores XORs arr[mid+1..j] for j in [mid+1..i-1].
+            #|MAINTENANCE:
+            #|Set row[i] = row[i-1] ^ arr[i], extending one step right.
+            #|TERMINATION:
+            #|At i = right_end + 1, prefixes for [mid+1..right_end] exist.
           ),
         }
       }
     } where {
       invariant: block_start >= 0 && block_start <= n,
       reasoning: (
-        #|All blocks in [0..block_start) have their suffix/prefix XORs computed.
+        #|INVARIANT (xor blocks):
+        #|Blocks in [0..block_start) already have correct suffix/prefix XORs.
+        #|MAINTENANCE:
+        #|Compute suffixes and prefixes for the block starting at block_start.
+        #|TERMINATION:
+        #|At block_start = n, all blocks at this level are processed.
       ),
     }
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
     reasoning: (
-      #|Levels [0..k) are built; level k stores XOR aggregates around each mid.
+      #|INVARIANT (xor levels):
+      #|Levels [0..k) are built with block size 2^(lvl+1) for level lvl.
+      #|MAINTENANCE:
+      #|Build level k by computing block-wise suffix/prefix XORs around mids.
+      #|TERMINATION:
+      #|At k = log_n, all levels are constructed.
     ),
   }
   { table, arr, n }
@@ -315,8 +354,12 @@ fn DisjointSparseProd::new(
         } where {
           invariant: i >= block_start - 1 && i < mid,
           reasoning: (
-            #|row[i+1..mid] already holds suffix products to mid;
-            #|row[i] extends the suffix by one element.
+            #|INVARIANT (prod suffix):
+            #|row[i+1..mid] stores products arr[j..mid] mod modulo for j in [i+1..mid].
+            #|MAINTENANCE:
+            #|Set row[i] = arr[i] * row[i+1] mod modulo, extending one step left.
+            #|TERMINATION:
+            #|At i = block_start - 1, suffix products for [block_start..mid] exist.
           ),
         }
       }
@@ -334,22 +377,36 @@ fn DisjointSparseProd::new(
         } where {
           invariant: i >= mid + 2 && i <= right_end + 1,
           reasoning: (
-            #|row[mid+1..i-1] stores prefix products from mid+1;
-            #|row[i] extends the prefix to the right.
+            #|INVARIANT (prod prefix):
+            #|row[mid+1..i-1] stores products arr[mid+1..j] mod modulo.
+            #|MAINTENANCE:
+            #|Set row[i] = row[i-1] * arr[i] mod modulo, extending right.
+            #|TERMINATION:
+            #|At i = right_end + 1, prefixes for [mid+1..right_end] exist.
           ),
         }
       }
     } where {
       invariant: block_start >= 0 && block_start <= n,
       reasoning: (
-        #|All blocks in [0..block_start) have their suffix/prefix products computed.
+        #|INVARIANT (prod blocks):
+        #|Blocks in [0..block_start) already have correct suffix/prefix products.
+        #|MAINTENANCE:
+        #|Compute suffixes and prefixes for the block starting at block_start.
+        #|TERMINATION:
+        #|At block_start = n, all blocks at this level are processed.
       ),
     }
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
     reasoning: (
-      #|Levels [0..k) are built; level k stores product aggregates around each mid.
+      #|INVARIANT (prod levels):
+      #|Levels [0..k) are built with block size 2^(lvl+1) for level lvl.
+      #|MAINTENANCE:
+      #|Build level k by computing block-wise suffix/prefix products around mids.
+      #|TERMINATION:
+      #|At k = log_n, all levels are constructed.
     ),
   }
   { table, arr, n, modulo }
