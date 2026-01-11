@@ -180,7 +180,14 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
     ancestors.push(Array::make(n, -1))
   } where {
     invariant: j >= 0 && j <= log_n,
-    reasoning: "Allocate one ancestor table per level 0..log_n-1.",
+    reasoning: (
+      #|INVARIANT (allocate levels):
+      #|ancestors contains tables for levels in [0, j), each sized n.
+      #|MAINTENANCE:
+      #|Append a fresh length-n table for level j.
+      #|TERMINATION:
+      #|At j = log_n, all binary lifting levels are allocated.
+    ),
   }
 
   // Base case: 2^0 = 1st ancestor is parent
@@ -188,7 +195,14 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
     ancestors[0][i] = nodes[i].parent
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Fill immediate parents for all nodes.",
+    reasoning: (
+      #|INVARIANT (level 0):
+      #|ancestors[0][0..i) stores the immediate parent for each node.
+      #|MAINTENANCE:
+      #|Assign the parent of node i.
+      #|TERMINATION:
+      #|At i = n, level-0 ancestors are initialized for all nodes.
+    ),
   }
 
   // Build using dynamic programming
@@ -201,11 +215,26 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
       }
     } where {
       invariant: v >= 0 && v <= n,
-      reasoning: "Use level k-1 ancestors to build level k for processed nodes.",
+      reasoning: (
+        #|INVARIANT (build level k):
+        #|For v in [0, v), ancestors[k][v] is the 2^k-th ancestor, computed
+        #|via the 2^(k-1)-th ancestor.
+        #|MAINTENANCE:
+        #|If the 2^(k-1)-th ancestor exists, jump once more to fill level k.
+        #|TERMINATION:
+        #|At v = n, level k is fully computed.
+      ),
     }
   } where {
     invariant: k >= 1 && k <= log_n,
-    reasoning: "Build binary lifting levels from 1 to log_n-1.",
+    reasoning: (
+      #|INVARIANT (levels complete):
+      #|All levels in [1, k) are fully built.
+      #|MAINTENANCE:
+      #|Construct level k using level k-1.
+      #|TERMINATION:
+      #|At k = log_n, all binary lifting levels are available.
+    ),
   }
   { nodes, root, index_to_node, depth, ancestors, n, log_n }
 }
@@ -255,7 +284,14 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
     }
   } where {
     invariant: k >= 0 && k <= self.log_n,
-    reasoning: "Scan each bit position of diff to lift u upward.",
+    reasoning: (
+      #|INVARIANT (lift depth):
+      #|u has been lifted by the sum of 2^bit for all processed bits in diff.
+      #|MAINTENANCE:
+      #|If bit k is set, jump u by 2^k.
+      #|TERMINATION:
+      #|At k = log_n, u and v are at the same depth.
+    ),
   }
   if u == v {
     return u
@@ -270,7 +306,15 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
     }
   } where {
     invariant: k >= 0 && k < self.log_n,
-    reasoning: "Lift both nodes from highest power of two downward.",
+    reasoning: (
+      #|INVARIANT (lift together):
+      #|u and v remain at the same depth, and the LCA is above both.
+      #|MAINTENANCE:
+      #|From higher powers downward, lift u and v when their 2^k ancestors
+      #|differ, keeping them just below the LCA.
+      #|TERMINATION:
+      #|After k < 0, u and v are children of the LCA.
+    ),
   }
 
   // Now u and v are children of LCA
@@ -351,7 +395,14 @@ fn CartesianTree::verify_inorder(
     }
   } where {
     invariant: i >= 0 && i <= arr.length(),
-    reasoning: "Check each index against the inorder traversal.",
+    reasoning: (
+      #|INVARIANT (inorder check):
+      #|All positions in [0, i) match between result and arr.
+      #|MAINTENANCE:
+      #|Compare result[i] with arr[i] and return false on mismatch.
+      #|TERMINATION:
+      #|At i = arr.length(), the inorder traversal matches the original array.
+    ),
   }
   true
 }
@@ -431,7 +482,16 @@ fn nearest_smaller_left(arr : Array[Int64]) -> Array[Int] {
     stack.push(i)
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Scan left-to-right while maintaining a monotonic stack.",
+    reasoning: (
+      #|INVARIANT (nearest smaller left):
+      #|Stack holds indices with strictly increasing values from bottom to top
+      #|for processed positions in [0, i).
+      #|MAINTENANCE:
+      #|Pop indices with value >= arr[i] so the top is the nearest smaller,
+      #|record it, then push i to preserve monotonicity.
+      #|TERMINATION:
+      #|At i = n, nearest smaller to the left is computed for all positions.
+    ),
   }
   result
 }
@@ -460,7 +520,16 @@ fn nearest_smaller_right(arr : Array[Int64]) -> Array[Int] {
     stack.push(i)
   } where {
     invariant: i >= 0 && i < n,
-    reasoning: "Scan right-to-left while maintaining a monotonic stack.",
+    reasoning: (
+      #|INVARIANT (nearest smaller right):
+      #|Stack holds indices with strictly increasing values from bottom to top
+      #|for processed positions in (i, n).
+      #|MAINTENANCE:
+      #|Pop indices with value >= arr[i] so the top is the nearest smaller,
+      #|record it, then push i.
+      #|TERMINATION:
+      #|At i = -1, nearest smaller to the right is computed for all positions.
+    ),
   }
   result
 }
@@ -489,7 +558,14 @@ fn largest_rectangle_histogram(heights : Array[Int64]) -> Int64 {
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Track the maximum rectangle area seen so far.",
+    reasoning: (
+      #|INVARIANT (max rectangle):
+      #|max_area is the largest rectangle area among bars in [0, i).
+      #|MAINTENANCE:
+      #|Compute area for bar i using its maximal span and update max_area.
+      #|TERMINATION:
+      #|At i = n, max_area is the largest rectangle in the histogram.
+    ),
   }
   max_area
 }
@@ -518,7 +594,14 @@ fn CartesianTree::tree_number(self : CartesianTree) -> Int64 {
     result = result * 2L + bits[i].to_int64()
   } where {
     invariant: i >= 0 && i <= bits.length(),
-    reasoning: "Accumulate the binary encoding left to right.",
+    reasoning: (
+      #|INVARIANT (binary encode):
+      #|result equals the binary value of bits[0..i) interpreted left-to-right.
+      #|MAINTENANCE:
+      #|Shift result by one bit (multiply by 2) and add bits[i].
+      #|TERMINATION:
+      #|At i = bits.length(), result encodes the full tree shape.
+    ),
   }
   result
 }

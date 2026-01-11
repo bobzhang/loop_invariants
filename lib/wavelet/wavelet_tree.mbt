@@ -111,7 +111,17 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
       )
     } where {
       invariant: bits.length() == i,
-      reasoning: "Each iteration processes one element and adds one bit",
+      reasoning: (
+        #|INVARIANT (partition):
+        #|After processing i elements, bits and rank have length i+1, and
+        #|left_elems/right_elems contain exactly the partition of elements[0..i).
+        #|Elements in left_elems are < mid; elements in right_elems are >= mid.
+        #|MAINTENANCE:
+        #|Process elements[i], append its bit, place it into the correct bucket,
+        #|and extend the prefix rank by one.
+        #|TERMINATION:
+        #|At i = elements.length(), the bitvector and partitions are complete.
+      ),
     }
 
     // Create this node first (to get index)
@@ -195,7 +205,16 @@ fn WaveletTree::count(self : WaveletTree, l : Int, r : Int, v : Int) -> Int {
     }
   } where {
     invariant: node_idx >= 0 && node_idx < self.nodes.length() && left <= right,
-    reasoning: "Each step follows valid child index, range only shrinks",
+    reasoning: (
+      #|INVARIANT (count path):
+      #|[left, right) is the subrange in the current node that corresponds to
+      #|the original query range, and v lies within the node's value interval.
+      #|MAINTENANCE:
+      #|Map [left, right) into the chosen child using rank; the interval shrinks
+      #|or becomes empty, preserving the correspondence to the original range.
+      #|TERMINATION:
+      #|At a leaf or an empty range, the count is determined for this path.
+    ),
   }
 }
 
@@ -258,7 +277,16 @@ fn WaveletTree::count_less(
     }
   } where {
     invariant: node_idx >= 0 && left <= right && count >= 0,
-    reasoning: "Each step either terminates or continues with valid child and accumulated count",
+    reasoning: (
+      #|INVARIANT (count_less path):
+      #|count equals the number of elements proven < v in the processed path,
+      #|and [left, right) is the corresponding range in the current node.
+      #|MAINTENANCE:
+      #|If v <= mid, go left without adding. If v > mid, add all left elements
+      #|in range (they are < mid <= v) and descend right with mapped indices.
+      #|TERMINATION:
+      #|At a leaf or empty range, count is final for the query.
+    ),
   }
 }
 
@@ -319,7 +347,16 @@ fn WaveletTree::quantile(self : WaveletTree, l : Int, r : Int, k : Int) -> Int? 
     left < right &&
     remaining_k > 0 &&
     remaining_k <= right - left,
-    reasoning: "k-th element exists in range; each step follows correct child maintaining this",
+    reasoning: (
+      #|INVARIANT (quantile path):
+      #|remaining_k is the rank of the desired element within [left, right),
+      #|and the answer lies within the current node's value range.
+      #|MAINTENANCE:
+      #|If remaining_k falls within the left count, descend left; otherwise
+      #|subtract left count and descend right.
+      #|TERMINATION:
+      #|At a leaf, node.lo is exactly the k-th smallest value.
+    ),
   }
 }
 
@@ -404,7 +441,16 @@ fn WaveletTree::access(self : WaveletTree, i : Int) -> Int? {
     }
   } where {
     invariant: node_idx >= 0 && pos >= 0,
-    reasoning: "Each step maps position to valid child position",
+    reasoning: (
+      #|INVARIANT (access path):
+      #|pos is the position of the queried element within the current node's
+      #|bitvector, corresponding to the original index i.
+      #|MAINTENANCE:
+      #|Map pos into the left or right child using rank; the mapping preserves
+      #|the element's identity.
+      #|TERMINATION:
+      #|At a leaf, node.lo is the value at the original position.
+    ),
   }
 }
 
