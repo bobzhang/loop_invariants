@@ -113,13 +113,17 @@ fn TarjanSCC::dfs(self : TarjanSCC, v : Int) -> Unit {
     ),
     invariant: self.on_stack[v],
     reasoning: (
-      #|INVARIANT 2 (Stack membership): v is pushed before the loop and is not
-      #|popped until after all neighbors are processed.
+      #|INVARIANT 2 (Stack membership):
+      #|v is pushed before exploring its neighbors and stays on the stack
+      #|until we finish scanning all outgoing edges. This ensures any back
+      #|edge to v is still recognized as part of the current SCC.
     ),
     invariant: self.low[v] <= self.disc[v],
     reasoning: (
-      #|INVARIANT 3 (Low-link monotonicity): low[v] starts at disc[v] and only
-      #|decreases through min updates.
+      #|INVARIANT 3 (Low-link monotonicity):
+      #|low[v] starts at disc[v] and only decreases via min updates when we
+      #|see earlier discovery times. This guarantees low[v] always reflects
+      #|the earliest reachable discovery time inside the active stack.
     ),
   }
   // Check if v is an SCC root
@@ -315,7 +319,9 @@ fn KosarajuSCC::dfs1(self : KosarajuSCC, v : Int) -> Unit {
     ),
     invariant: self.visited[v],
     reasoning: (
-      #|INVARIANT 2 (Visited): v stays marked visited throughout its DFS.
+      #|INVARIANT 2 (Visited):
+      #|v remains marked visited for the entire call, preventing re-entry
+      #|from other branches and ensuring finish_order receives v exactly once.
     ),
   }
   // Post-order: add to finish order after processing all descendants
@@ -353,7 +359,9 @@ fn KosarajuSCC::dfs2(self : KosarajuSCC, v : Int, scc : Array[Int]) -> Unit {
     ),
     invariant: self.visited[v],
     reasoning: (
-      #|INVARIANT 2 (Visited): v remains marked visited during the DFS2 call.
+      #|INVARIANT 2 (Visited):
+      #|v remains marked visited while dfs2 expands the SCC, so each vertex
+      #|is added to exactly one SCC and cannot be revisited in this pass.
     ),
   }
 }
@@ -429,8 +437,10 @@ fn KosarajuSCC::find_sccs(self : KosarajuSCC) -> Unit {
     ),
     invariant: self.sccs.length() <= self.n,
     reasoning: (
-      #|PROGRESS: After each iteration, all vertices with finish-order index
-      #|greater than i are assigned to exactly one SCC in self.sccs.
+      #|PROGRESS:
+      #|After each iteration, every vertex whose finish-order index is greater
+      #|than i has been assigned to exactly one SCC. The remaining vertices
+      #|in finish_order[0..i] are unassigned and will be processed next.
     ),
   }
 }
@@ -547,8 +557,10 @@ fn ArticulationFinder::dfs(self : ArticulationFinder, v : Int) -> Unit {
     ),
     invariant: self.low[v] <= self.disc[v],
     reasoning: (
-      #|INVARIANT 2 (Low-link monotonicity): low[v] starts at disc[v] and only
-      #|decreases through min updates.
+      #|INVARIANT 2 (Low-link monotonicity):
+      #|low[v] starts at disc[v] and only decreases as we discover back edges
+      #|or child subtrees with earlier discovery times. This maintains the
+      #|earliest ancestor reachable from v's subtree.
     ),
   }
 }
@@ -672,8 +684,10 @@ fn BridgeFinder::dfs(self : BridgeFinder, v : Int) -> Unit {
     ),
     invariant: self.low[v] <= self.disc[v],
     reasoning: (
-      #|INVARIANT 2 (Low-link monotonicity): low[v] starts at disc[v] and only
-      #|decreases through min updates.
+      #|INVARIANT 2 (Low-link monotonicity):
+      #|low[v] begins at disc[v] and only decreases when a back edge or child
+      #|subtree reaches an earlier ancestor. This is exactly what the bridge
+      #|test low[w] > disc[v] relies on.
     ),
   }
 }
@@ -770,8 +784,10 @@ fn TopologicalSort::dfs(self : TopologicalSort, v : Int) -> Unit {
     ),
     invariant: self.state[v] == 1 || self.has_cycle,
     reasoning: (
-      #|INVARIANT 2 (DFS stack): v remains in the visiting state until its
-      #|neighbors are processed (or a cycle short-circuits the search).
+      #|INVARIANT 2 (DFS stack):
+      #|v stays in the visiting state while its neighbors are explored, which
+      #|lets us detect a back edge to any node on the current DFS path. If a
+      #|cycle is detected, the search can short-circuit.
     ),
   }
   self.state[v] = 2 // Visited

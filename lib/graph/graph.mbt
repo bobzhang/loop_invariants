@@ -58,11 +58,16 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
   } where {
     invariant: head >= 0 && head <= queue.length(),
     reasoning: (
-      #|INVARIANT 1 (Queue processing): head is the index of next vertex to process.
+      #|INVARIANT 1 (Queue processing):
+      #|head points at the next vertex to process. All vertices in queue[0..head)
+      #|have been removed and appended to result, while queue[head..] contains
+      #|vertices discovered with in-degree 0 but not yet processed.
     ),
     invariant: result.length() == head,
     reasoning: (
-      #|INVARIANT 2 (Progress): We've processed exactly head vertices.
+      #|INVARIANT 2 (Progress):
+      #|result mirrors the processed prefix of the queue, so result.length()
+      #|tracks how many vertices have been popped and fixed in order.
     ),
     invariant: head >= 0,
     reasoning: (
@@ -167,8 +172,11 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       } where {
         invariant: i >= 0 && i <= n,
         reasoning: (
-          #|Linear scan to find minimum - O(V) per iteration.
-          #|Total: O(V²). Can be improved to O(E log V) with heap.
+          #|INVARIANT (Min scan):
+          #|After scanning indices [0..i), min_vertex is the unvisited vertex
+          #|with the smallest dist among those scanned, and min_dist is its
+          #|distance. When i reaches n, we have the global minimum among all
+          #|unvisited vertices.
         ),
       }
       if u == -1 {
@@ -186,7 +194,10 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       } where {
         invariant: i >= 0 && i <= graph[u].length(),
         reasoning: (
-          #|Edges graph[u][0..i) have been relaxed using dist[u].
+          #|INVARIANT (Edge relaxation):
+          #|After processing edges[0..i), all those neighbors v have been
+          #|relaxed with the finalized distance dist[u]. Any shortest path
+          #|that ends with u -> v among processed edges is now reflected in dist[v].
         ),
       }
       continue count + 1
@@ -194,7 +205,10 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
   } where {
     invariant: count >= 0 && count <= n,
     reasoning: (
-      #|INVARIANT 1 (Progress): We process one vertex per iteration.
+      #|INVARIANT 1 (Progress):
+      #|Each iteration selects one new unvisited vertex u and marks it visited,
+      #|so count equals the number of finalized vertices. If no such u exists,
+      #|all remaining vertices are unreachable and the loop terminates.
     ),
     invariant: count >= 0,
     reasoning: (
@@ -274,13 +288,8 @@ priv struct UnionFind {
 ///|
 fn make_union_find(n : Int) -> UnionFind {
   let parent : Array[Int] = Array::make(n, 0)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     parent[i] = i
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|parent[0..i) initialized so each element is its own root.
-    ),
   }
   { parent, rank: Array::make(n, 0) }
 }
@@ -378,7 +387,11 @@ fn bellman_ford(
       } where {
         invariant: e >= 0 && e <= edges.length(),
         reasoning: (
-          #|Edges[0..e) have been relaxed for this iteration.
+          #|INVARIANT (Edge sweep):
+          #|After processing edges[0..e), every path that ends with one of those
+          #|edges has been considered for this iteration. When the loop ends,
+          #|all edges have been relaxed once, yielding shortest paths with up to
+          #|i+1 edges.
         ),
       }
       if not(changed) {
@@ -429,7 +442,9 @@ fn bellman_ford(
   } where {
     invariant: e >= 0 && e <= edges.length(),
     reasoning: (
-      #|Edges[0..e) satisfy the no-further-relaxation check.
+      #|INVARIANT (No further relaxation):
+      #|Edges[0..e) cannot improve any dist value. If an improvement is possible
+      #|after the full scan, a negative cycle must be reachable from the source.
     ),
   }
   Some(dist)
@@ -475,7 +490,9 @@ fn floyd_warshall(
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Rows 0..i are initialized with inf and 0 on the diagonal.
+      #|INVARIANT (Distance matrix init):
+      #|Rows [0..i) are fully initialized with dist[v][v] = 0 and dist[v][u] = inf
+      #|for u != v. This sets the base case of zero-length paths.
     ),
   }
 
@@ -488,7 +505,10 @@ fn floyd_warshall(
   } where {
     invariant: e >= 0 && e <= edges.length(),
     reasoning: (
-      #|Edges[0..e) have been applied to the direct-distance matrix.
+      #|INVARIANT (Direct edges):
+      #|After processing edges[0..e), dist captures the minimum direct edge
+      #|weight for each pair (u, v) among those edges, preserving the best
+      #|one-edge paths before the main DP.
     ),
   }
 
@@ -508,13 +528,17 @@ fn floyd_warshall(
         } where {
           invariant: j >= 0 && j <= n,
           reasoning: (
-            #|Row i has been updated for columns [0..j) using intermediate k.
+            #|INVARIANT (Column update):
+            #|After processing columns [0..j), dist[i][c] is the shortest path
+            #|from i to c using intermediates from {0..k} for all c < j.
           ),
         }
       } where {
         invariant: i >= 0 && i <= n,
         reasoning: (
-          #|Rows [0..i) have been updated using intermediate k.
+          #|INVARIANT (Row update):
+          #|After processing rows [0..i), every dist[r][*] with r < i has been
+          #|updated to allow intermediate vertex k.
         ),
       }
       continue k + 1
@@ -591,7 +615,9 @@ fn sort_edge_tuples(edges : Array[(Int, Int, Int)]) -> Unit {
   } where {
     invariant: i >= 1 && i <= edges.length(),
     reasoning: (
-      #|edges[0..i) is sorted by weight after each insertion step.
+      #|INVARIANT (Insertion sort):
+      #|edges[0..i) is sorted by weight, and edges[i] is inserted into its
+      #|correct position by shifting larger elements one step to the right.
     ),
   }
 }
