@@ -13,3 +13,15 @@ test "bipartite matching example" {
   inspect(m, content="3")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "bipartite matching empty" {
+  let edges : Array[(Int, Int)] = []
+  let adj = @challenge_bipartite_matching_kuhn.build_adj(2, 2, edges[:])
+  let m = @challenge_bipartite_matching_kuhn.max_matching(adj, 2)
+  inspect(m, content="0")
+}
+```

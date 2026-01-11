@@ -12,3 +12,14 @@ test "scc kosaraju example" {
   inspect(comp[0] == comp[1] && comp[1] == comp[2], content="true")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "scc kosaraju isolated" {
+  let edges : Array[(Int, Int)] = []
+  let comp = @challenge_scc_kosaraju.scc_kosaraju(3, edges[:])
+  inspect(comp[0] != comp[1] && comp[1] != comp[2], content="true")
+}
+```

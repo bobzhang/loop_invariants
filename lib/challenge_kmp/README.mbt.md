@@ -11,3 +11,13 @@ test "kmp example" {
   inspect(matches, content="[0, 5, 7]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "kmp prefix example" {
+  let pi = @challenge_kmp.prefix_function("aaaa"[:])
+  inspect(pi, content="[0, 1, 2, 3]")
+}
+```

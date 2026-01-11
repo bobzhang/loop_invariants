@@ -12,3 +12,14 @@ test "centroid decomposition example" {
   inspect(cd.level[2] == 0, content="true")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "centroid root" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 3), (3, 4)]
+  let cd = @challenge_centroid_decomposition.build_centroid(5, edges[:])
+  inspect(cd.parent[2] == -1, content="true")
+}
+```

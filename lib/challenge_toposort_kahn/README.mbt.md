@@ -13,3 +13,14 @@ test "toposort example" {
   inspect(ord.length(), content="4")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "toposort cycle" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 0)]
+  let order = @challenge_toposort_kahn.topo_sort(3, edges[:])
+  inspect(order is None, content="true")
+}
+```

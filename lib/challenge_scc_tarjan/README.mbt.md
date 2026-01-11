@@ -12,3 +12,14 @@ test "scc tarjan example" {
   inspect(comp[0] == comp[1] && comp[1] == comp[2], content="true")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "scc tarjan isolated" {
+  let edges : Array[(Int, Int)] = []
+  let comp = @challenge_scc_tarjan.scc_tarjan(2, edges[:])
+  inspect(comp[0] != comp[1], content="true")
+}
+```

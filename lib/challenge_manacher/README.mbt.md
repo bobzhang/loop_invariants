@@ -11,3 +11,13 @@ test "manacher example" {
   inspect(len, content="7")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "manacher even example" {
+  let len = @challenge_manacher.longest_palindrome_len("cbbd"[:])
+  inspect(len, content="2")
+}
+```

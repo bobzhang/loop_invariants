@@ -18,3 +18,14 @@ test "bellman-ford example" {
   inspect(neg, content="false")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "bellman-ford negative cycle" {
+  let edges : Array[(Int, Int, Int)] = [(0, 1, 1), (1, 2, -2), (2, 0, 0)]
+  let (_, neg) = @challenge_bellman_ford.bellman_ford(3, edges[:], 0)
+  inspect(neg, content="true")
+}
+```

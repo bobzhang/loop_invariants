@@ -19,3 +19,15 @@ test "dag shortest path example" {
   inspect(d, content="[0, 2, 3, 4]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "dag shortest path chain" {
+  let edges : Array[(Int, Int, Int)] = [(0, 1, 1), (1, 2, 2)]
+  let dist = @challenge_dag_shortest_path.dag_shortest_paths(3, edges[:], 0)
+  guard dist is Some(d) else { fail("expected distances") }
+  inspect(d, content="[0, 1, 3]")
+}
+```

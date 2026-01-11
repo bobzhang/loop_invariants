@@ -14,3 +14,16 @@ test "rabin-karp example" {
   inspect(matches, content="[0, 7]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "rabin-karp single match" {
+  let matches = @challenge_rabin_karp.rabin_karp_search(
+    "mississippi"[:],
+    "issi"[:],
+  )
+  inspect(matches, content="[1, 4]")
+}
+```

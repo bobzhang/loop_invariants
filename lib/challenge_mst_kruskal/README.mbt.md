@@ -17,3 +17,14 @@ test "mst kruskal example" {
   inspect(total, content="Some(6)")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "mst kruskal disconnected" {
+  let edges : Array[(Int, Int, Int)] = [(0, 1, 1)]
+  let total = @challenge_mst_kruskal.mst_weight(3, edges[:])
+  inspect(total, content="None")
+}
+```

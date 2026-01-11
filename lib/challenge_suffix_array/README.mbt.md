@@ -13,3 +13,13 @@ test "suffix array example" {
   inspect(lcp, content="[0, 1, 3, 0, 0, 2]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "suffix array small" {
+  let sa = @challenge_suffix_array.suffix_array("abab"[:])
+  inspect(sa, content="[2, 0, 3, 1]")
+}
+```

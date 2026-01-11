@@ -11,3 +11,13 @@ test "z search example" {
   inspect(matches, content="[0, 2]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "z function example" {
+  let z = @challenge_z_algorithm.z_function("aaaaa"[:])
+  inspect(z, content="[5, 4, 3, 2, 1]")
+}
+```

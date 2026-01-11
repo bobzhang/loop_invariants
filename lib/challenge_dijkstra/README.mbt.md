@@ -18,3 +18,14 @@ test "dijkstra example" {
   inspect(dist, content="[0, 2, 3, 4, 5]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "dijkstra small" {
+  let adj : Array[Array[(Int, Int)]] = [[(1, 1)], [(2, 2)], []]
+  let dist = @challenge_dijkstra.dijkstra(adj, 0)
+  inspect(dist, content="[0, 1, 3]")
+}
+```

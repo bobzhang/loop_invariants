@@ -17,3 +17,15 @@ test "edmonds-karp example" {
   inspect(flow, content="5")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "edmonds-karp simple" {
+  let g = @challenge_edmonds_karp.make(2)
+  @challenge_edmonds_karp.add_edge(g, 0, 1, 7)
+  let flow = @challenge_edmonds_karp.max_flow(g, 0, 1)
+  inspect(flow, content="7")
+}
+```

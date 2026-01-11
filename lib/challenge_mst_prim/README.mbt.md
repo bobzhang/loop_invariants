@@ -18,3 +18,15 @@ test "mst prim example" {
   inspect(total, content="Some(6)")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "mst prim disconnected" {
+  let edges : Array[(Int, Int, Int)] = [(0, 1, 1)]
+  let adj = @challenge_mst_prim.build_adj(3, edges[:])
+  let total = @challenge_mst_prim.mst_weight(adj)
+  inspect(total, content="None")
+}
+```
