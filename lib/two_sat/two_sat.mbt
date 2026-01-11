@@ -51,12 +51,9 @@ priv struct TwoSat {
 fn TwoSat::new(n : Int) -> TwoSat {
   let adj = Array::make(2 * n, [])
   let radj = Array::make(2 * n, [])
-  for i = 0; i < 2 * n; i = i + 1 {
+  for i in 0..<(2 * n) {
     adj[i] = []
     radj[i] = []
-  } where {
-    invariant: i >= 0 && i <= 2 * n,
-    reasoning: "I: adj, radj contain empty default. M: Initialize each position with fresh empty array to avoid aliasing. T: After i = 2n, all adjacency lists are independent empty arrays.",
   }
   { n, adj, radj }
 }

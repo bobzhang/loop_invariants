@@ -640,28 +640,18 @@ test "implicit treap rope operations" {
   let treap2 = ImplicitTreap::from_array([4L, 5L, 6L])
 
   // Manual concatenation by inserting elements
-  for i = 0; i < treap2.size(); i = i + 1 {
+  for i in 0..<treap2.size() {
     match treap2.get(i) {
       Some(v) => treap1.push_back(v)
       None => ()
     }
-  } where {
-    invariant: i >= 0 && i <= treap2.size(),
-    reasoning: (
-      #|Read each element of treap2 and append it to treap1.
-    ),
   }
   inspect(treap1.to_array(), content="[1, 2, 3, 4, 5, 6]")
 
   // Split simulation: delete elements
-  for i = 0; i < 3; i = i + 1 {
+  for _ in 0..<3 {
     let _ = treap1.pop_front()
 
-  } where {
-    invariant: i >= 0 && i <= 3,
-    reasoning: (
-      #|Remove the first three elements after concatenation.
-    ),
   }
   inspect(treap1.to_array(), content="[4, 5, 6]")
 }

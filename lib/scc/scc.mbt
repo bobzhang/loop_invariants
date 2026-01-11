@@ -369,11 +369,8 @@ priv struct TwoSAT {
 /// Create a new 2-SAT instance with n variables
 fn TwoSAT::new(n : Int) -> TwoSAT {
   let adj : Array[Array[Int]] = []
-  for i = 0; i < 2 * n; i = i + 1 {
+  for _ in 0..<(2 * n) {
     adj.push([])
-  } where {
-    invariant: i >= 0 && i <= 2 * n,
-    reasoning: "I: adj has i empty lists. M: Add one list for each literal vertex. T: After i = 2n, implication graph has an adjacency list for every literal.",
   }
   { n, adj }
 }

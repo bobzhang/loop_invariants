@@ -317,13 +317,8 @@ test "euler_tour basic" {
   et.build(0)
 
   // Check entry < exit
-  for i = 0; i < 5; i = i + 1 {
+  for i in 0..<5 {
     inspect(et.entry[i] < et.exit[i], content="true")
-  } where {
-    invariant: i >= 0 && i <= 5,
-    reasoning: (
-      #|All nodes in [0..i) have been checked for entry < exit.
-    ),
   }
 }
 

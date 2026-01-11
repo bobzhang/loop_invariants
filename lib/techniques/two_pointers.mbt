@@ -381,15 +381,10 @@ fn min_window_substring(s : String, t : String) -> String {
 
   // Count distinct required characters
   let mut required_count = 0
-  for i = 0; i < 128; i = i + 1 {
+  for i in 0..<128 {
     if required[i] > 0 {
       required_count = required_count + 1
     }
-  } where {
-    invariant: i >= 0 && i <= 128,
-    reasoning: (
-      #|Count how many distinct characters are required.
-    ),
   }
 
   // Window character counts

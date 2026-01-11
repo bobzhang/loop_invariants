@@ -245,13 +245,8 @@ test "hld single node" {
 ///|
 test "hld linear" {
   let hld = HLD::new(8)
-  for i = 0; i < 7; i = i + 1 {
+  for i in 0..<7 {
     hld.add_edge(i, i + 1)
-  } where {
-    invariant: i >= 0 && i <= 7,
-    reasoning: (
-      #|Add consecutive edges to form a line.
-    ),
   }
   hld.build(0)
 
