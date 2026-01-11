@@ -165,7 +165,9 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
     invariant: i >= 0,
     invariant: temp == n >> i,
     reasoning: (
-      #|Repeatedly shift n to count log2(n).
+      #|INVARIANT (Log2 count):
+      #|temp is n shifted right by i bits, so i counts how many times we
+      #|halve n until it reaches 1. This yields log2(n) for power-of-two n.
     ),
   }
   // Bit-reversal permutation
@@ -211,7 +213,9 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Process each contiguous block of size len.
+        #|INVARIANT (Stage blocks):
+        #|Blocks of size len starting before i are fully transformed for
+        #|this stage. Each block merges two len/2 DFTs into a len DFT.
       ),
     }
   } where {
@@ -240,7 +244,9 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Normalize inverse FFT by dividing each term by n.
+        #|INVARIANT (Inverse normalization):
+        #|After processing indices [0..i), arr[t] has been divided by n.
+        #|This rescales the inverse FFT to recover the original signal.
       ),
     }
   }
@@ -263,7 +269,9 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
   } where {
     invariant: size >= 1,
     reasoning: (
-      #|Grow size by powers of two until it covers the result length.
+      #|INVARIANT (FFT size):
+      #|size stays a power of two and grows until it reaches result_len.
+      #|The final size is the smallest power of two that fits the convolution.
     ),
   }
   // Convert to complex arrays
@@ -274,7 +282,8 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= n1,
     reasoning: (
-      #|Load polynomial a into the complex buffer.
+      #|INVARIANT (Load a):
+      #|fa[0..i) stores a[0..i) as complex values; remaining entries stay 0.
     ),
   }
   for i = 0; i < n2; i = i + 1 {
@@ -282,7 +291,8 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= n2,
     reasoning: (
-      #|Load polynomial b into the complex buffer.
+      #|INVARIANT (Load b):
+      #|fb[0..i) stores b[0..i) as complex values, padding with zeros beyond n2.
     ),
   }
   // Forward FFT
@@ -313,11 +323,9 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
   } where {
     invariant: i <= result_len,
     reasoning: (
-      #|POLYNOMIAL MULTIPLICATION RESULT:
-      #|  result[k] = Σ a[i] * b[k-i] for valid indices
-      #|
-      #|This is the coefficient of x^k in the product polynomial.
-      #|We add 0.5 before truncating to round to nearest integer.
+      #|INVARIANT (Extract coefficients):
+      #|result[0..i) contains the rounded convolution coefficients for
+      #|degrees < i. Rounding mitigates floating-point drift from FFT.
     ),
   }
   result
@@ -384,7 +392,9 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
     invariant: i >= 0,
     invariant: temp == n >> i,
     reasoning: (
-      #|Count log2(n) by shifting until temp becomes 1.
+      #|INVARIANT (Log2 count):
+      #|temp equals n shifted right by i bits, so i counts the power-of-two
+      #|levels in the iterative NTT stages.
     ),
   }
   // Bit-reversal permutation
@@ -398,7 +408,9 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Reorder elements by bit-reversed index.
+      #|INVARIANT (Bit reversal):
+      #|Indices < i are placed at their bit-reversed positions. Swapping only
+      #|when i < j avoids double swaps and prepares for in-place butterflies.
     ),
   }
   // Iterative NTT
@@ -441,7 +453,9 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Process each length-len block in the NTT array.
+        #|INVARIANT (Stage blocks):
+        #|Blocks of size len starting before i are fully transformed for this
+        #|stage. Each block merges two len/2 sub-transforms.
       ),
     }
   } where {
@@ -460,7 +474,9 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Normalize inverse NTT by multiplying by n^{-1}.
+        #|INVARIANT (Inverse normalization):
+        #|After processing indices [0..i), arr[t] has been multiplied by n^{-1}
+        #|to rescale the inverse transform.
       ),
     }
   }
@@ -483,7 +499,9 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: size >= 1,
     reasoning: (
-      #|Grow size by powers of two until it covers the result length.
+      #|INVARIANT (NTT size):
+      #|size stays a power of two and grows until it reaches result_len.
+      #|The final size is the smallest power of two that fits the product.
     ),
   }
   // Prepare arrays
@@ -494,7 +512,8 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= n1,
     reasoning: (
-      #|Load polynomial a into NTT buffer.
+      #|INVARIANT (Load a):
+      #|fa[0..i) holds a[0..i) modulo ntt_mod, padded with zeros beyond n1.
     ),
   }
   for i = 0; i < n2; i = i + 1 {
@@ -502,7 +521,8 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= n2,
     reasoning: (
-      #|Load polynomial b into NTT buffer.
+      #|INVARIANT (Load b):
+      #|fb[0..i) holds b[0..i) modulo ntt_mod, with zero padding.
     ),
   }
   // Forward NTT
@@ -514,9 +534,9 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i <= n,
     reasoning: (
-      #|NTT CONVOLUTION INVARIANT:
-      #|  Same as FFT: NTT(a * b) = NTT(a) · NTT(b)
-      #|  All operations are exact modulo the NTT prime.
+      #|INVARIANT (Point-wise product):
+      #|After processing indices [0..i), fa[t] equals NTT(a)[t] * NTT(b)[t]
+      #|mod ntt_mod. The inverse NTT then yields the exact convolution.
     ),
   }
   // Inverse NTT
@@ -528,7 +548,9 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= result_len,
     reasoning: (
-      #|Extract the first result_len coefficients from the inverse NTT.
+      #|INVARIANT (Extract result):
+      #|result[0..i) contains the first i coefficients of the inverse NTT,
+      #|which correspond to the polynomial product.
     ),
   }
   result
@@ -568,7 +590,9 @@ fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= coins.length(),
     reasoning: (
-      #|Process each coin's generating function in sequence.
+      #|INVARIANT (Coin sequence):
+      #|After processing coins[0..i), result holds the generating function
+      #|for those coins. Each new coin multiplies by its geometric series.
     ),
   }
   result
@@ -596,7 +620,9 @@ fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= m,
     reasoning: (
-      #|Reverse the pattern for convolution-based matching.
+      #|INVARIANT (Pattern reverse):
+      #|pattern_rev[0..i) equals pattern[m-1..m-i] reversed, preparing the
+      #|sequence for convolution-based matching.
     ),
   }
   // Compute convolution of text and reversed pattern
@@ -614,11 +640,9 @@ fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
   } where {
     invariant: i <= result_len,
     reasoning: (
-      #|CONVOLUTION-BASED MATCHING INVARIANT:
-      #|  result[i] = Σ_j text[i+j] * pattern[j]
-      #|
-      #|This gives a "match score" at each position.
-      #|For exact matching: score = Σ pattern[j]^2 iff perfect match.
+      #|INVARIANT (Match score):
+      #|result[0..i) contains convolution-based match scores for offsets
+      #|0..i-1. Each score is the dot product of the text window and pattern.
     ),
   }
   result
