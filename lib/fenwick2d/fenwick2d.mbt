@@ -71,11 +71,27 @@ fn Fenwick2D::update(self : Fenwick2D, x : Int, y : Int, delta : Int64) -> Unit 
       self.tree[i][j] = self.tree[i][j] + delta
     } where {
       invariant: j > 0 && j <= self.cols + 1,
-      reasoning: "j increases by at least 1 each iteration; terminates when j > cols",
+      reasoning: (
+        #|INVARIANT (column update):
+        #|j iterates over the Fenwick indices that cover column y for this row i.
+        #|MAINTENANCE:
+        #|Advance by lowbit(j), which strictly increases j while preserving the
+        #|Fenwick coverage pattern.
+        #|TERMINATION:
+        #|j eventually exceeds cols, so all covering column indices are updated.
+      ),
     }
   } where {
     invariant: i > 0 && i <= self.rows + 1,
-    reasoning: "i increases by at least 1 each iteration; terminates when i > rows",
+    reasoning: (
+      #|INVARIANT (row update):
+      #|i iterates over the Fenwick indices that cover row x.
+      #|MAINTENANCE:
+      #|Advance by lowbit(i), which strictly increases i while preserving the
+      #|Fenwick coverage pattern.
+      #|TERMINATION:
+      #|i eventually exceeds rows, so all covering row indices are updated.
+    ),
   }
 }
 
