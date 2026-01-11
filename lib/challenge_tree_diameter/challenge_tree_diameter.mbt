@@ -1,0 +1,97 @@
+// ============================================================================
+// Challenge: Tree Diameter (Two BFS)
+// ============================================================================
+
+///|
+fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
+  let adj = Array::makei(n, fn(_) { [] })
+  for i = 0; i < edges.length(); i = i + 1 {
+    let (u, v) = edges[i]
+    adj[u].push(v)
+    adj[v].push(u)
+  } where {
+    invariant: i >= 0 && i <= edges.length(),
+    reasoning: (
+      #|INVARIANT (adjacency build):
+      #|All edges in edges[0..i) are added to adj.
+      #|MAINTENANCE:
+      #|Insert both directions for the next edge.
+      #|TERMINATION:
+      #|At i = edges.length(), the adjacency list is complete.
+    ),
+  }
+  adj
+}
+
+///|
+#warnings("+missing_invariant+missing_reasoning")
+fn bfs(adj : Array[Array[Int]], start : Int) -> (Int, Array[Int]) {
+  let n = adj.length()
+  let dist = Array::make(n, -1)
+  let queue : Array[Int] = []
+  dist[start] = 0
+  queue.push(start)
+  for head = 0; head < queue.length(); head = head + 1 {
+    let u = queue[head]
+    for v in adj[u] {
+      if dist[v] == -1 {
+        dist[v] = dist[u] + 1
+        queue.push(v)
+      }
+    }
+  } where {
+    invariant: head >= 0 && head <= queue.length(),
+    reasoning: (
+      #|INVARIANT (BFS queue):
+      #|All nodes in queue[0..head) have finalized distances. The queue holds
+      #|the frontier of discovered nodes.
+      #|MAINTENANCE:
+      #|Process queue[head], enqueue undiscovered neighbors with distance +1.
+      #|TERMINATION:
+      #|At head = queue.length(), all reachable nodes are processed.
+    ),
+  }
+  let mut best_node = start
+  let mut best_dist = dist[start]
+  for i = 0; i < n; i = i + 1 {
+    if dist[i] > best_dist {
+      best_dist = dist[i]
+      best_node = i
+    }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|INVARIANT (farthest scan):
+      #|best_node is the farthest among nodes in [0, i).
+      #|MAINTENANCE:
+      #|Update best_node when a larger distance is found.
+      #|TERMINATION:
+      #|At i = n, best_node is a farthest node from start.
+    ),
+  }
+  (best_node, dist)
+}
+
+///|
+#warnings("+missing_invariant+missing_reasoning")
+pub fn tree_diameter(n : Int, edges : ArrayView[(Int, Int)]) -> Int {
+  if n == 0 {
+    return 0
+  }
+  let adj = build_adj(n, edges)
+  let (a, _) = bfs(adj, 0)
+  let (b, dist) = bfs(adj, a)
+  dist[b]
+}
+
+///|
+test "tree_diameter_path" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 3), (3, 4)]
+  assert_eq(tree_diameter(5, edges[:]), 4)
+}
+
+///|
+test "tree_diameter_star" {
+  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (0, 3), (0, 4)]
+  assert_eq(tree_diameter(5, edges[:]), 2)
+}
