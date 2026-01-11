@@ -119,8 +119,12 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
     } where {
       invariant: i >= l && i <= r + 1,
       reasoning: (
-        #|Scan the single block from l through r, accumulating the prefix sum.
-        #|Each iteration advances i by one within the query bounds.
+        #|INVARIANT (single block scan):
+        #|sum equals the sum of arr[l..i) within the block.
+        #|MAINTENANCE:
+        #|Add arr[i] and advance i by one.
+        #|TERMINATION:
+        #|At i = r + 1, sum is the full range sum.
       ),
     }
     return result
@@ -151,8 +155,12 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
   } where {
     invariant: b >= left_block + 1 && b <= right_block,
     reasoning: (
-      #|Sum complete blocks between the two boundary blocks.
-      #|Each iteration adds one full block aggregate.
+      #|INVARIANT (middle blocks):
+      #|sum equals the total of full blocks in [left_block+1, b).
+      #|MAINTENANCE:
+      #|Add blocks[b] to include the next full block.
+      #|TERMINATION:
+      #|At b = right_block, all middle blocks are summed.
     ),
   }
 
@@ -263,8 +271,12 @@ fn SqrtMin::push_block(self : SqrtMin, block_idx : Int) -> Unit {
   } where {
     invariant: i >= start && i <= end,
     reasoning: (
-      #|Apply the pending delta to each element in the block range [start, end).
-      #|i advances one position at a time within the block.
+      #|INVARIANT (push block):
+      #|Elements in [start..i) have had the pending delta applied.
+      #|MAINTENANCE:
+      #|Add pending[block_idx] to arr[i] and advance.
+      #|TERMINATION:
+      #|At i = end, the entire block is updated.
     ),
   }
   self.pending[block_idx] = 0
@@ -291,8 +303,12 @@ fn SqrtMin::recompute_block(self : SqrtMin, block_idx : Int) -> Unit {
   } where {
     invariant: i >= start && i <= end,
     reasoning: (
-      #|m tracks the minimum of self.arr[start..i).
-      #|Each iteration considers one more element in the block.
+      #|INVARIANT (recompute min):
+      #|m is the minimum of self.arr[start..i).
+      #|MAINTENANCE:
+      #|Compare self.arr[i] against m and update if smaller.
+      #|TERMINATION:
+      #|At i = end, m is the minimum for the entire block.
     ),
   }
   self.blocks[block_idx] = min
@@ -540,8 +556,12 @@ fn MoSolver::solve_distinct(
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Scan the array to compute the maximum value for sizing the count array.
-      #|m tracks the maximum over self.arr[0..i).
+      #|INVARIANT (max scan):
+      #|m is the maximum of self.arr[0..i).
+      #|MAINTENANCE:
+      #|Update m if self.arr[i] is larger, then advance.
+      #|TERMINATION:
+      #|At i = n, m is the maximum over the array.
     ),
   }
 
@@ -624,11 +644,19 @@ fn MoSolver::solve_distinct(
     reasoning: (
       #|INVARIANT (Left pointer bounds):
       #|cur_l stays within [0, n] as we move it toward each query's left bound.
+      #|MAINTENANCE:
+      #|cur_l only moves by +/-1 within [0, n].
+      #|TERMINATION:
+      #|At loop end, cur_l matches the current query's left bound.
     ),
     invariant: cur_r >= -1 && cur_r < n,
     reasoning: (
       #|INVARIANT (Right pointer bounds):
       #|cur_r stays within [-1, n-1], with -1 representing the empty range.
+      #|MAINTENANCE:
+      #|cur_r only moves by +/-1 within [-1, n-1].
+      #|TERMINATION:
+      #|At loop end, cur_r matches the current query's right bound.
     ),
     invariant: distinct >= 0,
     reasoning: (
