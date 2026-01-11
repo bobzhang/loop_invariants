@@ -189,7 +189,12 @@ pub fn z_search(text : String, pattern : String) -> Array[Int] {
   } where {
     invariant: i >= offset && i <= concat.length(),
     reasoning: (
-      #|Scan Z-values after the delimiter; each i with z[i] == m marks a match.
+      #|INVARIANT (Z scan):
+      #|Positions in [offset..i) are checked; matches found so far are recorded.
+      #|MAINTENANCE:
+      #|If z[i] == m, record the match starting at i - offset.
+      #|TERMINATION:
+      #|At i = concat.length(), all matches in the text are reported.
     ),
   }
   matches

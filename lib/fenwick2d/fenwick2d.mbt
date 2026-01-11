@@ -118,7 +118,13 @@ fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
     } where {
       invariant: j >= 0 && j <= y_clamped,
       reasoning: (
-        #|row_sum accumulates contributions from processed column indices.
+        #|INVARIANT (prefix columns):
+        #|row_sum aggregates contributions from column indices already visited
+        #|along the BIT path from y_clamped down to j.
+        #|MAINTENANCE:
+        #|Add tree[i][j] and move to j - lowbit(j) to cover the next segment.
+        #|TERMINATION:
+        #|At j = 0, row_sum holds the full column contribution for row i.
       ),
     }
     continue i - lowbit(i), sum + row_sum
@@ -127,7 +133,13 @@ fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
   } where {
     invariant: i >= 0 && i <= x_clamped,
     reasoning: (
-      #|sum aggregates contributions from processed row indices in the BIT path.
+      #|INVARIANT (prefix rows):
+      #|sum aggregates row_sum for row indices already visited from x_clamped
+      #|down to i in the BIT path.
+      #|MAINTENANCE:
+      #|Add the current row_sum and move to i - lowbit(i).
+      #|TERMINATION:
+      #|At i = 0, sum equals the prefix sum up to (x_clamped, y_clamped).
     ),
   }
 }
@@ -226,13 +238,23 @@ fn Fenwick2DRange::internal_update(
     } where {
       invariant: j > 0 && j <= self.cols + 1,
       reasoning: (
-        #|j traverses all column indices that cover y in the BIT structure.
+        #|INVARIANT (range column update):
+        #|j traverses all Fenwick column indices that cover y for row i.
+        #|MAINTENANCE:
+        #|Update tree[i][j], then advance by lowbit(j) to the next covering node.
+        #|TERMINATION:
+        #|At j > cols, all covering column nodes are updated.
       ),
     }
   } where {
     invariant: i > 0 && i <= self.rows + 1,
     reasoning: (
-      #|i traverses all row indices that cover x in the BIT structure.
+      #|INVARIANT (range row update):
+      #|i traverses all Fenwick row indices that cover x.
+      #|MAINTENANCE:
+      #|Update columns for row i, then advance by lowbit(i).
+      #|TERMINATION:
+      #|At i > rows, all covering row nodes are updated.
     ),
   }
 }
@@ -257,7 +279,13 @@ fn Fenwick2DRange::internal_prefix(
     } where {
       invariant: j >= 0 && j <= y_clamped,
       reasoning: (
-        #|row_sum accumulates contributions from processed column indices.
+        #|INVARIANT (range prefix columns):
+        #|row_sum aggregates contributions from column indices already visited
+        #|along the BIT path from y_clamped down to j.
+        #|MAINTENANCE:
+        #|Add tree[i][j] and move to j - lowbit(j).
+        #|TERMINATION:
+        #|At j = 0, row_sum holds the full column contribution for row i.
       ),
     }
     continue i - lowbit(i), sum + row_sum
@@ -266,7 +294,13 @@ fn Fenwick2DRange::internal_prefix(
   } where {
     invariant: i >= 0 && i <= x_clamped,
     reasoning: (
-      #|sum aggregates contributions from processed row indices in the BIT path.
+      #|INVARIANT (range prefix rows):
+      #|sum aggregates row_sum for row indices already visited from x_clamped
+      #|down to i in the BIT path.
+      #|MAINTENANCE:
+      #|Add the current row_sum and move to i - lowbit(i).
+      #|TERMINATION:
+      #|At i = 0, sum equals the internal prefix sum.
     ),
   }
 }
@@ -388,7 +422,12 @@ test "fenwick2d larger grid" {
   } where {
     invariant: i >= 1 && i <= 6,
     reasoning: (
-      #|Diagonal entries [1..i) have been updated.
+      #|INVARIANT (diagonal fill):
+      #|Entries (k,k) for k in [1..i) have been updated with value k.
+      #|MAINTENANCE:
+      #|Update (i,i) with i to extend the filled diagonal.
+      #|TERMINATION:
+      #|At i = 6, all 1..5 diagonal entries are updated.
     ),
   }
 
