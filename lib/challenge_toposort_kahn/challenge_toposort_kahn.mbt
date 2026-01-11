@@ -6,7 +6,7 @@
 /// Return a topological ordering, or None if the graph has a cycle.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn topo_sort(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
-  let adj : Array[Array[Int]] = Array::make(n, [])
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   let indeg : Array[Int] = Array::make(n, 0)
   let m = edges.length()
   for i = 0; i < m; i = i + 1 {

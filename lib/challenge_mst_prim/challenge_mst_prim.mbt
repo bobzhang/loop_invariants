@@ -12,7 +12,7 @@ pub fn build_adj(
   n : Int,
   edges : ArrayView[(Int, Int, Int)],
 ) -> Array[Array[(Int, Int)]] {
-  let adj : Array[Array[(Int, Int)]] = Array::make(n, [])
+  let adj : Array[Array[(Int, Int)]] = Array::makei(n, _ => [])
   let m = edges.length()
   for i = 0; i < m; i = i + 1 {
     let (u, v, w) = edges[i]
