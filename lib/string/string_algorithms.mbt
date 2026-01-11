@@ -62,6 +62,10 @@ fn z_algorithm(s : ArrayView[Char]) -> Array[Int] {
       #|i advances left-to-right, and [l, r) always denotes a valid Z-box
       #|within the string. This ensures every access into s is in range and
       #|the loop terminates when i reaches n.
+      #|MAINTENANCE:
+      #|Advance i and update (l, r) whenever a longer Z-box is found.
+      #|TERMINATION:
+      #|At i == n, all Z-values have been computed.
     ),
     invariant: l < i,
     reasoning: (
@@ -98,6 +102,10 @@ fn z_algorithm(s : ArrayView[Char]) -> Array[Int] {
       #|APPLICATION: Pattern matching in O(n+m) time.
       #|Concatenate pattern + sentinel + text, compute Z-array.
       #|Positions where Z[i] >= pattern.length() are matches.
+      #|MAINTENANCE:
+      #|If i < r, reuse or extend from the Z-box; if i >= r, start a new box.
+      #|TERMINATION:
+      #|At i == n, every position has its correct Z value.
     ),
   }
 }
@@ -179,6 +187,10 @@ fn manacher(s : ArrayView[Char]) -> Array[Int] {
       #|c and r identify the rightmost palindrome seen so far, and i never
       #|exceeds t_len. This keeps all computed radii inside the transformed
       #|string and ensures every extension check is safe.
+      #|MAINTENANCE:
+      #|Update p[i] and adjust (c, r) when the palindrome expands.
+      #|TERMINATION:
+      #|At i == t_len, all radii are computed.
     ),
     invariant: c <= i,
     reasoning: (
@@ -220,6 +232,10 @@ fn manacher(s : ArrayView[Char]) -> Array[Int] {
       #|with a definite center. This unifies the two cases elegantly.
       #|
       #|Original palindrome length = p[i] (for positions in transformed string)
+      #|MAINTENANCE:
+      #|Use the mirror radius when inside the current boundary and extend if needed.
+      #|TERMINATION:
+      #|At i == t_len, the rightmost boundary information is complete.
     ),
   }
 }
@@ -315,6 +331,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
       #|acc = base^i mod modulus after i steps, so when i reaches m-1,
       #|acc equals base^(m-1) mod modulus. This factor is used to remove the
       #|leading character from a window during rolling updates.
+      #|MAINTENANCE:
+      #|Multiply acc by base modulo modulus and advance i.
+      #|TERMINATION:
+      #|At i == m - 1, acc is base^(m-1) mod modulus.
     ),
   }
 
@@ -342,6 +362,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
       #|
       #|This is Horner's method for polynomial evaluation.
       #|Each character contributes to the hash weighted by its position.
+      #|MAINTENANCE:
+      #|Update ph/th with the next character and advance i.
+      #|TERMINATION:
+      #|At i == m, both initial hashes are computed.
     ),
   }
   let results : Array[Int] = []
@@ -367,6 +391,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
             #|After j comparisons, match_found is true iff the prefix
             #|text[i..i+j) equals pattern[0..j). Any mismatch sets it to false
             #|and we break early, so a true result means exact match.
+            #|MAINTENANCE:
+            #|Compare text[i+j] with pattern[j] and advance j.
+            #|TERMINATION:
+            #|At j == m, the entire pattern matches this window.
           ),
         }
         if match_found {
@@ -420,6 +448,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
       #|The hash acts as a "fingerprint" of the window.
       #|Most non-matching windows have different fingerprints.
       #|Only matching fingerprints need expensive character-by-character check.
+      #|MAINTENANCE:
+      #|Advance i and update th to the next window hash.
+      #|TERMINATION:
+      #|At i == n - m + 1, all windows have been processed.
     ),
   }
 }
@@ -597,6 +629,10 @@ fn booth_smallest_rotation(s : ArrayView[Char]) -> Int {
           #|If we encounter a mismatch where get(i) < get(k + jj + 1),
           #|then the rotation starting at k is lexicographically larger than
           #|the rotation starting at i - jj - 1, so we signal a candidate change.
+          #|MAINTENANCE:
+          #|Follow failure[jj] on mismatch until a valid extension or -1.
+          #|TERMINATION:
+          #|At jj == -1 or a match, the longest extendable prefix is found.
         ),
       }
       if new_j == -2 {
@@ -641,6 +677,10 @@ fn booth_smallest_rotation(s : ArrayView[Char]) -> Int {
       #|  - Canonical form for cyclic strings (useful in DNA analysis)
       #|  - String equality under rotation
       #|  - Burrows-Wheeler Transform preprocessing
+      #|MAINTENANCE:
+      #|Advance i and update k when a smaller candidate is found.
+      #|TERMINATION:
+      #|At i == 2 * n, k is the smallest rotation start.
     ),
   }
 }
