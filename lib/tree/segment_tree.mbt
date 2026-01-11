@@ -962,11 +962,8 @@ fn SegmentTree2D::new(matrix : Array[Array[Int]]) -> SegmentTree2D {
   let cols = matrix[0].length()
   let tree = Array::make(2 * rows, Array::make(2 * cols, 0L))
   // Initialize each row's tree array
-  for i = 0; i < 2 * rows; i = i + 1 {
+  for i in 0..<(2 * rows) {
     tree[i] = Array::make(2 * cols, 0L)
-  } where {
-    invariant: i >= 0 && i <= 2 * rows,
-    reasoning: "I: Rows [0,i) each have a column tree of length 2*cols. M: Allocate a fresh array for row i. T: After i = 2*rows, all row trees are initialized.",
   }
   let st = { rows, cols, tree }
 
