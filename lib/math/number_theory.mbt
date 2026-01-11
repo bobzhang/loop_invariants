@@ -141,7 +141,12 @@ fn is_prime_32(n : Int) -> Bool {
   } where {
     invariant: i >= 0 && i <= witnesses.length(),
     reasoning: (
-      #|Try each deterministic witness; any failing witness proves composite.
+      #|INVARIANT (Witness scan):
+      #|After processing witnesses[0..i), n has passed all tested bases so far.
+      #|If any base fails the strong probable prime test, n is composite.
+      #|
+      #|For 32-bit n, the set {2, 7, 61} is proven sufficient: passing all
+      #|these bases implies primality for n < 2^32.
     ),
   }
 }
