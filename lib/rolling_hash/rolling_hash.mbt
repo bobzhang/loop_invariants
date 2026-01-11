@@ -69,7 +69,17 @@ fn RollingHash::new(s : String) -> RollingHash {
     pow_base[i] = pow_base[i - 1] * HASH_BASE % HASH_MOD
   } where {
     invariant: i >= 1 && i <= n + 1,
-    reasoning: "I: pow_base[k] is computed for k in [0,i). M: Extend by one power using pow_base[i-1]. T: After i = n+1, powers 0..n are ready.",
+    reasoning: (
+      #|INVARIANT (powers table):
+      #|pow_base contains correct base powers for indices [0, i). In
+      #|particular, pow_base[0] = 1 and each pow_base[k] represents
+      #|HASH_BASE^k mod HASH_MOD.
+      #|MAINTENANCE:
+      #|Compute pow_base[i] from pow_base[i - 1] * HASH_BASE mod HASH_MOD,
+      #|extending the table by one exponent while preserving prior entries.
+      #|TERMINATION:
+      #|At i = n + 1, powers for 0..n are available for all substring lengths.
+    ),
   }
 
   // Compute prefix hashes
@@ -80,7 +90,16 @@ fn RollingHash::new(s : String) -> RollingHash {
     prefix_hash[i + 1] = (prefix_hash[i] * HASH_BASE + char_val) % HASH_MOD
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: prefix_hash[k] equals hash of s[0..k-1] for k <= i. M: Extend hash with s[i]. T: After i = n, all prefix hashes are computed.",
+    reasoning: (
+      #|INVARIANT (prefix hashes):
+      #|prefix_hash[k] equals hash(s[0..k)) for all k in [0, i]. This
+      #|includes prefix_hash[0] = 0 and correctness up to length i.
+      #|MAINTENANCE:
+      #|Extend the polynomial hash by one character:
+      #|prefix_hash[i+1] = prefix_hash[i] * base + char_val (mod HASH_MOD).
+      #|TERMINATION:
+      #|At i = n, prefix_hash holds hashes for every prefix length 0..n.
+    ),
   }
   { n, prefix_hash, pow_base }
 }
@@ -155,7 +174,17 @@ fn DoubleRollingHash::new(s : String) -> DoubleRollingHash {
     pow_base2[i] = pow_base2[i - 1] * HASH_BASE2 % HASH_MOD2
   } where {
     invariant: i >= 1 && i <= n + 1,
-    reasoning: "I: pow_base1/2 are computed for powers < i. M: Extend both power tables by one exponent. T: After i = n+1, powers 0..n are ready.",
+    reasoning: (
+      #|INVARIANT (dual powers):
+      #|pow_base1 and pow_base2 are correct for all exponents in [0, i),
+      #|with pow_base1[0] = pow_base2[0] = 1 and each table storing its
+      #|respective base^k modulo its prime.
+      #|MAINTENANCE:
+      #|Extend both tables by one exponent using their previous entry and
+      #|the corresponding base/mod pair.
+      #|TERMINATION:
+      #|At i = n + 1, both power tables are filled for all lengths 0..n.
+    ),
   }
   let prefix_hash1 = Array::make(n + 1, 0L)
   let prefix_hash2 = Array::make(n + 1, 0L)
@@ -165,7 +194,15 @@ fn DoubleRollingHash::new(s : String) -> DoubleRollingHash {
     prefix_hash2[i + 1] = (prefix_hash2[i] * HASH_BASE2 + char_val) % HASH_MOD2
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: prefix_hash1/2 are correct for prefix length i. M: Extend both hashes with s[i]. T: After i = n, all prefix hashes are computed.",
+    reasoning: (
+      #|INVARIANT (dual prefix hashes):
+      #|prefix_hash1/2 are correct for all prefix lengths in [0, i]. This
+      #|means both hashing schemes agree with their definitions up to i.
+      #|MAINTENANCE:
+      #|Extend both hashes by the next character using their base/mod pairs.
+      #|TERMINATION:
+      #|At i = n, both prefix hash arrays cover every prefix length 0..n.
+    ),
   }
   { n, prefix_hash1, prefix_hash2, pow_base1, pow_base2 }
 }
@@ -254,7 +291,17 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
             }
           } where {
             invariant: j >= 0 && j <= m,
-            reasoning: "I: matches implies the first j characters match. M: Compare the next character and clear matches on mismatch. T: After j = m or matches=false, matches is true iff the full pattern matches at i.",
+            reasoning: (
+              #|INVARIANT (verification scan):
+              #|If matches is true, then text[i..i+j) equals pattern[0..j).
+              #|If a mismatch is found, matches becomes false and stays false.
+              #|MAINTENANCE:
+              #|Compare the next character; on mismatch, record failure by
+              #|clearing matches.
+              #|TERMINATION:
+              #|When j = m or matches is false, matches is true iff the full
+              #|pattern matches at position i.
+            ),
           }
           if matches {
             result.push(i)
@@ -264,7 +311,16 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
     }
   } where {
     invariant: i >= 0 && i <= n - m + 1,
-    reasoning: "I: All positions in [0,i) have been checked. M: Compare hash at position i, verify on match, record result. T: After i = n-m+1, all candidate positions are processed.",
+    reasoning: (
+      #|INVARIANT (window scan):
+      #|All start positions in [0, i) have been checked, and result contains
+      #|exactly those indices where pattern matches the text (after verifying
+      #|any hash collisions).
+      #|MAINTENANCE:
+      #|At position i, compare hashes; on a hit, verify characters and push i.
+      #|TERMINATION:
+      #|When i = n - m + 1, every valid start position has been processed.
+    ),
   }
   result
 }
@@ -308,7 +364,15 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
       }
     } where {
       invariant: i >= 0 && i <= n1 - len + 1,
-      reasoning: "I: hashes contains all length-len substrings from s1 in [0,i). M: Add hash for position i if valid. T: After i = n1-len+1, all hashes from s1 are collected.",
+      reasoning: (
+        #|INVARIANT (collect s1 hashes):
+        #|hashes contains the hash of every length-len substring of s1 with
+        #|start index in [0, i). No start in that range is skipped.
+        #|MAINTENANCE:
+        #|Compute the hash for start i and append it to hashes.
+        #|TERMINATION:
+        #|At i = n1 - len + 1, all length-len substrings of s1 are collected.
+      ),
     }
 
     // Sort for binary search
@@ -356,7 +420,15 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
       }
     } where {
       invariant: i >= 0 && i <= n2 - len + 1,
-      reasoning: "I: No substring of s2 in [0,i) has matched s1's hashes. M: Check s2 substring at i by binary searching the sorted hashes. T: After i = n2-len+1, a match is found or none exists.",
+      reasoning: (
+        #|INVARIANT (scan s2 hashes):
+        #|No substring of s2 with start in [0, i) matches any hash from s1.
+        #|MAINTENANCE:
+        #|For start i, compute its hash and binary search the sorted hashes;
+        #|return true immediately if a match exists.
+        #|TERMINATION:
+        #|At i = n2 - len + 1, all starts are checked and no match exists.
+      ),
     }
     false
   }
@@ -374,7 +446,16 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
     result
   } where {
     invariant: lo >= 0 && hi <= max_len && result >= 0,
-    reasoning: "I: result is the best length found so far; search space is [lo,hi]. M: Binary search on length using monotonic check_length. T: After lo > hi, result is the maximum valid length.",
+    reasoning: (
+      #|INVARIANT (length search):
+      #|All lengths <= result are known to be feasible, and any feasible
+      #|length must lie in the current search window [lo, hi].
+      #|MAINTENANCE:
+      #|If mid is feasible, move lo upward and promote result; otherwise,
+      #|shrink hi. Monotonicity of check_length preserves correctness.
+      #|TERMINATION:
+      #|When lo > hi, result is the maximum feasible length.
+    ),
   }
 }
 
@@ -401,11 +482,26 @@ fn count_distinct_substrings(s : String) -> Int {
       }
     } where {
       invariant: i >= 0 && i <= n - len + 1,
-      reasoning: "I: seen has hashes for length len substrings in [0,i). M: Add hash for position i. T: After i = n-len+1, all substrings of length len are collected.",
+      reasoning: (
+        #|INVARIANT (fixed length):
+        #|seen holds hashes for all length-len substrings starting in [0, i).
+        #|MAINTENANCE:
+        #|Append the hash for the substring starting at i.
+        #|TERMINATION:
+        #|At i = n - len + 1, all length-len substrings are collected.
+      ),
     }
   } where {
     invariant: len >= 1 && len <= n + 1,
-    reasoning: "I: seen contains hashes for all substring lengths in [1,len). M: Collect all hashes of length len. T: After len = n+1, all substring hashes are collected.",
+    reasoning: (
+      #|INVARIANT (all lengths):
+      #|seen contains hashes for all substring lengths in [1, len). Duplicates
+      #|are allowed since different substrings may collide in the hash.
+      #|MAINTENANCE:
+      #|Collect all hashes of the current length len.
+      #|TERMINATION:
+      #|At len = n + 1, seen holds hashes for every substring length.
+    ),
   }
 
   // Sort and count unique
@@ -445,7 +541,15 @@ fn count_distinct_substrings(s : String) -> Int {
     count
   } where {
     invariant: i >= 1 && i <= seen.length() && count >= 1,
-    reasoning: "I: count equals the number of distinct hashes in seen[0..i). M: Increment count when a new value appears. T: After i = len, count is the number of distinct substrings.",
+    reasoning: (
+      #|INVARIANT (distinct count):
+      #|Because seen is sorted, equal hashes are contiguous. count equals the
+      #|number of distinct hash values in seen[0..i).
+      #|MAINTENANCE:
+      #|If the current hash differs from the previous one, increment count.
+      #|TERMINATION:
+      #|At i = seen.length(), count is the number of distinct substrings.
+    ),
   }
 }
 
