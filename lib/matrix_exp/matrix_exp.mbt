@@ -36,13 +36,8 @@ priv struct Matrix {
 ///|
 fn Matrix::new(rows : Int, cols : Int) -> Matrix {
   let data = Array::make(rows, [])
-  for i = 0; i < rows; i = i + 1 {
+  for i in 0..<rows {
     data[i] = Array::make(cols, 0L)
-  } where {
-    invariant: i >= 0 && i <= rows,
-    reasoning: (
-      #|Allocate each row with zero-initialized columns.
-    ),
   }
   { data, rows, cols }
 }
@@ -50,13 +45,8 @@ fn Matrix::new(rows : Int, cols : Int) -> Matrix {
 ///|
 fn Matrix::identity(n : Int) -> Matrix {
   let m = Matrix::new(n, n)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     m.data[i][i] = 1L
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|Set diagonal entries to 1 to form the identity matrix.
-    ),
   }
   m
 }
@@ -69,21 +59,11 @@ fn Matrix::from_array(arr : Array[Array[Int64]]) -> Matrix {
   }
   let cols = arr[0].length()
   let data = Array::make(rows, [])
-  for i = 0; i < rows; i = i + 1 {
+  for i in 0..<rows {
     data[i] = Array::make(cols, 0L)
-    for j = 0; j < cols; j = j + 1 {
+    for j in 0..<cols {
       data[i][j] = arr[i][j]
-    } where {
-      invariant: j >= 0 && j <= cols,
-      reasoning: (
-        #|Copy row elements into the new matrix.
-      ),
     }
-  } where {
-    invariant: i >= 0 && i <= rows,
-    reasoning: (
-      #|Initialize each row before copying its elements.
-    ),
   }
   { data, rows, cols }
 }
@@ -110,20 +90,27 @@ fn Matrix::multiply(self : Matrix, other : Matrix) -> Matrix {
       } where {
         invariant: k >= 0 && k <= self.cols,
         reasoning: (
-          #|Accumulate the dot product for result[i][j] modulo MATRIX_MOD.
+          #|INVARIANT (Dot product):
+          #|sum equals the partial dot product
+          #|  sum_{t < k} self[i,t] * other[t,j] (mod MATRIX_MOD).
+          #|When k reaches self.cols, sum is the full (i,j) entry.
         ),
       }
       result.data[i][j] = sum
     } where {
       invariant: j >= 0 && j <= other.cols,
       reasoning: (
-        #|Compute each column entry for row i.
+        #|INVARIANT (Row fill):
+        #|After processing columns [0..j), result[i][c] is correct for all c < j.
+        #|Each column is computed by a full dot product over the shared dimension.
       ),
     }
   } where {
     invariant: i >= 0 && i <= self.rows,
     reasoning: (
-      #|Compute all rows of the result matrix.
+      #|INVARIANT (Matrix fill):
+      #|After processing rows [0..i), every entry in those rows matches the
+      #|matrix product. The loop constructs the result row by row.
     ),
   }
   result
@@ -141,20 +128,24 @@ fn Matrix::multiply_no_mod(self : Matrix, other : Matrix) -> Matrix {
       } where {
         invariant: k >= 0 && k <= self.cols,
         reasoning: (
-          #|Accumulate the dot product for result[i][j].
+          #|INVARIANT (Dot product):
+          #|sum equals the partial dot product sum_{t < k} self[i,t] * other[t,j].
+          #|When k reaches self.cols, sum is the full entry for (i,j).
         ),
       }
       result.data[i][j] = sum
     } where {
       invariant: j >= 0 && j <= other.cols,
       reasoning: (
-        #|Compute each column entry for row i.
+        #|INVARIANT (Row fill):
+        #|After processing columns [0..j), result[i][c] is correct for all c < j.
       ),
     }
   } where {
     invariant: i >= 0 && i <= self.rows,
     reasoning: (
-      #|Compute all rows of the result matrix.
+      #|INVARIANT (Matrix fill):
+      #|Rows [0..i) are fully computed for the product without modulo.
     ),
   }
   result
@@ -181,7 +172,10 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
   } where {
     invariant: e >= 0L,
     reasoning: (
-      #|Binary exponentiation maintains result * base^e = M^exp.
+      #|INVARIANT (Binary exponentiation):
+      #|result * base^e = M^exp holds at each step. When e is odd we fold one
+      #|factor of base into result, then square base and halve e. This preserves
+      #|the invariant while strictly decreasing e toward 0.
     ),
   }
   result
@@ -191,20 +185,10 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
 /// Copy matrix
 fn Matrix::copy(self : Matrix) -> Matrix {
   let m = Matrix::new(self.rows, self.cols)
-  for i = 0; i < self.rows; i = i + 1 {
-    for j = 0; j < self.cols; j = j + 1 {
+  for i in 0..<self.rows {
+    for j in 0..<self.cols {
       m.data[i][j] = self.data[i][j]
-    } where {
-      invariant: j >= 0 && j <= self.cols,
-      reasoning: (
-        #|Copy a single row's entries.
-      ),
     }
-  } where {
-    invariant: i >= 0 && i <= self.rows,
-    reasoning: (
-      #|Copy each row of the matrix.
-    ),
   }
   m
 }
@@ -215,22 +199,12 @@ fn Matrix::equals(self : Matrix, other : Matrix) -> Bool {
   if self.rows != other.rows || self.cols != other.cols {
     return false
   }
-  for i = 0; i < self.rows; i = i + 1 {
-    for j = 0; j < self.cols; j = j + 1 {
+  for i in 0..<self.rows {
+    for j in 0..<self.cols {
       if self.data[i][j] != other.data[i][j] {
         return false
       }
-    } where {
-      invariant: j >= 0 && j <= self.cols,
-      reasoning: (
-        #|Compare all entries in row i.
-      ),
     }
-  } where {
-    invariant: i >= 0 && i <= self.rows,
-    reasoning: (
-      #|Compare rows sequentially until a mismatch is found.
-    ),
   }
   true
 }
@@ -282,31 +256,16 @@ fn solve_recurrence(
   //  ...
   //  [0,    0,    ..., 0     ]]
   let m = Matrix::new(k, k)
-  for j = 0; j < k; j = j + 1 {
+  for j in 0..<k {
     m.data[0][j] = coefficients[j]
-  } where {
-    invariant: j >= 0 && j <= k,
-    reasoning: (
-      #|Fill the first row with recurrence coefficients.
-    ),
   }
-  for i = 1; i < k; i = i + 1 {
+  for i in 1..<k {
     m.data[i][i - 1] = 1L
-  } where {
-    invariant: i >= 1 && i <= k,
-    reasoning: (
-      #|Set the subdiagonal to shift state in the transition matrix.
-    ),
   }
   let result = m.power(n - k.to_int64() + 1L)
   let mut ans = 0L
-  for j = 0; j < k; j = j + 1 {
+  for j in 0..<k {
     ans = (ans + result.data[0][j] * initial[k - 1 - j]) % MATRIX_MOD
-  } where {
-    invariant: j >= 0 && j <= k,
-    reasoning: (
-      #|Compute the dot product of the first row with initial values.
-    ),
   }
   ans
 }

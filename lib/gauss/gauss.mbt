@@ -74,16 +74,22 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
     } where {
       invariant: i >= row + 1 && i <= n,
       reasoning: (
-        #|Scan rows below the current pivot row to find the largest absolute entry.
-        #|i advances through candidate rows in the same column.
+        #|INVARIANT (Pivot scan range):
+        #|Rows [row+1..i) have been inspected for the current column.
+        #|The loop only considers candidates below the active pivot row,
+        #|which preserves the upper-triangular structure of prior pivots.
       ),
       invariant: best_row >= row && best_row < n,
       reasoning: (
-        #|best_row always points to a valid candidate row in the search range.
+        #|INVARIANT (Best row validity):
+        #|best_row stays within [row, i), so it always names a row already
+        #|examined for this pivot choice.
       ),
       invariant: best_val == abs(aug[best_row][col]),
       reasoning: (
-        #|best_val tracks the maximum absolute value seen so far in column col.
+        #|INVARIANT (Best value):
+        #|best_val is the maximum absolute entry seen so far in column col
+        #|among rows [row..i). This implements partial pivoting for stability.
       ),
     }
 
@@ -106,12 +112,16 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
     } where {
       invariant: j >= col && j <= m + 1,
       reasoning: (
-        #|Normalize the pivot row by dividing each entry by the pivot.
-        #|Entries in columns < j have already been scaled.
+        #|INVARIANT (Row normalization):
+        #|After processing columns [col..j), aug[row][t] has been divided by
+        #|pivot for every t in that range. When the loop ends, the pivot entry
+        #|becomes 1 and the entire augmented row is scaled consistently.
       ),
       invariant: abs(pivot) >= GAUSS_EPS,
       reasoning: (
-        #|We only scale when the pivot is numerically non-zero.
+        #|INVARIANT (Non-zero pivot):
+        #|We only normalize when the chosen pivot is safely away from zero,
+        #|so dividing preserves numerical stability and avoids blow-ups.
       ),
     }
 
@@ -124,20 +134,26 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         } where {
           invariant: j >= col && j <= m + 1,
           reasoning: (
-            #|Subtract factor * pivot_row from row i to zero out column col.
-            #|Columns col..j-1 have already been updated.
+            #|INVARIANT (Row elimination):
+            #|After processing columns [col..j), row i has been updated by
+            #|subtracting factor * pivot_row, so all entries in that range
+            #|match the new row with column col targeted for zeroing.
           ),
         }
       }
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Eliminate the pivot column from every other row.
-        #|Rows processed so far have column col reduced to zero.
+        #|INVARIANT (Column elimination):
+        #|After processing rows [0..i), every row other than the pivot row
+        #|has column col reduced to 0 (within epsilon). This produces the
+        #|Gauss-Jordan form for the current pivot column.
       ),
       invariant: abs(aug[row][col] - 1.0) < GAUSS_EPS,
       reasoning: (
-        #|Pivot row is normalized, so the pivot entry stays 1 throughout elimination.
+        #|INVARIANT (Pivot stability):
+        #|The pivot entry remains 1 because we never modify the pivot row
+        #|during elimination of other rows.
       ),
     }
     rank = rank + 1
@@ -145,13 +161,16 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
   } where {
     invariant: 0 <= row && row <= n && 0 <= col && col <= m,
     reasoning: (
-      #|row counts how many pivot rows have been fixed; col is the next column to process.
-      #|Bounds guarantee all matrix accesses remain valid.
+      #|INVARIANT (Forward elimination progress):
+      #|row counts completed pivot rows, and col is the current column under
+      #|consideration. All rows above row are already in reduced row-echelon
+      #|form for columns < col, so each new pivot maintains the invariant.
     ),
     invariant: rank == row,
     reasoning: (
-      #|Each successful pivot increases both rank and row by one.
-      #|Thus rank equals the number of pivot rows already placed in echelon form.
+      #|INVARIANT (Rank tracking):
+      #|Every time we accept a pivot we increment row and rank together.
+      #|Therefore rank equals the number of independent pivot rows built so far.
     ),
   }
 
@@ -165,7 +184,10 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
   } where {
     invariant: i >= rank && i <= n,
     reasoning: (
-      #|Rows below rank should be all zeros on the left; any non-zero RHS is inconsistent.
+      #|INVARIANT (Consistency check):
+      #|Rows i >= rank have all-zero coefficients on the left side. If any
+      #|such row has a non-zero right-hand side, the system is inconsistent
+      #|because it encodes 0 = c with c != 0.
     ),
   }
 
@@ -183,14 +205,19 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
       } where {
         invariant: j >= 0 && j <= m,
         reasoning: (
-          #|Scan row i to locate its pivot column (entry ~ 1.0).
+          #|INVARIANT (Pivot column scan):
+          #|After scanning columns [0..j), no pivot (value near 1) has been
+          #|found yet. When we find it, the corresponding variable is fixed
+          #|to the row's augmented value.
         ),
       }
     } where {
       invariant: i >= 0 && i <= rank && i <= m,
       reasoning: (
-        #|Each pivot row contributes exactly one variable to the solution.
-        #|We only scan rows that correspond to pivots.
+        #|INVARIANT (Solution extraction):
+        #|Each pivot row determines one basic variable. By scanning only the
+        #|first rank rows, we assign values to all pivot variables while leaving
+        #|free variables (if any) at their default value.
       ),
     }
   }
