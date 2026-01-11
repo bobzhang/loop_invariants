@@ -58,7 +58,15 @@ fn manacher(s : String) -> ManacherResult {
     t[2 * i + 1] = s[i]
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: t filled with '#'. M: Place s[i] at position 2*i+1, leaving separators at even positions. T: After i = n, t = ['#', s[0], '#', s[1], '#', ..., s[n-1], '#'], interleaving chars with separators.",
+    reasoning: (
+      #|INVARIANT (transform):
+      #|t is filled with separators, and positions 2*j+1 for j in [0, i)
+      #|contain s[j]. Even positions remain separators.
+      #|MAINTENANCE:
+      #|Place s[i] at position 2*i+1, preserving the separator pattern.
+      #|TERMINATION:
+      #|At i = n, t interleaves separators and characters: "#a#b#...#".
+    ),
   }
   let p = Array::make(t_len, 0) // p[i] = radius of palindrome centered at i
   for i = 0, c = 0, r = 0; i < t_len; {
@@ -86,7 +94,18 @@ fn manacher(s : String) -> ManacherResult {
     continue i + 1, curr_c, curr_r
   } where {
     invariant: i >= 0 && i <= t_len && c >= 0 && r >= 0 && r <= t_len,
-    reasoning: "I: i=0, c=0, r=0; no palindromes computed. M: For position i, if i < r, use symmetry: p[i] >= min(p[mirror], r-i). Then expand greedily while chars match. If new right boundary i+p[i] > r, update c=i, r=i+p[i]. Key insight: r only increases, and each comparison that fails is at position > r, so it contributes to increasing r. Total comparisons O(n). T: After i = t_len, p[j] contains radius of longest palindrome centered at j.",
+    reasoning: (
+      #|INVARIANT (Manacher scan):
+      #|For all centers < i, p is the correct palindrome radius, and (c, r)
+      #|marks the rightmost palindrome boundary seen so far.
+      #|MAINTENANCE:
+      #|If i < r, initialize p[i] using the mirror radius and the boundary.
+      #|Then expand around i while characters match. If the expansion crosses
+      #|r, update (c, r) to the new rightmost palindrome.
+      #|TERMINATION:
+      #|At i = t_len, every center has its maximal radius; r only increases,
+      #|so total comparisons are linear.
+    ),
   }
   { radii: p, original: s }
 }
@@ -117,7 +136,15 @@ fn ManacherResult::longest_palindrome(self : ManacherResult) -> String {
     }
   } where {
     invariant: i >= 0 && i <= self.radii.length(),
-    reasoning: "I: max_len=0, no radii examined. M: Track maximum radius and its center. T: After loop, max_center has longest palindrome in transformed string.",
+    reasoning: (
+      #|INVARIANT (max radius):
+      #|max_len is the largest radius among centers in [0, i), and max_center
+      #|records its position.
+      #|MAINTENANCE:
+      #|Update max_len and max_center when a larger radius is found.
+      #|TERMINATION:
+      #|At i = radii.length(), max_center marks the longest palindrome.
+    ),
   }
 
   // Convert back to original string indices
@@ -179,7 +206,15 @@ fn ManacherResult::count_palindromes(self : ManacherResult) -> Int {
     count = count + (self.radii[i] + 1) / 2
   } where {
     invariant: i >= 0 && i <= self.radii.length(),
-    reasoning: "I: count=0. M: Each position i in transformed string with radius r contributes ceil((r+1)/2) palindromes: the center itself (if char position) and all expansions. T: Total count of all palindromic substrings.",
+    reasoning: (
+      #|INVARIANT (palindrome count):
+      #|count equals the total number of palindromic substrings contributed by
+      #|centers in [0, i).
+      #|MAINTENANCE:
+      #|Each center adds (radii[i] + 1) / 2 palindromes in the original string.
+      #|TERMINATION:
+      #|At i = radii.length(), count is the total number of palindromic substrings.
+    ),
   }
   count
 }
@@ -199,7 +234,12 @@ fn ManacherResult::get_all_palindromes(
   } where {
     invariant: i >= 0 && i <= self.radii.length(),
     reasoning: (
-      #|Collect each center's maximal palindrome span.
+      #|INVARIANT (collect spans):
+      #|result contains maximal palindrome spans for centers in [0, i).
+      #|MAINTENANCE:
+      #|If a center has positive radius, add its maximal span.
+      #|TERMINATION:
+      #|At i = radii.length(), all maximal spans are collected.
     ),
   }
   result
