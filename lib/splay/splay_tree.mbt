@@ -222,6 +222,10 @@ fn SplayTree::splay(self : SplayTree, x : Int) -> Unit {
       #|   the access path, reducing future access costs.
       #|
       #|4. Termination: parent pointer becomes -1 when x reaches root
+      #|MAINTENANCE:
+      #|Each rotation preserves BST order while moving x upward toward root.
+      #|TERMINATION:
+      #|x's depth strictly decreases, so it reaches the root.
     ),
   }
 }
@@ -260,6 +264,10 @@ fn SplayTree::search(self : SplayTree, key : Int) -> Bool {
       #|2. Each step follows BST property: left if key < node.key, right otherwise
       #|3. Loop terminates when key found or no appropriate child exists
       #|4. We track 'last' to splay even on failed search (important for amortization)
+      #|MAINTENANCE:
+      #|Following the BST rule keeps the target (if any) within the subtree.
+      #|TERMINATION:
+      #|The search descends until it finds key or a missing child.
     ),
   }
   self.splay(last)
@@ -353,6 +361,10 @@ fn SplayTree::insert(self : SplayTree, key : Int) -> Bool {
       #|
       #|Find the node that will become parent of new node.
       #|BST property guides the search.
+      #|MAINTENANCE:
+      #|Each step descends to the child where the key must belong.
+      #|TERMINATION:
+      #|The search ends at a leaf where the new node attaches.
     ),
   }
 
@@ -514,6 +526,10 @@ fn SplayTree::kth_element(self : SplayTree, k : Int) -> Int? {
       #|4. Otherwise: target is in right subtree with adjusted rank
       #|
       #|Correctness: BST property ensures in-order gives sorted sequence
+      #|MAINTENANCE:
+      #|Updating (node, remaining) preserves the rank within the chosen subtree.
+      #|TERMINATION:
+      #|remaining decreases toward 1 or a leaf is reached, yielding the target.
     ),
   }
   self.splay(result)
@@ -556,6 +572,10 @@ fn SplayTree::count_less(self : SplayTree, key : Int) -> Int {
       #|1. count = number of elements less than key in already-visited parts
       #|2. If key <= node.key: only left subtree may contain smaller elements
       #|3. If key > node.key: node and all left subtree are smaller, continue right
+      #|MAINTENANCE:
+      #|Updating count with left subtree size preserves the total smaller count.
+      #|TERMINATION:
+      #|The search descends to a leaf, yielding the final count.
     ),
   }
 }
