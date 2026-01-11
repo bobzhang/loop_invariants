@@ -109,7 +109,13 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: Array unsorted. M: Swap a[i] with a[bit_reverse(i)] when i < j (to avoid double swap). T: Array in bit-reversed order for Cooley-Tukey algorithm.",
+    reasoning: (
+      #|INVARIANT (Bit-reversal):
+      #|For all indices < i, a has been swapped into its bit-reversed position.
+      #|We only swap when i < j to avoid undoing a previous swap, so each pair
+      #|is processed exactly once. This prepares the array for iterative
+      #|Cooley-Tukey butterflies.
+    ),
   }
 
   // Cooley-Tukey NTT
@@ -151,7 +157,10 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|a[0..i) has been scaled by n_inv to complete the inverse transform.
+        #|INVARIANT (Inverse scaling):
+        #|After processing indices [0..i), a[t] has been multiplied by n_inv
+        #|to normalize the inverse NTT. When i reaches n, all coefficients are
+        #|scaled by 1/n as required.
       ),
     }
   }
@@ -174,7 +183,9 @@ fn NTT::multiply(
   } where {
     invariant: i >= 0 && i <= a.length() && i <= n,
     reasoning: (
-      #|pa[0..i) holds the reduced coefficients from a[0..i).
+      #|INVARIANT (Pad a):
+      #|pa[0..i) matches a[0..i) modulo mod_val, and remaining entries are 0.
+      #|This ensures pa represents the polynomial a in size-n form.
     ),
   }
   for i = 0; i < b.length() && i < n; i = i + 1 {
@@ -182,7 +193,9 @@ fn NTT::multiply(
   } where {
     invariant: i >= 0 && i <= b.length() && i <= n,
     reasoning: (
-      #|pb[0..i) holds the reduced coefficients from b[0..i).
+      #|INVARIANT (Pad b):
+      #|pb[0..i) matches b[0..i) modulo mod_val, with zeros beyond the input
+      #|length, giving a size-n polynomial representation.
     ),
   }
 
@@ -195,7 +208,13 @@ fn NTT::multiply(
     pa[i] = pa[i] * pb[i] % self.mod_val
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: pa, pb contain NTT of inputs. M: Multiply corresponding point values. Convolution theorem: NTT(a*b) = NTT(a) * NTT(b) pointwise. T: pa contains NTT of product.",
+    reasoning: (
+      #|INVARIANT (Point-wise product):
+      #|After processing indices [0..i), pa[t] equals NTT(a)[t] * NTT(b)[t]
+      #|mod mod_val for all t < i. By the convolution theorem, this is the
+      #|NTT of the coefficient-wise convolution. The inverse transform then
+      #|recovers the product polynomial.
+    ),
   }
 
   // Inverse transform
@@ -220,13 +239,18 @@ fn poly_multiply_naive(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     } where {
       invariant: j >= 0 && j <= b.length(),
       reasoning: (
-        #|All pairs (i, 0..j) have contributed to result[i + *].
+        #|INVARIANT (Inner products):
+        #|After processing j, result[i + t] includes contribution from
+        #|a[i] * b[t] for all t < j. This accumulates all pairs for fixed i.
       ),
     }
   } where {
     invariant: i >= 0 && i <= a.length(),
     reasoning: (
-      #|All pairs (0..i, *) have been accumulated into result.
+      #|INVARIANT (Outer accumulation):
+      #|After processing i, result includes contributions from all pairs
+      #|a[0..i) * b[*], so each coefficient has the sum of products for
+      #|those leading terms.
     ),
   }
   result
@@ -261,7 +285,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= a.length(),
     reasoning: (
-      #|a_low contains a[0..min(i,half)); a_high contains a[half..i) when i > half.
+      #|INVARIANT (Split a):
+      #|a_low contains a[0..min(i,half)) and a_high contains a[half..i) for
+      #|elements already processed. This partitions a into low/high halves.
     ),
   }
   let b_low : Array[Int64] = []
@@ -275,7 +301,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= b.length(),
     reasoning: (
-      #|b_low contains b[0..min(i,half)); b_high contains b[half..i) when i > half.
+      #|INVARIANT (Split b):
+      #|b_low contains b[0..min(i,half)) and b_high contains b[half..i)
+      #|for processed indices, splitting b into low/high halves.
     ),
   }
 
@@ -298,7 +326,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= max_low,
     reasoning: (
-      #|a_sum[0..i) equals (a_low + a_high) coefficient-wise.
+      #|INVARIANT (a_low + a_high):
+      #|a_sum[0..i) holds the coefficient-wise sum of a_low and a_high,
+      #|padding with zeros when one half is shorter.
     ),
   }
   let max_low_b = if b_low.length() > b_high.length() {
@@ -313,7 +343,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= max_low_b,
     reasoning: (
-      #|b_sum[0..i) equals (b_low + b_high) coefficient-wise.
+      #|INVARIANT (b_low + b_high):
+      #|b_sum[0..i) holds the coefficient-wise sum of b_low and b_high,
+      #|with zero padding as needed.
     ),
   }
   let z1_full = poly_multiply_karatsuba(a_sum, b_sum)
@@ -326,7 +358,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= z0.length(),
     reasoning: (
-      #|result[0..i) contains the z0 contribution.
+      #|INVARIANT (z0 add):
+      #|result[0..i) includes the low-part contribution z0, corresponding to
+      #|coefficients of degree < half.
     ),
   }
   for i = 0; i < z1_full.length(); i = i + 1 {
@@ -341,7 +375,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= z1_full.length(),
     reasoning: (
-      #|result[half..half+i) has been adjusted with z1_full and subtracted z0/z2.
+      #|INVARIANT (z1 correction):
+      #|result[half..half+i) has been updated with z1_full minus z0 and z2,
+      #|which isolates the middle coefficients of the Karatsuba combine.
     ),
   }
   for i = 0; i < z2.length(); i = i + 1 {
@@ -351,7 +387,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   } where {
     invariant: i >= 0 && i <= z2.length(),
     reasoning: (
-      #|result[2*half..2*half+i) includes the z2 contribution.
+      #|INVARIANT (z2 add):
+      #|result[2*half..2*half+i) includes the high-part contribution z2,
+      #|corresponding to degrees shifted by 2*half.
     ),
   }
   result
@@ -394,13 +432,8 @@ test "ntt vs naive" {
   let ntt = NTT::new(8)
   let ntt_result = ntt.multiply(a, b)
   let naive_result = poly_multiply_naive(a, b)
-  for i = 0; i < naive_result.length(); i = i + 1 {
+  for i in 0..<naive_result.length() {
     inspect(ntt_result[i] == naive_result[i], content="true")
-  } where {
-    invariant: i >= 0 && i <= naive_result.length(),
-    reasoning: (
-      #|Results match for indices [0..i).
-    ),
   }
 }
 
@@ -411,13 +444,8 @@ test "karatsuba vs naive" {
   let karatsuba_result = poly_multiply_karatsuba(a, b)
   let naive_result = poly_multiply_naive(a, b)
   inspect(karatsuba_result.length() == naive_result.length(), content="true")
-  for i = 0; i < naive_result.length(); i = i + 1 {
+  for i in 0..<naive_result.length() {
     inspect(karatsuba_result[i] == naive_result[i], content="true")
-  } where {
-    invariant: i >= 0 && i <= naive_result.length(),
-    reasoning: (
-      #|Results match for indices [0..i).
-    ),
   }
 }
 
