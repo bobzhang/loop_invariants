@@ -47,13 +47,22 @@ priv struct LCA {
 
 ///|
 fn compute_log(n : Int) -> Int {
-  let mut log = 0
-  let mut val = 1
-  while val < n {
-    log = log + 1
-    val = val * 2
+  for val = 1, log = 0; val < n; {
+    continue val * 2, log + 1
+  } else {
+    log + 1
+  } where {
+    invariant: val >= 1,
+    invariant: log >= 0,
+    reasoning: (
+      #|INVARIANT (power-of-two growth):
+      #|val equals 2^log and is the smallest power of two checked so far.
+      #|MAINTENANCE:
+      #|Each step doubles val and increments log, preserving val = 2^log.
+      #|TERMINATION:
+      #|val grows exponentially, so eventually val >= n and the loop ends.
+    ),
   }
-  log + 1
 }
 
 ///|
@@ -101,6 +110,11 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
         #|After processing vertices [0..v), up[x][k] is computed for all x < v.
         #|We use the recurrence up[v][k] = up[up[v][k-1]][k-1] when the
         #|2^(k-1)-th ancestor exists, yielding the 2^k-th ancestor.
+        #|MAINTENANCE:
+        #|Each vertex v uses two 2^(k-1) jumps to fill its 2^k ancestor,
+        #|preserving correctness for the processed prefix.
+        #|TERMINATION:
+        #|At v == n, level k is fully populated.
       ),
     }
   } where {
@@ -112,6 +126,10 @@ fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
       #|  up[v][k] = up[up[v][k-1]][k-1].
       #|If either jump is invalid, up[v][k] stays -1. This builds all
       #|2^k ancestors needed for O(log n) queries.
+      #|MAINTENANCE:
+      #|Each k uses only already-correct level k-1, so correctness carries up.
+      #|TERMINATION:
+      #|At k == log_n, all powers of two needed for queries are built.
     ),
   }
   { n, log_n, up, depth }
@@ -142,6 +160,10 @@ fn dfs_build(
       #|After processing neighbors [0..i), every vertex reachable from v
       #|through those neighbors has been visited, with depth and parent set.
       #|This ensures the DFS tree is built consistently and without revisits.
+      #|MAINTENANCE:
+      #|Each recursive call fully explores a child subtree before i advances.
+      #|TERMINATION:
+      #|At i == adj[v].length(), all descendants of v are processed.
     ),
   }
 }
@@ -184,6 +206,11 @@ fn LCA::query(self : LCA, u : Int, v : Int) -> Int {
       #|
       #|When the loop ends, curr_u is lifted by exactly diff levels, so
       #|depth[curr_u] == depth[curr_v].
+      #|MAINTENANCE:
+      #|If bit k is set, we jump 2^k; otherwise we skip, preserving the
+      #|remaining height difference invariant.
+      #|TERMINATION:
+      #|At k == log_n, all bits of diff are applied and depths match.
     ),
   }
   if curr_u == curr_v {
@@ -207,6 +234,11 @@ fn LCA::query(self : LCA, u : Int, v : Int) -> Int {
       #|
       #|After finishing, curr_u and curr_v are distinct children of the LCA,
       #|so up[curr_u][0] is the answer.
+      #|MAINTENANCE:
+      #|Lifting only when ancestors differ keeps both nodes strictly below
+      #|the LCA while reducing their distance to it.
+      #|TERMINATION:
+      #|When k drops below 0, no larger lift is possible and the parent is LCA.
     ),
   }
 
@@ -276,18 +308,38 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
   let path_v : Array[Int] = []
 
   // Path from u to LCA
-  let mut curr = u
-  while curr != lca {
+  for curr = u; curr != lca; {
     path_u.push(curr)
-    curr = self.up[curr][0]
+    continue self.up[curr][0]
+  } where {
+    invariant: curr >= 0 && curr < self.n,
+    reasoning: (
+      #|INVARIANT (u to LCA):
+      #|path_u contains the nodes from u up to (but excluding) curr, and curr
+      #|is the current ancestor on the path to lca.
+      #|MAINTENANCE:
+      #|Appending curr and moving to its parent advances one step toward lca.
+      #|TERMINATION:
+      #|When curr == lca, the upward path from u is fully collected.
+    ),
   }
   path_u.push(lca)
 
   // Path from v to LCA
-  curr = v
-  while curr != lca {
+  for curr = v; curr != lca; {
     path_v.push(curr)
-    curr = self.up[curr][0]
+    continue self.up[curr][0]
+  } where {
+    invariant: curr >= 0 && curr < self.n,
+    reasoning: (
+      #|INVARIANT (v to LCA):
+      #|path_v contains the nodes from v up to (but excluding) curr, and curr
+      #|is the current ancestor on the path to lca.
+      #|MAINTENANCE:
+      #|Appending curr and moving to its parent advances one step toward lca.
+      #|TERMINATION:
+      #|When curr == lca, the upward path from v is fully collected.
+    ),
   }
 
   // Combine paths (path_u + reversed path_v without LCA)
