@@ -199,7 +199,13 @@ fn extended_gcd_64(a : Int64, b : Int64) -> (Int64, Int64, Int64) {
     ),
     invariant: a * x1 + b * y1 == r1,
     reasoning: (
-      #|Second Bézout identity maintained in parallel.
+      #|INVARIANT (Second remainder):
+      #|r1 always equals a*x1 + b*y1. The Euclidean update
+      #|  (r0, r1) <- (r1, r0 - q*r1)
+      #|is mirrored by the coefficient update
+      #|  (x0, x1) <- (x1, x0 - q*x1)
+      #|  (y0, y1) <- (y1, y0 - q*y1),
+      #|so both Bézout identities stay true together.
     ),
   }
 }
@@ -245,7 +251,10 @@ fn chinese_remainder(congruences : ArrayView[(Int64, Int64)]) -> (Int64, Int64) 
   } where {
     invariant: i >= 1 && i <= congruences.length(),
     reasoning: (
-      #|INVARIANT 1 (Bounds): i iterates through congruences.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i is the next congruence to merge. Each iteration combines exactly
+      #|one new pair into the accumulator, so we eventually process all
+      #|congruences and terminate at i == congruences.length().
     ),
     invariant: acc_m >= 1L,
     reasoning: (
@@ -343,8 +352,11 @@ fn binary_gcd(a : Int, b : Int) -> Int {
     invariant: x >= 1 &&
     gcd_spec(x, b / (1 << shift)) == gcd_spec(a, b) / (1 << shift),
     reasoning: (
-      #|Since b has factor 2^shift, and we're looking for gcd after extracting
-      #|common 2s, removing extra 2s from a doesn't change the odd part of gcd.
+      #|INVARIANT (Odd part of a):
+      #|We repeatedly strip factors of 2 from a until it becomes odd.
+      #|Because all common powers of 2 were already removed into shift,
+      #|this loop only removes extra powers of 2 from a, which do not affect
+      #|the odd component of gcd(a, b). The invariant preserves the scaled gcd.
     ),
   }
 
@@ -360,8 +372,10 @@ fn binary_gcd(a : Int, b : Int) -> Int {
     } where {
       invariant: x >= 1,
       reasoning: (
-        #|Removing factors of 2 from v to get its odd part.
-        #|gcd(u, v) = gcd(u, odd_part(v)) when u is odd.
+        #|INVARIANT (Odd part of v):
+        #|Because u is odd, gcd(u, v) is unchanged by removing powers of 2
+        #|from v. The loop returns the odd part of v, allowing the main
+        #|subtraction step to operate only on odd numbers.
       ),
     }
     // Now both u and v1 are odd
@@ -627,7 +641,10 @@ fn nth_root(n : Int, b : Int) -> Int {
   } where {
     invariant: lo >= 1 && hi <= n && lo <= hi + 1,
     reasoning: (
-      #|Binary search keeps the true root within [lo, hi].
+      #|INVARIANT (Root bracket):
+      #|lo is always a candidate with lo^b <= n, and hi is always a candidate
+      #|with hi^b >= n. The update keeps the true floor root inside [lo, hi].
+      #|Using the upper mid (lo + (hi-lo+1)/2) guarantees progress.
     ),
   }
 }
@@ -652,7 +669,10 @@ fn int_pow_checked(a : Int, b : Int, max_val : Int) -> Int {
   } where {
     invariant: exp >= 0,
     reasoning: (
-      #|Exponentiation by squaring with overflow guard.
+      #|INVARIANT (Exponentiation by squaring):
+      #|At each step, acc * base^exp equals a^b, unless overflow is detected.
+      #|When a multiplication would exceed max_val, we clamp to max_val+1
+      #|to signal overflow and keep comparisons sound.
     ),
   }
 }
@@ -671,7 +691,9 @@ fn int_pow(a : Int, b : Int) -> Int {
   } where {
     invariant: exp >= 0,
     reasoning: (
-      #|Exponentiation by squaring accumulates a^b in acc.
+      #|INVARIANT (Exponentiation by squaring):
+      #|acc * base^exp == a^b. When exp is even, we square base and halve exp;
+      #|when exp is odd, we multiply acc by base and decrement exp.
     ),
   }
 }

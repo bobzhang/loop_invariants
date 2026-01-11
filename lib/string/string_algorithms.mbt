@@ -58,7 +58,10 @@ fn z_algorithm(s : ArrayView[Char]) -> Array[Int] {
   } where {
     invariant: i >= 1 && i <= n && l >= 0 && r >= l && r <= n,
     reasoning: (
-      #|INVARIANT 1 (Bounds): All indices stay valid.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i advances left-to-right, and [l, r) always denotes a valid Z-box
+      #|within the string. This ensures every access into s is in range and
+      #|the loop terminates when i reaches n.
     ),
     invariant: l < i,
     reasoning: (
@@ -172,7 +175,10 @@ fn manacher(s : ArrayView[Char]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= t_len && c >= 0 && c < t_len && r >= c,
     reasoning: (
-      #|INVARIANT 1 (Bounds): All indices remain valid.
+      #|INVARIANT 1 (Bounds and center validity):
+      #|c and r identify the rightmost palindrome seen so far, and i never
+      #|exceeds t_len. This keeps all computed radii inside the transformed
+      #|string and ensures every extension check is safe.
     ),
     invariant: c <= i,
     reasoning: (
@@ -301,8 +307,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= m - 1 && acc >= 0 && acc < modulus,
     reasoning: (
-      #|Computing h = base^(m-1) mod modulus.
-      #|This is needed to "shift out" the leading character when rolling.
+      #|INVARIANT (Base power):
+      #|acc = base^i mod modulus after i steps, so when i reaches m-1,
+      #|acc equals base^(m-1) mod modulus. This factor is used to remove the
+      #|leading character from a window during rolling updates.
     ),
   }
 
@@ -351,8 +359,10 @@ fn rabin_karp(text : ArrayView[Char], pattern : ArrayView[Char]) -> Array[Int] {
         } where {
           invariant: j >= 0 && j <= m,
           reasoning: (
-            #|match_found is true iff text[i..i+j) equals pattern[0..j).
-            #|A mismatch flips match_found to false and exits early.
+            #|INVARIANT (Verification scan):
+            #|After j comparisons, match_found is true iff the prefix
+            #|text[i..i+j) equals pattern[0..j). Any mismatch sets it to false
+            #|and we break early, so a true result means exact match.
           ),
         }
         if match_found {

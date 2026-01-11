@@ -375,7 +375,9 @@ fn count_paths(
       invariant: i >= 0 && i <= n,
       reasoning: (
         #|INVARIANT (Matrix fill):
-        #|After processing rows [0..i), all entries in those rows are computed.
+        #|After processing rows [0..i), every entry result[r,c] for r < i
+        #|matches the matrix product of a and b. The inner loops compute each
+        #|row by full dot products, so the outer loop accumulates completed rows.
       ),
     }
     result
