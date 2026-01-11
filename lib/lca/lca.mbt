@@ -248,7 +248,12 @@ fn LCA::kth_ancestor(self : LCA, v : Int, k : Int) -> Int {
     invariant: bit >= 0 && bit <= self.log_n,
     invariant: curr >= 0 && curr < self.n,
     reasoning: (
-      #|Process k's bits from low to high, jumping 2^bit when the bit is set.
+      #|INVARIANT (binary lifting):
+      #|Bits [0..bit) of k are processed; curr is the ancestor after those jumps.
+      #|MAINTENANCE:
+      #|If bit is set, jump 2^bit using up-table; otherwise keep curr unchanged.
+      #|TERMINATION:
+      #|At bit = log_n, curr is the k-th ancestor if it exists.
     ),
   }
   curr
@@ -292,7 +297,12 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= path_u.length(),
     reasoning: (
-      #|Append the u -> LCA path in forward order.
+      #|INVARIANT (path_u append):
+      #|result contains path_u[0..i) in order.
+      #|MAINTENANCE:
+      #|Push path_u[i] to extend the prefix.
+      #|TERMINATION:
+      #|At i = path_u.length(), the u->LCA path is fully appended.
     ),
   }
   for i = path_v.length() - 1; i >= 0; i = i - 1 {
@@ -300,7 +310,12 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
   } where {
     invariant: i >= -1 && i < path_v.length(),
     reasoning: (
-      #|Append the v -> LCA path in reverse, skipping the LCA already included.
+      #|INVARIANT (path_v append):
+      #|result already has path_u; we append path_v in reverse to reach v.
+      #|MAINTENANCE:
+      #|Push path_v[i], moving upward toward v without duplicating the LCA.
+      #|TERMINATION:
+      #|At i = -1, the full u->v path is constructed.
     ),
   }
   result
@@ -330,7 +345,12 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   } where {
     invariant: i >= 0 && i <= edges.length(),
     reasoning: (
-      #|Strip weights to build the plain LCA structure.
+      #|INVARIANT (strip weights):
+      #|unweighted_edges contains edges[0..i) without weights.
+      #|MAINTENANCE:
+      #|Push (u, v) for edges[i], discarding the weight.
+      #|TERMINATION:
+      #|At i = edges.length(), all weighted edges are stripped.
     ),
   }
   let lca = LCA::new(n, unweighted_edges)
@@ -342,7 +362,12 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Initialize weighted adjacency lists.
+      #|INVARIANT (init weighted adj):
+      #|wadj[0..i) are initialized as empty adjacency lists.
+      #|MAINTENANCE:
+      #|Push a fresh empty list for vertex i.
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
     ),
   }
   for i = 0; i < edges.length(); i = i + 1 {
@@ -354,7 +379,12 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   } where {
     invariant: i >= 0 && i <= edges.length(),
     reasoning: (
-      #|Add weighted edges in both directions.
+      #|INVARIANT (add weighted edges):
+      #|All valid edges in edges[0..i) are added to wadj in both directions.
+      #|MAINTENANCE:
+      #|Insert (u, v, w) into both adjacency lists when endpoints are valid.
+      #|TERMINATION:
+      #|At i = edges.length(), the weighted graph is fully built.
     ),
   }
 
@@ -383,7 +413,12 @@ fn dfs_dist(
   } where {
     invariant: i >= 0 && i <= wadj[v].length(),
     reasoning: (
-      #|DFS visits each neighbor once to accumulate root distances.
+      #|INVARIANT (dfs neighbors):
+      #|Neighbors wadj[v][0..i) have been explored; dist values are set for them.
+      #|MAINTENANCE:
+      #|Recurse into unvisited neighbor u, adding edge weight w to the distance.
+      #|TERMINATION:
+      #|At i = deg(v), all neighbors of v are processed.
     ),
   }
 }
