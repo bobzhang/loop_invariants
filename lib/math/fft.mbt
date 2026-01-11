@@ -64,10 +64,10 @@ fn bit_reverse(x_in : Int, bits : Int) -> Int {
       #|BASE CASE (i = 0):
       #|  result = 0, which trivially contains reversed bits
       #|
-      #|INDUCTIVE STEP (i → i + 1):
-      #|  - We shift result left and add LSB of current x
-      #|  - x is right-shifted, so next iteration gets next bit
-      #|  - Result now has i+1 reversed bits
+      #|MAINTENANCE (i -> i + 1):
+      #|  - Shift result left and add LSB of current x
+      #|  - x is right-shifted, so next iteration reads the next bit
+      #|  - Result now has i+1 reversed bits of x_in[0..i+1)
       #|
       #|TERMINATION (i = bits):
       #|  result contains all bits of x_in reversed
@@ -96,6 +96,12 @@ fn bit_reverse_permute(arr : Array[Complex], n : Int, log_n : Int) -> Unit {
       #|We swap only when i < j to avoid double-swapping.
       #|This is a valid permutation that groups elements by
       #|their position in the butterfly network.
+      #|MAINTENANCE:
+      #|At index i we either swap i with j=bit_reverse(i) or do nothing.
+      #|This fixes position i while leaving earlier positions unchanged.
+      #|TERMINATION:
+      #|When i = n, every index has been considered, so the array is fully
+      #|bit-reversal permuted.
     ),
   }
 }
@@ -114,12 +120,39 @@ let fft_pi : Double = 3.14159265358979323846
 fn fft_sin(x_in : Double) -> Double {
   // Normalize x to [-pi, pi]
   let two_pi = 2.0 * fft_pi
-  let mut x = x_in
-  while x > fft_pi {
-    x = x - two_pi
+  let x0 = x_in
+  let x = for x = x0; x > fft_pi; {
+    continue x - two_pi
+  } else {
+    x
+  } where {
+    invariant: x <= x0,
+    reasoning: (
+      #|INVARIANT (Normalize positive angle):
+      #|x equals x0 minus some multiple of 2*pi and remains <= x0.
+      #|MAINTENANCE:
+      #|If x > pi, subtracting 2*pi preserves equivalence modulo 2*pi and
+      #|strictly decreases x, keeping x <= x0.
+      #|TERMINATION:
+      #|Once x <= pi, the loop stops with x in (-inf, pi].
+    ),
   }
-  while x < -fft_pi {
-    x = x + two_pi
+  let x1 = x
+  let x = for x = x1; x < -fft_pi; {
+    continue x + two_pi
+  } else {
+    x
+  } where {
+    invariant: x >= x1,
+    reasoning: (
+      #|INVARIANT (Normalize negative angle):
+      #|x equals x1 plus some multiple of 2*pi and remains >= x1.
+      #|MAINTENANCE:
+      #|If x < -pi, adding 2*pi preserves equivalence modulo 2*pi and
+      #|strictly increases x, keeping x >= x1.
+      #|TERMINATION:
+      #|Once x >= -pi, the loop stops with x in [-pi, pi].
+    ),
   }
   // Taylor series: sin(x) = x - x^3/3! + x^5/5! - ...
   let x2 = x * x
@@ -136,12 +169,39 @@ fn fft_sin(x_in : Double) -> Double {
 fn fft_cos(x_in : Double) -> Double {
   // Normalize x to [-pi, pi]
   let two_pi = 2.0 * fft_pi
-  let mut x = x_in
-  while x > fft_pi {
-    x = x - two_pi
+  let x0 = x_in
+  let x = for x = x0; x > fft_pi; {
+    continue x - two_pi
+  } else {
+    x
+  } where {
+    invariant: x <= x0,
+    reasoning: (
+      #|INVARIANT (Normalize positive angle):
+      #|x equals x0 minus some multiple of 2*pi and remains <= x0.
+      #|MAINTENANCE:
+      #|If x > pi, subtracting 2*pi preserves equivalence modulo 2*pi and
+      #|strictly decreases x, keeping x <= x0.
+      #|TERMINATION:
+      #|Once x <= pi, the loop stops with x in (-inf, pi].
+    ),
   }
-  while x < -fft_pi {
-    x = x + two_pi
+  let x1 = x
+  let x = for x = x1; x < -fft_pi; {
+    continue x + two_pi
+  } else {
+    x
+  } where {
+    invariant: x >= x1,
+    reasoning: (
+      #|INVARIANT (Normalize negative angle):
+      #|x equals x1 plus some multiple of 2*pi and remains >= x1.
+      #|MAINTENANCE:
+      #|If x < -pi, adding 2*pi preserves equivalence modulo 2*pi and
+      #|strictly increases x, keeping x >= x1.
+      #|TERMINATION:
+      #|Once x >= -pi, the loop stops with x in [-pi, pi].
+    ),
   }
   // Taylor series: cos(x) = 1 - x^2/2! + x^4/4! - ...
   let x2 = x * x
@@ -168,6 +228,10 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
       #|INVARIANT (Log2 count):
       #|temp is n shifted right by i bits, so i counts how many times we
       #|halve n until it reaches 1. This yields log2(n) for power-of-two n.
+      #|MAINTENANCE:
+      #|Right-shift temp once and increment i, preserving temp == n >> i.
+      #|TERMINATION:
+      #|When temp <= 1, i is the number of halving steps, i.e. log2(n).
     ),
   }
   // Bit-reversal permutation
@@ -208,6 +272,11 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
           #|               X[k+n/2] = E[k] - w^k * O[k]
           #|  where E = DFT of even-indexed elements
           #|        O = DFT of odd-indexed elements
+          #|MAINTENANCE:
+          #|Update w to w * wlen so w = wlen^j, and apply the butterfly for
+          #|index j, leaving previously processed pairs correct.
+          #|TERMINATION:
+          #|When j = len/2, all butterflies in the block have been applied.
         ),
       }
     } where {
@@ -216,6 +285,11 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
         #|INVARIANT (Stage blocks):
         #|Blocks of size len starting before i are fully transformed for
         #|this stage. Each block merges two len/2 DFTs into a len DFT.
+        #|MAINTENANCE:
+        #|Processing block starting at i completes its len-point transform,
+        #|and advancing i by len moves to the next disjoint block.
+        #|TERMINATION:
+        #|At i = n, all blocks for this stage are transformed.
       ),
     }
   } where {
@@ -227,8 +301,10 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
       #|BASE CASE (len = 2):
       #|  After bit-reversal, adjacent pairs are combined
       #|
-      #|INDUCTIVE STEP (len → 2*len):
-      #|  Pairs of len-point DFTs are combined into 2*len-point DFTs
+      #|MAINTENANCE (len -> 2*len):
+      #|  Pairs of len-point DFTs are combined into 2*len-point DFTs,
+      #|  so the invariant "all len-size blocks are transformed" holds
+      #|  for the next stage size.
       #|
       #|TERMINATION (len = n):
       #|  The full n-point DFT is computed
@@ -247,6 +323,10 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
         #|INVARIANT (Inverse normalization):
         #|After processing indices [0..i), arr[t] has been divided by n.
         #|This rescales the inverse FFT to recover the original signal.
+        #|MAINTENANCE:
+        #|Divide arr[i] by n to extend the normalized prefix.
+        #|TERMINATION:
+        #|At i = n, every entry is scaled by n^{-1}.
       ),
     }
   }
@@ -378,7 +458,7 @@ fn ntt_mod_pow(base_in : Int64, exp_in : Int64, m : Int64) -> Int64 {
       #|BASE CASE (initially):
       #|  1 * base^exp = base^exp ✓
       #|
-      #|INDUCTIVE STEP:
+      #|MAINTENANCE:
       #|  If exp is odd: new_result = result * base
       #|    new_result * (base^2)^(exp/2) = result * base * base^(exp-1) ✓
       #|  If exp is even:
@@ -414,6 +494,10 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
       #|INVARIANT (Log2 count):
       #|temp equals n shifted right by i bits, so i counts the power-of-two
       #|levels in the iterative NTT stages.
+      #|MAINTENANCE:
+      #|Shift temp once and increment i, preserving temp == n >> i.
+      #|TERMINATION:
+      #|When temp <= 1, i is the number of stages, i.e. log2(n).
     ),
   }
   // Bit-reversal permutation
@@ -430,6 +514,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
       #|INVARIANT (Bit reversal):
       #|Indices < i are placed at their bit-reversed positions. Swapping only
       #|when i < j avoids double swaps and prepares for in-place butterflies.
+      #|MAINTENANCE:
+      #|At index i, swapping i with j=bit_reverse(i) (if i<j) fixes both
+      #|positions without disturbing earlier indices.
+      #|TERMINATION:
+      #|At i = n, every index is placed at its bit-reversed position.
     ),
   }
   // Iterative NTT
@@ -467,6 +556,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
           #|CORRECTNESS:
           #|  Using Fermat's little theorem: a^(p-1) ≡ 1 (mod p)
           #|  So g^((p-1)/n) is an n-th root of unity modulo p.
+          #|MAINTENANCE:
+          #|Update wj = wj * w_actual so wj tracks the next root power, and
+          #|apply the butterfly to position j, keeping prior pairs correct.
+          #|TERMINATION:
+          #|When j = len/2, all butterflies in the block are applied.
         ),
       }
     } where {
@@ -475,6 +569,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
         #|INVARIANT (Stage blocks):
         #|Blocks of size len starting before i are fully transformed for this
         #|stage. Each block merges two len/2 sub-transforms.
+        #|MAINTENANCE:
+        #|Processing block at i completes its len-point transform; advancing
+        #|i by len moves to the next disjoint block.
+        #|TERMINATION:
+        #|At i = n, all blocks are transformed for this stage.
       ),
     }
   } where {
@@ -483,6 +582,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
       #|NTT SIZE INVARIANT:
       #|  Same as FFT - sub-transforms double in size each iteration.
       #|  All arithmetic is exact modulo the NTT prime.
+      #|MAINTENANCE:
+      #|After finishing size len, doubling len schedules the next merge of
+      #|two len-point transforms into a 2*len-point transform.
+      #|TERMINATION:
+      #|When len exceeds n, all stages up to size n are complete.
     ),
   }
   // For inverse NTT, multiply by n^(-1)
@@ -496,6 +600,10 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
         #|INVARIANT (Inverse normalization):
         #|After processing indices [0..i), arr[t] has been multiplied by n^{-1}
         #|to rescale the inverse transform.
+        #|MAINTENANCE:
+        #|Multiply arr[i] by n_inv to extend the normalized prefix.
+        #|TERMINATION:
+        #|At i = n, all entries are scaled by n^{-1}.
       ),
     }
   }
@@ -623,6 +731,11 @@ fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
         #|Coefficient update: result[k] += result[k-c]
         #|
         #|This is convolution with the geometric series for each coin.
+        #|MAINTENANCE:
+        #|At amount, add ways that end with one coin c by using result[amount-c],
+        #|so coefficients up to amount incorporate the current coin.
+        #|TERMINATION:
+        #|When amount = max_amount + 1, all coefficients for this coin are updated.
       ),
     }
   } where {
@@ -631,6 +744,11 @@ fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
       #|INVARIANT (Coin sequence):
       #|After processing coins[0..i), result holds the generating function
       #|for those coins. Each new coin multiplies by its geometric series.
+      #|MAINTENANCE:
+      #|Updating with coins[i] extends the product by the coin's series,
+      #|so the invariant holds for coins[0..i+1).
+      #|TERMINATION:
+      #|At i = coins.length(), all coins are incorporated.
     ),
   }
   result
@@ -661,6 +779,10 @@ fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
       #|INVARIANT (Pattern reverse):
       #|pattern_rev[0..i) equals pattern[m-1..m-i] reversed, preparing the
       #|sequence for convolution-based matching.
+      #|MAINTENANCE:
+      #|Assign pattern_rev[i] = pattern[m-1-i], extending the reversed prefix.
+      #|TERMINATION:
+      #|At i = m, pattern_rev is the full reversal of pattern.
     ),
   }
   // Compute convolution of text and reversed pattern
@@ -681,6 +803,11 @@ fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
       #|INVARIANT (Match score):
       #|result[0..i) contains convolution-based match scores for offsets
       #|0..i-1. Each score is the dot product of the text window and pattern.
+      #|MAINTENANCE:
+      #|Store the convolution value at offset i (when in range), extending
+      #|the computed prefix of match scores.
+      #|TERMINATION:
+      #|At i = result_len, all offsets have scores.
     ),
   }
   result
