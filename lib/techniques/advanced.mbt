@@ -56,6 +56,11 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|
       #|Inductive: We only continue if next_fast >= 0, which implies the
       #|list has enough elements for slow to advance safely. ✓
+      #|MAINTENANCE:
+      #|We advance slow by one step only when fast can advance, preserving
+      #|a valid index within the list bounds.
+      #|TERMINATION:
+      #|The loop ends when fast reaches -1 (no cycle) or slow meets fast.
     ),
     invariant: fast >= 0 && fast < nodes.length(),
     reasoning: (
@@ -63,6 +68,10 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|
       #|Similar to slow, but fast moves 2 steps per iteration.
       #|We guard against invalid fast pointers before continuing.
+      #|MAINTENANCE:
+      #|We only advance fast when both next_fast_1 and next_fast are valid.
+      #|TERMINATION:
+      #|If fast cannot advance, we return None (no cycle).
     ),
     invariant: slow >= 0,
     reasoning: (
@@ -85,6 +94,12 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|
       #|MEETING POINT: They meet at position (μ + k) mod λ into the cycle,
       #|where k = λ - (μ mod λ). This equals λ - μ mod λ from cycle start.
+      #|MAINTENANCE:
+      #|Each iteration advances slow by 1 and fast by 2, so their relative
+      #|distance in the cycle decreases by 1 mod λ.
+      #|TERMINATION:
+      #|If a cycle exists, they meet within at most λ iterations after entry;
+      #|otherwise fast hits the end and the loop stops.
     ),
   }
   guard meet_point is Some(meeting) else { return (false, -1) }
@@ -132,6 +147,11 @@ fn floyd_cycle_detect(nodes : ArrayView[ListNode], head : Int) -> (Bool, Int) {
       #|
       #|  From head: walk μ steps → reach cycle start
       #|  From meeting: walk (λ-k) + (n-1)λ = μ steps → reach cycle start
+      #|MAINTENANCE:
+      #|Both pointers advance one step, so their distance to cycle start
+      #|decreases together until they coincide.
+      #|TERMINATION:
+      #|When p1 == p2, both are at the cycle start.
     ),
   }
   (true, cycle_start)
@@ -198,6 +218,11 @@ fn build_kmp_failure(pattern : ArrayView[Char]) -> Array[Int] {
       #|i is the next pattern index whose failure value is still unknown.
       #|All entries failure[0..i) are already fixed and correct, so the
       #|loop advances left-to-right and terminates at i == pattern.length().
+      #|MAINTENANCE:
+      #|On match, i increments; on fallback, j decreases. Either way,
+      #|previous failure values remain fixed.
+      #|TERMINATION:
+      #|At i = pattern.length(), all failure values are computed.
     ),
     invariant: j >= 0 && j < i,
     reasoning: (
@@ -209,6 +234,10 @@ fn build_kmp_failure(pattern : ArrayView[Char]) -> Array[Int] {
       #|  - If match: i+1, j+1 → j+1 < i+1 since j < i. ✓
       #|  - If fallback: i unchanged, j decreases (failure[j-1] < j). ✓
       #|  - If j=0, mismatch: i+1, 0 → 0 < i+1. ✓
+      #|MAINTENANCE:
+      #|Updates preserve 0 <= j < i by either increasing both or reducing j.
+      #|TERMINATION:
+      #|At loop end, j remains a valid prefix length.
     ),
     invariant: j >= 0,
     reasoning: (
@@ -240,6 +269,11 @@ fn build_kmp_failure(pattern : ArrayView[Char]) -> Array[Int] {
       #|AMORTIZED ANALYSIS: j can increase at most n times total (once per i).
       #|Each fallback decreases j. Total fallbacks ≤ total increases = O(n).
       #|Therefore the entire loop runs in O(n) time, not O(n²).
+      #|MAINTENANCE:
+      #|Both match-extension and fallback preserve the prefix-suffix meaning
+      #|of j for the current i.
+      #|TERMINATION:
+      #|When i reaches pattern.length(), every failure entry is finalized.
     ),
   }
 }
@@ -277,6 +311,11 @@ fn kmp_search(text : ArrayView[Char], pattern : ArrayView[Char]) -> Int {
       #|pattern prefix. The bounds ensure all indexing is safe.
       #|Each iteration either advances i or shortens j, so the loop makes
       #|progress and eventually finishes.
+      #|MAINTENANCE:
+      #|On match we advance i and j; on mismatch we either fall back j or
+      #|advance i, keeping indices in range.
+      #|TERMINATION:
+      #|The loop ends when i reaches text.length() or a full match is found.
     ),
     invariant: j >= 0,
     reasoning: (
@@ -311,6 +350,11 @@ fn kmp_search(text : ArrayView[Char], pattern : ArrayView[Char]) -> Int {
       #|If pattern has a prefix that's also a suffix of pattern[0..j),
       #|we can "slide" the pattern to align that prefix with what we've
       #|already seen in text, without re-examining those characters!
+      #|MAINTENANCE:
+      #|Matches extend the equality by one; fallback uses failure[j-1] to
+      #|preserve text[i-j..i) == pattern[0..j).
+      #|TERMINATION:
+      #|When j reaches pattern.length(), the pattern is found at i-j.
     ),
   }
 }
@@ -391,6 +435,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       #|After processing columns [0..j), prev[t] = t for each t in [0..j),
       #|matching the definition D[0][t] = t (insert t characters into empty).
       #|This row anchors the DP recurrence for all later rows.
+      #|MAINTENANCE:
+      #|Assign prev[j] = j and advance j, extending the initialized prefix.
+      #|TERMINATION:
+      #|At j = n + 1, the entire base row is initialized.
     ),
   }
   for i = 1 {
@@ -426,6 +474,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
           #|  curr[j-1] = D[i][j-1]
           #|  prev[j-1] = D[i-1][j-1]
           #|so curr[j] is computed exactly by the recurrence.
+          #|MAINTENANCE:
+          #|Compute curr[j] from the three neighbors and advance j.
+          #|TERMINATION:
+          #|At j = n + 1, row i is complete.
         ),
       }
 
@@ -442,6 +494,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       #|i tracks which prefix of s1 is being processed. After each iteration
       #|we have completed row i and advance to i+1, guaranteeing termination
       #|once i exceeds m.
+      #|MAINTENANCE:
+      #|After finishing row i, increment i to move to the next prefix.
+      #|TERMINATION:
+      #|At i = m + 1, all rows are processed.
     ),
     invariant: i >= 1,
     reasoning: (
@@ -497,6 +553,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       #|  Notice that D[i][j] only depends on D[i-1][j], D[i][j-1], D[i-1][j-1].
       #|  We only need the previous row and current row, not the full matrix.
       #|  This reduces space from O(mn) to O(n).
+      #|MAINTENANCE:
+      #|After computing curr, swapping rows makes prev hold D[i][*].
+      #|TERMINATION:
+      #|When i = m, prev[n] is the full edit distance.
     ),
   }
 }
@@ -595,6 +655,10 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
       #|i is the next point to consider in the sorted order. All points with
       #|index < i have either been added to the lower hull or discarded as
       #|non-hull points, so the scan proceeds left-to-right and terminates.
+      #|MAINTENANCE:
+      #|After processing points[i], increment i to move to the next point.
+      #|TERMINATION:
+      #|At i = points.length(), all points were considered for the lower hull.
     ),
     invariant: i >= 0,
     reasoning: (
@@ -628,6 +692,11 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
       #|   * hull[k-1]  ← This point gets removed if turn is clockwise
       #|  /
       #| * hull[k-2]
+      #|MAINTENANCE:
+      #|Pop while the turn is non-left, then push points[i], preserving
+      #|strict counterclockwise turns in the hull chain.
+      #|TERMINATION:
+      #|At i = points.length(), the lower hull is convex and complete.
     ),
   }
   let lower_size = hull.length()
@@ -671,6 +740,10 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
       #|TIME COMPLEXITY: O(n log n) for sorting + O(n) for hull construction.
       #|Each point is pushed at most once to lower hull and once to upper hull.
       #|Each point is popped at most once from each. Total: O(n).
+      #|MAINTENANCE:
+      #|Decrement i each step and maintain convexity by popping when needed.
+      #|TERMINATION:
+      #|At i < 0, the upper hull is complete.
     ),
   }
 
