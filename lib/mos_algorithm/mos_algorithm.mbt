@@ -77,8 +77,12 @@ fn isqrt(n : Int) -> Int {
   } where {
     invariant: result >= 1 && (result - 1) * (result - 1) <= n,
     reasoning: (
-      #|result increases until result^2 > n.
-      #|The last valid candidate is result - 1, the floor of sqrt(n).
+      #|INVARIANT (isqrt loop):
+      #|result - 1 is a candidate with (result - 1)^2 <= n.
+      #|MAINTENANCE:
+      #|Increase result by 1 while result^2 <= n.
+      #|TERMINATION:
+      #|When result^2 > n, result - 1 is floor(sqrt(n)).
     ),
   }
 }
@@ -191,8 +195,12 @@ fn MoDistinct::answer_queries(
   } where {
     invariant: i >= 0 && i <= q,
     reasoning: (
-      #|INVARIANT 1 (Progress): i counts how many queries have been fully
-      #|processed and stored in answers.
+      #|INVARIANT 1 (Progress):
+      #|i counts how many queries have been processed and stored in answers.
+      #|MAINTENANCE:
+      #|Store answers[query.index] after range adjustment and advance i.
+      #|TERMINATION:
+      #|At i = q, all queries are answered.
     ),
     invariant: cur_l >= 0 &&
     cur_l <= self.n &&
@@ -200,8 +208,12 @@ fn MoDistinct::answer_queries(
     cur_r < self.n &&
     cur_l <= cur_r + 1,
     reasoning: (
-      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
-      #|range or the empty range when cur_l = cur_r + 1.
+      #|INVARIANT 2 (Range validity):
+      #|cur_l/cur_r describe a valid inclusive range or the empty range.
+      #|MAINTENANCE:
+      #|Each boundary move updates one endpoint by 1, preserving validity.
+      #|TERMINATION:
+      #|After adjustments, [cur_l, cur_r] equals the target range.
     ),
     invariant: distinct >= 0 &&
     distinct <= (if cur_r >= cur_l { cur_r - cur_l + 1 } else { 0 }),
@@ -300,7 +312,12 @@ fn MoSum::answer_queries(
   } where {
     invariant: i >= 0 && i <= q,
     reasoning: (
-      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+      #|INVARIANT 1 (Progress):
+      #|i queries have been answered and stored.
+      #|MAINTENANCE:
+      #|Store answers[query.index] after updating the range sum.
+      #|TERMINATION:
+      #|At i = q, all queries are answered.
     ),
     invariant: cur_l >= 0 &&
     cur_l <= self.n &&
@@ -308,8 +325,12 @@ fn MoSum::answer_queries(
     cur_r < self.n &&
     cur_l <= cur_r + 1,
     reasoning: (
-      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
-      #|range or the empty range when cur_l = cur_r + 1.
+      #|INVARIANT 2 (Range validity):
+      #|cur_l/cur_r describe a valid inclusive range or the empty range.
+      #|MAINTENANCE:
+      #|Each boundary move updates one endpoint by 1, preserving validity.
+      #|TERMINATION:
+      #|After adjustments, the range matches the current query.
     ),
     invariant: if cur_r < cur_l {
       current_sum == 0L
@@ -429,16 +450,24 @@ fn MoRangeCount::answer_queries(
     } where {
       invariant: v >= lo && v <= hi && v < 100001,
       reasoning: (
-        #|INVARIANT: count equals sum(freq[lo..v)) over the current range.
-        #|We clamp the upper bound to the freq array size, so v stays valid.
-        #|When the loop finishes, count is sum(freq[lo..min(hi, 100000)]).
+        #|INVARIANT (range count):
+        #|count equals sum(freq[lo..v)) for the current range.
+        #|MAINTENANCE:
+        #|Add freq[v] and advance v, preserving the running sum.
+        #|TERMINATION:
+        #|At v = min(hi, 100000) + 1, count is the total in [lo..hi].
       ),
     }
     answers[query.index] = count
   } where {
     invariant: i >= 0 && i <= q,
     reasoning: (
-      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+      #|INVARIANT 1 (Progress):
+      #|i queries have been answered and stored.
+      #|MAINTENANCE:
+      #|Store answers[query.index] after counting within [lo, hi].
+      #|TERMINATION:
+      #|At i = q, all queries are answered.
     ),
     invariant: cur_l >= 0 &&
     cur_l <= self.n &&
@@ -446,8 +475,12 @@ fn MoRangeCount::answer_queries(
     cur_r < self.n &&
     cur_l <= cur_r + 1,
     reasoning: (
-      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
-      #|range or the empty range when cur_l = cur_r + 1.
+      #|INVARIANT 2 (Range validity):
+      #|cur_l/cur_r describe a valid inclusive range or the empty range.
+      #|MAINTENANCE:
+      #|Each boundary move updates one endpoint by 1, preserving validity.
+      #|TERMINATION:
+      #|After adjustments, the range matches the current query.
     ),
     invariant: freq.length() == 100001,
     reasoning: (
@@ -538,7 +571,12 @@ fn MoMode::answer_queries(
     } where {
       invariant: i >= cur_l && i <= cur_r + 1,
       reasoning: (
-        #|INVARIANT 1 (Scan bounds): i walks the current range [cur_l, cur_r].
+        #|INVARIANT 1 (Scan bounds):
+        #|i walks the current range [cur_l, cur_r].
+        #|MAINTENANCE:
+        #|Advance i by 1 each step.
+        #|TERMINATION:
+        #|At i = cur_r + 1, the entire range is scanned.
       ),
       invariant: max_f >= 0,
       reasoning: (
@@ -599,7 +637,12 @@ fn MoMode::answer_queries(
   } where {
     invariant: i >= 0 && i <= q,
     reasoning: (
-      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+      #|INVARIANT 1 (Progress):
+      #|i queries have been answered and stored.
+      #|MAINTENANCE:
+      #|Store the computed mode for the current query.
+      #|TERMINATION:
+      #|At i = q, all queries are answered.
     ),
     invariant: cur_l >= 0 &&
     cur_l <= self.n &&
@@ -607,8 +650,12 @@ fn MoMode::answer_queries(
     cur_r < self.n &&
     cur_l <= cur_r + 1,
     reasoning: (
-      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
-      #|range or the empty range when cur_l = cur_r + 1.
+      #|INVARIANT 2 (Range validity):
+      #|cur_l/cur_r describe a valid inclusive range or the empty range.
+      #|MAINTENANCE:
+      #|Each boundary move updates one endpoint by 1, preserving validity.
+      #|TERMINATION:
+      #|After adjustments, the range matches the current query.
     ),
     invariant: max_freq >= 0 &&
     max_freq <= (if cur_r >= cur_l { cur_r - cur_l + 1 } else { 0 }),
