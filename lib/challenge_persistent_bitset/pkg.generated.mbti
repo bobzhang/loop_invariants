@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/challenge_persistent_bitset"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Bitset
+pub impl Show for Bitset
+
+type Node
+pub impl Show for Node
+
+// Type aliases
+
+// Traits
+
