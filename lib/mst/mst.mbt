@@ -65,7 +65,14 @@ fn UF::new(n : Int) -> UF {
     parent[i] = i
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: parent initialized but not assigned. M: Set parent[i] = i to make each node its own representative. T: After i = n, all vertices are separate sets.",
+    reasoning: (
+      #|INVARIANT (UF init):
+      #|parent[j] = j for all j in [0, i); each vertex is its own set.
+      #|MAINTENANCE:
+      #|Assign parent[i] = i.
+      #|TERMINATION:
+      #|At i = n, all vertices are separate sets.
+    ),
   }
   { parent, rank }
 }
@@ -128,7 +135,16 @@ fn MST::kruskal(self : MST) -> (Array[Edge], Int64) {
     }
   } where {
     invariant: i >= 0 && i <= sorted_edges.length(),
-    reasoning: "I: No edges selected, empty forest. M: Consider edges in weight order. If edge (u,v) connects different components (find(u) != find(v)), add to MST and union components. This maintains forest property and by cut property, edge is in some MST. T: After n-1 edges or all edges considered, MST complete.",
+    reasoning: (
+      #|INVARIANT (Kruskal):
+      #|mst_edges is a forest spanning the processed edges with minimum total
+      #|weight among all forests with the same number of edges.
+      #|MAINTENANCE:
+      #|Process edges in nondecreasing order; add an edge only if it connects
+      #|different components, preserving acyclicity and cut optimality.
+      #|TERMINATION:
+      #|When n-1 edges are chosen or all edges are processed, the MST is complete.
+    ),
   }
   (mst_edges, total_weight)
 }
@@ -174,7 +190,14 @@ fn PrimMST::new(n : Int) -> PrimMST {
     adj[i] = []
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: adj has length n. M: Assign a fresh empty list at index i. T: After i = n, all vertices have empty adjacency lists.",
+    reasoning: (
+      #|INVARIANT (adj init):
+      #|Adjacency lists for vertices in [0, i) are initialized and independent.
+      #|MAINTENANCE:
+      #|Assign a fresh empty list to adj[i].
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
+    ),
   }
   { n, adj }
 }
@@ -209,7 +232,14 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
       }
     } where {
       invariant: i >= 0 && i <= self.n,
-      reasoning: "I: min_w is the best candidate among examined vertices. M: Scan vertices not in MST to find minimum min_edge. T: After i = n, u is the argmin of min_edge over non-MST vertices (or stays -1 if none).",
+      reasoning: (
+        #|INVARIANT (select min):
+        #|min_w/u track the smallest min_edge among vertices in [0, i) not in MST.
+        #|MAINTENANCE:
+        #|If a better candidate is found, update min_w and u.
+        #|TERMINATION:
+        #|At i = n, u is the argmin among all non-MST vertices (or -1 if none).
+      ),
     }
     if u < 0 || min_w == PRIM_INF {
       break // No more reachable vertices
@@ -228,11 +258,29 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
       }
     } where {
       invariant: i >= 0 && i <= self.adj[u].length() && in_mst[u],
-      reasoning: "I: u is newly added to MST. M: For each neighbor v, relax min_edge[v] with edge (u,v). T: After i = deg(u), min_edge records the cheapest edge from MST to each vertex.",
+      reasoning: (
+        #|INVARIANT (relax neighbors):
+        #|min_edge for neighbors in adj[u][0..i) reflects the cheapest edge
+        #|from the current MST to that neighbor.
+        #|MAINTENANCE:
+        #|Relax edge (u, v) if it improves min_edge[v].
+        #|TERMINATION:
+        #|At i = deg(u), all neighbor keys are updated.
+      ),
     }
   } where {
     invariant: iter >= 0 && iter <= self.n,
-    reasoning: "I: Start vertex 0 has min_edge=0. M: Each iteration adds the non-MST vertex with minimum connecting edge. Update min_edge for its neighbors. By cut property, this edge is in some MST. T: After n iterations or no reachable vertex, MST complete.",
+    reasoning: (
+      #|INVARIANT (Prim):
+      #|The set in_mst forms a tree, and min_edge holds the cheapest crossing
+      #|edge for each vertex not yet in the tree.
+      #|MAINTENANCE:
+      #|Select the minimum min_edge vertex, add it, and relax its neighbors.
+      #|By the cut property, the chosen edge is safe.
+      #|TERMINATION:
+      #|After n iterations or when no reachable vertex remains, MST is complete
+      #|for the connected component.
+    ),
   }
   if edges_added == self.n - 1 {
     Some(total_weight)

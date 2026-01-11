@@ -47,7 +47,14 @@ fn HLD::new(n : Int) -> HLD {
     adj[i] = []
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: adj uninitialized. M: Initialize each vertex's adjacency list. T: All lists independent.",
+    reasoning: (
+      #|INVARIANT (adj init):
+      #|Adjacency lists for vertices in [0, i) are initialized and independent.
+      #|MAINTENANCE:
+      #|Assign a fresh empty list to adj[i].
+      #|TERMINATION:
+      #|At i = n, all adjacency lists are initialized.
+    ),
   }
   {
     n,
@@ -87,7 +94,15 @@ fn HLD::dfs_size(self : HLD, u : Int, p : Int, d : Int) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: "I: subtree_size[u]=1, heavy_child[u]=-1. M: For each child v, recursively compute its subtree, add to size, track heaviest. T: subtree_size[u] = 1 + sum of children's sizes, heavy_child is child with max subtree.",
+    reasoning: (
+      #|INVARIANT (dfs_size):
+      #|subtree_size[u] includes u and all processed children in adj[u][0..i);
+      #|heavy_child[u] is the largest processed child subtree.
+      #|MAINTENANCE:
+      #|Recurse into child v, add its size, and update heavy_child if needed.
+      #|TERMINATION:
+      #|At i = deg(u), subtree_size[u] is complete and heavy_child is correct.
+    ),
   }
 }
 
@@ -111,7 +126,15 @@ fn HLD::dfs_hld(self : HLD, u : Int, head : Int) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: "I: u assigned position, heavy child processed. M: Each light child starts a new chain with itself as head. T: All descendants assigned contiguous positions within their chains.",
+    reasoning: (
+      #|INVARIANT (dfs_hld):
+      #|u has been assigned a position, and the heavy child (if any) has been
+      #|processed to keep the heavy path contiguous.
+      #|MAINTENANCE:
+      #|Each light child starts a new chain with itself as head.
+      #|TERMINATION:
+      #|At i = deg(u), all descendants are assigned to chains.
+    ),
   }
 }
 
