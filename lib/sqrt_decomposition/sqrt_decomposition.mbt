@@ -102,6 +102,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Single block sum):
         #|sum equals the sum of arr[l..i). Each step adds arr[i], so after
         #|i reaches r+1 we have the full sum for [l, r].
+        #|MAINTENANCE:
+        #|Add arr[i] and advance i, extending the prefix sum.
+        #|TERMINATION:
+        #|At i = r + 1, sum is the full range sum.
       ),
     }
   } else {
@@ -115,6 +119,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
         #|sum equals the sum of arr[l..i) within the left boundary block.
         #|After reaching the block boundary, the left partial block is fully
         #|accounted for.
+        #|MAINTENANCE:
+        #|Add arr[i] and advance i to extend the left partial sum.
+        #|TERMINATION:
+        #|At i = (block_l + 1) * block_size, the left boundary is done.
       ),
     }
     // Complete blocks
@@ -126,6 +134,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Complete blocks):
         #|sum already includes the left partial block and complete blocks
         #|up to b-1. Each iteration adds the precomputed sum of block b.
+        #|MAINTENANCE:
+        #|Add blocks[b] and advance b to include the next full block.
+        #|TERMINATION:
+        #|At b = block_r, all middle blocks are included.
       ),
     }
     // Right partial block
@@ -138,6 +150,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
         #|sum includes left partial and complete blocks, plus arr from the
         #|right boundary block prefix. After i reaches r+1, the full range
         #|sum is complete.
+        #|MAINTENANCE:
+        #|Add arr[i] and advance i, extending the right partial sum.
+        #|TERMINATION:
+        #|At i = r + 1, the full range sum is complete.
       ),
     }
   }
@@ -221,6 +237,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Single block min):
         #|result is the minimum of arr[l..i). Each step compares arr[i]
         #|and updates result, yielding the min over [l, r] at termination.
+        #|MAINTENANCE:
+        #|Update result with arr[i] if smaller, then advance i.
+        #|TERMINATION:
+        #|At i = r + 1, result is the minimum over [l, r].
       ),
     }
   } else {
@@ -234,6 +254,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Left partial min):
         #|result is the minimum of arr[l..i) in the left boundary block.
         #|After reaching the boundary, the left partial block is fully scanned.
+        #|MAINTENANCE:
+        #|Update result with arr[i] if smaller, then advance i.
+        #|TERMINATION:
+        #|At i = (block_l + 1) * block_size, the left partial min is complete.
       ),
     }
     for b = block_l + 1; b < block_r; b = b + 1 {
@@ -246,6 +270,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Complete blocks min):
         #|result is the minimum over the left partial block and complete
         #|blocks up to b-1. Each iteration considers block b's minimum.
+        #|MAINTENANCE:
+        #|Compare blocks[b] against result and advance b.
+        #|TERMINATION:
+        #|At b = block_r, all middle blocks are considered.
       ),
     }
     for i = block_r * self.block_size; i <= r; i = i + 1 {
@@ -259,6 +287,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int64 {
         #|result includes the left partial block, all complete blocks, and the
         #|right block prefix arr[block_r*bs..i). After i reaches r+1, result
         #|is the minimum over the full range.
+        #|MAINTENANCE:
+        #|Update result with arr[i] if smaller, then advance i.
+        #|TERMINATION:
+        #|At i = r + 1, result is the minimum over [l, r].
       ),
     }
   }
@@ -332,6 +364,10 @@ fn SqrtLazy::range_add(self : SqrtLazy, l : Int, r : Int, val : Int64) -> Unit {
         #|For indices [l..i), arr has been incremented by val and the block sum
         #|reflects those updates. After i reaches r+1, the entire range in this
         #|block is updated consistently.
+        #|MAINTENANCE:
+        #|Increment arr[i] and block sum, then advance i.
+        #|TERMINATION:
+        #|At i = r + 1, the block range is fully updated.
       ),
     }
   } else {
@@ -346,6 +382,10 @@ fn SqrtLazy::range_add(self : SqrtLazy, l : Int, r : Int, val : Int64) -> Unit {
         #|INVARIANT (Left partial update):
         #|After pushing lazy, indices [l..i) are incremented by val and the
         #|block sum is adjusted. This completes the left partial block update.
+        #|MAINTENANCE:
+        #|Increment arr[i] and block sum, then advance i.
+        #|TERMINATION:
+        #|At i = (block_l + 1) * block_size, the left boundary is updated.
       ),
     }
 
@@ -365,6 +405,10 @@ fn SqrtLazy::range_add(self : SqrtLazy, l : Int, r : Int, val : Int64) -> Unit {
         #|All complete blocks in [block_l+1..b) have their lazy add and block
         #|sum updated. Each iteration updates one full block without touching
         #|individual elements.
+        #|MAINTENANCE:
+        #|Apply lazy add and sum adjustment to block b, then advance b.
+        #|TERMINATION:
+        #|At b = block_r, all middle blocks are updated.
       ),
     }
 
@@ -380,6 +424,10 @@ fn SqrtLazy::range_add(self : SqrtLazy, l : Int, r : Int, val : Int64) -> Unit {
         #|After pushing lazy for block_r, indices [block_r*bs..i) are updated
         #|and the block sum reflects those changes. After i reaches r+1, the
         #|right partial block is fully updated.
+        #|MAINTENANCE:
+        #|Increment arr[i] and block sum, then advance i.
+        #|TERMINATION:
+        #|At i = r + 1, the right boundary is updated.
       ),
     }
   }
@@ -402,6 +450,10 @@ fn SqrtLazy::query(self : SqrtLazy, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Single block query):
         #|sum equals the sum of arr[l..i) with the block's lazy add applied.
         #|When i reaches r+1, sum is the full range sum.
+        #|MAINTENANCE:
+        #|Add the next value with lazy applied and advance i.
+        #|TERMINATION:
+        #|At i = r + 1, sum is the full range sum.
       ),
     }
   } else {
@@ -413,6 +465,10 @@ fn SqrtLazy::query(self : SqrtLazy, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Left partial query):
         #|sum equals the left partial block sum for indices [l..i) with the
         #|lazy add applied. After the boundary, the left partial block is done.
+        #|MAINTENANCE:
+        #|Add the next value with lazy applied and advance i.
+        #|TERMINATION:
+        #|At i = (block_l + 1) * block_size, the left boundary is done.
       ),
     }
     for b = block_l + 1; b < block_r; b = b + 1 {
@@ -424,6 +480,10 @@ fn SqrtLazy::query(self : SqrtLazy, l : Int, r : Int) -> Int64 {
         #|sum includes the left partial block and complete blocks up to b-1.
         #|Each blocks[b] already includes lazy contributions, so adding it is
         #|correct for the full block.
+        #|MAINTENANCE:
+        #|Add blocks[b] and advance b to include the next full block.
+        #|TERMINATION:
+        #|At b = block_r, all middle blocks are included.
       ),
     }
     for i = block_r * self.block_size; i <= r; i = i + 1 {
@@ -434,6 +494,10 @@ fn SqrtLazy::query(self : SqrtLazy, l : Int, r : Int) -> Int64 {
         #|INVARIANT (Right partial query):
         #|sum includes left partial and complete blocks plus the right block
         #|prefix [block_r*bs..i). After i reaches r+1, the full range is covered.
+        #|MAINTENANCE:
+        #|Add the next value with lazy applied and advance i.
+        #|TERMINATION:
+        #|At i = r + 1, the full range is covered.
       ),
     }
   }
