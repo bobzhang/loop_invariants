@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/challenge_persistent_hash_map"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Bucket
+pub impl Show for Bucket
+
+type HashMap
+pub impl Show for HashMap
+
+// Type aliases
+
+// Traits
+
