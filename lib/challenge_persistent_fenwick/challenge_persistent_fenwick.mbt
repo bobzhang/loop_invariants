@@ -10,7 +10,7 @@ enum Node {
 } derive(Show)
 
 ///|
-struct Fenwick {
+pub struct Fenwick {
   root : Node
   n : Int
 } derive(Show)
@@ -75,15 +75,20 @@ fn tree_shape(node : Node, len : Int) -> Bool {
 }
 
 ///|
-fn make(n : Int) -> Fenwick {
+pub fn make(n : Int) -> Fenwick {
   let size = n + 1
   { root: build_zero(0, size), n }
 }
 
 ///|
+pub fn length(fw : Fenwick) -> Int {
+  fw.n
+}
+
+///|
 /// Add delta at index idx (0-based).
 #warnings("+missing_invariant+missing_reasoning")
-fn add(fw : Fenwick, idx : Int, delta : Int) -> Fenwick {
+pub fn add(fw : Fenwick, idx : Int, delta : Int) -> Fenwick {
   if idx < 0 || idx >= fw.n {
     return fw
   }
@@ -113,7 +118,7 @@ fn add(fw : Fenwick, idx : Int, delta : Int) -> Fenwick {
 ///|
 /// Prefix sum for [0, idx] (0-based, inclusive).
 #warnings("+missing_invariant+missing_reasoning")
-fn prefix_sum(fw : Fenwick, idx : Int) -> Int {
+pub fn prefix_sum(fw : Fenwick, idx : Int) -> Int {
   if idx < 0 {
     return 0
   }
@@ -141,7 +146,7 @@ fn prefix_sum(fw : Fenwick, idx : Int) -> Int {
 }
 
 ///|
-fn range_sum(fw : Fenwick, l : Int, r : Int) -> Int {
+pub fn range_sum(fw : Fenwick, l : Int, r : Int) -> Int {
   if l > r {
     0
   } else {

@@ -16,7 +16,7 @@ struct Fenwick {
 } derive(Show)
 
 ///|
-struct RangeFenwick {
+pub struct RangeFenwick {
   bit1 : Fenwick
   bit2 : Fenwick
   n : Int
@@ -120,13 +120,23 @@ fn prefix_sum(bit : Fenwick, idx : Int) -> Int {
 }
 
 ///|
-fn make(n : Int) -> RangeFenwick {
+pub fn make(n : Int) -> RangeFenwick {
   let size = n + 2
   { bit1: make_bit(size), bit2: make_bit(size), n }
 }
 
 ///|
-fn range_add(rf : RangeFenwick, l : Int, r : Int, delta : Int) -> RangeFenwick {
+pub fn length(rf : RangeFenwick) -> Int {
+  rf.n
+}
+
+///|
+pub fn range_add(
+  rf : RangeFenwick,
+  l : Int,
+  r : Int,
+  delta : Int,
+) -> RangeFenwick {
   if l > r {
     rf
   } else {
@@ -141,7 +151,7 @@ fn range_add(rf : RangeFenwick, l : Int, r : Int, delta : Int) -> RangeFenwick {
 }
 
 ///|
-fn prefix_sum_range(rf : RangeFenwick, idx : Int) -> Int {
+pub fn prefix_sum_range(rf : RangeFenwick, idx : Int) -> Int {
   if idx < 0 {
     0
   } else {
@@ -153,7 +163,7 @@ fn prefix_sum_range(rf : RangeFenwick, idx : Int) -> Int {
 }
 
 ///|
-fn range_sum(rf : RangeFenwick, l : Int, r : Int) -> Int {
+pub fn range_sum(rf : RangeFenwick, l : Int, r : Int) -> Int {
   if l > r {
     0
   } else {
@@ -164,7 +174,7 @@ fn range_sum(rf : RangeFenwick, l : Int, r : Int) -> Int {
 ///|
 /// Apply range adds (l, r, delta) inclusive.
 #warnings("+missing_invariant+missing_reasoning")
-fn apply_updates(
+pub fn apply_updates(
   rf : RangeFenwick,
   updates : ArrayView[(Int, Int, Int)],
 ) -> RangeFenwick {

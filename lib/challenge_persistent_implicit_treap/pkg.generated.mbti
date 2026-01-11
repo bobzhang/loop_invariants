@@ -2,11 +2,29 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_implicit_treap"
 
 // Values
+pub fn empty() -> Treap
+
+pub fn from_array(ArrayView[Int]) -> Treap
+
+pub fn get(Treap, Int) -> Int?
+
+pub fn insert_at(Treap, Int, Int) -> Treap
+
+pub fn merge(Treap, Treap) -> Treap
+
+pub fn size(Treap) -> Int
+
+pub fn split(Treap, Int) -> (Treap, Treap)
+
+pub fn to_array(Treap) -> Array[Int]
 
 // Errors
 
 // Types and methods
-type Treap
+pub enum Treap {
+  Empty
+  Node(value~ : Int, priority~ : Int, size~ : Int, left~ : Treap, right~ : Treap)
+}
 pub impl Show for Treap
 
 // Type aliases

@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Tree {
+pub enum Tree {
   Empty
   Node(start~ : Int, end~ : Int, left~ : Tree, right~ : Tree)
 } derive(Show)
@@ -107,7 +107,17 @@ fn merge_sorted(arr : ArrayView[(Int, Int)]) -> Array[(Int, Int)] {
 }
 
 ///|
-fn insert_interval(t : Tree, start : Int, end : Int) -> Tree {
+pub fn empty() -> Tree {
+  Tree::Empty
+}
+
+///|
+pub fn to_array(t : Tree) -> Array[(Int, Int)] {
+  inorder(t)
+}
+
+///|
+pub fn insert_interval(t : Tree, start : Int, end : Int) -> Tree {
   let list = inorder(t)
   let with_new = insert_sorted(list[:], (start, end))
   let merged = merge_sorted(with_new[:])
@@ -115,7 +125,7 @@ fn insert_interval(t : Tree, start : Int, end : Int) -> Tree {
 }
 
 ///|
-fn contains_point(t : Tree, x : Int) -> Bool {
+pub fn contains_point(t : Tree, x : Int) -> Bool {
   match t {
     Tree::Empty => false
     Tree::Node(start=s, end=e, left=l, right=r) =>

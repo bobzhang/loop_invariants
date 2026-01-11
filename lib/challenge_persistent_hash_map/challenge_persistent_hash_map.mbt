@@ -10,7 +10,7 @@ enum Bucket {
 } derive(Show)
 
 ///|
-struct HashMap {
+pub struct HashMap {
   buckets : Array[Bucket]
   size : Int
 } derive(Show)
@@ -41,7 +41,7 @@ fn reverse_append(rev : Bucket, tail : Bucket) -> Bucket {
 }
 
 ///|
-fn make(capacity : Int) -> HashMap {
+pub fn make(capacity : Int) -> HashMap {
   let cap = if capacity <= 0 { 1 } else { capacity }
   { buckets: Array::make(cap, Bucket::Nil), size: 0 }
 }
@@ -114,13 +114,23 @@ fn bucket_insert(bucket : Bucket, key : Int, value : Int) -> (Bucket, Bool) {
 }
 
 ///|
-fn get(map : HashMap, key : Int) -> Int? {
+pub fn size(map : HashMap) -> Int {
+  map.size
+}
+
+///|
+pub fn capacity(map : HashMap) -> Int {
+  map.buckets.length()
+}
+
+///|
+pub fn get(map : HashMap, key : Int) -> Int? {
   let idx = index_for(key, map.buckets.length())
   bucket_get(map.buckets[idx], key)
 }
 
 ///|
-fn put(map : HashMap, key : Int, value : Int) -> HashMap {
+pub fn put(map : HashMap, key : Int, value : Int) -> HashMap {
   let idx = index_for(key, map.buckets.length())
   let bucket = map.buckets[idx]
   let (new_bucket, added) = bucket_insert(bucket, key, value)

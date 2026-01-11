@@ -2,11 +2,23 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_fenwick"
 
 // Values
+pub fn add(Fenwick, Int, Int) -> Fenwick
+
+pub fn length(Fenwick) -> Int
+
+pub fn make(Int) -> Fenwick
+
+pub fn prefix_sum(Fenwick, Int) -> Int
+
+pub fn range_sum(Fenwick, Int, Int) -> Int
 
 // Errors
 
 // Types and methods
-type Fenwick
+pub struct Fenwick {
+  root : Node
+  n : Int
+}
 pub impl Show for Fenwick
 
 type Node

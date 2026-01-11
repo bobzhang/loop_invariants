@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Treap {
+pub enum Treap {
   Empty
   Node(
     value~ : Int,
@@ -16,7 +16,7 @@ enum Treap {
 } derive(Show)
 
 ///|
-fn size(t : Treap) -> Int {
+pub fn size(t : Treap) -> Int {
   match t {
     Treap::Empty => 0
     Treap::Node(value=_, priority=_, size~, left=_, right=_) => size
@@ -56,7 +56,12 @@ fn make_node(value : Int, priority : Int, left : Treap, right : Treap) -> Treap 
 }
 
 ///|
-fn split(t : Treap, k : Int) -> (Treap, Treap) {
+pub fn empty() -> Treap {
+  Treap::Empty
+}
+
+///|
+pub fn split(t : Treap, k : Int) -> (Treap, Treap) {
   match t {
     Treap::Empty => (Treap::Empty, Treap::Empty)
     Treap::Node(value=v, priority=p, size=_, left=l, right=r) => {
@@ -73,7 +78,7 @@ fn split(t : Treap, k : Int) -> (Treap, Treap) {
 }
 
 ///|
-fn merge(a : Treap, b : Treap) -> Treap {
+pub fn merge(a : Treap, b : Treap) -> Treap {
   match (a, b) {
     (Treap::Empty, _) => b
     (_, Treap::Empty) => a
@@ -90,7 +95,7 @@ fn merge(a : Treap, b : Treap) -> Treap {
 }
 
 ///|
-fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
+pub fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
   let (l, r) = split(t, idx)
   let node = make_node(
     value,
@@ -102,7 +107,7 @@ fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
 }
 
 ///|
-fn get(t : Treap, idx : Int) -> Int? {
+pub fn get(t : Treap, idx : Int) -> Int? {
   match t {
     Treap::Empty => None
     Treap::Node(value=v, priority=_, size=_, left=l, right=r) => {
@@ -119,7 +124,7 @@ fn get(t : Treap, idx : Int) -> Int? {
 }
 
 ///|
-fn to_array(t : Treap) -> Array[Int] {
+pub fn to_array(t : Treap) -> Array[Int] {
   match t {
     Treap::Empty => []
     Treap::Node(value=v, priority=_, size=_, left=l, right=r) =>
@@ -130,7 +135,7 @@ fn to_array(t : Treap) -> Array[Int] {
 ///|
 /// Build a treap by appending elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-fn from_array(arr : ArrayView[Int]) -> Treap {
+pub fn from_array(arr : ArrayView[Int]) -> Treap {
   let n = arr.length()
   for i = 0, tree = Treap::Empty {
     if i >= n {

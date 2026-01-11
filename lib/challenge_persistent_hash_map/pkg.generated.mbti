@@ -2,6 +2,15 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_hash_map"
 
 // Values
+pub fn capacity(HashMap) -> Int
+
+pub fn get(HashMap, Int) -> Int?
+
+pub fn make(Int) -> HashMap
+
+pub fn put(HashMap, Int, Int) -> HashMap
+
+pub fn size(HashMap) -> Int
 
 // Errors
 
@@ -9,7 +18,10 @@ package "bobzhang/loop_invariants/lib/challenge_persistent_hash_map"
 type Bucket
 pub impl Show for Bucket
 
-type HashMap
+pub struct HashMap {
+  buckets : Array[Bucket]
+  size : Int
+}
 pub impl Show for HashMap
 
 // Type aliases

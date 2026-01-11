@@ -2,11 +2,21 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_interval_set"
 
 // Values
+pub fn contains_point(Tree, Int) -> Bool
+
+pub fn empty() -> Tree
+
+pub fn insert_interval(Tree, Int, Int) -> Tree
+
+pub fn to_array(Tree) -> Array[(Int, Int)]
 
 // Errors
 
 // Types and methods
-type Tree
+pub enum Tree {
+  Empty
+  Node(start~ : Int, end~ : Int, left~ : Tree, right~ : Tree)
+}
 pub impl Show for Tree
 
 // Type aliases

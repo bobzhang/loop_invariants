@@ -2,6 +2,17 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_fenwick_range_add"
 
 // Values
+pub fn apply_updates(RangeFenwick, ArrayView[(Int, Int, Int)]) -> RangeFenwick
+
+pub fn length(RangeFenwick) -> Int
+
+pub fn make(Int) -> RangeFenwick
+
+pub fn prefix_sum_range(RangeFenwick, Int) -> Int
+
+pub fn range_add(RangeFenwick, Int, Int, Int) -> RangeFenwick
+
+pub fn range_sum(RangeFenwick, Int, Int) -> Int
 
 // Errors
 
@@ -12,7 +23,11 @@ pub impl Show for Fenwick
 type Node
 pub impl Show for Node
 
-type RangeFenwick
+pub struct RangeFenwick {
+  bit1 : Fenwick
+  bit2 : Fenwick
+  n : Int
+}
 pub impl Show for RangeFenwick
 
 // Type aliases
