@@ -37,7 +37,15 @@ fn compute_hash(s : String, start : Int, len : Int) -> Int64 {
     h = (h * RK_BASE + c.to_int64()) % RK_MOD
   } where {
     invariant: i >= 0 && i <= len,
-    reasoning: "I: h equals hash of s[start..start+i). M: Incorporate s[start+i] into rolling hash. T: After i = len, h is the hash of the full substring.",
+    reasoning: (
+      #|INVARIANT (rolling hash):
+      #|h equals the polynomial hash of s[start..start+i).
+      #|MAINTENANCE:
+      #|Incorporate s[start+i] by multiplying by RK_BASE and adding the new
+      #|character value, all modulo RK_MOD.
+      #|TERMINATION:
+      #|At i = len, h is the hash of the full substring of length len.
+    ),
   }
   h
 }
@@ -81,7 +89,15 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
         }
       } where {
         invariant: j >= 0 && j <= m,
-        reasoning: "I: If match_found is true, the first j characters match. M: Compare the next character and flip match_found on mismatch. T: After j = m or break, match_found is true iff the full pattern matches text at i.",
+        reasoning: (
+          #|INVARIANT (collision check):
+          #|If match_found is true, then text[i..i+j) matches pattern[0..j).
+          #|MAINTENANCE:
+          #|Compare the next character; on mismatch, set match_found to false.
+          #|TERMINATION:
+          #|At j = m or after breaking, match_found is true iff the full
+          #|pattern matches at position i.
+        ),
       }
       if match_found {
         result.push(i)
@@ -100,7 +116,16 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
     }
   } where {
     invariant: i >= 0 && i <= n - m + 1,
-    reasoning: "I: text_hash = hash(text[0..m)). M: Check if hashes match, verify on collision. Roll hash by removing leftmost char and adding next char. T: All positions checked.",
+    reasoning: (
+      #|INVARIANT (window scan):
+      #|text_hash equals hash(text[i..i+m)), and all positions in [0, i) have
+      #|been checked for matches.
+      #|MAINTENANCE:
+      #|Compare hashes (verify on collision), then roll the hash by removing
+      #|the leftmost character and adding the next character.
+      #|TERMINATION:
+      #|At i = n - m + 1, all candidate positions have been processed.
+    ),
   }
   result
 }
@@ -141,7 +166,16 @@ fn rabin_karp_multi(
     }
   } where {
     invariant: i >= 0 && i <= patterns.length(),
-    reasoning: "I: by_length groups hashes for patterns[0..i) by their length. M: Compute hash for patterns[i] (if valid) and insert into the corresponding bucket. T: After i = patterns.length(), all patterns are grouped by length.",
+    reasoning: (
+      #|INVARIANT (group patterns):
+      #|by_length groups hashes for patterns[0..i) by their length, mapping
+      #|each length to the list of (pattern_idx, hash).
+      #|MAINTENANCE:
+      #|If patterns[i] is valid, compute its hash and insert into the proper
+      #|bucket keyed by length.
+      #|TERMINATION:
+      #|At i = patterns.length(), all patterns are grouped by length.
+    ),
   }
 
   // For each pattern length, do rolling hash
@@ -162,7 +196,15 @@ fn rabin_karp_multi(
             }
           } where {
             invariant: k >= 0 && k <= len,
-            reasoning: "I: If match_found is true, the first k characters match. M: Compare the next character and flip match_found on mismatch. T: After k = len or break, match_found is true iff the full pattern matches at i.",
+            reasoning: (
+              #|INVARIANT (collision check):
+              #|If match_found is true, text[i..i+k) matches pattern[0..k).
+              #|MAINTENANCE:
+              #|Compare the next character; on mismatch, set match_found to false.
+              #|TERMINATION:
+              #|At k = len or after breaking, match_found is true iff the full
+              #|pattern matches at position i.
+            ),
           }
           if match_found {
             result.push((pat_idx, i))
@@ -170,7 +212,15 @@ fn rabin_karp_multi(
         }
       } where {
         invariant: j >= 0 && j <= pattern_list.length(),
-        reasoning: "I: Patterns in pattern_list[0..j) have been checked for this position i. M: Compare hash and verify on matches. T: After j = len(list), all patterns of this length are tested at i.",
+        reasoning: (
+          #|INVARIANT (check patterns):
+          #|All patterns in pattern_list[0..j) have been checked against the
+          #|current text window at position i.
+          #|MAINTENANCE:
+          #|Compare hashes and verify on matches to avoid collisions.
+          #|TERMINATION:
+          #|At j = pattern_list.length(), all patterns of this length are tested.
+        ),
       }
 
       // Roll hash
@@ -185,7 +235,16 @@ fn rabin_karp_multi(
       }
     } where {
       invariant: i >= 0 && i <= n - len + 1,
-      reasoning: "I: text_hash corresponds to text[i..i+len). M: Check all patterns of length len at position i, then roll the hash to i+1. T: After i = n-len+1, all positions have been processed.",
+      reasoning: (
+        #|INVARIANT (window scan):
+        #|text_hash corresponds to text[i..i+len), and all positions in [0, i)
+        #|have been processed for this length.
+        #|MAINTENANCE:
+        #|Check all patterns of this length at position i, then roll the hash
+        #|to advance the window by one.
+        #|TERMINATION:
+        #|At i = n - len + 1, all positions have been processed.
+      ),
     }
   }
   result
@@ -214,7 +273,14 @@ fn HashArray::new(s : String) -> HashArray {
     powers[i + 1] = powers[i] * RK_BASE % RK_MOD
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: prefix_hash and powers are correct for prefix length i. M: Extend hash and powers by one character. T: After i = n, all prefix hashes and powers are precomputed.",
+    reasoning: (
+      #|INVARIANT (prefix tables):
+      #|prefix_hash and powers are correct for all prefix lengths in [0, i].
+      #|MAINTENANCE:
+      #|Extend the hash and powers by one character using the recurrence.
+      #|TERMINATION:
+      #|At i = n, all prefix hashes and base powers are precomputed.
+    ),
   }
   { prefix_hash, powers, n }
 }
