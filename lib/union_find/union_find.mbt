@@ -50,11 +50,8 @@ fn UnionFind::new(n : Int) -> UnionFind {
   let rank = Array::make(n, 0)
 
   // Initialize: each element is its own parent (self-loop = root)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     parent[i] = i
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: "I: parent is uninitialized. M: Set parent[i] = i, making i a root of singleton set. T: After i = n-1, each element 0..n-1 is its own root. parent[x] = x for all x, satisfying the root invariant.",
   }
   { parent, rank, num_sets: n }
 }
@@ -139,15 +136,10 @@ fn UnionFind::set_size(self : UnionFind, x : Int) -> Int {
     return 0
   }
   let mut size = 0
-  for i = 0; i < self.parent.length(); i = i + 1 {
+  for i in 0..<self.parent.length() {
     if self.find(i) == root {
       size = size + 1
     }
-  } where {
-    invariant: i >= 0 && i <= self.parent.length(),
-    reasoning: (
-      #|size counts members of root among indices [0..i).
-    ),
   }
   size
 }
@@ -170,13 +162,8 @@ fn WeightedUnionFind::new(n : Int) -> WeightedUnionFind {
   let parent = Array::make(n, 0)
   let rank = Array::make(n, 0)
   let weight = Array::make(n, 0L)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     parent[i] = i
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|parent[0..i) initialized to self; each node is a singleton root.
-    ),
   }
   { parent, rank, weight }
 }

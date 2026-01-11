@@ -40,13 +40,8 @@ priv struct Fenwick2D {
 fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
   // Use 1-indexed arrays (index 0 unused)
   let tree : Array[Array[Int64]] = []
-  for i = 0; i <= rows; i = i + 1 {
+  for _ in 0..=rows {
     tree.push(Array::make(cols + 1, 0L))
-  } where {
-    invariant: i >= 0 && i <= rows + 1,
-    reasoning: (
-      #|tree has been allocated for rows 0..i) with cols+1 entries each.
-    ),
   }
   { tree, rows, cols }
 }
@@ -192,13 +187,8 @@ priv struct Fenwick2DRange {
 ///|
 fn Fenwick2DRange::new(rows : Int, cols : Int) -> Fenwick2DRange {
   let tree : Array[Array[Int64]] = []
-  for i = 0; i <= rows; i = i + 1 {
+  for _ in 0..=rows {
     tree.push(Array::make(cols + 1, 0L))
-  } where {
-    invariant: i >= 0 && i <= rows + 1,
-    reasoning: (
-      #|tree has been allocated for rows 0..i) with cols+1 entries each.
-    ),
   }
   { tree, rows, cols }
 }

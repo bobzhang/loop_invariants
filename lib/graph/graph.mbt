@@ -13,21 +13,10 @@
 fn compute_in_degrees(graph : Array[Array[Int]]) -> Array[Int] {
   let n = graph.length()
   let in_degree : Array[Int] = Array::make(n, 0)
-  for u = 0; u < n; u = u + 1 {
-    for i = 0; i < graph[u].length(); i = i + 1 {
-      let neighbor = graph[u][i]
+  for u in 0..<n {
+    for neighbor in graph[u] {
       in_degree[neighbor] = in_degree[neighbor] + 1
-    } where {
-      invariant: i >= 0 && i <= graph[u].length(),
-      reasoning: (
-        #|Processed edges from u to neighbors graph[u][0..i).
-      ),
     }
-  } where {
-    invariant: u >= 0 && u <= n,
-    reasoning: (
-      #|in_degree reflects all edges originating from vertices [0..u).
-    ),
   }
   in_degree
 }
@@ -43,15 +32,10 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
 
   // Initialize queue with all vertices having in-degree 0
   let queue : Array[Int] = []
-  for v = 0; v < n; v = v + 1 {
+  for v in 0..<n {
     if in_degree[v] == 0 {
       queue.push(v)
     }
-  } where {
-    invariant: v >= 0 && v <= n,
-    reasoning: (
-      #|queue contains exactly the zero in-degree vertices in [0..v).
-    ),
   }
 
   // Process vertices in topological order
@@ -63,17 +47,11 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       result.push(u)
 
       // "Remove" u by decrementing in-degrees of its neighbors
-      for i = 0; i < graph[u].length(); i = i + 1 {
-        let neighbor = graph[u][i]
+      for neighbor in graph[u] {
         in_degree[neighbor] = in_degree[neighbor] - 1
         if in_degree[neighbor] == 0 {
           queue.push(neighbor)
         }
-      } where {
-        invariant: i >= 0 && i <= graph[u].length(),
-        reasoning: (
-          #|Neighbors graph[u][0..i) have been processed and enqueued if needed.
-        ),
       }
       continue head + 1
     }
@@ -140,13 +118,8 @@ test "topological_sort" {
       assert_eq(order.length(), 3)
       // 0 must come before 1 and 2, 1 must come before 2
       let pos : Array[Int] = Array::make(3, 0)
-      for i = 0; i < order.length(); i = i + 1 {
-        pos[order[i]] = i
-      } where {
-        invariant: i >= 0 && i <= order.length(),
-        reasoning: (
-          #|pos has been filled for order[0..i).
-        ),
+      for i, v in order {
+        pos[v] = i
       }
       assert_true(pos[0] < pos[1])
       assert_true(pos[0] < pos[2])
