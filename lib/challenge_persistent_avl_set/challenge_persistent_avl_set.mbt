@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Avl {
+pub enum Avl {
   Empty
   Node(key~ : Int, height~ : Int, left~ : Avl, right~ : Avl)
 } derive(Show)
@@ -27,7 +27,7 @@ fn height(t : Avl) -> Int {
 }
 
 ///|
-fn size(t : Avl) -> Int {
+pub fn size(t : Avl) -> Int {
   match t {
     Avl::Empty => 0
     Avl::Node(key=_, height=_, left~, right~) => 1 + size(left) + size(right)
@@ -135,7 +135,12 @@ fn balance(t : Avl) -> Avl {
 }
 
 ///|
-fn insert(t : Avl, key : Int) -> Avl {
+pub fn empty() -> Avl {
+  Avl::Empty
+}
+
+///|
+pub fn insert(t : Avl, key : Int) -> Avl {
   match t {
     Avl::Empty => Avl::Node(key~, height=1, left=Avl::Empty, right=Avl::Empty)
     Avl::Node(key=k, height=_, left=l, right=r) =>
@@ -151,7 +156,7 @@ fn insert(t : Avl, key : Int) -> Avl {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn contains(t : Avl, key : Int) -> Bool {
+pub fn contains(t : Avl, key : Int) -> Bool {
   let none : Int? = None
   for cur = t, lo = none, hi = none {
     match cur {
@@ -180,7 +185,7 @@ fn contains(t : Avl, key : Int) -> Bool {
 }
 
 ///|
-fn inorder(t : Avl) -> Array[Int] {
+pub fn inorder(t : Avl) -> Array[Int] {
   match t {
     Avl::Empty => []
     Avl::Node(key=k, height=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
@@ -190,7 +195,7 @@ fn inorder(t : Avl) -> Array[Int] {
 ///|
 /// Build an AVL set by inserting elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-fn from_array(arr : ArrayView[Int]) -> Avl {
+pub fn from_array(arr : ArrayView[Int]) -> Avl {
   let n = arr.length()
   for i = 0, tree = Avl::Empty {
     if i >= n {

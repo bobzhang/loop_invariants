@@ -4,13 +4,18 @@
 // ============================================================================
 
 ///|
-enum Node {
+pub enum Node {
   Empty
   Node(count~ : Int, zero~ : Node, one~ : Node)
 } derive(Show)
 
 ///|
-fn count(node : Node) -> Int {
+pub fn empty() -> Node {
+  Node::Empty
+}
+
+///|
+pub fn count(node : Node) -> Int {
   match node {
     Node::Empty => 0
     Node::Node(count~, zero=_, one=_) => count
@@ -18,7 +23,7 @@ fn count(node : Node) -> Int {
 }
 
 ///|
-fn insert(node : Node, value : Int, bit : Int) -> Node {
+pub fn insert(node : Node, value : Int, bit : Int) -> Node {
   if bit < 0 {
     match node {
       Node::Empty => Node::Node(count=1, zero=Node::Empty, one=Node::Empty)
@@ -55,7 +60,7 @@ fn insert(node : Node, value : Int, bit : Int) -> Node {
 ///|
 /// Query the maximum xor with value (assumes trie is non-empty).
 #warnings("+missing_invariant+missing_reasoning")
-fn max_xor(root : Node, value : Int, max_bit : Int) -> Int {
+pub fn max_xor(root : Node, value : Int, max_bit : Int) -> Int {
   for bit = max_bit, cur = root, acc = 0 {
     match cur {
       Node::Empty => break acc

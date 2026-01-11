@@ -1,0 +1,18 @@
+# Persistent 2-3 Tree
+
+Balanced search tree that keeps versions by path copying.
+
+## Example
+
+```mbt check
+///|
+test "persistent 2-3 tree" {
+  let t0 = @challenge_persistent_23_tree.empty()
+  let t1 = @challenge_persistent_23_tree.insert(t0, 5)
+  let t2 = @challenge_persistent_23_tree.insert(t1, 2)
+  let t3 = @challenge_persistent_23_tree.insert(t2, 8)
+  inspect(@challenge_persistent_23_tree.contains(t3, 2), content="true")
+  inspect(@challenge_persistent_23_tree.contains(t3, 7), content="false")
+  inspect(@challenge_persistent_23_tree.size(t3), content="3")
+}
+```

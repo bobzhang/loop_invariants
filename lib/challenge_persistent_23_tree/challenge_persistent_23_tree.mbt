@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Tree {
+pub enum Tree {
   Empty
   Two(key~ : Int, left~ : Tree, right~ : Tree)
   Three(key1~ : Int, key2~ : Int, left~ : Tree, middle~ : Tree, right~ : Tree)
@@ -17,7 +17,7 @@ enum InsertResult {
 } derive(Show)
 
 ///|
-fn size(t : Tree) -> Int {
+pub fn size(t : Tree) -> Int {
   match t {
     Tree::Empty => 0
     Tree::Two(key=_, left~, right~) => 1 + size(left) + size(right)
@@ -148,7 +148,12 @@ fn insert_inner(t : Tree, key : Int) -> InsertResult {
 }
 
 ///|
-fn insert(t : Tree, key : Int) -> Tree {
+pub fn empty() -> Tree {
+  Tree::Empty
+}
+
+///|
+pub fn insert(t : Tree, key : Int) -> Tree {
   match insert_inner(t, key) {
     InsertResult::Done(tree~) => tree
     InsertResult::Split(key=k, left=l, right=r) =>
@@ -158,7 +163,7 @@ fn insert(t : Tree, key : Int) -> Tree {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn contains(t : Tree, key : Int) -> Bool {
+pub fn contains(t : Tree, key : Int) -> Bool {
   let none : Int? = None
   for cur = t, lo = none, hi = none {
     match cur {
@@ -199,7 +204,7 @@ fn contains(t : Tree, key : Int) -> Bool {
 ///|
 /// Build a 2-3 tree by inserting elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-fn from_array(arr : ArrayView[Int]) -> Tree {
+pub fn from_array(arr : ArrayView[Int]) -> Tree {
   let n = arr.length()
   for i = 0, tree = Tree::Empty {
     if i >= n {

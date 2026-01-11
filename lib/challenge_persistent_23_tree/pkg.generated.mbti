@@ -2,6 +2,15 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_23_tree"
 
 // Values
+pub fn contains(Tree, Int) -> Bool
+
+pub fn empty() -> Tree
+
+pub fn from_array(ArrayView[Int]) -> Tree
+
+pub fn insert(Tree, Int) -> Tree
+
+pub fn size(Tree) -> Int
 
 // Errors
 
@@ -9,7 +18,11 @@ package "bobzhang/loop_invariants/lib/challenge_persistent_23_tree"
 type InsertResult
 pub impl Show for InsertResult
 
-type Tree
+pub enum Tree {
+  Empty
+  Two(key~ : Int, left~ : Tree, right~ : Tree)
+  Three(key1~ : Int, key2~ : Int, left~ : Tree, middle~ : Tree, right~ : Tree)
+}
 pub impl Show for Tree
 
 // Type aliases

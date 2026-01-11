@@ -10,7 +10,7 @@ enum Node {
 } derive(Show)
 
 ///|
-struct PArray {
+pub struct PArray {
   root : Node
   n : Int
 } derive(Show)
@@ -61,13 +61,18 @@ fn set_node(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
 }
 
 ///|
-fn from_array(arr : ArrayView[Int]) -> PArray {
+pub fn from_array(arr : ArrayView[Int]) -> PArray {
   let n = arr.length()
   { root: build(arr, 0, n), n }
 }
 
 ///|
-fn get_at(arr : PArray, idx : Int) -> Int? {
+pub fn length(arr : PArray) -> Int {
+  arr.n
+}
+
+///|
+pub fn get_at(arr : PArray, idx : Int) -> Int? {
   if idx < 0 || idx >= arr.n {
     None
   } else {
@@ -76,7 +81,7 @@ fn get_at(arr : PArray, idx : Int) -> Int? {
 }
 
 ///|
-fn set_at(arr : PArray, idx : Int, value : Int) -> PArray {
+pub fn set_at(arr : PArray, idx : Int, value : Int) -> PArray {
   if idx < 0 || idx >= arr.n {
     arr
   } else {
@@ -87,7 +92,7 @@ fn set_at(arr : PArray, idx : Int, value : Int) -> PArray {
 ///|
 /// Materialize the persistent array to a mutable array.
 #warnings("+missing_invariant+missing_reasoning")
-fn to_array(arr : PArray) -> Array[Int] {
+pub fn to_array(arr : PArray) -> Array[Int] {
   let out = Array::new()
   for i = 0; i < arr.n; i = i + 1 {
     out.push(get_node(arr.root, 0, arr.n, i))

@@ -2,6 +2,15 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_array"
 
 // Values
+pub fn from_array(ArrayView[Int]) -> PArray
+
+pub fn get_at(PArray, Int) -> Int?
+
+pub fn length(PArray) -> Int
+
+pub fn set_at(PArray, Int, Int) -> PArray
+
+pub fn to_array(PArray) -> Array[Int]
 
 // Errors
 
@@ -9,7 +18,10 @@ package "bobzhang/loop_invariants/lib/challenge_persistent_array"
 type Node
 pub impl Show for Node
 
-type PArray
+pub struct PArray {
+  root : Node
+  n : Int
+}
 pub impl Show for PArray
 
 // Type aliases
