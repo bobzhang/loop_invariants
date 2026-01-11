@@ -30,6 +30,10 @@ fn fib_loop(n : Int) -> Int {
       #|Termination: When i >= n, we return a = F(i) = F(n), matching fib(n).
       #|
       #|This proves fib_loop(n) ≡ fib(n) for all n >= 0.
+      #|MAINTENANCE:
+      #|Advancing (i, a, b) to (i+1, b, a+b) preserves a=F(i) and b=F(i+1).
+      #|TERMINATION:
+      #|At i = n, a equals F(n), which is returned.
     ),
   }
 }
@@ -74,6 +78,10 @@ fn binary_search(arr : ArrayView[Int], target : Int) -> Int? {
       #|Inductive: mid ∈ [lo, hi), so:
       #|  - (mid+1, hi): mid+1 ≤ hi, and mid+1 > lo ≥ 0. ✓
       #|  - (lo, mid): lo ≤ mid < hi. ✓
+      #|MAINTENANCE:
+      #|Choosing [mid+1, hi) or [lo, mid) preserves a valid subrange.
+      #|TERMINATION:
+      #|When lo >= hi, the search interval is empty.
     ),
     invariant: lo == 0 || arr[lo - 1] < target,
     reasoning: (
@@ -87,6 +95,10 @@ fn binary_search(arr : ArrayView[Int], target : Int) -> Int? {
       #|Inductive (lo unchanged): Invariant preserved. ✓
       #|
       #|This proves: ∀i < lo, arr[i] < target (by sortedness + boundary witness).
+      #|MAINTENANCE:
+      #|When lo increases to mid+1, arr[lo-1] is proven < target.
+      #|TERMINATION:
+      #|At loop end, all indices before lo are excluded.
     ),
     invariant: hi == arr.length() || arr[hi] > target,
     reasoning: (
@@ -100,6 +112,10 @@ fn binary_search(arr : ArrayView[Int], target : Int) -> Int? {
       #|Inductive (hi unchanged): Invariant preserved. ✓
       #|
       #|This proves: ∀i ≥ hi, arr[i] > target (by sortedness + boundary witness).
+      #|MAINTENANCE:
+      #|When hi decreases to mid, arr[hi] is proven > target.
+      #|TERMINATION:
+      #|At loop end, all indices from hi onward are excluded.
     ),
     invariant: hi - lo >= 0,
     reasoning: (
@@ -117,6 +133,10 @@ fn binary_search(arr : ArrayView[Int], target : Int) -> Int? {
       #|  - All arr[hi..n) > target  
       #|  - lo >= hi means these cover the entire array
       #|Therefore target is not in arr. ✓
+      #|MAINTENANCE:
+      #|Each step strictly shrinks hi - lo, ensuring progress.
+      #|TERMINATION:
+      #|At hi - lo = 0, the search space is empty and the target is absent.
     ),
   }
 }
@@ -166,6 +186,10 @@ fn gcd_loop(a : Int, b : Int) -> Int {
       #|
       #|Termination: y strictly decreases (0 ≤ x%y < y) until y = 0.
       #|When y = 0: return x, and gcd(x, 0) = x = gcd(a, b). ✓
+      #|MAINTENANCE:
+      #|Updating (x, y) to (y, x % y) preserves gcd(x, y).
+      #|TERMINATION:
+      #|y decreases to 0, yielding the gcd.
     ),
   }
 }
@@ -219,6 +243,10 @@ fn pow_loop(base : Int, exp : Int) -> Int {
       #|
       #|Termination: e decreases (halved or decremented) until e = 0.
       #|When e = 0: return acc, and acc × b^0 = acc = base^exp. ✓
+      #|MAINTENANCE:
+      #|Odd/even updates preserve acc * b^e = base^exp.
+      #|TERMINATION:
+      #|When e = 0, acc is the final power.
     ),
   }
 }
@@ -266,6 +294,10 @@ fn reverse_inplace(arr : Array[Int]) -> Unit {
       #|
       #|Termination: hi - lo decreases by 2 each step.
       #|When lo >= hi: middle is 0 or 1 element → fully reversed.
+      #|MAINTENANCE:
+      #|Swap arr[lo] and arr[hi], then move inward to preserve symmetry.
+      #|TERMINATION:
+      #|When lo >= hi, all pairs are swapped and the array is reversed.
     ),
   }
 }
@@ -318,6 +350,10 @@ fn isqrt(n : Int) -> Int {
       #|Termination: hi - lo shrinks (mid strictly between lo and hi).
       #|When lo + 1 >= hi: interval has one element, lo² ≤ n < (lo+1)².
       #|So lo = floor(sqrt(n)). ✓
+      #|MAINTENANCE:
+      #|Updating lo or hi preserves lo² ≤ n < hi².
+      #|TERMINATION:
+      #|When hi = lo + 1, lo is the floor sqrt.
     ),
   }
 }
@@ -375,6 +411,10 @@ fn dutch_flag(arr : Array[Int], pivot : Int) -> Unit {
       #|
       #|Case arr[mid] == pivot: (lo, mid+1, hi)
       #|  lo ≤ mid+1 (since lo ≤ mid), mid+1 ≤ hi (since mid < hi). ✓
+      #|MAINTENANCE:
+      #|Each case advances at least one pointer while preserving order.
+      #|TERMINATION:
+      #|When mid >= hi, all elements are partitioned.
     ),
     invariant: hi - mid >= 0,
     reasoning: (
@@ -406,6 +446,10 @@ fn dutch_flag(arr : Array[Int], pivot : Int) -> Unit {
       #|Standard quicksort degrades to O(n²) when many elements equal pivot.
       #|3-way partition handles duplicates in O(n) per level, keeping
       #|overall complexity at O(n log n) even for duplicate-heavy inputs.
+      #|MAINTENANCE:
+      #|Each branch shrinks the unprocessed segment [mid, hi).
+      #|TERMINATION:
+      #|When hi - mid = 0, the array is fully partitioned.
     ),
   }
 }
@@ -462,6 +506,10 @@ fn kadane(arr : ArrayView[Int]) -> Int {
       #|
       #|Base: i=1, and we guard arr.length() > 0, so 1 ≤ len. ✓
       #|Inductive: i+1 ≤ len when i < len (loop condition). ✓
+      #|MAINTENANCE:
+      #|Increment i each iteration while i < len.
+      #|TERMINATION:
+      #|At i = len, the scan is complete.
     ),
     invariant: max_ending_here >= arr[i - 1],
     reasoning: (
@@ -480,6 +528,10 @@ fn kadane(arr : ArrayView[Int]) -> Int {
       #|
       #|By induction, max_ending_here was optimal for i-1, so this choice
       #|gives the optimal subarray ending at i. ✓
+      #|MAINTENANCE:
+      #|Update max_ending_here to the best subarray ending at i.
+      #|TERMINATION:
+      #|At i = len, max_ending_here is optimal for the last index.
     ),
     invariant: max_so_far >= max_ending_here,
     reasoning: (
@@ -518,6 +570,10 @@ fn kadane(arr : ArrayView[Int]) -> Int {
       #|HISTORICAL NOTE: This algorithm is often attributed to Kadane (1984),
       #|but similar ideas appeared earlier. It's a beautiful example of
       #|how the right invariant reveals the algorithm's essence.
+      #|MAINTENANCE:
+      #|max_so_far is updated with the best ending-at-i value each step.
+      #|TERMINATION:
+      #|At i = len, max_so_far is the maximum subarray sum.
     ),
   }
 }
@@ -562,6 +618,10 @@ fn two_sum_sorted(arr : ArrayView[Int], target : Int) -> (Int, Int)? {
       #|
       #|Inductive (sum < target): lo+1 ≤ hi since lo < hi. ✓
       #|Inductive (sum > target): lo ≤ hi-1 since lo < hi. ✓
+      #|MAINTENANCE:
+      #|Each branch moves exactly one pointer inward while preserving order.
+      #|TERMINATION:
+      #|When lo >= hi, no pair remains to check.
     ),
     invariant: lo == 0 || arr[lo - 1] + arr[hi] < target,
     reasoning: (
@@ -576,6 +636,10 @@ fn two_sum_sorted(arr : ArrayView[Int], target : Int) -> (Int, Int)? {
       #|By sortedness, all j < lo have arr[j] ≤ arr[lo-1], and 
       #|arr[lo-1] + arr[hi] < target (boundary witness), so
       #|arr[j] + arr[hi] ≤ arr[lo-1] + arr[hi] < target for all j < lo. ✓
+      #|MAINTENANCE:
+      #|Increasing lo preserves the exclusion of all indices < lo.
+      #|TERMINATION:
+      #|At loop end, all pairs with left index < lo are excluded.
     ),
     invariant: hi == arr.length() - 1 || arr[lo] + arr[hi + 1] > target,
     reasoning: (
@@ -598,6 +662,10 @@ fn two_sum_sorted(arr : ArrayView[Int], target : Int) -> (Int, Int)? {
       #|  - If j > hi: by Inv 3, arr[lo] + arr[j] > target, but arr[lo] ≤ arr[i],
       #|    so arr[i] + arr[j] ≥ arr[lo] + arr[j] > target. Contradiction.
       #|Therefore i ≥ lo and j ≤ hi: the solution is still in our search space.
+      #|MAINTENANCE:
+      #|Decreasing hi preserves the exclusion of all indices > hi.
+      #|TERMINATION:
+      #|At loop end, all pairs with right index > hi are excluded.
     ),
   }
 }
@@ -642,6 +710,10 @@ fn merge(left : ArrayView[Int], right : ArrayView[Int]) -> Array[Int] {
       #|
       #|Base: i=0, j=0 → both valid. ✓
       #|Inductive: We only increment i when i < left.len, j when j < right.len. ✓
+      #|MAINTENANCE:
+      #|Each branch advances exactly one index within bounds.
+      #|TERMINATION:
+      #|When i and j reach the ends, the merge is complete.
     ),
     invariant: result.length() == i + j,
     reasoning: (
@@ -654,6 +726,10 @@ fn merge(left : ArrayView[Int], right : ArrayView[Int]) -> Array[Int] {
       #|  result.len' = result.len + 1 = i + j + 1 = i' + j'. ✓
       #|
       #|At termination: result.len = left.len + right.len (complete merge).
+      #|MAINTENANCE:
+      #|Pushing one element keeps result.len == i + j.
+      #|TERMINATION:
+      #|At i = left.len and j = right.len, result is fully merged.
     ),
   }
 }
@@ -694,6 +770,10 @@ fn extended_gcd(a : Int, b : Int) -> (Int, Int, Int) {
       #|  r0' = r1, x0' = x1, y0' = y1
       #|
       #|By Invariant 2 (below): a·x1 + b·y1 = r1 = r0'. ✓
+      #|MAINTENANCE:
+      #|Setting (r0, x0, y0) to (r1, x1, y1) preserves the identity.
+      #|TERMINATION:
+      #|When r1 = 0, r0 is gcd and x0,y0 are Bézout coefficients.
     ),
     invariant: a * x1 + b * y1 == r1,
     reasoning: (
@@ -711,6 +791,10 @@ fn extended_gcd(a : Int, b : Int) -> (Int, Int, Int) {
       #|  = (a·x0 + b·y0) - q·(a·x1 + b·y1)
       #|  = r0 - q·r1           (by Invariants 1 & 2)
       #|  = r1'. ✓
+      #|MAINTENANCE:
+      #|The linear combination update mirrors the Euclidean remainder update.
+      #|TERMINATION:
+      #|At r1 = 0, the identity holds trivially and r0 is gcd.
     ),
     invariant: r1 >= 0,
     reasoning: (
@@ -721,6 +805,10 @@ fn extended_gcd(a : Int, b : Int) -> (Int, Int, Int) {
       #|
       #|Termination: r1 strictly decreases until r1 = 0.
       #|At termination: r0 = gcd(a,b), and a·x0 + b·y0 = r0 = gcd. ✓
+      #|MAINTENANCE:
+      #|Each remainder update keeps r1 non-negative.
+      #|TERMINATION:
+      #|r1 decreases to 0, ending the algorithm.
     ),
   }
 }
@@ -792,6 +880,10 @@ fn majority_element(arr : ArrayView[Int]) -> Int? {
       #|Each "cancel" removes one from each group at most.
       #|After all cancellations: #M - #O > 0 elements of M remain uncanceled.
       #|Therefore candidate = M at the end.
+      #|MAINTENANCE:
+      #|Increment/decrement count preserves the net surplus of the candidate.
+      #|TERMINATION:
+      #|At i = arr.length(), the remaining candidate is the majority if one exists.
     ),
   }
   // Phase 2: Verify candidate is actually majority
@@ -844,6 +936,10 @@ fn isqrt_newton(n : Int) -> Int {
       #|NOTE: Integer division makes x' ≤ (x + n/x) / 2 (real).
       #|The key insight is that we only continue when x' < x,
       #|meaning we're still above √n and improving.
+      #|MAINTENANCE:
+      #|Updating x to x' keeps x as an upper bound while decreasing it.
+      #|TERMINATION:
+      #|When x' >= x, the loop stops at the floor sqrt.
     ),
     invariant: x <= n,
     reasoning: (
@@ -866,6 +962,10 @@ fn isqrt_newton(n : Int) -> Int {
       #|
       #|Newton's method converges quadratically: if error is ε,
       #|next error is roughly ε²/2√n. From x=n, reaches answer in O(log log n).
+      #|MAINTENANCE:
+      #|Since n/x ≤ x, averaging keeps x within [√n, n].
+      #|TERMINATION:
+      #|Strict decreases stop after finitely many steps (integer sequence).
     ),
   }
 }
@@ -914,6 +1014,10 @@ fn sieve(n : Int) -> Array[Int] {
       #|
       #|We only need to sieve up to √n because if n = a·b with a ≤ b,
       #|then a ≤ √n. So any composite ≤ n has a factor ≤ √n.
+      #|MAINTENANCE:
+      #|Incrementing i keeps i within the sieving bound.
+      #|TERMINATION:
+      #|When i * i > n, all composites have a smaller prime factor marked.
     ),
     invariant: i >= 2,
     reasoning: (
@@ -933,6 +1037,10 @@ fn sieve(n : Int) -> Array[Int] {
       #|
       #|  Since p ≤ √c ≤ √n, we will process p before termination.
       #|  Therefore all composites get marked, all primes stay unmarked.
+      #|MAINTENANCE:
+      #|Marking multiples of prime i preserves correctness up to i.
+      #|TERMINATION:
+      #|At loop end, is_prime reflects primality for all numbers ≤ n.
     ),
   }
   // Collect remaining primes
@@ -979,6 +1087,10 @@ fn mod_pow(base : Int, exp : Int, m : Int) -> Int {
       #|  - (b * b) % m ∈ [0, m) ✓
       #|  - (acc * b) % m ∈ [0, m) ✓
       #|  - e/2 ≥ 0, e-1 ≥ 0 when e > 0 ✓
+      #|MAINTENANCE:
+      #|Updates keep b and acc reduced modulo m and e non-negative.
+      #|TERMINATION:
+      #|When e = 0, the loop stops with a valid result.
     ),
     invariant: acc >= 0,
     reasoning: (
@@ -1002,6 +1114,10 @@ fn mod_pow(base : Int, exp : Int, m : Int) -> Int {
       #|SECURITY NOTE: This is the basis of RSA encryption.
       #|Computing m^e mod n where e has thousands of bits is feasible
       #|only because we reduce mod n at each step, keeping numbers small.
+      #|MAINTENANCE:
+      #|Odd/even updates preserve acc · b^e ≡ base^exp (mod m).
+      #|TERMINATION:
+      #|At e = 0, acc is the desired modular power.
     ),
   }
 }
@@ -1041,6 +1157,10 @@ fn popcount(n : Int) -> Int {
       #|
       #|Inductive: count + 1 ≥ 0. x & (x-1) clears lowest bit,
       #|keeping x non-negative. ✓
+      #|MAINTENANCE:
+      #|Clearing the lowest set bit preserves non-negativity.
+      #|TERMINATION:
+      #|When x = 0, all bits have been counted.
     ),
     invariant: count >= 0,
     reasoning: (
@@ -1063,6 +1183,10 @@ fn popcount(n : Int) -> Int {
       #|
       #|EFFICIENCY: This runs in O(k) where k = number of 1-bits,
       #|not O(32) or O(64). Sparse numbers are fast!
+      #|MAINTENANCE:
+      #|Each iteration removes exactly one 1-bit from x and increments count.
+      #|TERMINATION:
+      #|At x = 0, count equals the popcount (plus sign-bit adjustment).
     ),
   }
 }
@@ -1114,6 +1238,10 @@ fn next_permutation(arr : Array[Int]) -> Bool {
       #|
       #|If no pivot found (i < 0): entire array is non-increasing,
       #|meaning it's the lexicographically largest permutation.
+      #|MAINTENANCE:
+      #|Decrementing i extends the non-increasing suffix.
+      #|TERMINATION:
+      #|Stop when a pivot is found or i < 0 (last permutation).
     ),
   }
   guard pivot is Some(p) else {
@@ -1137,6 +1265,10 @@ fn next_permutation(arr : Array[Int]) -> Bool {
       #|there exists at least one element > arr[p] in the suffix.
       #|We scan from the right to find the smallest such element
       #|(rightmost due to non-increasing order).
+      #|MAINTENANCE:
+      #|Decrement j until we find an element > arr[p].
+      #|TERMINATION:
+      #|When found, j is the correct swap index.
     ),
   }
   // Step 3: Swap arr[p] and arr[swap_idx]
@@ -1166,6 +1298,10 @@ fn reverse_range(arr : Array[Int], lo : Int, hi : Int) -> Unit {
       #|
       #|Base: l=lo, h=hi and 0 <= lo <= hi < n by caller contract.
       #|Update: l increases and h decreases, so they remain in [lo, hi].
+      #|MAINTENANCE:
+      #|Swapping and moving inward keeps l,h within bounds.
+      #|TERMINATION:
+      #|When l >= h, the range is fully reversed.
     ),
     invariant: l + h == lo + hi,
     reasoning: (
@@ -1173,6 +1309,10 @@ fn reverse_range(arr : Array[Int], lo : Int, hi : Int) -> Unit {
       #|
       #|Each step does (l, h) -> (l+1, h-1), preserving l+h.
       #|This ensures we swap mirrored positions while shrinking inward.
+      #|MAINTENANCE:
+      #|Incrementing l and decrementing h preserves symmetry.
+      #|TERMINATION:
+      #|At l >= h, all mirrored swaps are complete.
     ),
   }
 }
@@ -1214,12 +1354,20 @@ fn lower_bound(arr : Array[Int], len : Int, target : Int) -> Int {
       #|Bounds: lo and hi always stay within [0, len].
       #|
       #|Base: lo=0, hi=len. Updates use mid in [lo, hi), so bounds hold.
+      #|MAINTENANCE:
+      #|Updating lo or hi keeps them within [0, len].
+      #|TERMINATION:
+      #|When lo >= hi, lo is the lower_bound.
     ),
     invariant: lo == 0 || arr[lo - 1] < target,
     reasoning: (
       #|Left exclusion: all indices < lo are strictly < target.
       #|
       #|We only move lo to mid+1 when arr[mid] < target.
+      #|MAINTENANCE:
+      #|If arr[mid] < target, lo advances and exclusion remains true.
+      #|TERMINATION:
+      #|At loop end, all indices before lo are excluded.
     ),
     invariant: hi == len || arr[hi] >= target,
     reasoning: (
@@ -1228,6 +1376,8 @@ fn lower_bound(arr : Array[Int], len : Int, target : Int) -> Int {
       #|MAINTENANCE:
       #|When arr[mid] >= target, we move hi to mid to keep the earliest candidate.
       #|When arr[mid] < target, hi stays put and remains a valid upper bound.
+      #|TERMINATION:
+      #|When lo == hi, hi is the first index with arr[hi] >= target (or len).
     ),
   }
 }
@@ -1290,6 +1440,10 @@ fn lis_length(arr : ArrayView[Int]) -> Int {
       #|
       #|WHY O(n log n)? Binary search for pos takes O(log len) ≤ O(log n).
       #|Total: O(n log n), much better than O(n²) DP.
+      #|MAINTENANCE:
+      #|Updating tails[pos] preserves minimal possible endings for each length.
+      #|TERMINATION:
+      #|At i = arr.length(), len is the LIS length.
     ),
   }
 }
