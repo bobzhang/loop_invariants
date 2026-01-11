@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/challenge_persistent_23_tree"
+
+// Values
+
+// Errors
+
+// Types and methods
+type InsertResult
+pub impl Show for InsertResult
+
+type Tree
+pub impl Show for Tree
+
+// Type aliases
+
+// Traits
+
