@@ -189,16 +189,38 @@ fn MoDistinct::answer_queries(
     // Store answer at original query index
     answers[query.index] = distinct
   } where {
-    invariant: i >= 0 &&
-    i <= q &&
-    cur_l >= 0 &&
-    cur_l <= cur_r + 1 &&
-    cur_r < self.n,
+    invariant: i >= 0 && i <= q,
     reasoning: (
-      #|STATE: freq matches counts in the current range [cur_l, cur_r],
-      #|distinct is the number of values with freq > 0.
-      #|answers for mo_queries[0..i) are already finalized.
-      #|Each while loop updates the range by one element, preserving counts.
+      #|INVARIANT 1 (Progress): i counts how many queries have been fully
+      #|processed and stored in answers.
+    ),
+    invariant: cur_l >= 0 &&
+    cur_l <= self.n &&
+    cur_r >= -1 &&
+    cur_r < self.n &&
+    cur_l <= cur_r + 1,
+    reasoning: (
+      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
+      #|range or the empty range when cur_l = cur_r + 1.
+    ),
+    invariant: distinct >= 0 &&
+    distinct <= (if cur_r >= cur_l { cur_r - cur_l + 1 } else { 0 }),
+    reasoning: (
+      #|INVARIANT 3 (State correctness):
+      #|freq[v] equals the count of value v in arr[cur_l..cur_r].
+      #|distinct equals the number of values with freq[v] > 0.
+      #|
+      #|MAINTENANCE:
+      #|- Expanding/shrinking an endpoint touches exactly one element.
+      #|- We update freq[val] and adjust distinct when it crosses 0.
+      #|- This preserves the correspondence between freq and the current range.
+      #|
+      #|QUERY STEP:
+      #|- After four while loops, [cur_l, cur_r] matches (target_l, target_r).
+      #|- Therefore answers[query.index] = distinct is correct.
+      #|
+      #|PROGRESS:
+      #|- answers for mo_queries[0..i) are finalized in original query order.
     ),
   }
   answers
@@ -276,15 +298,39 @@ fn MoSum::answer_queries(
     }
     answers[query.index] = current_sum
   } where {
-    invariant: i >= 0 &&
-    i <= q &&
-    cur_l >= 0 &&
-    cur_l <= cur_r + 1 &&
-    cur_r < self.n,
+    invariant: i >= 0 && i <= q,
     reasoning: (
-      #|STATE: current_sum equals sum(arr[cur_l..cur_r]) for the current range.
-      #|answers for mo_queries[0..i) are stored at original indices.
-      #|Moving cur_l/cur_r adjusts current_sum by a single element each step.
+      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+    ),
+    invariant: cur_l >= 0 &&
+    cur_l <= self.n &&
+    cur_r >= -1 &&
+    cur_r < self.n &&
+    cur_l <= cur_r + 1,
+    reasoning: (
+      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
+      #|range or the empty range when cur_l = cur_r + 1.
+    ),
+    invariant: if cur_r < cur_l {
+      current_sum == 0L
+    } else {
+      true
+    },
+    reasoning: (
+      #|INVARIANT 3 (State correctness):
+      #|current_sum equals sum(arr[cur_l..cur_r]) for the current range.
+      #|In the empty-range state (cur_r < cur_l), the sum is zero.
+      #|
+      #|MAINTENANCE:
+      #|- Each boundary move updates current_sum by the single element added
+      #|  or removed, so the sum stays consistent with the range.
+      #|
+      #|QUERY STEP:
+      #|- After all adjustments, the range equals (target_l, target_r),
+      #|  so answers[query.index] is correct.
+      #|
+      #|PROGRESS:
+      #|- answers for mo_queries[0..i) are finalized in original order.
     ),
   }
   answers
@@ -383,20 +429,37 @@ fn MoRangeCount::answer_queries(
     } where {
       invariant: v >= lo && v <= hi && v < 100001,
       reasoning: (
-        #|count is the sum of freq[lo..v) over the current range.
-        #|The upper bound is clamped by the freq array size.
+        #|INVARIANT: count equals sum(freq[lo..v)) over the current range.
+        #|We clamp the upper bound to the freq array size, so v stays valid.
+        #|When the loop finishes, count is sum(freq[lo..min(hi, 100000)]).
       ),
     }
     answers[query.index] = count
   } where {
-    invariant: i >= 0 &&
-    i <= q &&
-    cur_l >= 0 &&
-    cur_l <= cur_r + 1 &&
-    cur_r < self.n,
+    invariant: i >= 0 && i <= q,
     reasoning: (
-      #|STATE: freq[v] counts occurrences of v in [cur_l, cur_r].
-      #|answers for mo_queries[0..i) are finalized in original order.
+      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+    ),
+    invariant: cur_l >= 0 &&
+    cur_l <= self.n &&
+    cur_r >= -1 &&
+    cur_r < self.n &&
+    cur_l <= cur_r + 1,
+    reasoning: (
+      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
+      #|range or the empty range when cur_l = cur_r + 1.
+    ),
+    invariant: freq.length() == 100001,
+    reasoning: (
+      #|INVARIANT 3 (State correctness):
+      #|freq[v] counts occurrences of v in arr[cur_l..cur_r].
+      #|
+      #|MAINTENANCE:
+      #|- Each boundary move updates one value's frequency, preserving counts.
+      #|- The inner loop sums freq[lo..hi], yielding the answer for that query.
+      #|
+      #|PROGRESS:
+      #|- answers for mo_queries[0..i) are finalized in original order.
     ),
   }
   answers
@@ -475,8 +538,21 @@ fn MoMode::answer_queries(
     } where {
       invariant: i >= cur_l && i <= cur_r + 1,
       reasoning: (
-        #|max_f/m track the best (highest freq, smallest value tie-break)
-        #|among values in arr[cur_l..i).
+        #|INVARIANT 1 (Scan bounds): i walks the current range [cur_l, cur_r].
+      ),
+      invariant: max_f >= 0,
+      reasoning: (
+        #|INVARIANT 2 (Best-so-far):
+        #|max_f/m track the value with highest freq seen in arr[cur_l..i).
+        #|Ties are broken by choosing the smallest value.
+        #|
+        #|MAINTENANCE:
+        #|- Each step considers v = arr[i] and compares freq[v] against max_f.
+        #|- Because freq[] is computed for the full range, comparing by v
+        #|  is sufficient even if v appears multiple times.
+        #|
+        #|TERMINATION:
+        #|After i = cur_r + 1, max_f/m describe the mode for the full range.
       ),
     }
     (m, max_f)
@@ -521,15 +597,33 @@ fn MoMode::answer_queries(
     mode = m
     answers[query.index] = (mode, max_freq)
   } where {
-    invariant: i >= 0 &&
-    i <= q &&
-    cur_l >= 0 &&
-    cur_l <= cur_r + 1 &&
-    cur_r < self.n,
+    invariant: i >= 0 && i <= q,
     reasoning: (
-      #|STATE: freq matches counts in [cur_l, cur_r]; mode/max_freq are
-      #|recomputed for the current range before storing each answer.
-      #|answers for mo_queries[0..i) are written in original order.
+      #|INVARIANT 1 (Progress): i queries have been answered and stored.
+    ),
+    invariant: cur_l >= 0 &&
+    cur_l <= self.n &&
+    cur_r >= -1 &&
+    cur_r < self.n &&
+    cur_l <= cur_r + 1,
+    reasoning: (
+      #|INVARIANT 2 (Range validity): cur_l/cur_r describe a valid inclusive
+      #|range or the empty range when cur_l = cur_r + 1.
+    ),
+    invariant: max_freq >= 0 &&
+    max_freq <= (if cur_r >= cur_l { cur_r - cur_l + 1 } else { 0 }),
+    reasoning: (
+      #|INVARIANT 3 (State correctness):
+      #|freq[v] counts occurrences in arr[cur_l..cur_r].
+      #|mode/max_freq represent the range's mode after the recalc step.
+      #|
+      #|MAINTENANCE:
+      #|- Expansions update freq and may update mode/max_freq optimistically.
+      #|- Shrinks can invalidate the mode, so we recompute with recalc_mode
+      #|  before storing the answer, restoring correctness.
+      #|
+      #|PROGRESS:
+      #|- answers for mo_queries[0..i) are finalized in original order.
     ),
   }
   answers
