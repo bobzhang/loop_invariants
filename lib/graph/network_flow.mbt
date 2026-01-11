@@ -73,14 +73,30 @@ fn FlowNetwork::bfs_find_path(
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Neighbors adj[u][0..i) checked for residual capacity.
+        #|INVARIANT 1 (Edge scan):
+        #|After processing edges adj[u][0..i), every neighbor reachable via a
+        #|positive-residual edge from u has been marked visited and enqueued
+        #|(if it was previously undiscovered), with parent set to (u, edge_idx).
+        #|
+        #|This preserves the BFS tree: parent[v] records the first edge that
+        #|discovers v, giving a shortest (fewest-edge) path from source.
       ),
     }
   } where {
     invariant: front >= 0 && front <= queue.length(),
     reasoning: (
-      #|BFS INVARIANT: All nodes in queue[0..front) have been processed.
-      #|visited[v] = true iff v is reachable from source in residual graph.
+      #|INVARIANT 1 (Queue processing):
+      #|All nodes in queue[0..front) have had their outgoing residual edges
+      #|scanned; queue[front..] are discovered but not yet expanded.
+      #|
+      #|INVARIANT 2 (Reachability):
+      #|visited[v] = true iff v is reachable from source in the residual graph
+      #|via the edges scanned so far; parent[v] stores a valid predecessor edge
+      #|for all visited v != source.
+      #|
+      #|TERMINATION:
+      #|We stop once sink is visited (shortest augmenting path found), or once
+      #|the queue is exhausted (no augmenting path exists).
     ),
   }
   (visited[sink], parent)
@@ -207,7 +223,7 @@ fn DinicNetwork::bfs_dinic(
   } where {
     invariant: i >= 0 && i <= self.n,
     reasoning: (
-      #|level[0..i) reset to -1.
+      #|RESET: level[0..i) reset to -1, clearing the previous level graph.
     ),
   }
   self.level[source] = 0
@@ -225,14 +241,19 @@ fn DinicNetwork::bfs_dinic(
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Neighbors adj[u][0..i) explored for level graph edges.
+        #|INVARIANT (Edge scan):
+        #|After processing edges adj[u][0..i), all neighbors reachable from u
+        #|by a positive-residual edge have been assigned a level and enqueued.
+        #|Each such neighbor gets level = level[u] + 1, preserving BFS layers.
       ),
     }
   } where {
     invariant: front >= 0 && front <= queue.length(),
     reasoning: (
-      #|BFS for level graph construction.
-      #|level[v] = distance from source in residual graph.
+      #|INVARIANT (Level graph):
+      #|All nodes in queue[0..front) have been expanded; for any visited node v,
+      #|level[v] equals the shortest edge-distance from source in the residual
+      #|graph. Unvisited nodes keep level = -1.
     ),
   }
   self.level[sink] >= 0
@@ -280,7 +301,7 @@ fn DinicNetwork::dinic_max_flow(
     } where {
       invariant: i >= 0 && i <= self.n,
       reasoning: (
-        #|iter[0..i) reset before DFS phase.
+        #|Reset per-node edge iterators before building a blocking flow.
       ),
     }
     let mut pushed = self.dfs_dinic(source, sink, 2147483647)
@@ -371,7 +392,8 @@ fn MCMFNetwork::spfa_mcmf(
   } where {
     invariant: i >= 0 && i <= self.n,
     reasoning: (
-      #|dist/parent initialized for indices [0..i).
+      #|Initialize dist/parent for indices [0..i). All vertices start as
+      #|unreached with no predecessor in the shortest path tree.
     ),
   }
   dist[source] = 0
@@ -396,14 +418,22 @@ fn MCMFNetwork::spfa_mcmf(
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Edges adj[u][0..i) relaxed for current SPFA iteration.
+        #|INVARIANT (Relaxation):
+        #|After processing edges adj[u][0..i), any neighbor reachable from u
+        #|via a positive-residual edge has been relaxed. If a shorter path
+        #|is found, dist and parent are updated and the neighbor is queued.
       ),
     }
   } where {
     invariant: front >= 0,
     reasoning: (
-      #|SPFA for minimum cost path.
-      #|Handles negative edges from reverse flows.
+      #|INVARIANT (SPFA queue):
+      #|Vertices in queue are candidates whose outgoing edges may further
+      #|improve dist. dist[v] always represents the best known cost of a
+      #|residual path from source to v; parent encodes that path.
+      #|
+      #|SPFA handles negative-cost reverse edges introduced by flow updates,
+      #|while ensuring dist decreases only when a strictly cheaper path is found.
     ),
   }
   dist[sink] < inf
@@ -561,7 +591,13 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
       } where {
         invariant: j >= 1 && j <= m + 1,
         reasoning: (
-          #|Scanned columns [1..j) to update minv/way and track best delta.
+          #|INVARIANT (Reduced costs):
+          #|For each un-used column k in [1..j), minv[k] stores the minimum
+          #|reduced cost of an alternating path from the current tree to k,
+          #|and way[k] records the predecessor column on that path.
+          #|
+          #|delta/j1 track the smallest minv among un-used columns scanned so
+          #|far, selecting the next column to enter the tree.
         ),
       }
 
@@ -576,7 +612,11 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
       } where {
         invariant: j >= 0 && j <= m + 1,
         reasoning: (
-          #|Potentials and minv updated for columns [0..j).
+          #|INVARIANT (Feasible potentials):
+          #|Updating u/v by delta preserves feasibility:
+          #|u[i] + v[j] <= cost[i][j] for all assigned rows/columns, while
+          #|minv for un-used columns decreases uniformly so the best candidate
+          #|reaches zero reduced cost.
         ),
       }
       j0 = j1
@@ -592,12 +632,13 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
   } where {
     invariant: i >= 1 && i <= n + 1,
     reasoning: (
-      #|HUNGARIAN ALGORITHM:
-      #|Maintains optimal potentials u, v such that:
-      #|u[i] + v[j] <= cost[i][j] for all i, j
-      #|u[i] + v[j] = cost[i][j] for assigned pairs
+      #|HUNGARIAN ALGORITHM INVARIANT:
+      #|After iteration i-1, p encodes a minimum-cost matching for rows
+      #|1..i-1. Potentials u, v are feasible (u[i] + v[j] <= cost[i][j]) and
+      #|tight on matched pairs (equality holds on assigned edges).
       #|
-      #|Each iteration adds one row to assignment.
+      #|The inner phase builds an alternating tree and augments along a
+      #|zero reduced-cost path, extending the matching by one row.
     ),
   }
 
@@ -610,7 +651,7 @@ fn hungarian_algorithm(cost : Array[Array[Int]]) -> Int {
   } where {
     invariant: j >= 1 && j <= m + 1,
     reasoning: (
-      #|total_cost accumulates assigned column costs for [1..j).
+      #|total_cost accumulates costs of assigned columns in [1..j).
     ),
   }
   total_cost
