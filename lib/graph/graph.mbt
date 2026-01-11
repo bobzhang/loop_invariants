@@ -62,12 +62,24 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       #|head points at the next vertex to process. All vertices in queue[0..head)
       #|have been removed and appended to result, while queue[head..] contains
       #|vertices discovered with in-degree 0 but not yet processed.
+      #|MAINTENANCE:
+      #|We process queue[head], append it to result, and enqueue any neighbor
+      #|whose in-degree drops to 0. Incrementing head preserves the split
+      #|between processed and discovered-but-unprocessed vertices.
+      #|TERMINATION:
+      #|When head reaches queue.length(), every discovered zero-in-degree
+      #|vertex has been processed and no further work remains.
     ),
     invariant: result.length() == head,
     reasoning: (
       #|INVARIANT 2 (Progress):
       #|result mirrors the processed prefix of the queue, so result.length()
       #|tracks how many vertices have been popped and fixed in order.
+      #|MAINTENANCE:
+      #|Each iteration appends exactly one vertex (queue[head]) and then
+      #|increments head, preserving result.length() == head.
+      #|TERMINATION:
+      #|At loop exit, result length equals the number of processed vertices.
     ),
     invariant: head >= 0,
     reasoning: (
@@ -76,6 +88,7 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       #|(v's in-degree decremented). Moreover, result is a valid partial
       #|topological ordering of the vertices processed so far.
       #|
+      #|MAINTENANCE:
       #|KEY INSIGHT (Kahn's Algorithm):
       #|A vertex can be added to the topological order iff its in-degree is 0,
       #|meaning all its predecessors have already been processed.
@@ -92,6 +105,7 @@ fn topological_sort(graph : Array[Array[Int]]) -> Array[Int]? {
       #|  Any successor v whose in-degree becomes 0 has had ALL its
       #|  predecessors processed, so v can now be added to queue.
       #|
+      #|TERMINATION:
       #|CYCLE DETECTION:
       #|If a cycle exists, vertices in the cycle never reach in-degree 0.
       #|They're waiting for predecessors that are also waiting for them.
@@ -177,6 +191,13 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
           #|with the smallest dist among those scanned, and min_dist is its
           #|distance. When i reaches n, we have the global minimum among all
           #|unvisited vertices.
+          #|MAINTENANCE:
+          #|At index i, if the vertex is unvisited and has a smaller distance,
+          #|we update (min_dist, min_vertex); otherwise we keep the current
+          #|minimum. This preserves the minimum over the scanned prefix.
+          #|TERMINATION:
+          #|When i == n, min_vertex is the minimum-distance unvisited vertex,
+          #|or -1 if none remain.
         ),
       }
       if u == -1 {
@@ -198,6 +219,11 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
           #|After processing edges[0..i), all those neighbors v have been
           #|relaxed with the finalized distance dist[u]. Any shortest path
           #|that ends with u -> v among processed edges is now reflected in dist[v].
+          #|MAINTENANCE:
+          #|Relaxing edge (u, v) updates dist[v] to min(current, dist[u] + w),
+          #|so all processed neighbors incorporate the best path via u.
+          #|TERMINATION:
+          #|When i reaches degree(u), every outgoing edge of u has been relaxed.
         ),
       }
       continue count + 1
@@ -209,6 +235,12 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       #|Each iteration selects one new unvisited vertex u and marks it visited,
       #|so count equals the number of finalized vertices. If no such u exists,
       #|all remaining vertices are unreachable and the loop terminates.
+      #|MAINTENANCE:
+      #|Selecting the minimum unvisited u and marking it visited increments
+      #|count by one, preserving the correspondence between count and visited.
+      #|TERMINATION:
+      #|The loop stops when count == n or when no reachable unvisited vertex
+      #|remains (u == -1).
     ),
     invariant: count >= 0,
     reasoning: (
@@ -217,6 +249,7 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       #|
       #|This is the fundamental invariant that makes Dijkstra's work.
       #|
+      #|MAINTENANCE:
       #|PROOF BY INDUCTION:
       #|
       #|Base: source is the first visited vertex, dist[source] = 0. ✓
@@ -247,6 +280,9 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       #|REQUIREMENT: All edge weights must be non-negative.
       #|With negative weights, a shorter path could be found later
       #|through a vertex with higher initial distance.
+      #|TERMINATION:
+      #|When the loop ends, all visited (and therefore reachable) vertices
+      #|have their shortest distances finalized.
     ),
   }
 }
@@ -392,6 +428,11 @@ fn bellman_ford(
           #|edges has been considered for this iteration. When the loop ends,
           #|all edges have been relaxed once, yielding shortest paths with up to
           #|i+1 edges.
+          #|MAINTENANCE:
+          #|Relaxing edge e updates dist[v] using the current dist[u], so the
+          #|prefix [0..e] has been fully considered for this iteration.
+          #|TERMINATION:
+          #|At e == edges.length(), every edge has been relaxed once.
         ),
       }
       if not(changed) {
@@ -405,6 +446,7 @@ fn bellman_ford(
       #|INVARIANT (Bellman-Ford correctness):
       #|After i iterations, dist[v] ≤ shortest path using ≤ i edges.
       #|
+      #|MAINTENANCE:
       #|PROOF:
       #|Base (i=0): dist[source] = 0, others = ∞.
       #|  The only 0-edge path is source→source with length 0. ✓
@@ -430,6 +472,9 @@ fn bellman_ford(
       #|find a shorter path by going around the cycle again.
       #|After n-1 iterations, if another relaxation succeeds,
       #|a negative cycle exists.
+      #|TERMINATION:
+      #|The loop stops after n-1 iterations or earlier if no changes occur;
+      #|at that point all shortest paths without negative cycles are found.
     ),
   }
 
@@ -445,6 +490,11 @@ fn bellman_ford(
       #|INVARIANT (No further relaxation):
       #|Edges[0..e) cannot improve any dist value. If an improvement is possible
       #|after the full scan, a negative cycle must be reachable from the source.
+      #|MAINTENANCE:
+      #|Each examined edge that fails to relax confirms no shorter path using
+      #|that edge exists given current dist values.
+      #|TERMINATION:
+      #|If any edge can still relax after the full scan, a negative cycle exists.
     ),
   }
   Some(dist)
@@ -493,6 +543,11 @@ fn floyd_warshall(
       #|INVARIANT (Distance matrix init):
       #|Rows [0..i) are fully initialized with dist[v][v] = 0 and dist[v][u] = inf
       #|for u != v. This sets the base case of zero-length paths.
+      #|MAINTENANCE:
+      #|Initialize row i by setting dist[i][i] = 0 and all other entries to inf,
+      #|then move to the next row.
+      #|TERMINATION:
+      #|At i == n, all rows are initialized.
     ),
   }
 
@@ -509,6 +564,11 @@ fn floyd_warshall(
       #|After processing edges[0..e), dist captures the minimum direct edge
       #|weight for each pair (u, v) among those edges, preserving the best
       #|one-edge paths before the main DP.
+      #|MAINTENANCE:
+      #|For each edge, update dist[u][v] to the smaller direct weight if needed,
+      #|so the prefix property remains true.
+      #|TERMINATION:
+      #|After e == edges.length(), all direct edges are incorporated.
     ),
   }
 
@@ -531,6 +591,11 @@ fn floyd_warshall(
             #|INVARIANT (Column update):
             #|After processing columns [0..j), dist[i][c] is the shortest path
             #|from i to c using intermediates from {0..k} for all c < j.
+            #|MAINTENANCE:
+            #|Updating column j considers paths through k for (i, j), so the
+            #|property extends to [0..j+1).
+            #|TERMINATION:
+            #|When j == n, row i has been fully updated for intermediate k.
           ),
         }
       } where {
@@ -539,6 +604,11 @@ fn floyd_warshall(
           #|INVARIANT (Row update):
           #|After processing rows [0..i), every dist[r][*] with r < i has been
           #|updated to allow intermediate vertex k.
+          #|MAINTENANCE:
+          #|For each row i, the inner loop applies the k-based relaxation for
+          #|all columns, so the processed prefix gains k as an allowed intermediate.
+          #|TERMINATION:
+          #|At i == n, all rows have been updated for this k.
         ),
       }
       continue k + 1
@@ -551,6 +621,7 @@ fn floyd_warshall(
       #|dist[i][j] = shortest path from i to j using only vertices
       #|            {0, 1, ..., k-1} as intermediate nodes.
       #|
+      #|MAINTENANCE:
       #|PROOF:
       #|Base (k=0): dist[i][j] = direct edge weight (or ∞).
       #|  The only path using no intermediates is a direct edge. ✓
@@ -575,6 +646,9 @@ fn floyd_warshall(
       #|ELEGANT INSIGHT:
       #|This is DP over the STRUCTURE of paths, not their length.
       #|The intermediate vertices form the subproblem decomposition.
+      #|TERMINATION:
+      #|When k == n, all vertices are allowed as intermediates, so dist holds
+      #|the true all-pairs shortest paths.
     ),
   }
 }
@@ -601,23 +675,47 @@ fn sort_edge_tuples(edges : Array[(Int, Int, Int)]) -> Unit {
   for i = 1; i < edges.length(); i = i + 1 {
     let key = edges[i]
     let (_, _, key_weight) = key
-    let mut j = i - 1
-    while j >= 0 {
+    let insert_pos = for j = i - 1 {
+      if j < 0 {
+        break 0
+      }
       let (_, _, j_weight) = edges[j]
       if j_weight > key_weight {
         edges[j + 1] = edges[j]
-        j = j - 1
+        continue j - 1
       } else {
-        break
+        break j + 1
       }
+    } where {
+      invariant: j >= -1 && j < i,
+      reasoning: (
+        #|INVARIANT (Insertion scan):
+        #|The subarray edges[j+1..i] contains elements from the original
+        #|edges[0..i) that are strictly heavier than key_weight, shifted
+        #|one position to the right. Elements in edges[0..j] remain sorted
+        #|and have weight <= key_weight.
+        #|MAINTENANCE:
+        #|If edges[j] is heavier than key_weight, we shift it right and
+        #|decrement j, preserving the partition and sorted prefix. If not,
+        #|we stop because key belongs after j.
+        #|TERMINATION:
+        #|j decreases on each shift; the loop ends when j < 0 or
+        #|edges[j] <= key_weight, so placing key at the break position keeps
+        #|edges[0..i] sorted.
+      ),
     }
-    edges[j + 1] = key
+    edges[insert_pos] = key
   } where {
     invariant: i >= 1 && i <= edges.length(),
     reasoning: (
       #|INVARIANT (Insertion sort):
       #|edges[0..i) is sorted by weight, and edges[i] is inserted into its
       #|correct position by shifting larger elements one step to the right.
+      #|MAINTENANCE:
+      #|The inner while loop finds the insertion position for edges[i] and
+      #|shifts heavier elements, preserving sorted order of edges[0..i+1).
+      #|TERMINATION:
+      #|At i == edges.length(), the entire array is sorted.
     ),
   }
 }
@@ -655,6 +753,7 @@ fn kruskal(
       #|INVARIANT (Kruskal's cut property):
       #|At each step, mst contains a subset of some MST.
       #|
+      #|MAINTENANCE:
       #|PROOF (Cut Property):
       #|For any cut (S, V-S) of the graph, the minimum weight edge
       #|crossing the cut is in some MST.
@@ -665,9 +764,6 @@ fn kruskal(
       #|    (because we process edges in sorted order)
       #|  - By cut property, (u,v) is safe to add to MST
       #|
-      #|TERMINATION:
-      #|We stop when mst has n-1 edges (spanning tree) or no more edges.
-      #|
       #|CORRECTNESS:
       #|Union-Find ensures we never create a cycle:
       #|  - We only add (u,v) if find(u) ≠ find(v)
@@ -676,6 +772,8 @@ fn kruskal(
       #|
       #|TIME: O(E log E) for sorting + O(E α(V)) for union-find operations
       #|      ≈ O(E log E) since α(V) is nearly constant
+      #|TERMINATION:
+      #|The loop stops when mst has n-1 edges or edges are exhausted.
     ),
   }
 }
