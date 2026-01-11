@@ -88,6 +88,10 @@ fn FenwickTree::update(self : FenwickTree, i : Int, delta : Int) -> Unit {
       #|  idx = 3:  lowbit(3) = 1, next = 4
       #|  idx = 4:  lowbit(4) = 4, next = 8
       #|  idx = 8:  lowbit(8) = 8, next = 16 > n (if n < 16)
+      #|MAINTENANCE:
+      #|Update tree[idx] and advance idx by lowbit(idx), staying on ancestors.
+      #|TERMINATION:
+      #|When idx > n, all Fenwick ancestors of i have been updated.
     ),
   }
 }
@@ -191,6 +195,10 @@ fn FenwickTree::from_array(arr : ArrayView[Int]) -> FenwickTree {
       #|After processing indices [0..i), tree[t+1] = arr[t] for all t < i.
       #|This prepares the base values so that the propagation pass can
       #|aggregate ranges without reading from arr again.
+      #|MAINTENANCE:
+      #|Assign tree[i+1] = arr[i] and advance i.
+      #|TERMINATION:
+      #|At i == n, all leaves are copied into the tree array.
     ),
   }
   // Then propagate to parents
@@ -221,6 +229,10 @@ fn FenwickTree::from_array(arr : ArrayView[Int]) -> FenwickTree {
       #|from all its children before being propagated to its parent.
       #|
       #|TIME: O(n) because each index is touched at most twice.
+      #|MAINTENANCE:
+      #|Add tree[i] into its parent if present, then advance i by one.
+      #|TERMINATION:
+      #|At i == n + 1, all parent aggregates are complete.
     ),
   }
   { tree, n }
@@ -296,6 +308,9 @@ fn FenwickTree::find_kth(self : FenwickTree, k : Int) -> Int {
       #|  The answer is ≤ pos + bit, so we don't advance pos but try
       #|  smaller bits.
       #|
+      #|MAINTENANCE:
+      #|If tree[pos+bit] < remaining, advance pos and subtract its sum;
+      #|otherwise keep pos and halve the step.
       #|TERMINATION:
       #|  When bit = 0, pos is the largest index with prefix_sum(pos) < k.
       #|  Therefore pos + 1 is the smallest index with prefix_sum >= k.
@@ -378,6 +393,10 @@ fn FenwickTree2D::update(
           #|y walks the Fenwick ancestors of column j: j, j+lowbit(j), ...
           #|Each visited y corresponds to a column interval that contains j,
           #|so updating tree[x,y] adds delta to exactly the ranges covering (i,j).
+          #|MAINTENANCE:
+          #|Update tree[x,y] and advance y by lowbit(y).
+          #|TERMINATION:
+          #|When y > m, all column ancestors for this x are updated.
         ),
       }
       continue x + lowbit(x)
@@ -395,6 +414,10 @@ fn FenwickTree2D::update(
       #|
       #|This is exactly the Cartesian product of the 1D Fenwick ancestors,
       #|giving O(log n · log m) updates.
+      #|MAINTENANCE:
+      #|Advance x by lowbit(x) after updating all relevant y for this x.
+      #|TERMINATION:
+      #|When x > n, all 2D ancestors of (i, j) are updated.
     ),
   }
 }
@@ -420,6 +443,10 @@ fn FenwickTree2D::prefix_sum(self : FenwickTree2D, i : Int, j : Int) -> Int {
           #|acc accumulates the 1D Fenwick prefix sum for column y at fixed x,
           #|so after the loop, inner_sum equals sum of row-ancestor ranges
           #|for this x.
+          #|MAINTENANCE:
+          #|Add tree[x,y] and move y to its parent by subtracting lowbit(y).
+          #|TERMINATION:
+          #|When y <= 0, the column prefix sum for this x is complete.
         ),
       }
       continue x - lowbit(x), sum + inner_sum
@@ -433,6 +460,10 @@ fn FenwickTree2D::prefix_sum(self : FenwickTree2D, i : Int, j : Int) -> Int {
       #|  For each x-ancestor, we do a 1D column query.
       #|
       #|COMPLEXITY: O(log n × log m) - product of dimensions.
+      #|MAINTENANCE:
+      #|Accumulate inner_sum for this x and move to x's parent.
+      #|TERMINATION:
+      #|When x <= 0, the full 2D prefix sum has been accumulated.
     ),
   }
 }

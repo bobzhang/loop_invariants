@@ -700,6 +700,8 @@ fn iterative_segment_tree_build(arr : ArrayView[Int]) -> IterativeSegmentTree {
       #|
       #|TERMINATION (i = n):
       #|  - All leaves tree[n..2n] contain arr[0..n]
+      #|MAINTENANCE:
+      #|Assign tree[n+i] from arr[i] and advance i by one.
     ),
   }
 
@@ -723,6 +725,8 @@ fn iterative_segment_tree_build(arr : ArrayView[Int]) -> IterativeSegmentTree {
       #|TERMINATION (i = 0):
       #|  - All internal nodes tree[1..n] are computed
       #|  - tree[1] is the root (sum of entire array)
+      #|MAINTENANCE:
+      #|Combine children at i and move to the next parent by decrementing i.
     ),
   }
   { n, tree }
@@ -752,6 +756,10 @@ fn IterativeSegmentTree::update(
       #|
       #|The path from leaf to root has O(log n) nodes.
       #|Each iteration updates one internal node and moves to its parent.
+      #|MAINTENANCE:
+      #|Recompute tree[i] from its children and move to i/2.
+      #|TERMINATION:
+      #|When i == 0, all ancestors up to the root are updated.
     ),
   }
 }
@@ -805,6 +813,8 @@ fn IterativeSegmentTree::range_sum(
       #|
       #|TERMINATION: l and r converge as they move up the tree.
       #|When l >= r, we've processed the entire range.
+      #|MAINTENANCE:
+      #|Consume exposed segments, then move l and r to their parents.
     ),
   }
 }
