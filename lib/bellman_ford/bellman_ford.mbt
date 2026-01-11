@@ -79,7 +79,16 @@ fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
     }
   } where {
     invariant: iter >= 0 && iter <= self.n - 1,
-    reasoning: "I: dist[source]=0, others=INF (correct for 0 edges). M: After iteration i, dist[v] = shortest path using ≤ i+1 edges. Relaxing edge (u,v) updates dist[v] if better path through u exists. T: After V-1 iterations, all shortest paths found (no simple path has > V-1 edges).",
+    reasoning: (
+      #|INVARIANT (Bellman-Ford):
+      #|After iter iterations, dist[v] is the shortest path using at most iter
+      #|edges; dist[source] = 0 and others are upper bounds.
+      #|MAINTENANCE:
+      #|Relax all edges; any shorter path with <= iter+1 edges is discovered.
+      #|TERMINATION:
+      #|After V-1 iterations, all simple shortest paths are found (no simple
+      #|path uses more than V-1 edges).
+    ),
   }
 
   // Check for negative cycles
@@ -189,7 +198,14 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
       }
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
-      reasoning: "Scan neighbors of u; index stays within adjacency bounds.",
+      reasoning: (
+        #|INVARIANT (SPFA relax):
+        #|All neighbors in adj[u][0..i) have been considered for relaxation.
+        #|MAINTENANCE:
+        #|Relax edge to neighbor i and enqueue if improved.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing edges from u are processed.
+      ),
     }
   }
   Some(self.dist)

@@ -104,7 +104,15 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
       i = smallest
     } where {
       invariant: i >= 0 && i < len,
-      reasoning: "Bubble down within heap bounds while restoring heap order.",
+      reasoning: (
+        #|INVARIANT (heapify down):
+        #|All indices outside the path from the root to i satisfy the heap
+        #|property; i is the current candidate position for the swapped element.
+        #|MAINTENANCE:
+        #|Swap with the smaller child when needed to restore the min-heap order.
+        #|TERMINATION:
+        #|When smallest == i, the heap property holds for the entire heap.
+      ),
     }
   }
   Some(result)
@@ -223,13 +231,33 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
           }
         } where {
           invariant: i >= 0 && i <= graph.adj[u].length(),
-          reasoning: "I: dist[u] is finalized (u just settled). M: For each edge (u,v) with weight w, if dist[u]+w < dist[v], we improve dist[v]. This is safe because dist[u] is optimal (greedy property: u had minimum tentative distance among unvisited, and all edges are non-negative, so no future path through unvisited vertices can improve it). T: All edges from u are relaxed; dist[v] for each neighbor is updated if improvable via u.",
+          reasoning: (
+            #|INVARIANT (relax edges):
+            #|dist[u] is finalized (u has the smallest tentative distance among
+            #|unvisited vertices), so any improvement to neighbors must go through u.
+            #|MAINTENANCE:
+            #|For each edge (u, v), relax dist[v] using dist[u] + weight.
+            #|Non-negative weights guarantee this is safe and preserves optimality.
+            #|TERMINATION:
+            #|After all outgoing edges are processed, neighbors' distances are
+            #|the best known via u.
+          ),
         }
       }
     }
   } where {
     invariant: true,
-    reasoning: "I: dist[source]=0 is optimal; all other dist[v]=INF. M: Each iteration selects the unvisited vertex u with minimum dist[u], marks it visited, and relaxes its edges. Claim: dist[u] is the true shortest path. Proof: Suppose a shorter path P exists. P must pass through some unvisited vertex w before reaching u. But dist[w] >= dist[u] (since u was selected as minimum), and the subpath to w has length >= dist[w] >= dist[u], contradiction since edge weights are non-negative. T: When PQ is empty, all reachable vertices are visited with optimal distances.",
+    reasoning: (
+      #|INVARIANT (Dijkstra):
+      #|All visited vertices have their final shortest distance; dist for
+      #|unvisited vertices is the best known upper bound.
+      #|MAINTENANCE:
+      #|Extract the unvisited vertex u with minimum dist[u], mark it visited,
+      #|and relax its outgoing edges. Non-negative weights ensure dist[u] is
+      #|optimal (no shorter path can go through unvisited vertices).
+      #|TERMINATION:
+      #|When the priority queue is empty, all reachable vertices are finalized.
+    ),
   }
   { dist, parent }
 }
@@ -347,7 +375,15 @@ pub fn bidirectional_dijkstra(
                 }
               } where {
                 invariant: i >= 0 && i <= graph.adj[u].length(),
-                reasoning: "Relax each outgoing edge from u in forward search.",
+                reasoning: (
+                  #|INVARIANT (forward relax):
+                  #|All outgoing edges in adj[u][0..i) have been relaxed for
+                  #|the forward search.
+                  #|MAINTENANCE:
+                  #|Relax edge i and update dist_forward/pq_forward as needed.
+                  #|TERMINATION:
+                  #|At i = deg(u), forward relaxations from u are complete.
+                ),
               }
             }
           }
@@ -387,7 +423,15 @@ pub fn bidirectional_dijkstra(
                 }
               } where {
                 invariant: i >= 0 && i <= reverse_graph.adj[u].length(),
-                reasoning: "Relax each outgoing edge from u in backward search.",
+                reasoning: (
+                  #|INVARIANT (backward relax):
+                  #|All outgoing edges in reverse_graph.adj[u][0..i) have been
+                  #|relaxed for the backward search.
+                  #|MAINTENANCE:
+                  #|Relax edge i and update dist_backward/pq_backward as needed.
+                  #|TERMINATION:
+                  #|At i = deg(u), backward relaxations from u are complete.
+                ),
               }
             }
           }
@@ -397,7 +441,16 @@ pub fn bidirectional_dijkstra(
     }
   } where {
     invariant: best_dist >= 0L,
-    reasoning: "Alternate forward/backward relaxations until both queues are empty.",
+    reasoning: (
+      #|INVARIANT (bidirectional search):
+      #|best_dist is the shortest path length found so far from any meeting node.
+      #|MAINTENANCE:
+      #|Alternate forward and backward expansions, updating best_dist when the
+      #|frontiers meet; early termination is safe when a frontier's distance
+      #|exceeds best_dist.
+      #|TERMINATION:
+      #|When both queues are exhausted, no shorter path exists.
+    ),
   }
   if best_dist == INF {
     None
