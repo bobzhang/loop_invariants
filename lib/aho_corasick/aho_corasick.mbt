@@ -89,7 +89,14 @@ fn AhoCorasick::add_pattern(self : AhoCorasick, pattern : String) -> Unit {
     state = self.states[state].children[c]
   } where {
     invariant: 0 <= i && i < pattern.length(),
-    reasoning: "Range loop enumerates valid code-unit indices of the pattern.",
+    reasoning: (
+      #|INVARIANT (pattern insert):
+      #|i ranges over valid code-unit indices of the pattern.
+      #|MAINTENANCE:
+      #|Advance one character per iteration to extend the trie path.
+      #|TERMINATION:
+      #|All characters in the pattern are inserted.
+    ),
   }
 
   // Mark this state as accepting for this pattern
@@ -114,7 +121,14 @@ fn AhoCorasick::build(self : AhoCorasick) -> Unit {
     }
   } where {
     invariant: 0 <= c && c < 256,
-    reasoning: "Iterates through all byte transitions from the root.",
+    reasoning: (
+      #|INVARIANT (root transitions):
+      #|All byte transitions for characters in [0, c) are processed.
+      #|MAINTENANCE:
+      #|If a child exists, set its failure to root and enqueue it.
+      #|TERMINATION:
+      #|At c = 256, all root transitions are initialized.
+    ),
   }
 
   // BFS to compute failure links
@@ -165,11 +179,25 @@ fn AhoCorasick::build(self : AhoCorasick) -> Unit {
       })
     } where {
       invariant: 0 <= c && c < 256,
-      reasoning: "Iterates through all byte transitions from the current state.",
+      reasoning: (
+        #|INVARIANT (state transitions):
+        #|All byte transitions for characters in [0, c) are processed for state.
+        #|MAINTENANCE:
+        #|Process transition c and compute its failure link/output.
+        #|TERMINATION:
+        #|At c = 256, all transitions from this state are handled.
+      ),
     }
   } where {
     invariant: front >= 0 && front <= queue.length(),
-    reasoning: "BFS processes each state once; failure links point to shallower states",
+    reasoning: (
+      #|INVARIANT (BFS):
+      #|States in queue[0..front) have their failure links computed.
+      #|MAINTENANCE:
+      #|Process queue[front], enqueue its children, and compute their failures.
+      #|TERMINATION:
+      #|At front = queue.length(), all states have failure links assigned.
+    ),
   }
 }
 
@@ -206,7 +234,15 @@ fn AhoCorasick::search(self : AhoCorasick, text : String) -> Array[(Int, Int)] {
     })
   } where {
     invariant: 0 <= i && i < text.length(),
-    reasoning: "Range loop scans each text code unit once.",
+    reasoning: (
+      #|INVARIANT (search scan):
+      #|Characters in text[0..i) have been processed and all matches ending
+      #|before i are reported.
+      #|MAINTENANCE:
+      #|Advance one character, update state via failure links, and emit outputs.
+      #|TERMINATION:
+      #|At i = text.length(), all matches are reported.
+    ),
   }
   matches
 }
@@ -259,7 +295,14 @@ fn AhoCorasick::contains_any(self : AhoCorasick, text : String) -> Bool {
     }
   } where {
     invariant: 0 <= i && i < text.length(),
-    reasoning: "Range loop scans each text code unit once.",
+    reasoning: (
+      #|INVARIANT (contains_any):
+      #|Characters in text[0..i) have been scanned with no match found.
+      #|MAINTENANCE:
+      #|Advance state with current character and check outputs.
+      #|TERMINATION:
+      #|At i = text.length(), no pattern occurs in text.
+    ),
   }
   false
 }

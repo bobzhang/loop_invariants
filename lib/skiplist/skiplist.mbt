@@ -799,7 +799,14 @@ fn MultiSkipList::random_level(self : MultiSkipList) -> Int {
     max_level - 1
   } where {
     invariant: lvl >= 0 && lvl < max_level,
-    reasoning: "I: lvl is the current candidate level in [0, max_level-1]. M: With probability 1/promotion_probability, increase lvl by 1; otherwise stop. T: lvl increases monotonically and is bounded, so the loop terminates with a valid level.",
+    reasoning: (
+      #|INVARIANT (random level):
+      #|lvl is the current candidate level in [0, max_level - 1].
+      #|MAINTENANCE:
+      #|With probability 1/promotion_probability, increase lvl by one.
+      #|TERMINATION:
+      #|lvl increases monotonically and is bounded, so the loop terminates.
+    ),
   }
 }
 
@@ -872,7 +879,15 @@ fn MultiSkipList::search(self : MultiSkipList, key : Int) -> Array[Int]? {
     }
   } where {
     invariant: lvl >= -1,
-    reasoning: "I: At each level, current is the rightmost node with key < target reachable at that level. M: Move right while next.key < key, otherwise drop one level. T: When lvl < 0, current.forward[0] is the first node with key >= target, so the final check decides membership.",
+    reasoning: (
+      #|INVARIANT (search):
+      #|At each level, current is the rightmost node with key < target reachable
+      #|at that level.
+      #|MAINTENANCE:
+      #|Move right while next.key < key; otherwise drop one level.
+      #|TERMINATION:
+      #|When lvl < 0, current.forward[0] is the first node with key >= target.
+    ),
   }
 }
 
