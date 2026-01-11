@@ -130,7 +130,10 @@ fn Matrix::multiply_no_mod(self : Matrix, other : Matrix) -> Matrix {
         reasoning: (
           #|INVARIANT (Dot product):
           #|sum equals the partial dot product sum_{t < k} self[i,t] * other[t,j].
-          #|When k reaches self.cols, sum is the full entry for (i,j).
+          #|MAINTENANCE:
+          #|Add self[i,k] * other[k,j] to extend the partial sum.
+          #|TERMINATION:
+          #|At k = self.cols, sum is the full entry for (i,j).
         ),
       }
       result.data[i][j] = sum
@@ -139,6 +142,10 @@ fn Matrix::multiply_no_mod(self : Matrix, other : Matrix) -> Matrix {
       reasoning: (
         #|INVARIANT (Row fill):
         #|After processing columns [0..j), result[i][c] is correct for all c < j.
+        #|MAINTENANCE:
+        #|Compute the dot product for column j and store it in result[i][j].
+        #|TERMINATION:
+        #|At j = other.cols, row i is fully computed.
       ),
     }
   } where {
@@ -146,6 +153,10 @@ fn Matrix::multiply_no_mod(self : Matrix, other : Matrix) -> Matrix {
     reasoning: (
       #|INVARIANT (Matrix fill):
       #|Rows [0..i) are fully computed for the product without modulo.
+      #|MAINTENANCE:
+      #|Compute row i using dot products with all columns.
+      #|TERMINATION:
+      #|At i = self.rows, the full product matrix is computed.
     ),
   }
   result
@@ -176,6 +187,10 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
       #|result * base^e = M^exp holds at each step. When e is odd we fold one
       #|factor of base into result, then square base and halve e. This preserves
       #|the invariant while strictly decreasing e toward 0.
+      #|MAINTENANCE:
+      #|If e is odd, multiply result by base; square base; halve e.
+      #|TERMINATION:
+      #|At e = 0, result equals M^exp.
     ),
   }
   result

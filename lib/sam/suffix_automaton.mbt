@@ -284,9 +284,12 @@ fn SuffixAutomaton::compute_counts(self : SuffixAutomaton) -> Unit {
     reasoning: (
       #|COUNT PROPAGATION INVARIANT:
       #|
-      #|Processing from longest to shortest ensures children
-      #|contribute counts before their suffix link targets.
-      #|Final cnt = number of ending positions for strings in class.
+      #|Processing from longest to shortest ensures children contribute counts
+      #|before their suffix link targets.
+      #|MAINTENANCE:
+      #|Add state_idx.count to its suffix link target to accumulate occurrences.
+      #|TERMINATION:
+      #|After i reaches -1, all counts are propagated to link ancestors.
     ),
   }
 }
@@ -310,8 +313,12 @@ fn SuffixAutomaton::count_occurrences(
   } where {
     invariant: state >= 0,
     reasoning: (
-      #|OCCURRENCE COUNT INVARIANT: Navigate to pattern's state,
-      #|then return the precomputed count.
+      #|OCCURRENCE COUNT INVARIANT:
+      #|state represents the SAM state after reading pattern[0..i).
+      #|MAINTENANCE:
+      #|Follow the transition for pattern[i], or fail if it does not exist.
+      #|TERMINATION:
+      #|At i = pattern.length(), state.cnt is the occurrence count.
     ),
   }
 }
@@ -350,8 +357,10 @@ fn SuffixAutomaton::longest_common_substring_length(
       #|2. cur_len: length of current match
       #|3. best_len: best match found so far
       #|
-      #|When we can't extend, suffix link traversal finds the longest
-      #|proper suffix that can be extended.
+      #|MAINTENANCE:
+      #|Extend on matching transition; otherwise follow suffix links to shorten.
+      #|TERMINATION:
+      #|After scanning all characters, best_len is the LCS length.
     ),
   }
 }
@@ -373,10 +382,14 @@ fn find_suffix_match(
   } else {
     (0, 0)
   } where {
-    invariant: true,
+    invariant: st >= -1,
     reasoning: (
-      #|SUFFIX FALLBACK: Follow suffix links until we find
-      #|a state with transition c, or reach initial state.
+      #|INVARIANT (suffix fallback):
+      #|st is a valid suffix-link state or -1 sentinel.
+      #|MAINTENANCE:
+      #|Follow suffix links until a transition on c exists.
+      #|TERMINATION:
+      #|At st < 0, no suffix matches; return (0, 0).
     ),
   }
 }
@@ -411,6 +424,11 @@ fn SuffixAutomaton::longest_common_substring(
       #|state and cur_len describe the longest suffix of other[0..i)
       #|that is recognized by the SAM. best_len/best_end track the
       #|best substring seen so far.
+      #|MAINTENANCE:
+      #|Extend on matching transition or follow suffix links on mismatch.
+      #|Update best_len/best_end when a longer match is found.
+      #|TERMINATION:
+      #|At i = other.length(), best_len/best_end identify the LCS.
     ),
   }
   if best_len == 0 {

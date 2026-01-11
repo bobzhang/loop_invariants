@@ -271,7 +271,10 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
     reasoning: (
       #|INVARIANT (FFT size):
       #|size stays a power of two and grows until it reaches result_len.
-      #|The final size is the smallest power of two that fits the convolution.
+      #|MAINTENANCE:
+      #|Multiply size by 2, preserving the power-of-two property.
+      #|TERMINATION:
+      #|When size >= result_len, it is the smallest power of two that fits.
     ),
   }
   // Convert to complex arrays
@@ -284,6 +287,10 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
     reasoning: (
       #|INVARIANT (Load a):
       #|fa[0..i) stores a[0..i) as complex values; remaining entries stay 0.
+      #|MAINTENANCE:
+      #|Assign fa[i] from a[i], extending the converted prefix.
+      #|TERMINATION:
+      #|At i = n1, all coefficients of a are loaded.
     ),
   }
   for i = 0; i < n2; i = i + 1 {
@@ -293,6 +300,10 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
     reasoning: (
       #|INVARIANT (Load b):
       #|fb[0..i) stores b[0..i) as complex values, padding with zeros beyond n2.
+      #|MAINTENANCE:
+      #|Assign fb[i] from b[i], extending the converted prefix.
+      #|TERMINATION:
+      #|At i = n2, all coefficients of b are loaded.
     ),
   }
   // Forward FFT
@@ -311,6 +322,10 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
       #|  fa[k] = FFT(a)[k] * FFT(b)[k] for all k
       #|
       #|When we apply inverse FFT, we get the convolution (a * b).
+      #|MAINTENANCE:
+      #|Multiply fa[i] by fb[i] for the next frequency index.
+      #|TERMINATION:
+      #|At i = n, all frequency components are multiplied.
     ),
   }
   // Inverse FFT
@@ -326,6 +341,10 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
       #|INVARIANT (Extract coefficients):
       #|result[0..i) contains the rounded convolution coefficients for
       #|degrees < i. Rounding mitigates floating-point drift from FFT.
+      #|MAINTENANCE:
+      #|Round fa[i].re and store it in result[i].
+      #|TERMINATION:
+      #|At i = result_len, the full convolution is extracted.
     ),
   }
   result
@@ -501,7 +520,10 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     reasoning: (
       #|INVARIANT (NTT size):
       #|size stays a power of two and grows until it reaches result_len.
-      #|The final size is the smallest power of two that fits the product.
+      #|MAINTENANCE:
+      #|Multiply size by 2, preserving the power-of-two property.
+      #|TERMINATION:
+      #|When size >= result_len, it is the smallest power of two that fits.
     ),
   }
   // Prepare arrays
@@ -514,6 +536,10 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     reasoning: (
       #|INVARIANT (Load a):
       #|fa[0..i) holds a[0..i) modulo ntt_mod, padded with zeros beyond n1.
+      #|MAINTENANCE:
+      #|Assign fa[i] = a[i] % ntt_mod, extending the prefix.
+      #|TERMINATION:
+      #|At i = n1, all coefficients of a are loaded.
     ),
   }
   for i = 0; i < n2; i = i + 1 {
@@ -523,6 +549,10 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     reasoning: (
       #|INVARIANT (Load b):
       #|fb[0..i) holds b[0..i) modulo ntt_mod, with zero padding.
+      #|MAINTENANCE:
+      #|Assign fb[i] = b[i] % ntt_mod, extending the prefix.
+      #|TERMINATION:
+      #|At i = n2, all coefficients of b are loaded.
     ),
   }
   // Forward NTT
@@ -537,6 +567,10 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
       #|INVARIANT (Point-wise product):
       #|After processing indices [0..i), fa[t] equals NTT(a)[t] * NTT(b)[t]
       #|mod ntt_mod. The inverse NTT then yields the exact convolution.
+      #|MAINTENANCE:
+      #|Multiply fa[i] by fb[i] for the next frequency index.
+      #|TERMINATION:
+      #|At i = n, all frequency components are multiplied.
     ),
   }
   // Inverse NTT
@@ -551,6 +585,10 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
       #|INVARIANT (Extract result):
       #|result[0..i) contains the first i coefficients of the inverse NTT,
       #|which correspond to the polynomial product.
+      #|MAINTENANCE:
+      #|Copy fa[i] into result[i] as the next coefficient.
+      #|TERMINATION:
+      #|At i = result_len, the full product is extracted.
     ),
   }
   result
