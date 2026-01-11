@@ -38,13 +38,8 @@ fn reservoir_sample(stream : ArrayView[Int], k : Int, rng : RNG) -> Array[Int] {
 
   // Initialize reservoir with first k elements
   let reservoir : Array[Int] = []
-  for i = 0; i < k; i = i + 1 {
+  for i in 0..<k {
     reservoir.push(stream[i])
-  } where {
-    invariant: i >= 0 && i <= k,
-    reasoning: (
-      #|Seed the reservoir with the first k items.
-    ),
   }
 
   // Process remaining elements
@@ -421,9 +416,15 @@ fn count_leading_zeros(x : Int) -> Int {
         continue n + 1, val << 1
       }
     } where {
-      invariant: n >= 0,
+      invariant: n >= 0 && val == x << n,
       reasoning: (
-        #|Shift left until the sign bit becomes 1 to count leading zeros.
+        #|INVARIANT (Shift tracking):
+        #|val equals x shifted left by n positions, so each loop iteration
+        #|advances the check to the next bit without losing prior progress.
+        #|
+        #|When val becomes negative, the sign bit is 1, meaning we have
+        #|shifted past all leading zeros in the original x. The count n at
+        #|that point is the number of leading zeros for a 32-bit value.
       ),
     }
   }
@@ -547,10 +548,20 @@ fn skip_list_search(list : SkipList, target : Int) -> Int {
       continue level - 1, next
     }
   } where {
-    invariant: level >= -1 && level < list.max_level && current >= 0,
+    invariant: level >= -1 &&
+    level < list.max_level &&
+    current >= 0 &&
+    current < list.nodes.length(),
     reasoning: (
-      #|Outer loop drops down through levels.
-      #|At each level, we advance as far as possible, then descend.
+      #|INVARIANT (Level descent):
+      #|Before processing level, current is the rightmost node we can reach
+      #|at the next higher level whose value is still < target (or the head
+      #|sentinel when none qualifies). This preserves the search window:
+      #|any candidate equal to target must lie at current or to its right.
+      #|
+      #|We first walk forward at the current level until we would overshoot,
+      #|then drop down one level and continue from that last safe position.
+      #|This is the skip-list analog of staircase search in a matrix.
     ),
   }
 }

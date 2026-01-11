@@ -194,7 +194,10 @@ fn build_kmp_failure(pattern : ArrayView[Char]) -> Array[Int] {
   } where {
     invariant: i >= 1 && i <= pattern.length(),
     reasoning: (
-      #|INVARIANT 1 (Bounds): i scans through pattern positions.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i is the next pattern index whose failure value is still unknown.
+      #|All entries failure[0..i) are already fixed and correct, so the
+      #|loop advances left-to-right and terminates at i == pattern.length().
     ),
     invariant: j >= 0 && j < i,
     reasoning: (
@@ -269,7 +272,11 @@ fn kmp_search(text : ArrayView[Char], pattern : ArrayView[Char]) -> Int {
   } where {
     invariant: i >= 0 && i <= text.length() && j >= 0 && j < pattern.length(),
     reasoning: (
-      #|INVARIANT 1 (Bounds): i and j stay in valid ranges.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i is the current text position, and j is the length of the matched
+      #|pattern prefix. The bounds ensure all indexing is safe.
+      #|Each iteration either advances i or shortens j, so the loop makes
+      #|progress and eventually finishes.
     ),
     invariant: j >= 0,
     reasoning: (
@@ -380,8 +387,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
   } where {
     invariant: j >= 0 && j <= n + 1,
     reasoning: (
-      #|Base case initialization: prev[j] = j means transforming
-      #|empty string to s2[0..j) requires j insertions.
+      #|INVARIANT (Base row):
+      #|After processing columns [0..j), prev[t] = t for each t in [0..j),
+      #|matching the definition D[0][t] = t (insert t characters into empty).
+      #|This row anchors the DP recurrence for all later rows.
     ),
   }
   for i = 1 {
@@ -409,8 +418,14 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       } where {
         invariant: j >= 1 && j <= n + 1,
         reasoning: (
-          #|Inner loop builds curr row from prev row.
-          #|curr[j] = edit_dist(s1[0..i), s2[0..j)) after processing.
+          #|INVARIANT (Row DP construction):
+          #|After processing columns [1..j), curr[t] is the edit distance
+          #|D[i][t] = edit_dist(s1[0..i), s2[0..t)) for each t in that range.
+          #|Each step uses the three neighboring DP states:
+          #|  prev[j]   = D[i-1][j]
+          #|  curr[j-1] = D[i][j-1]
+          #|  prev[j-1] = D[i-1][j-1]
+          #|so curr[j] is computed exactly by the recurrence.
         ),
       }
 
@@ -423,7 +438,10 @@ fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
   } where {
     invariant: i >= 1 && i <= m + 1,
     reasoning: (
-      #|INVARIANT 1 (Outer loop bounds): i iterates through s1 positions.
+      #|INVARIANT 1 (Outer loop bounds):
+      #|i tracks which prefix of s1 is being processed. After each iteration
+      #|we have completed row i and advance to i+1, guaranteeing termination
+      #|once i exceeds m.
     ),
     invariant: i >= 1,
     reasoning: (
@@ -573,7 +591,10 @@ fn convex_hull(points : Array[Point]) -> Array[Point] {
   } where {
     invariant: i >= 0 && i <= points.length(),
     reasoning: (
-      #|INVARIANT 1 (Bounds): i iterates through sorted points.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i is the next point to consider in the sorted order. All points with
+      #|index < i have either been added to the lower hull or discarded as
+      #|non-hull points, so the scan proceeds left-to-right and terminates.
     ),
     invariant: i >= 0,
     reasoning: (

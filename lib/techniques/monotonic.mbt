@@ -32,7 +32,10 @@ fn next_greater_element(arr : ArrayView[Int]) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|INVARIANT 1 (Bounds): i iterates through array positions.
+      #|INVARIANT 1 (Bounds and progress):
+      #|i is the next index to process, and every index < i has either been
+      #|resolved (its next greater element found) or is waiting on the stack.
+      #|This ensures linear progress until i reaches n.
     ),
     invariant: i >= 0,
     reasoning: (
@@ -124,7 +127,9 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|INVARIANT 1 (Bounds): i iterates through positions.
+      #|INVARIANT 1 (Bounds and window position):
+      #|i is the current right edge of the sliding window. All deque indices
+      #|refer to positions < i, so each iteration advances the window by one.
     ),
     invariant: i >= 0,
     reasoning: (
@@ -227,7 +232,9 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
   } where {
     invariant: i >= 0 && i <= n + 1 && max_area >= 0,
     reasoning: (
-      #|INVARIANT 1 (Bounds and progress): i scans left to right.
+      #|INVARIANT 1 (Bounds and sentinel):
+      #|i scans bars from left to right, and the extra step at i == n acts
+      #|as a sentinel height 0 that flushes any remaining bars on the stack.
     ),
     invariant: max_area >= 0,
     reasoning: (
@@ -314,7 +321,10 @@ fn trap_rain_water(heights : ArrayView[Int]) -> Int {
   } where {
     invariant: 0 <= lo && lo <= hi + 1 && hi < n && water >= 0,
     reasoning: (
-      #|INVARIANT 1 (Bounds): Pointers stay valid and converge.
+      #|INVARIANT 1 (Bounds and processed region):
+      #|All positions outside [lo, hi] have been finalized and their trapped
+      #|water accounted for in water. The pointers only move inward, so the
+      #|unprocessed region shrinks until lo > hi.
     ),
     invariant: left_max >= 0 && right_max >= 0,
     reasoning: (
@@ -407,7 +417,10 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Maintain a strictly increasing stack to find previous smaller elements.
+      #|INVARIANT (Previous smaller):
+      #|The stack stores indices with strictly increasing values, so the top
+      #|after popping is the nearest index to the left with value < arr[i].
+      #|For every processed position t < i, left[t] is already fixed.
     ),
   }
 
@@ -427,7 +440,10 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
   } where {
     invariant: i >= -1 && i < n,
     reasoning: (
-      #|Maintain a strictly increasing stack from the right for next smaller elements.
+      #|INVARIANT (Next smaller):
+      #|Scanning from right to left, the stack keeps indices with strictly
+      #|increasing values. After popping, the top is the nearest index to the
+      #|right with value <= arr[i], so right[i] is computed correctly.
     ),
   }
 
