@@ -66,7 +66,12 @@ fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
     states.push(SAMState::new())
   } where {
     invariant: iter >= 0 && iter <= 2 * max_len,
-    reasoning: "I: states contains the initial state plus iter reserved slots. M: Push one blank state per iteration. T: After iter = 2*max_len, capacity for up to 2n states is reserved.",
+    reasoning: (
+      #|INVARIANT (Capacity reserve):
+      #|states contains the initial state plus iter blank states. Each step
+      #|adds one placeholder, so after 2*max_len iterations we have space for
+      #|up to 2n states, which is the maximum size of a suffix automaton.
+    ),
   }
   { states, last: 0, size: 1 }
 }
@@ -104,7 +109,12 @@ fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
         self.states[clone].next[i] = self.states[q].next[i]
       } where {
         invariant: i >= 0 && i <= SAM_ALPHABET,
-        reasoning: "I: Transitions for clone are copied for indices [0,i). M: Copy transition i from q to clone. T: After i = SAM_ALPHABET, clone has identical transitions to q.",
+        reasoning: (
+          #|INVARIANT (Clone transitions):
+          #|For indices [0..i), clone.next matches q.next. When the loop ends,
+          #|clone has identical transitions to q, preserving the automaton
+          #|structure while allowing link redirection.
+        ),
       }
 
       // Redirect transitions from p and its ancestors to clone
@@ -129,7 +139,13 @@ fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
     }
   } where {
     invariant: i >= 0 && i <= s.length(),
-    reasoning: "I: SAM contains only initial state. M: Add character c, create new state for s[0..i], follow suffix links to add all suffix transitions. T: SAM accepts all substrings of s.",
+    reasoning: (
+      #|INVARIANT (Prefix build):
+      #|After processing s[0..i), the SAM recognizes all substrings of that
+      #|prefix, and self.last corresponds to the entire prefix. Each extend
+      #|adds a new state for the new prefix and updates suffix links, so the
+      #|property holds inductively.
+    ),
   }
 }
 
@@ -149,7 +165,12 @@ fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
     state = next
   } where {
     invariant: i >= 0 && i <= s.length() && state >= 0 && state < self.size,
-    reasoning: "I: state corresponds to the prefix s[0..i). M: Follow transition for s[i]; fail if missing. T: After i = n, all characters are accepted and s is a substring.",
+    reasoning: (
+      #|INVARIANT (Traverse pattern):
+      #|state corresponds to the SAM state for prefix s[0..i). If a transition
+      #|is missing, the substring does not exist. Reaching the end means the
+      #|entire pattern is accepted as a substring.
+    ),
   }
   true
 }
@@ -164,7 +185,12 @@ fn SuffixAutomaton::count_distinct_substrings(self : SuffixAutomaton) -> Int64 {
     count = count + (self.states[i].len - link_len).to_int64()
   } where {
     invariant: i >= 1 && i <= self.size,
-    reasoning: "I: count=0. M: Each state represents len - link.len distinct substrings. Sum all contributions. T: count = total distinct substrings.",
+    reasoning: (
+      #|INVARIANT (Distinct substrings):
+      #|After processing states [1..i), count equals the total number of
+      #|distinct substrings contributed by those states, where each state
+      #|adds len[v] - len[link[v]] new substrings.
+    ),
   }
   count
 }
@@ -209,7 +235,13 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
     }
   } where {
     invariant: i >= 0 && i <= s2.length() && state >= 0 && state < sam.size,
-    reasoning: "I: At initial state, len=0. M: For each character, try to extend. If can't, follow suffix links until possible or reach initial state. Track maximum length reached. T: max_len is longest common substring length.",
+    reasoning: (
+      #|INVARIANT (LCS traversal):
+      #|len is the length of the longest suffix of s2[0..i) that is a substring
+      #|of s1, and state corresponds to that suffix in the SAM. If the next
+      #|character cannot extend, we follow suffix links to find the longest
+      #|extendable suffix. max_len tracks the best length seen so far.
+    ),
   }
   max_len
 }
@@ -243,7 +275,12 @@ fn SuffixAutomaton::count_occurrences(
     i <= pattern.length() &&
     state >= 0 &&
     state < self.size,
-    reasoning: "I: state corresponds to pattern[0..i). M: Follow transition for pattern[i]; return 0 if missing. T: After i = m, state represents the pattern.",
+    reasoning: (
+      #|INVARIANT (Pattern state):
+      #|state corresponds to pattern[0..i). If a transition is missing, the
+      #|pattern does not occur. Reaching the end gives the state representing
+      #|the full pattern.
+    ),
   }
 
   // Count using topological sort on suffix link tree
@@ -260,30 +297,51 @@ fn SuffixAutomaton::count_occurrences(
     }
   } where {
     invariant: i >= 0 && i <= self.size && max_len >= 0,
-    reasoning: "I: max_len is the maximum state length in [0,i). M: Update max_len with state i if larger. T: After i = size, max_len is the longest state length.",
+    reasoning: (
+      #|INVARIANT (Max length scan):
+      #|max_len is the maximum length among states [0..i). Updating with state i
+      #|maintains this property. After the loop, max_len is the longest state.
+    ),
   }
   for iter = 0; iter <= max_len; iter = iter + 1 {
     by_len.push([])
   } where {
     invariant: iter >= 0 && iter <= max_len + 1,
-    reasoning: "I: by_len has iter buckets for lengths [0,iter). M: Add an empty bucket. T: After iter = max_len+1, all length buckets exist.",
+    reasoning: (
+      #|INVARIANT (Bucket init):
+      #|by_len has empty buckets for lengths [0..iter). After the loop, we
+      #|have buckets for every possible length up to max_len.
+    ),
   }
   for i = 0; i < self.size; i = i + 1 {
     by_len[self.states[i].len].push(i)
   } where {
     invariant: i >= 0 && i <= self.size,
-    reasoning: "I: States [0,i) are placed into their length buckets. M: Insert state i into by_len[len]. T: After i = size, all states are bucketed by length.",
+    reasoning: (
+      #|INVARIANT (Bucket fill):
+      #|States [0..i) have been placed into their length buckets. After the
+      #|loop, every state appears exactly once in by_len[len].
+    ),
   }
   for len = max_len; len >= 0; len = len - 1 {
     for j = 0; j < by_len[len].length(); j = j + 1 {
       order.push(by_len[len][j])
     } where {
       invariant: j >= 0 && j <= by_len[len].length(),
-      reasoning: "I: order contains the first j states of by_len[len]. M: Append by_len[len][j]. T: After j = len(bucket), all states of this length are appended.",
+      reasoning: (
+        #|INVARIANT (Append bucket):
+        #|order contains the first j states from by_len[len]. After the loop,
+        #|all states of length len are appended in arbitrary order.
+      ),
     }
   } where {
     invariant: len >= -1 && len <= max_len,
-    reasoning: "I: order contains all states with length > len. M: Append states of current length. T: After len = -1, order is sorted by decreasing length.",
+    reasoning: (
+      #|INVARIANT (Length order):
+      #|order contains all states with length > len. Appending the current
+      #|bucket builds a list sorted by decreasing length, used for propagating
+      #|endpos counts from longer states to their suffix links.
+    ),
   }
 
   // Mark terminal states (states on path from initial to last)
@@ -302,7 +360,12 @@ fn SuffixAutomaton::count_occurrences(
     }
   } where {
     invariant: i >= 0 && i <= order.length(),
-    reasoning: "I: Counts have been propagated for order[0..i). M: Add cnt[v] to its suffix link. T: After i = len, all counts are accumulated.",
+    reasoning: (
+      #|INVARIANT (Count propagation):
+      #|After processing order[0..i), all states in that prefix have pushed
+      #|their counts to their suffix links. Because order is by decreasing
+      #|length, every state contributes before its link is processed.
+    ),
   }
   cnt[state]
 }
