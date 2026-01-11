@@ -95,8 +95,12 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|assigns all vertices in that connected region. This guarantees all SCCs
       #|are found even when the graph is disconnected.
       #|
-      #|Termination: v increases to n, so every vertex is either visited or
-      #|skipped as already visited. Total cost is O(V+E).
+      #|MAINTENANCE:
+      #|If disc[v] == -1, tarjan_dfs marks exactly the reachable vertices from v;
+      #|otherwise we skip v. Advancing v preserves the processed-prefix claim.
+      #|TERMINATION:
+      #|v increases to n, so every vertex is either visited or skipped as
+      #|already visited. Total cost is O(V+E).
     ),
   }
 
@@ -128,6 +132,11 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
             #|exists is true iff comp_v appears in scc_adj[comp_u][0..k).
             #|By scanning the current adjacency list, we ensure each SCC edge
             #|is inserted at most once, keeping the condensation graph simple.
+            #|MAINTENANCE:
+            #|Each comparison extends the scanned prefix without changing the
+            #|truth of the membership check for earlier elements.
+            #|TERMINATION:
+            #|When k reaches the list length, exists reflects full membership.
           ),
         }
         if not(exists) {
@@ -141,6 +150,11 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
         #|For fixed u, neighbors in adj[u][0..j) have been processed. For each
         #|edge u -> v crossing components, we add comp_u -> comp_v once.
         #|After j reaches deg(u), all outgoing SCC edges from u are recorded.
+        #|MAINTENANCE:
+        #|Processing one more neighbor extends the set of considered edges
+        #|while preserving the single-edge-per-component-pair rule.
+        #|TERMINATION:
+        #|At j == adj[u].length(), all edges out of u are handled.
       ),
     }
   } where {
@@ -150,6 +164,10 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|All edges originating from vertices [0..u) have been considered, so
       #|scc_adj contains every SCC edge induced by those vertices. The loop
       #|finishes once all vertices have been scanned.
+      #|MAINTENANCE:
+      #|Processing vertex u adds all SCC edges induced by its outgoing edges.
+      #|TERMINATION:
+      #|At u == n, every vertex has been scanned and scc_adj is complete.
     ),
   }
   { num_sccs, component, scc_sizes, scc_adj }
@@ -216,6 +234,11 @@ fn tarjan_dfs(
       #|
       #|When the loop ends, low[v] is final. If low[v] == disc[v], v is the
       #|root of its SCC, so the stack suffix up to v forms one component.
+      #|MAINTENANCE:
+      #|Each tree or back edge updates low[v] with a minimum discovery time
+      #|reachable within the active stack.
+      #|TERMINATION:
+      #|At i == adj[v].length(), low[v] is finalized for v.
     ),
   }
 
@@ -247,6 +270,11 @@ fn tarjan_dfs(
         #|We stop exactly when v is popped, which is the root with
         #|disc[v] == low[v]. The popped suffix is contiguous in the stack,
         #|so no vertex is skipped or assigned twice.
+        #|MAINTENANCE:
+        #|Each pop removes one vertex from the top, updates its component,
+        #|and increments size, preserving the SCC suffix property.
+        #|TERMINATION:
+        #|The loop ends when v is popped, completing the SCC.
       ),
     }
     scc_sizes.push(size)
@@ -288,6 +316,11 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|This property ensures SCCs are ordered by decreasing finish time:
       #|if SCC A can reach SCC B, then every vertex in A finishes after all
       #|vertices in B. The second pass will therefore start from sink SCCs.
+      #|MAINTENANCE:
+      #|If v is unvisited, dfs_order visits its reachable region and appends
+      #|nodes in post-order, extending the finish-order invariant.
+      #|TERMINATION:
+      #|At v == n, order is a complete post-order of the graph.
     ),
   }
 
@@ -306,6 +339,10 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
         #|INVARIANT (Transpose per vertex):
         #|For fixed u, edges adj[u][0..j) have been reversed into radj,
         #|so each original edge u -> v becomes v -> u in the transpose.
+        #|MAINTENANCE:
+        #|Each processed edge appends exactly one reversed edge to radj.
+        #|TERMINATION:
+        #|At j == adj[u].length(), all outgoing edges from u are reversed.
       ),
     }
   } where {
@@ -314,6 +351,10 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|INVARIANT (Full transpose):
       #|All edges from vertices [0..u) have been reversed into radj.
       #|After u reaches n, radj is exactly the transpose of adj.
+      #|MAINTENANCE:
+      #|Processing each u adds all reversed edges out of u.
+      #|TERMINATION:
+      #|At u == n, every edge has been reversed.
     ),
   }
 
@@ -343,6 +384,10 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|
       #|Processing in reverse finish order yields SCCs in reverse topological
       #|order of the condensation DAG.
+      #|MAINTENANCE:
+      #|Each dfs_assign call labels exactly one SCC and increments scc_count.
+      #|TERMINATION:
+      #|When i < 0, all vertices have been assigned to SCCs.
     ),
   }
 
@@ -369,6 +414,11 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
             #|INVARIANT (Duplicate check):
             #|exists is true iff comp_v already appears in scc_adj[comp_u][0..k).
             #|This prevents parallel edges in the condensation graph.
+            #|MAINTENANCE:
+            #|Each comparison extends the scanned prefix without changing
+            #|membership results for earlier elements.
+            #|TERMINATION:
+            #|When k reaches the list length, exists is final.
           ),
         }
         if not(exists) {
@@ -381,6 +431,11 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
         #|INVARIANT (Outgoing SCC edges):
         #|For fixed u, neighbors in adj[u][0..j) have been processed. Each edge
         #|u -> v crossing components contributes a single edge comp_u -> comp_v.
+        #|MAINTENANCE:
+        #|Processing one more neighbor extends the set of SCC edges while
+        #|preserving uniqueness.
+        #|TERMINATION:
+        #|At j == adj[u].length(), all edges out of u are handled.
       ),
     }
   } where {
@@ -389,6 +444,10 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       #|INVARIANT (Condensation construction):
       #|All edges from vertices [0..u) have been mapped to SCC edges.
       #|After u reaches n, scc_adj is the full condensation DAG.
+      #|MAINTENANCE:
+      #|Each u contributes all SCC edges induced by its outgoing edges.
+      #|TERMINATION:
+      #|At u == n, the condensation graph is complete.
     ),
   }
   { num_sccs: scc_count, component, scc_sizes, scc_adj }
@@ -413,6 +472,10 @@ fn dfs_order(
       #|INVARIANT (DFS expansion):
       #|After processing neighbors[0..i), all vertices reachable from v through
       #|those neighbors are marked visited and will appear before v in order.
+      #|MAINTENANCE:
+      #|Each recursive call finishes before i advances, preserving post-order.
+      #|TERMINATION:
+      #|At i == adj[v].length(), all descendants of v are visited.
     ),
   }
   order.push(v)
@@ -440,6 +503,10 @@ fn dfs_assign(
       #|After processing neighbors[0..i), every vertex reachable from v via
       #|those edges has component == scc_id. The DFS assigns exactly the
       #|vertices in this SCC and no others.
+      #|MAINTENANCE:
+      #|Each recursive visit labels one more vertex in the same SCC.
+      #|TERMINATION:
+      #|At i == radj[v].length(), all vertices in v's SCC are labeled.
     ),
   }
 }
