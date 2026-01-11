@@ -428,6 +428,11 @@ fn binary_search(arr : Array[Int], value : Int) -> Int {
       #|1. If value exists, it's in arr[lo..hi]
       #|2. Each iteration halves the search space
       #|3. Loop terminates when lo > hi (not found) or we find value
+      #|MAINTENANCE:
+      #|Comparing arr[mid] with value keeps the target (if any) within the
+      #|updated [lo, hi] interval.
+      #|TERMINATION:
+      #|The interval shrinks each step; when lo > hi we return -1.
     ),
   }
 }
