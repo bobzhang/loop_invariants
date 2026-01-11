@@ -38,6 +38,11 @@ fn bellman_ford_with_neg_cycle(
         #|After processing edges[0..e), dist reflects the shortest distances
         #|obtainable using at most i+1 edges whose last edge appears in this
         #|prefix. Any improvement sets changed = true for early termination.
+        #|MAINTENANCE:
+        #|Relaxing edge e can only decrease dist[v] using a path with <= i+1
+        #|edges, so the invariant extends to the longer prefix.
+        #|TERMINATION:
+        #|When e == edges.length(), all edges have been relaxed once this pass.
       ),
     }
     // Early termination if no changes
@@ -56,6 +61,10 @@ fn bellman_ford_with_neg_cycle(
       #|  If shortest path to u uses k edges, and (u,v,w) is an edge,
       #|  then path to v via u uses k+1 edges.
       #|  Relaxation ensures we find this path in iteration k+1.
+      #|
+      #|MAINTENANCE:
+      #|Each iteration relaxes all edges once, so any shortest path with
+      #|<= i+1 edges is realized by extending a <= i-edge shortest path.
       #|
       #|TERMINATION: Any shortest path uses at most n-1 edges (no cycles),
       #|  so n-1 iterations suffice.
@@ -77,6 +86,11 @@ fn bellman_ford_with_neg_cycle(
       #|After scanning edges[0..e), no edge in this prefix can further relax
       #|dist. If any relaxable edge exists after n-1 passes, then some path
       #|can be improved indefinitely, implying a reachable negative cycle.
+      #|MAINTENANCE:
+      #|Each edge that fails to relax confirms the prefix cannot improve dist.
+      #|TERMINATION:
+      #|If we complete the scan without a relax, there is no reachable
+      #|negative cycle; otherwise we mark has_negative_cycle.
     ),
   }
   (dist, has_negative_cycle)
@@ -164,6 +178,11 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
           #|from i to t using intermediate vertices from {0..k}. Each step
           #|applies the transition dist[i][t] = min(dist[i][t], dist[i][k] +
           #|dist[k][t]) for the current t.
+          #|MAINTENANCE:
+          #|Updating column j applies the k-relaxation for t = j, extending
+          #|the invariant from [0..j) to [0..j+1).
+          #|TERMINATION:
+          #|When j == n, row i is fully updated for intermediate k.
         ),
       }
     } where {
@@ -172,6 +191,11 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
         #|INVARIANT (Row completion):
         #|After processing rows [0..i), dist[x][*] is correct using
         #|intermediates from {0..k} for all x < i.
+        #|MAINTENANCE:
+        #|Each row i applies the inner relaxation for all columns, so the
+        #|processed prefix gains k as an allowed intermediate.
+        #|TERMINATION:
+        #|At i == n, every row has been updated for this k.
       ),
     }
   } where {
@@ -187,6 +211,10 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
       #|  1. Shortest path doesn't use k: dist remains same
       #|  2. Shortest path uses k: dist[i][j] = dist[i][k] + dist[k][j]
       #|  We take the minimum.
+      #|
+      #|MAINTENANCE:
+      #|Allowing k as an intermediate updates each pair (i, j) with the best
+      #|path that either bypasses k or splits through k.
       #|
       #|TERMINATION: After all vertices, dist[i][j] = true shortest path.
     ),
@@ -231,6 +259,12 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
       #|After processing edges[0..e), adj contains exactly those edges,
       #|and in_degree[v] equals the number of incoming edges to v from
       #|that prefix. This initializes the dependency counts for Kahn's queue.
+      #|MAINTENANCE:
+      #|Each edge adds one adjacency entry and increments exactly one
+      #|in-degree, preserving the counts for the prefix.
+      #|TERMINATION:
+      #|At e == edges.length(), all edges are represented and in-degrees
+      #|are accurate.
     ),
   }
 
@@ -260,6 +294,11 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
         #|After processing adj[u][0..i), all edges u→v in this prefix have been
         #|"removed" by decrementing in_degree[v]. Any v that drops to 0 is now
         #|ready to be processed and is enqueued.
+        #|MAINTENANCE:
+        #|Each processed neighbor consumes exactly one incoming edge from u,
+        #|so in_degree reflects the remaining predecessors outside result.
+        #|TERMINATION:
+        #|When i reaches adj[u].length(), all outgoing edges of u are removed.
       ),
     }
     continue front + 1
@@ -280,6 +319,10 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
       #|
       #|When a vertex enters the queue, all its predecessors are in result,
       #|so it can safely be next in the topological order.
+      #|
+      #|MAINTENANCE:
+      #|Processing queue[front] moves it to result and updates neighbors'
+      #|in-degrees, preserving the zero-in-degree queue invariant.
       #|
       #|TERMINATION: If result.length() < n, there's a cycle.
     ),
@@ -326,6 +369,11 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
             #|receives the opposite color (if unvisited) or is confirmed to
             #|have a compatible color. Any same-color edge immediately
             #|detects an odd cycle and returns false.
+            #|MAINTENANCE:
+            #|Assigning color[v] = 1 - color[u] preserves bipartite parity
+            #|across each processed edge.
+            #|TERMINATION:
+            #|At i == adj[u].length(), all neighbors of u are checked.
           ),
         }
         continue front + 1
@@ -336,6 +384,11 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
           #|Vertices in queue[0..front) have been expanded, and their neighbors
           #|are colored with the opposite color. This enforces a 2-coloring
           #|consistent with BFS levels; any violation implies an odd cycle.
+          #|MAINTENANCE:
+          #|Expanding queue[front] colors its neighbors and enqueues them,
+          #|preserving the layered coloring.
+          #|TERMINATION:
+          #|When front reaches queue.length(), the component is fully colored.
         ),
       }
     }
@@ -345,6 +398,10 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
       #|INVARIANT (Component scan):
       #|All vertices in [0, start) belong to components already checked and
       #|found bipartite. Each new start launches BFS for an unvisited component.
+      #|MAINTENANCE:
+      #|If start is uncolored, we color its whole component; otherwise we skip.
+      #|TERMINATION:
+      #|At start == n, all components are checked.
     ),
   }
   true
@@ -384,6 +441,11 @@ fn has_cycle_directed(n : Int, adj : Array[Array[Int]]) -> Bool {
       #|All vertices in [0, start) have been considered; any BLACK vertex is
       #|fully explored with no back edges found. If a cycle exists in those
       #|components, we would have returned true already.
+      #|MAINTENANCE:
+      #|Each new start launches DFS for its component, marking all reachable
+      #|vertices BLACK once finished.
+      #|TERMINATION:
+      #|When start == n, all components are checked for cycles.
     ),
   }
   false
@@ -413,6 +475,11 @@ fn dfs_has_cycle(
       #|After processing neighbors[0..i), all DFS tree edges in this prefix
       #|have been explored. Encountering a GRAY vertex indicates a back edge
       #|to the current recursion stack, which is exactly a directed cycle.
+      #|MAINTENANCE:
+      #|Each neighbor is either explored recursively or checked for a gray
+      #|back edge, preserving the invariant over the processed prefix.
+      #|TERMINATION:
+      #|At i == adj[u].length(), all outgoing edges of u are checked.
     ),
   }
   state[u] = black // Mark as finished
@@ -451,6 +518,11 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
       #|All vertices in [0..i) have been considered as DFS roots. Any vertex
       #|reachable from those roots is marked visited, and appears in order
       #|after all of its descendants (post-order).
+      #|MAINTENANCE:
+      #|If visited[i] is false, dfs_order visits its reachable region and
+      #|appends vertices in post-order, extending order correctly.
+      #|TERMINATION:
+      #|At i == n, order is a complete post-order for the graph.
     ),
   }
 
@@ -468,6 +540,10 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
         #|INVARIANT (Edge reversal):
         #|After processing adj[u][0..i), all edges u→v in this prefix have been
         #|reversed into rev_adj[v], so rev_adj holds the transpose graph.
+        #|MAINTENANCE:
+        #|Each processed edge adds exactly one reversed adjacency entry.
+        #|TERMINATION:
+        #|At i == adj[u].length(), all edges from u are reversed.
       ),
     }
   } where {
@@ -476,6 +552,10 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
       #|INVARIANT (Transpose build):
       #|After processing vertices [0..u), all outgoing edges from those vertices
       #|have been reversed into rev_adj.
+      #|MAINTENANCE:
+      #|Each u contributes all of its outgoing edges to the transpose.
+      #|TERMINATION:
+      #|At u == n, rev_adj is the full reversed graph.
     ),
   }
 
@@ -495,6 +575,10 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
       #|Vertices in order[i+1..] have already been assigned to exactly one SCC.
       #|Processing order[i] in the reversed graph discovers precisely its SCC,
       #|because any edge to a different SCC would go to a vertex already marked.
+      #|MAINTENANCE:
+      #|Each dfs_mark call marks one new SCC and increments scc_count.
+      #|TERMINATION:
+      #|When i < 0, all vertices have been assigned to SCCs.
     ),
   }
   scc_count
@@ -519,6 +603,10 @@ fn dfs_order(
       #|INVARIANT (DFS1):
       #|After processing neighbors[0..i), all vertices reachable from u through
       #|those neighbors are visited and appended to order after their descendants.
+      #|MAINTENANCE:
+      #|Each recursive visit finishes before we advance i, preserving post-order.
+      #|TERMINATION:
+      #|At i == adj[u].length(), all descendants of u are visited.
     ),
   }
   order.push(u)
@@ -538,6 +626,10 @@ fn dfs_mark(adj : Array[Array[Int]], visited : Array[Bool], u : Int) -> Unit {
       #|INVARIANT (DFS2):
       #|After processing neighbors[0..i), all vertices reachable from u via
       #|those edges are marked visited and belong to the same SCC.
+      #|MAINTENANCE:
+      #|Each recursive visit marks an additional vertex in this SCC.
+      #|TERMINATION:
+      #|At i == adj[u].length(), all vertices in u's SCC are visited.
     ),
   }
 }
@@ -581,6 +673,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
         #|After scanning vertices [0..v), min_key/u holds the smallest key
         #|among those not yet in the MST. This selects the safest next vertex
         #|by the cut property.
+        #|MAINTENANCE:
+        #|Updating min_key/u when a smaller candidate is found preserves the
+        #|minimum over the scanned prefix.
+        #|TERMINATION:
+        #|At v == n, u is the minimum-key vertex outside the MST.
       ),
     }
     if u == -1 {
@@ -601,6 +698,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
         #|INVARIANT (Key updates):
         #|After processing adj[u][0..i), key[v] stores the minimum edge weight
         #|connecting v to the current MST for every neighbor seen so far.
+        #|MAINTENANCE:
+        #|Each neighbor update applies a min with edge (u, v), preserving the
+        #|best-known crossing edge to the MST.
+        #|TERMINATION:
+        #|When i == adj[u].length(), all outgoing edges from u are applied.
       ),
     }
   } where {
@@ -613,6 +715,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
       #|
       #|CORRECTNESS: Always adding the minimum safe edge ensures MST property.
       #|This is the cut property: minimum edge crossing any cut is in some MST.
+      #|MAINTENANCE:
+      #|Selecting u with minimal key and updating neighbors preserves the
+      #|minimum crossing edges for the expanded MST.
+      #|TERMINATION:
+      #|After n iterations or when u == -1, no more vertices can be added.
     ),
   }
   total_weight
@@ -663,6 +770,11 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
         #|INVARIANT (Selection in bubble sort):
         #|After scanning indices [i+1..j), sorted_edges[i] holds the smallest
         #|weight edge among sorted_edges[i..j) seen so far.
+        #|MAINTENANCE:
+        #|Swapping a smaller edge into position i preserves the minimum of the
+        #|scanned suffix.
+        #|TERMINATION:
+        #|At j == sorted_edges.length(), position i holds the minimum of i..end.
       ),
     }
   } where {
@@ -671,6 +783,10 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
       #|INVARIANT (Sorted prefix):
       #|After iteration i, sorted_edges[0..i) contains the i smallest edges in
       #|non-decreasing order. The remaining suffix is unsorted.
+      #|MAINTENANCE:
+      #|The inner loop places the smallest remaining edge at index i.
+      #|TERMINATION:
+      #|At i == sorted_edges.length(), the array is fully sorted.
     ),
   }
 
@@ -715,6 +831,11 @@ fn kruskal_mst(n : Int, edges : Array[(Int, Int, Int)]) -> Int {
       #|CORRECTNESS: By cut property, minimum edge connecting two components
       #|is always safe to add. Since we process in sorted order, we always
       #|add the minimum safe edge.
+      #|MAINTENANCE:
+      #|Each accepted edge merges two components and increments edges_added,
+      #|preserving the forest property.
+      #|TERMINATION:
+      #|The loop ends when edges_added == n - 1 or all edges are considered.
     ),
   }
 }
