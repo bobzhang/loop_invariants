@@ -36,6 +36,11 @@ fn next_greater_element(arr : ArrayView[Int]) -> Array[Int] {
       #|i is the next index to process, and every index < i has either been
       #|resolved (its next greater element found) or is waiting on the stack.
       #|This ensures linear progress until i reaches n.
+      #|MAINTENANCE:
+      #|Processing arr[i] either resolves waiting indices or pushes i, then
+      #|advances to i+1, preserving the invariant.
+      #|TERMINATION:
+      #|At i = n, all indices are processed; unresolved ones have no NGE.
     ),
     invariant: i >= 0,
     reasoning: (
@@ -69,6 +74,11 @@ fn next_greater_element(arr : ArrayView[Int]) -> Array[Int] {
       #|
       #|TIME: O(n) - each element pushed and popped at most once.
       #|SPACE: O(n) - stack can hold all elements in decreasing sequence.
+      #|MAINTENANCE:
+      #|Popping smaller elements and pushing i preserves the decreasing-value
+      #|order of the stack.
+      #|TERMINATION:
+      #|After the scan, stack elements correctly have no greater element to the right.
     ),
   }
 }
@@ -130,6 +140,10 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
       #|INVARIANT 1 (Bounds and window position):
       #|i is the current right edge of the sliding window. All deque indices
       #|refer to positions < i, so each iteration advances the window by one.
+      #|MAINTENANCE:
+      #|After processing arr[i], increment i to move the window right.
+      #|TERMINATION:
+      #|At i = n, all windows have been processed.
     ),
     invariant: i >= 0,
     reasoning: (
@@ -173,6 +187,11 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
       #|COMPARISON WITH NAIVE:
       #|Naive: O(nk) - recompute max for each window
       #|Monotonic deque: O(n) - amortized O(1) per element
+      #|MAINTENANCE:
+      #|Deque updates preserve window membership and decreasing values after
+      #|each push/pop.
+      #|TERMINATION:
+      #|At i = n, result contains maxima for all windows.
     ),
   }
 }
@@ -235,6 +254,10 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
       #|INVARIANT 1 (Bounds and sentinel):
       #|i scans bars from left to right, and the extra step at i == n acts
       #|as a sentinel height 0 that flushes any remaining bars on the stack.
+      #|MAINTENANCE:
+      #|Each iteration processes bar i (or sentinel) and advances i by one.
+      #|TERMINATION:
+      #|At i = n + 1, all bars have been flushed and max_area is final.
     ),
     invariant: max_area >= 0,
     reasoning: (
@@ -275,6 +298,10 @@ fn largest_rectangle_histogram(heights : ArrayView[Int]) -> Int {
       #|  - Maximal rectangle in binary matrix
       #|  - Container with most water (variant)
       #|  - Trapping rain water (related problem)
+      #|MAINTENANCE:
+      #|Stack remains increasing in height after pops and the push of i.
+      #|TERMINATION:
+      #|When the sentinel is processed, all candidate rectangles are accounted for.
     ),
   }
 }
@@ -325,6 +352,10 @@ fn trap_rain_water(heights : ArrayView[Int]) -> Int {
       #|All positions outside [lo, hi] have been finalized and their trapped
       #|water accounted for in water. The pointers only move inward, so the
       #|unprocessed region shrinks until lo > hi.
+      #|MAINTENANCE:
+      #|Move the smaller side inward, finalizing exactly one position.
+      #|TERMINATION:
+      #|When lo > hi, every position is finalized and water is complete.
     ),
     invariant: left_max >= 0 && right_max >= 0,
     reasoning: (
@@ -368,6 +399,10 @@ fn trap_rain_water(heights : ArrayView[Int]) -> Int {
       #|
       #|TIME: O(n) - single pass with two pointers
       #|SPACE: O(1) - only a few variables
+      #|MAINTENANCE:
+      #|Update left_max/right_max and water as the pointers move inward.
+      #|TERMINATION:
+      #|At loop end, water equals the total trapped water.
     ),
   }
 }
@@ -421,6 +456,11 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
       #|The stack stores indices with strictly increasing values, so the top
       #|after popping is the nearest index to the left with value < arr[i].
       #|For every processed position t < i, left[t] is already fixed.
+      #|MAINTENANCE:
+      #|Pop until the previous smaller element is on top, then set left[i]
+      #|and push i.
+      #|TERMINATION:
+      #|At i = n, all left distances are computed.
     ),
   }
 
@@ -444,6 +484,11 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
       #|Scanning from right to left, the stack keeps indices with strictly
       #|increasing values. After popping, the top is the nearest index to the
       #|right with value <= arr[i], so right[i] is computed correctly.
+      #|MAINTENANCE:
+      #|Pop until the next smaller-or-equal element is on top, then set right[i]
+      #|and push i.
+      #|TERMINATION:
+      #|At i = -1, all right distances are computed.
     ),
   }
 
@@ -485,6 +530,10 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
       #|
       #|TIME: O(n) - two monotonic stack passes + one summation pass
       #|SPACE: O(n) - left, right arrays and stack
+      #|MAINTENANCE:
+      #|Add contribution for arr[i] and advance i, keeping total modulo.
+      #|TERMINATION:
+      #|At i = n, total equals the sum over all subarrays.
     ),
   }
 }
@@ -552,6 +601,10 @@ fn stock_span(prices : ArrayView[Int]) -> Array[Int] {
       #|ONLINE ALGORITHM:
       #|This can process one price at a time with O(1) amortized cost,
       #|making it suitable for streaming scenarios.
+      #|MAINTENANCE:
+      #|Pop dominated prices, compute span for i, then push i.
+      #|TERMINATION:
+      #|At i = n, spans for all days are computed.
     ),
   }
 }
