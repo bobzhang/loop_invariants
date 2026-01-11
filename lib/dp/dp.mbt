@@ -104,7 +104,14 @@ fn knapsack_unbounded(
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|dp[w] is the best value for capacity w using items[0..i).
+        #|INVARIANT (Item scan for fixed w):
+        #|After processing items[0..i), dp[w] equals the best value for
+        #|capacity w using only those items with unlimited multiplicity.
+        #|
+        #|Since w is fixed and we process weights in increasing order,
+        #|dp[w - weights[i]] is already optimal when we consider item i.
+        #|Thus each candidate dp[w - weight] + value is valid and the max
+        #|over all items[0..i) is captured in dp[w].
       ),
     }
   } where {
@@ -189,7 +196,11 @@ fn lower_bound_lis(arr : ArrayView[Int], target : Int) -> Int {
   } where {
     invariant: lo >= 0 && hi >= 0 && lo <= hi + 1,
     reasoning: (
-      #|Standard binary search for lower bound
+      #|INVARIANT (Lower bound):
+      #|All indices in [0..lo) satisfy arr[idx] < target, and all indices
+      #|in [hi..len) satisfy arr[idx] >= target. The loop shrinks the
+      #|search window until lo == hi, which is the first position where
+      #|target can be inserted to keep arr sorted.
     ),
   }
 }
@@ -225,7 +236,10 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
     } where {
       invariant: i >= 0 && i <= coins.length(),
       reasoning: (
-        #|dp[a] is the minimum coin count using coins[0..i).
+        #|INVARIANT (Coin scan for amount a):
+        #|After processing coins[0..i), dp[a] is the minimum number of coins
+        #|needed to form amount a using those coins. Each candidate uses
+        #|dp[a - coin], which is already optimal for a smaller amount.
       ),
     }
   } where {
@@ -322,17 +336,15 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
     } where {
       invariant: j >= 1 && j <= n + 1,
       reasoning: (
-        #|INNER LOOP INVARIANT: curr[0..j) contains LCS lengths for row i
+        #|INVARIANT (Row fill):
+        #|After processing columns [1..j), curr[t] equals LCS length for
+        #|s1[0..i) vs s2[0..t). Each update uses prev[j], prev[j-1],
+        #|and curr[j-1], matching the standard recurrence.
       ),
     }
     // Swap rows
-    for k = 0; k <= n; k = k + 1 {
+    for k in 0..=n {
       prev[k] = curr[k]
-    } where {
-      invariant: k >= 0 && k <= n + 1,
-      reasoning: (
-        #|prev[0..k) has been copied from curr[0..k).
-      ),
     }
   } where {
     invariant: i >= 1 && i <= m + 1,
@@ -509,13 +521,8 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
   dp[0] = grid[0][0]
 
   // Initialize first row
-  for j = 1; j < n; j = j + 1 {
+  for j in 1..<n {
     dp[j] = dp[j - 1] + grid[0][j]
-  } where {
-    invariant: j >= 1 && j <= n,
-    reasoning: (
-      #|dp[0..j] stores prefix sums along the top row.
-    ),
   }
 
   // Fill remaining rows
@@ -529,7 +536,11 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
     } where {
       invariant: j >= 1 && j <= n,
       reasoning: (
-        #|INNER LOOP: dp[j] = min path sum to (i, j)
+        #|INVARIANT (Cell update):
+        #|dp[j] is updated to the minimum path sum to cell (i, j). Before
+        #|the update, dp[j] stores the value from the row above (i-1, j),
+        #|and dp[j-1] stores the value for (i, j-1). Taking the min matches
+        #|the recurrence for grid paths.
       ),
     }
   } where {
@@ -559,13 +570,8 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
 
   // Convert word dict to char arrays for comparison
   let words : Array[Array[Char]] = []
-  for i = 0; i < word_dict.length(); i = i + 1 {
-    words.push(word_dict[i].to_array())
-  } where {
-    invariant: i >= 0 && i <= word_dict.length(),
-    reasoning: (
-      #|words[0..i) holds the dictionary prefixes as char arrays.
-    ),
+  for word in word_dict {
+    words.push(word.to_array())
   }
   let dp = Array::make(n + 1, false)
   dp[0] = true // Empty string can be segmented
@@ -583,8 +589,10 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
     } where {
       invariant: w >= 0 && w <= words.length(),
       reasoning: (
-        #|If dp[i] is true, a matching word exists in words[0..w);
-        #|otherwise no processed word completes the prefix.
+        #|INVARIANT (Dictionary scan):
+        #|After processing words[0..w), dp[i] is true iff some word in that
+        #|prefix completes a valid segmentation of s[0..i). If none match,
+        #|dp[i] remains false and we continue scanning.
       ),
     }
   } where {
@@ -614,7 +622,9 @@ fn matches_word(chars : Array[Char], start : Int, word : Array[Char]) -> Bool {
   } where {
     invariant: i >= 0 && i <= word_len,
     reasoning: (
-      #|Compare characters one by one
+      #|INVARIANT (Prefix match):
+      #|All characters in word[0..i) match chars[start..start+i). On the
+      #|first mismatch we return false; if we reach the end, the word matches.
     ),
   }
 }
@@ -642,14 +652,9 @@ fn min_palindrome_cuts(s : String) -> Int {
 
   // is_palindrome[i][j] = true if s[i..j+1) is palindrome
   let is_palindrome : Array[Array[Bool]] = []
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     is_palindrome.push(Array::make(n, false))
     is_palindrome[i][i] = true
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|Rows 0..i are allocated and the diagonal entries are true.
-    ),
   }
 
   // Fill palindrome table
@@ -665,25 +670,26 @@ fn min_palindrome_cuts(s : String) -> Int {
     } where {
       invariant: i >= 0 && i <= n - length + 1,
       reasoning: (
-        #|All substrings of current length with start < i are classified.
+        #|INVARIANT (Palindrome table):
+        #|After processing starts [0..i), all substrings of the current
+        #|length have been classified. Each entry uses the shorter
+        #|substring is_palindrome[i+1][j-1] which is already known.
       ),
     }
   } where {
     invariant: length >= 2 && length <= n + 1,
     reasoning: (
-      #|All palindrome statuses for lengths < length are finalized.
+      #|INVARIANT (Length order):
+      #|Before processing length, all palindromes of smaller lengths are
+      #|finalized. This ensures the length-2 and length>2 cases have the
+      #|needed subproblems available.
     ),
   }
 
   // dp[i] = min cuts for s[0..i)
   let dp = Array::make(n + 1, 0)
-  for i = 0; i <= n; i = i + 1 {
+  for i in 0..=n {
     dp[i] = i - 1 // Maximum cuts = i - 1
-  } where {
-    invariant: i >= 0 && i <= n + 1,
-    reasoning: (
-      #|dp[0..i) initialized to the worst-case cut count.
-    ),
   }
   for i = 1; i <= n; i = i + 1 {
     if is_palindrome[0][i - 1] {
@@ -699,7 +705,10 @@ fn min_palindrome_cuts(s : String) -> Int {
       } where {
         invariant: j >= 1 && j <= i,
         reasoning: (
-          #|Try all possible last palindrome partitions
+          #|INVARIANT (Last cut):
+          #|After processing j in [1..i), dp[i] is the minimum of
+          #|dp[j] + 1 over all starts j where s[j..i) is a palindrome.
+          #|This considers every possible final palindrome block.
         ),
       }
     }
@@ -795,14 +804,9 @@ fn longest_palindromic_subsequence(s : String) -> Int {
 
   // Full 2D DP table
   let dp : Array[Array[Int]] = []
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     dp.push(Array::make(n, 0))
     dp[i][i] = 1 // Single character is palindrome of length 1
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|Rows 0..i are allocated and dp[k][k] set to 1 for k < i.
-    ),
   }
 
   // Fill for lengths 2 to n
@@ -821,16 +825,20 @@ fn longest_palindromic_subsequence(s : String) -> Int {
     } where {
       invariant: i >= 0 && i <= n - length + 1,
       reasoning: (
-        #|INNER LOOP: dp[i][j] = LPS length for s[i..j+1)
+        #|INVARIANT (Substring DP):
+        #|After processing starts [0..i), dp[s][s+length-1] holds the LPS
+        #|length for all substrings of the current length. Each update uses
+        #|shorter substrings (length-2 or length-1), which are already filled.
       ),
     }
   } where {
     invariant: length >= 2 && length <= n + 1,
     reasoning: (
-      #|LOOP INVARIANT: dp[i][j] computed for all substrings of length < current
-      #|
-      #|If s[i] == s[j]: LPS(i,j) = LPS(i+1,j-1) + 2
-      #|Otherwise: LPS(i,j) = max(LPS(i+1,j), LPS(i,j-1))
+      #|INVARIANT (Length order):
+      #|All substrings shorter than length are already computed, so the
+      #|recurrence for length uses only known values. The rule matches:
+      #|  if s[i] == s[j], take dp[i+1][j-1] + 2
+      #|  else take max(dp[i+1][j], dp[i][j-1]).
     ),
   }
   dp[0][n - 1]
@@ -857,13 +865,8 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
 
   // dp[i][j] = min cost to multiply matrices i..j (1-indexed)
   let dp : Array[Array[Int]] = []
-  for i = 0; i <= n; i = i + 1 {
+  for _ in 0..=n {
     dp.push(Array::make(n + 1, 0))
-  } where {
-    invariant: i >= 0 && i <= n + 1,
-    reasoning: (
-      #|dp rows 0..i are allocated with zeros.
-    ),
   }
 
   // Chain length from 2 to n
@@ -883,24 +886,27 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
       } where {
         invariant: k >= i && k <= j,
         reasoning: (
-          #|Try splitting (M_i * ... * M_k) * (M_{k+1} * ... * M_j)
+          #|INVARIANT (Split scan):
+          #|After processing k in [i..j), dp[i][j] is the minimum cost among
+          #|all splits up to k. Each split considers multiplying the left
+          #|subchain and right subchain plus the cost of combining results.
         ),
       }
     } where {
       invariant: i >= 1 && i <= n - len + 2,
       reasoning: (
-        #|INNER LOOP: compute dp[i][j] for all chains of current length
+        #|INVARIANT (Chain start):
+        #|For the current chain length, dp[i][j] is computed for every
+        #|start position i, so all chains of this length are covered.
       ),
     }
   } where {
     invariant: len >= 2 && len <= n + 1,
     reasoning: (
-      #|LOOP INVARIANT: dp[i][j] computed for all chains of length < len
-      #|
-      #|Recurrence: dp[i][j] = min over k in [i,j) of
-      #|  dp[i][k] + dp[k+1][j] + p[i-1] * p[k] * p[j]
-      #|
-      #|This tries all ways to split the product into two subchains.
+      #|INVARIANT (Length order):
+      #|All chains shorter than len have their optimal costs computed, so
+      #|each dp[i][j] for length len can safely use dp on smaller subchains.
+      #|This is the classic optimal substructure for matrix chain multiplication.
     ),
   }
   dp[1][n]
