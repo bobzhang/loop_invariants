@@ -236,8 +236,13 @@ fn longest_palindrome(s : ArrayView[Char]) -> (Int, Int) {
   } where {
     invariant: i >= 0 && i <= p.length(),
     reasoning: (
-      #|Scan all centers; max_radius/max_center track the best palindrome seen so far.
-      #|Each iteration considers one candidate center i.
+      #|INVARIANT (Maximum radius scan):
+      #|After processing centers [0..i), max_radius is the maximum p value
+      #|seen so far, and max_center is an index achieving that maximum.
+      #|
+      #|Because p stores the palindrome radius at every center in the
+      #|transformed string, the maximum radius corresponds to the longest
+      #|palindromic substring in the original string (after conversion).
     ),
   }
 
@@ -449,7 +454,11 @@ fn lcs_length(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
       } where {
         invariant: j >= 1 && j <= n + 1,
         reasoning: (
-          #|Inner loop computes curr[j] = LCS(s1[0..i), s2[0..j)).
+          #|INVARIANT (Row update):
+          #|After processing columns [1..j), curr[t] for t < j equals
+          #|LCS(s1[0..i), s2[0..t)). The recurrence uses prev (row i-1)
+          #|and curr (row i) so each update is based on already-computed
+          #|subproblems.
         ),
       }
       let tmp = prev
@@ -557,7 +566,15 @@ fn booth_smallest_rotation(s : ArrayView[Char]) -> Int {
       } where {
         invariant: jj >= -1,
         reasoning: (
-          #|Following failure links to find match length.
+          #|INVARIANT (Failure link walk):
+          #|jj represents the length of the longest prefix of the current
+          #|candidate rotation s[k..] that matches a suffix ending at i-1.
+          #|We follow failure links to shorten this candidate when the next
+          #|character mismatches, exactly like KMP.
+          #|
+          #|If we encounter a mismatch where get(i) < get(k + jj + 1),
+          #|then the rotation starting at k is lexicographically larger than
+          #|the rotation starting at i - jj - 1, so we signal a candidate change.
         ),
       }
       if new_j == -2 {

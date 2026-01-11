@@ -213,7 +213,9 @@ fn matrix_mult_3x3(
           } where {
             invariant: k >= 0 && k <= 3,
             reasoning: (
-              #|Inner product computation: result[i,j] = Σ_k a[i,k]·b[k,j]
+              #|INVARIANT (Dot product):
+              #|acc = Σ_{t < k} a[i,t] * b[t,j] (mod modulo).
+              #|After k reaches 3, acc is the full inner product for cell (i,j).
             ),
           }
           result[i * 3 + j] = sum
@@ -222,7 +224,10 @@ fn matrix_mult_3x3(
       } where {
         invariant: j >= 0 && j <= 3,
         reasoning: (
-          #|Computing column j of row i in the result matrix.
+          #|INVARIANT (Row fill):
+          #|After processing columns [0..j), result[i,*] is correct for those
+          #|columns. Each column j computes the dot product of row i and
+          #|column j of the right matrix.
         ),
       }
       continue i + 1
@@ -230,7 +235,9 @@ fn matrix_mult_3x3(
   } where {
     invariant: i >= 0 && i <= 3,
     reasoning: (
-      #|Computing row i of the result matrix.
+      #|INVARIANT (Matrix fill):
+      #|After processing rows [0..i), all entries in those rows are computed.
+      #|This is the standard triple-loop matrix multiplication.
     ),
   }
   result
@@ -253,10 +260,11 @@ fn matrix_pow_3x3(m : Array[Int64], p : Int64, modulo : Int64) -> Array[Int64] {
   } where {
     invariant: power >= 0L,
     reasoning: (
-      #|INVARIANT: M^original_p ≡ result · matrix^power (mod modulo)
+      #|INVARIANT: M^original_p ≡ result · matrix^power (mod modulo).
       #|
-      #|Same binary exponentiation invariant as 2x2 case.
-      #|Associativity of 3x3 matrix multiplication guarantees correctness.
+      #|This is the same binary exponentiation invariant as the 2x2 case.
+      #|Associativity of 3x3 multiplication ensures regrouping is valid,
+      #|so halving power and squaring matrix preserves the equation.
     ),
   }
 }
@@ -345,7 +353,9 @@ fn count_paths(
             } where {
               invariant: kk >= 0 && kk <= n,
               reasoning: (
-                #|Computing dot product of row i and column j.
+                #|INVARIANT (Dot product):
+                #|acc = Σ_{t < kk} a[i,t] * b[t,j] (mod modulo).
+                #|After kk reaches n, acc is the full inner product for (i,j).
               ),
             }
             result[i * n + j] = sum
@@ -354,7 +364,9 @@ fn count_paths(
         } where {
           invariant: j >= 0 && j <= n,
           reasoning: (
-            #|Computing column j of row i.
+            #|INVARIANT (Row fill):
+            #|After processing columns [0..j), result[i,*] is correct for those
+            #|columns. Each column j computes a full dot product.
           ),
         }
         continue i + 1
@@ -362,7 +374,8 @@ fn count_paths(
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|Computing row i of the result matrix.
+        #|INVARIANT (Matrix fill):
+        #|After processing rows [0..i), all entries in those rows are computed.
       ),
     }
     result
@@ -379,7 +392,9 @@ fn count_paths(
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Setting diagonal entries to 1 to form the identity matrix.
+      #|INVARIANT (Identity build):
+      #|After processing rows [0..i), identity has 1s on the diagonal entries
+      #|(t,t) for t < i and 0s elsewhere.
     ),
   }
   // Matrix exponentiation
@@ -396,14 +411,12 @@ fn count_paths(
   } where {
     invariant: power >= 0L,
     reasoning: (
-      #|INVARIANT: A^original_k = result · matrix^power
+      #|INVARIANT: A^original_k = result · matrix^power.
       #|
-      #|By the path counting theorem, result[i,j] will eventually equal
-      #|the number of paths of length original_k from i to j.
-      #|
-      #|The binary exponentiation preserves this because matrix multiplication
-      #|corresponds to path composition: a path of length a followed by a
-      #|path of length b gives a path of length a+b.
+      #|By the path-counting theorem, A^t[i,j] equals the number of paths
+      #|of length t from i to j. Binary exponentiation preserves this
+      #|because matrix multiplication composes path lengths:
+      #|A^a · A^b = A^(a+b).
     ),
   }
 }

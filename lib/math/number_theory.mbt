@@ -23,8 +23,16 @@ fn mod_exp(base : Int64, exp : Int64, m : Int64) -> Int64 {
   } where {
     invariant: e >= 0L && acc >= 0L && acc < m && b >= 0L && b < m,
     reasoning: (
-      #|Same as standard modular exponentiation invariant.
-      #|acc × b^e ≡ base^exp (mod m) is maintained throughout.
+      #|INVARIANT (Binary exponentiation):
+      #|acc * b^e ≡ base^exp (mod m) at every step.
+      #|
+      #|If e is even, we square b and halve e:
+      #|  acc * b^e = acc * (b^2)^(e/2).
+      #|
+      #|If e is odd, we multiply acc by b and decrement e:
+      #|  acc * b^e = (acc*b) * b^(e-1).
+      #|
+      #|When e = 0, acc ≡ base^exp (mod m), which is returned.
     ),
   }
 }

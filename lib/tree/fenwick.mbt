@@ -187,7 +187,10 @@ fn FenwickTree::from_array(arr : ArrayView[Int]) -> FenwickTree {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Copying array values to 1-indexed tree positions.
+      #|INVARIANT (Copy step):
+      #|After processing indices [0..i), tree[t+1] = arr[t] for all t < i.
+      #|This prepares the base values so that the propagation pass can
+      #|aggregate ranges without reading from arr again.
     ),
   }
   // Then propagate to parents
@@ -275,7 +278,9 @@ fn FenwickTree::find_kth(self : FenwickTree, k : Int) -> Int {
   } where {
     invariant: bit >= 0 && pos >= 0 && pos <= self.n,
     reasoning: (
-      #|INVARIANT: pos is the largest index such that prefix_sum(pos) < remaining + already_consumed.
+      #|INVARIANT (Binary lifting):
+      #|pos is the largest index such that prefix_sum(pos) < k, and
+      #|remaining = k - prefix_sum(pos).
       #|
       #|At each step:
       #|  - pos represents the rightmost position we've confirmed has sum < k
@@ -369,7 +374,10 @@ fn FenwickTree2D::update(
       } where {
         invariant: y >= j,
         reasoning: (
-          #|Inner loop traverses column indices in Fenwick tree order.
+          #|INVARIANT (Column traversal):
+          #|y walks the Fenwick ancestors of column j: j, j+lowbit(j), ...
+          #|Each visited y corresponds to a column interval that contains j,
+          #|so updating tree[x,y] adds delta to exactly the ranges covering (i,j).
         ),
       }
       continue x + lowbit(x)
@@ -385,7 +393,8 @@ fn FenwickTree2D::update(
       #|To update (i, j), we must update all (x, y) where:
       #|  x - lowbit(x) < i ≤ x  AND  y - lowbit(y) < j ≤ y
       #|
-      #|This is exactly the Cartesian product of the 1D Fenwick ancestors.
+      #|This is exactly the Cartesian product of the 1D Fenwick ancestors,
+      #|giving O(log n · log m) updates.
     ),
   }
 }
@@ -407,7 +416,10 @@ fn FenwickTree2D::prefix_sum(self : FenwickTree2D, i : Int, j : Int) -> Int {
       } where {
         invariant: y >= 0,
         reasoning: (
-          #|Inner loop: standard 1D Fenwick prefix sum for column.
+          #|INVARIANT (Column sum):
+          #|acc accumulates the 1D Fenwick prefix sum for column y at fixed x,
+          #|so after the loop, inner_sum equals sum of row-ancestor ranges
+          #|for this x.
         ),
       }
       continue x - lowbit(x), sum + inner_sum
