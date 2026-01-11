@@ -112,7 +112,12 @@ fn MaxFlow::bfs(self : MaxFlow, source : Int, sink : Int) -> Bool {
   } where {
     invariant: i >= 0 && i <= self.n,
     reasoning: (
-      #|Reset levels before BFS.
+      #|INVARIANT (reset levels):
+      #|level[0..i) are reset to -1 from the previous BFS phase.
+      #|MAINTENANCE:
+      #|Set level[i] = -1 to clear the next node.
+      #|TERMINATION:
+      #|At i = n, all levels are reset.
     ),
   }
   self.level[source] = 0
@@ -137,7 +142,12 @@ fn MaxFlow::bfs(self : MaxFlow, source : Int, sink : Int) -> Bool {
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Scan outgoing edges to build the level graph.
+        #|INVARIANT (bfs edges):
+        #|Edges adj[u][0..i) have been scanned; reachable neighbors are leveled.
+        #|MAINTENANCE:
+        #|If residual > 0 and unseen, set level and enqueue.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing edges are processed.
       ),
     }
   }
@@ -190,7 +200,12 @@ fn MaxFlow::max_flow(self : MaxFlow, source : Int, sink : Int) -> Int64 {
     } where {
       invariant: i >= 0 && i <= self.n,
       reasoning: (
-        #|Reset DFS iterators for the new level graph.
+        #|INVARIANT (reset iter):
+        #|iter[0..i) are reset for the new level graph.
+        #|MAINTENANCE:
+        #|Set iter[i] = 0 to restart DFS scans at each node.
+        #|TERMINATION:
+        #|At i = n, all iterators are reset.
       ),
     }
 
@@ -204,7 +219,12 @@ fn MaxFlow::max_flow(self : MaxFlow, source : Int, sink : Int) -> Int64 {
     } where {
       invariant: flow >= 0L,
       reasoning: (
-        #|Accumulate augmenting paths until blocking flow is reached.
+        #|INVARIANT (blocking flow):
+        #|flow is the total pushed in this phase plus prior phases.
+        #|MAINTENANCE:
+        #|Add each augmenting path's flow until dfs returns 0.
+        #|TERMINATION:
+        #|When pushed == 0, a blocking flow is reached.
       ),
     }
   }
@@ -231,7 +251,12 @@ fn MaxFlow::min_cut(self : MaxFlow, source : Int) -> Array[(Int, Int, Int64)] {
     } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: (
-        #|Traverse residual edges to mark reachable vertices.
+        #|INVARIANT (min-cut BFS edges):
+        #|Edges adj[u][0..i) have been scanned for residual reachability.
+        #|MAINTENANCE:
+        #|If residual > 0 and unseen, mark visited and enqueue.
+        #|TERMINATION:
+        #|At i = deg(u), all outgoing edges are processed.
       ),
     }
   }
@@ -248,14 +273,24 @@ fn MaxFlow::min_cut(self : MaxFlow, source : Int) -> Array[(Int, Int, Int64)] {
       } where {
         invariant: i >= 0 && i <= self.adj[u].length(),
         reasoning: (
-          #|Collect crossing edges from reachable to unreachable nodes.
+          #|INVARIANT (cut edges):
+          #|Edges adj[u][0..i) have been checked for cut crossings.
+          #|MAINTENANCE:
+          #|If edge goes to an unvisited node and has capacity, add to cut.
+          #|TERMINATION:
+          #|At i = deg(u), all outgoing edges from u are processed.
         ),
       }
     }
   } where {
     invariant: u >= 0 && u <= self.n,
     reasoning: (
-      #|Scan all reachable vertices for cut edges.
+      #|INVARIANT (cut scan):
+      #|Vertices [0..u) have been scanned for cut edges.
+      #|MAINTENANCE:
+      #|Process vertex u if visited, collecting its crossing edges.
+      #|TERMINATION:
+      #|At u = n, all reachable vertices are processed.
     ),
   }
   cut
@@ -375,7 +410,12 @@ test "max flow min cut" {
   } where {
     invariant: i >= 0 && i <= cut.length(),
     reasoning: (
-      #|Sum capacities of cut edges.
+      #|INVARIANT (cut sum):
+      #|cut_capacity equals the sum of cut[0..i) capacities.
+      #|MAINTENANCE:
+      #|Add cut[i].capacity to the running total.
+      #|TERMINATION:
+      #|At i = cut.length(), cut_capacity is the full cut sum.
     ),
   }
   inspect(cut_capacity, content="4")
