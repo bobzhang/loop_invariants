@@ -432,7 +432,12 @@ fn ImplicitTreap::from_array(arr : Array[Int64]) -> ImplicitTreap {
   } where {
     invariant: i >= 0 && i <= arr.length(),
     reasoning: (
-      #|Insert elements in order so array index matches treap position.
+      #|INVARIANT (treap build):
+      #|Elements arr[0..i) have been inserted so position j stores arr[j].
+      #|MAINTENANCE:
+      #|Insert arr[i] at position i, extending the sequence by one.
+      #|TERMINATION:
+      #|At i = arr.length(), treap order matches the array.
     ),
   }
   treap

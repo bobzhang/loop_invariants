@@ -412,7 +412,12 @@ test "treap reverse sorted insertion" {
   } where {
     invariant: i >= -1 && i <= 9,
     reasoning: (
-      #|Values (i+1)..9 have been inserted in reverse order.
+      #|INVARIANT (reverse insertion):
+      #|Values in (i..9] have been inserted; remaining values are <= i.
+      #|MAINTENANCE:
+      #|Insert i, then decrement to continue the reverse sequence.
+      #|TERMINATION:
+      #|At i = -1, all values 0..9 are inserted.
     ),
   }
   inspect(t.size(), content="10")
