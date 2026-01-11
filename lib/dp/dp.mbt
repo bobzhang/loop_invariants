@@ -47,6 +47,10 @@ fn knapsack_01(
         #|from considering items [0..i), not including item i.
         #|
         #|This prevents using the same item multiple times.
+        #|MAINTENANCE:
+        #|Update dp[w] using dp[w - weight] and decrement w.
+        #|TERMINATION:
+        #|When w < weight, all capacities that can include item i are updated.
       ),
     }
   } where {
@@ -62,6 +66,8 @@ fn knapsack_01(
       #|  This correctly considers including or excluding item i.
       #|
       #|TERMINATION: dp[capacity] = optimal value using all n items.
+      #|MAINTENANCE:
+      #|Process item i with the reverse-weight loop, preserving 0/1 usage.
     ),
   }
   dp[capacity]
@@ -112,6 +118,10 @@ fn knapsack_unbounded(
         #|dp[w - weights[i]] is already optimal when we consider item i.
         #|Thus each candidate dp[w - weight] + value is valid and the max
         #|over all items[0..i) is captured in dp[w].
+        #|MAINTENANCE:
+        #|Consider item i and update dp[w], then advance i.
+        #|TERMINATION:
+        #|At i == n, dp[w] is optimal over all items.
       ),
     }
   } where {
@@ -122,6 +132,10 @@ fn knapsack_unbounded(
       #|For each capacity w, we try all items and take the best option.
       #|Since we process w in increasing order and dp[w - weight] is already
       #|computed, we can use the same item multiple times.
+      #|MAINTENANCE:
+      #|After scanning all items, dp[w] is fixed and we advance w.
+      #|TERMINATION:
+      #|At w == capacity + 1, all capacities are computed.
     ),
   }
   dp[capacity]
@@ -177,6 +191,8 @@ fn lis_binary_search(nums : ArrayView[Int]) -> Int {
       #|  - Otherwise: nums[i] gives a smaller tail for length pos+1
       #|
       #|TERMINATION: tails.length() is the LIS length
+      #|MAINTENANCE:
+      #|Replace tails[pos] or append, preserving minimal tails for each length.
     ),
   }
   tails.length()
@@ -201,6 +217,10 @@ fn lower_bound_lis(arr : ArrayView[Int], target : Int) -> Int {
       #|in [hi..len) satisfy arr[idx] >= target. The loop shrinks the
       #|search window until lo == hi, which is the first position where
       #|target can be inserted to keep arr sorted.
+      #|MAINTENANCE:
+      #|Move lo up or hi down based on arr[mid] compared to target.
+      #|TERMINATION:
+      #|At lo == hi, the insertion point is found.
     ),
   }
 }
@@ -240,6 +260,10 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
         #|After processing coins[0..i), dp[a] is the minimum number of coins
         #|needed to form amount a using those coins. Each candidate uses
         #|dp[a - coin], which is already optimal for a smaller amount.
+        #|MAINTENANCE:
+        #|If coin i fits, update dp[a] with dp[a-coin]+1 and advance i.
+        #|TERMINATION:
+        #|At i == coins.length(), dp[a] is minimal over all coins.
       ),
     }
   } where {
@@ -251,6 +275,10 @@ fn coin_change_min(coins : ArrayView[Int], amount : Int) -> Int {
       #|dp[a] = min(dp[a - coin] + 1) over all valid coins.
       #|
       #|If dp[a] remains inf, amount a is unreachable.
+      #|MAINTENANCE:
+      #|After scanning all coins, dp[a] is fixed and we advance a.
+      #|TERMINATION:
+      #|At a == amount + 1, all dp values up to amount are computed.
     ),
   }
   if dp[amount] > amount {
@@ -299,6 +327,10 @@ fn coin_change_ways(coins : ArrayView[Int], amount : Int) -> Int {
       #|we count combinations, not permutations.
       #|
       #|Each coin is either used 0, 1, 2, ... times.
+      #|MAINTENANCE:
+      #|Process coin i and update dp for all reachable amounts.
+      #|TERMINATION:
+      #|At i == coins.length(), dp counts all combinations.
     ),
   }
   dp[amount]
@@ -344,6 +376,10 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
         #|After processing columns [1..j), curr[t] equals LCS length for
         #|s1[0..i) vs s2[0..t). Each update uses prev[j], prev[j-1],
         #|and curr[j-1], matching the standard recurrence.
+        #|MAINTENANCE:
+        #|Compute curr[j] from prev/curr and advance j.
+        #|TERMINATION:
+        #|At j == n + 1, the row for i is fully computed.
       ),
     }
     // Swap rows
@@ -359,6 +395,10 @@ fn longest_common_subsequence(s1 : String, s2 : String) -> Int {
       #|  curr[j] = LCS(i, j) = LCS of s1[0..i) and s2[0..j)
       #|
       #|This correctly implements the recurrence relation.
+      #|MAINTENANCE:
+      #|Fill curr, then copy it into prev for the next iteration.
+      #|TERMINATION:
+      #|At i == m + 1, prev[n] holds the LCS length for the full strings.
     ),
   }
   prev[n]
@@ -403,6 +443,10 @@ fn max_subarray_dp(nums : ArrayView[Int]) -> Int {
       #|
       #|The decision at each step is whether to extend or start fresh.
       #|This is exactly Kadane's algorithm.
+      #|MAINTENANCE:
+      #|Update max_ending_here and max_so_far using nums[i], then advance i.
+      #|TERMINATION:
+      #|At i == n, max_so_far is the maximum subarray sum.
     ),
   }
 }
@@ -454,6 +498,10 @@ fn house_robber(nums : ArrayView[Int]) -> Int {
       #|  - If we skip it: profit = prev1
       #|
       #|We take the maximum.
+      #|MAINTENANCE:
+      #|Compute current, shift prev2/prev1 forward, and advance i.
+      #|TERMINATION:
+      #|At i == n, prev1 holds the optimal robbery sum.
     ),
   }
 }
@@ -499,6 +547,10 @@ fn unique_paths(m : Int, n : Int) -> Int {
       #|First row is all 1s (only one path: all right moves)
       #|First column is all 1s (only one path: all down moves)
       #|Other cells: sum of paths from above and left
+      #|MAINTENANCE:
+      #|Update row i by scanning columns and summing from above/left.
+      #|TERMINATION:
+      #|At i == m, dp[n-1] is the total number of unique paths.
     ),
   }
   dp[n - 1]
@@ -549,6 +601,10 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
         #|the update, dp[j] stores the value from the row above (i-1, j),
         #|and dp[j-1] stores the value for (i, j-1). Taking the min matches
         #|the recurrence for grid paths.
+        #|MAINTENANCE:
+        #|Compute dp[j] from min(from_above, from_left) and advance j.
+        #|TERMINATION:
+        #|At j == n, row i is fully updated.
       ),
     }
   } where {
@@ -557,6 +613,10 @@ fn min_path_sum(grid : Array[Array[Int]]) -> Int {
       #|LOOP INVARIANT: dp[j] = minimum path sum to cell (i, j)
       #|
       #|Each cell's min path = its value + min(path from above, path from left)
+      #|MAINTENANCE:
+      #|Update dp for row i, then advance to the next row.
+      #|TERMINATION:
+      #|At i == m, dp[n-1] is the minimum path sum to the bottom-right cell.
     ),
   }
   dp[n - 1]
@@ -601,6 +661,10 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
         #|After processing words[0..w), dp[i] is true iff some word in that
         #|prefix completes a valid segmentation of s[0..i). If none match,
         #|dp[i] remains false and we continue scanning.
+        #|MAINTENANCE:
+        #|Check word w for a valid segmentation and advance w.
+        #|TERMINATION:
+        #|At w == words.length(), dp[i] is final for this position.
       ),
     }
   } where {
@@ -613,6 +677,10 @@ fn word_break(s : String, word_dict : Array[String]) -> Bool {
       #|For each position i, we check all words in dictionary:
       #|  If dp[i - len(word)] is true and s[i-len(word)..i) == word,
       #|  then dp[i] = true
+      #|MAINTENANCE:
+      #|Scan all dictionary words to determine dp[i], then advance i.
+      #|TERMINATION:
+      #|At i == n + 1, dp[n] indicates full-string segmentability.
     ),
   }
   dp[n]
@@ -633,6 +701,10 @@ fn matches_word(chars : Array[Char], start : Int, word : Array[Char]) -> Bool {
       #|INVARIANT (Prefix match):
       #|All characters in word[0..i) match chars[start..start+i). On the
       #|first mismatch we return false; if we reach the end, the word matches.
+      #|MAINTENANCE:
+      #|Compare chars[start+i] with word[i] and advance i.
+      #|TERMINATION:
+      #|At i == word_len, the full word matches the substring.
     ),
   }
 }
@@ -682,6 +754,10 @@ fn min_palindrome_cuts(s : String) -> Int {
         #|After processing starts [0..i), all substrings of the current
         #|length have been classified. Each entry uses the shorter
         #|substring is_palindrome[i+1][j-1] which is already known.
+        #|MAINTENANCE:
+        #|Compute is_palindrome[i][j] for this start and advance i.
+        #|TERMINATION:
+        #|At i == n - length + 1, all substrings of this length are classified.
       ),
     }
   } where {
@@ -691,6 +767,10 @@ fn min_palindrome_cuts(s : String) -> Int {
       #|Before processing length, all palindromes of smaller lengths are
       #|finalized. This ensures the length-2 and length>2 cases have the
       #|needed subproblems available.
+      #|MAINTENANCE:
+      #|Process all starts for this length, then increment length.
+      #|TERMINATION:
+      #|At length == n + 1, the palindrome table is complete.
     ),
   }
 
@@ -717,6 +797,10 @@ fn min_palindrome_cuts(s : String) -> Int {
           #|After processing j in [1..i), dp[i] is the minimum of
           #|dp[j] + 1 over all starts j where s[j..i) is a palindrome.
           #|This considers every possible final palindrome block.
+          #|MAINTENANCE:
+          #|Consider palindrome s[j..i) and update dp[i], then advance j.
+          #|TERMINATION:
+          #|At j == i, all candidate last cuts have been checked.
         ),
       }
     }
@@ -727,6 +811,10 @@ fn min_palindrome_cuts(s : String) -> Int {
       #|
       #|dp[i] = min over j < i where s[j..i) is palindrome of (dp[j] + 1)
       #|Or 0 if entire s[0..i) is palindrome
+      #|MAINTENANCE:
+      #|Compute dp[i] using the palindrome table, then advance i.
+      #|TERMINATION:
+      #|At i == n + 1, dp[n] is the minimum cuts for the full string.
     ),
   }
   dp[n]
@@ -792,6 +880,10 @@ fn egg_drop(eggs : Int, floors : Int) -> Int {
       #|  - 1 floor tested this trial
       #|  - dp[k-1] floors checkable below (if egg breaks)
       #|  - dp[k] floors checkable above (if egg survives)
+      #|MAINTENANCE:
+      #|Perform a full reverse update for this trial, then increment trials.
+      #|TERMINATION:
+      #|When dp[eggs] >= floors, trials-1 is the minimum needed.
     ),
   }
 }
@@ -841,6 +933,10 @@ fn longest_palindromic_subsequence(s : String) -> Int {
         #|After processing starts [0..i), dp[s][s+length-1] holds the LPS
         #|length for all substrings of the current length. Each update uses
         #|shorter substrings (length-2 or length-1), which are already filled.
+        #|MAINTENANCE:
+        #|Compute dp[i][j] for this start and advance i.
+        #|TERMINATION:
+        #|At i == n - length + 1, all substrings of this length are processed.
       ),
     }
   } where {
@@ -851,6 +947,10 @@ fn longest_palindromic_subsequence(s : String) -> Int {
       #|recurrence for length uses only known values. The rule matches:
       #|  if s[i] == s[j], take dp[i+1][j-1] + 2
       #|  else take max(dp[i+1][j], dp[i][j-1]).
+      #|MAINTENANCE:
+      #|Process all starts for this length, then increment length.
+      #|TERMINATION:
+      #|At length == n + 1, dp[0][n-1] is finalized.
     ),
   }
   dp[0][n - 1]
@@ -902,6 +1002,10 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
           #|After processing k in [i..j), dp[i][j] is the minimum cost among
           #|all splits up to k. Each split considers multiplying the left
           #|subchain and right subchain plus the cost of combining results.
+          #|MAINTENANCE:
+          #|Evaluate split at k, update dp[i][j], then advance k.
+          #|TERMINATION:
+          #|At k == j, all split points have been evaluated.
         ),
       }
     } where {
@@ -910,6 +1014,10 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
         #|INVARIANT (Chain start):
         #|For the current chain length, dp[i][j] is computed for every
         #|start position i, so all chains of this length are covered.
+        #|MAINTENANCE:
+        #|Compute dp[i][j] for this start, then advance i.
+        #|TERMINATION:
+        #|At i == n - len + 2, all starts for this length are processed.
       ),
     }
   } where {
@@ -919,6 +1027,10 @@ fn matrix_chain_mult(dimensions : ArrayView[Int]) -> Int {
       #|All chains shorter than len have their optimal costs computed, so
       #|each dp[i][j] for length len can safely use dp on smaller subchains.
       #|This is the classic optimal substructure for matrix chain multiplication.
+      #|MAINTENANCE:
+      #|Process all starts for this length, then increment len.
+      #|TERMINATION:
+      #|At len == n + 1, dp[1][n] is the optimal cost.
     ),
   }
   dp[1][n]
