@@ -71,6 +71,10 @@ fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
       #|states contains the initial state plus iter blank states. Each step
       #|adds one placeholder, so after 2*max_len iterations we have space for
       #|up to 2n states, which is the maximum size of a suffix automaton.
+      #|MAINTENANCE:
+      #|Pushing one fresh SAMState extends the reserved capacity by one.
+      #|TERMINATION:
+      #|At iter == 2 * max_len, the maximum state capacity is allocated.
     ),
   }
   { states, last: 0, size: 1 }
