@@ -32,7 +32,14 @@ fn sqrt_f64(x : Double) -> Double {
     guess = (guess + x / guess) / 2.0
   } where {
     invariant: iter >= 0 && iter <= 50,
-    reasoning: "Fixed number of Newton iterations to refine the estimate.",
+    reasoning: (
+      #|INVARIANT (Newton iterations):
+      #|Each iteration refines the guess toward sqrt(x).
+      #|MAINTENANCE:
+      #|Apply Newton's update rule to improve the estimate.
+      #|TERMINATION:
+      #|After a fixed number of iterations, guess is sufficiently accurate.
+    ),
   }
   guess
 }
@@ -76,11 +83,25 @@ fn brute_force_closest(points : ArrayView[Point]) -> (Double, Int, Int) {
       }
     } where {
       invariant: j >= i + 1 && j <= n,
-      reasoning: "Compare point i with all later points.",
+      reasoning: (
+        #|INVARIANT (brute force inner):
+        #|All pairs (i, k) with k in [i+1, j) have been checked.
+        #|MAINTENANCE:
+        #|Compare point i with point j.
+        #|TERMINATION:
+        #|At j = n, all pairs with first index i are checked.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: min_dist=INF. M: Check all pairs (i,j) with i<j. Update minimum. T: All pairs checked, minimum found.",
+    reasoning: (
+      #|INVARIANT (brute force outer):
+      #|min_dist is the minimum distance among pairs with first index < i.
+      #|MAINTENANCE:
+      #|Check all pairs starting at i and update min_dist as needed.
+      #|TERMINATION:
+      #|At i = n, all pairs are checked and min_dist is optimal.
+    ),
   }
   (min_dist, p1, p2)
 }
@@ -120,11 +141,26 @@ fn strip_closest(
       }
     } where {
       invariant: j >= i + 1 && j <= n,
-      reasoning: "Check nearby points below i within the current y-window.",
+      reasoning: (
+        #|INVARIANT (strip inner):
+        #|All candidate points below i in [i+1, j) within the y-window
+        #|have been checked.
+        #|MAINTENANCE:
+        #|Compare strip[i] with strip[j] while y-distance < min_dist.
+        #|TERMINATION:
+        #|At j = n or window break, all relevant pairs for i are checked.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: min_dist=delta from recursive calls. M: For each point, check points within y-distance < min_dist. At most 6 such points exist (packing argument). T: All close pairs in strip checked.",
+    reasoning: (
+      #|INVARIANT (strip outer):
+      #|min_dist is the best distance found so far in the strip for indices < i.
+      #|MAINTENANCE:
+      #|Check candidates within the y-window; packing argument bounds checks.
+      #|TERMINATION:
+      #|At i = n, all close pairs in the strip are checked.
+    ),
   }
   (min_dist, p1, p2)
 }
@@ -248,11 +284,25 @@ fn closest_pair_naive(points : Array[(Double, Double)]) -> (Double, Int, Int) {
       }
     } where {
       invariant: j >= i + 1 && j <= n,
-      reasoning: "Compare point i with all later points.",
+      reasoning: (
+        #|INVARIANT (naive inner):
+        #|All pairs (i, k) with k in [i+1, j) have been checked.
+        #|MAINTENANCE:
+        #|Compare point i with point j.
+        #|TERMINATION:
+        #|At j = n, all pairs with first index i are checked.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Scan all points for naive pairwise comparison.",
+    reasoning: (
+      #|INVARIANT (naive outer):
+      #|All pairs with first index < i have been checked.
+      #|MAINTENANCE:
+      #|Scan all pairs starting at i.
+      #|TERMINATION:
+      #|At i = n, all pairs are checked.
+    ),
   }
   (min_dist, p1, p2)
 }
@@ -277,11 +327,25 @@ fn k_closest_pairs(
       pairs.push((d, i, j))
     } where {
       invariant: j >= i + 1 && j <= n,
-      reasoning: "Enumerate all pairs with second index after i.",
+      reasoning: (
+        #|INVARIANT (pair enum inner):
+        #|All pairs (i, k) with k in [i+1, j) have been added to pairs.
+        #|MAINTENANCE:
+        #|Add pair (i, j) with its distance.
+        #|TERMINATION:
+        #|At j = n, all pairs with first index i are added.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Enumerate all point pairs to collect distances.",
+    reasoning: (
+      #|INVARIANT (pair enum outer):
+      #|pairs contains distances for all pairs with first index < i.
+      #|MAINTENANCE:
+      #|Enumerate pairs starting at i.
+      #|TERMINATION:
+      #|At i = n, all point pairs are collected.
+    ),
   }
 
   // Sort by distance
@@ -301,7 +365,14 @@ fn k_closest_pairs(
     result.push(pairs[i])
   } where {
     invariant: i >= 0 && i <= k && i <= pairs.length(),
-    reasoning: "Collect up to k smallest pairs from the sorted list.",
+    reasoning: (
+      #|INVARIANT (take k):
+      #|result contains the first i pairs from the sorted list.
+      #|MAINTENANCE:
+      #|Append pairs[i] to result.
+      #|TERMINATION:
+      #|At i = k or i = pairs.length(), result has the k smallest pairs.
+    ),
   }
   result
 }

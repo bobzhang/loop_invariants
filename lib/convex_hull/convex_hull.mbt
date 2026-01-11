@@ -114,7 +114,15 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
     hull.push(sorted[i])
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: hull is empty; sorted array is in left-to-right order by x-coordinate. M: For each point sorted[i], we pop points from hull while the last three points (second, top, sorted[i]) make a left turn or are collinear (cross product <= 0). This removes points that would violate convexity. Then we push sorted[i]. Key insight: if a point is removed, it lies inside or on the edge of the triangle formed by its neighbors, so it cannot be on the lower hull. T: After processing all points, hull contains the lower hull vertices in left-to-right order. Each consecutive triple makes a strict right turn (cross product > 0), guaranteeing convexity.",
+    reasoning: (
+      #|INVARIANT (lower hull):
+      #|hull contains the lower hull for points in sorted[0..i).
+      #|MAINTENANCE:
+      #|Pop while the last three points make a non-right turn, then push sorted[i].
+      #|Removed points are interior or collinear and cannot be on the lower hull.
+      #|TERMINATION:
+      #|At i = n, hull is the full lower hull in left-to-right order.
+    ),
   }
 
   // Build upper hull
@@ -134,7 +142,17 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
     hull.push(sorted[i])
   } where {
     invariant: i >= -1 && i <= n - 2,
-    reasoning: "I: hull[0..lower_len] contains completed lower hull; upper hull construction starts from rightmost point. M: Processing right-to-left, for each sorted[i], we pop points from hull[lower_len:] while they violate convexity (cross product <= 0). This mirrors lower hull construction but on the upper boundary. The separation at lower_len ensures we don't corrupt the lower hull. T: After i=-1, hull[lower_len:] contains upper hull in right-to-left order. Combined with lower hull, we have a complete convex polygon. Final pop removes duplicate endpoint.",
+    reasoning: (
+      #|INVARIANT (upper hull):
+      #|hull[0..lower_len] is the completed lower hull; hull[lower_len..] is the
+      #|partial upper hull built from sorted points in (i, n).
+      #|MAINTENANCE:
+      #|Process points right-to-left, popping while convexity is violated, then
+      #|push sorted[i] to extend the upper hull.
+      #|TERMINATION:
+      #|At i = -1, the upper hull is complete; combined with lower hull, the
+      #|polygon is closed (duplicate endpoint removed).
+    ),
   }
 
   // Remove last point (duplicate of first)
@@ -170,7 +188,14 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
     }
   } where {
     invariant: i >= 1 && i <= n,
-    reasoning: "Scan remaining points to find the lowest (then leftmost) pivot.",
+    reasoning: (
+      #|INVARIANT (pivot scan):
+      #|pivot_idx is the lowest (then leftmost) point among pts[0..i).
+      #|MAINTENANCE:
+      #|Compare pts[i] to the current pivot and update if it is lower/leftmost.
+      #|TERMINATION:
+      #|At i = n, pivot_idx is the lowest-leftmost point.
+    ),
   }
 
   // Swap pivot to first position
@@ -186,7 +211,14 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
     rest.push(pts[i])
   } where {
     invariant: i >= 1 && i <= n,
-    reasoning: "Collect all points except the pivot into rest.",
+    reasoning: (
+      #|INVARIANT (rest points):
+      #|rest contains pts[1..i) (all points except the pivot).
+      #|MAINTENANCE:
+      #|Append pts[i] to rest.
+      #|TERMINATION:
+      #|At i = n, rest contains all non-pivot points.
+    ),
   }
   rest.sort_by(fn(a, b) {
     let cp = cross(pivot, a, b)
@@ -227,7 +259,15 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
     hull.push(rest[i])
   } where {
     invariant: i >= 0 && i <= rest.length(),
-    reasoning: "I: hull = [pivot]; rest is sorted by polar angle from pivot. M: For each rest[i], while the last three points make a right turn or are collinear, pop the middle point. This maintains the convex hull property: all turns are left turns (CCW). Since points are processed in polar angle order, adding rest[i] extends the boundary; any removed point is interior. T: After processing all points, hull is the convex hull in CCW order. Correctness: polar angle ordering ensures each new point extends the boundary; cross product test ensures only convex vertices remain.",
+    reasoning: (
+      #|INVARIANT (Graham scan):
+      #|hull is the convex hull of the processed points in rest[0..i), in CCW
+      #|order, starting at pivot.
+      #|MAINTENANCE:
+      #|Pop while the last three points make a non-left turn, then push rest[i].
+      #|TERMINATION:
+      #|At i = rest.length(), hull is the convex hull in CCW order.
+    ),
   }
   hull
 }
@@ -264,7 +304,14 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
     }
   } where {
     invariant: i >= 1 && i <= n,
-    reasoning: "Scan remaining points to find the leftmost start.",
+    reasoning: (
+      #|INVARIANT (leftmost scan):
+      #|leftmost is the leftmost point among points[0..i).
+      #|MAINTENANCE:
+      #|Compare points[i] to the current leftmost and update if needed.
+      #|TERMINATION:
+      #|At i = n, leftmost is the leftmost (then lowest) point.
+    ),
   }
   let hull : Array[Point] = []
   let mut current = leftmost
@@ -302,7 +349,14 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
       }
     } where {
       invariant: i >= 0 && i <= n,
-      reasoning: "Test each candidate point against current to choose next.",
+      reasoning: (
+        #|INVARIANT (next candidate):
+        #|next is the best candidate among points[0..i) for the next hull point.
+        #|MAINTENANCE:
+        #|Compare points[i] to next using orientation and distance for collinear.
+        #|TERMINATION:
+        #|At i = n, next is the most counterclockwise choice.
+      ),
     }
     current = next
 
@@ -343,7 +397,14 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
     area = area + delta
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Accumulate shoelace cross terms over all edges.",
+    reasoning: (
+      #|INVARIANT (shoelace):
+      #|area accumulates cross terms for edges in [0, i).
+      #|MAINTENANCE:
+      #|Add the cross term for edge (i, i+1).
+      #|TERMINATION:
+      #|At i = n, area is the full shoelace sum.
+    ),
   }
   if area < 0L {
     -area
@@ -380,7 +441,14 @@ pub fn point_in_hull(hull : Array[Point], p : Point) -> Int {
     }
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "Check point p against each hull edge in order.",
+    reasoning: (
+      #|INVARIANT (point-in-hull):
+      #|p has been checked against edges in [0, i) and is on the left side.
+      #|MAINTENANCE:
+      #|Check edge (i, i+1); if p is to the right, return outside.
+      #|TERMINATION:
+      #|At i = n, p lies inside or on all hull edges.
+    ),
   }
   if on_boundary {
     0
@@ -446,7 +514,16 @@ pub fn hull_diameter_squared(hull : Array[Point]) -> Int64 {
     continue i + 1, curr_j
   } where {
     invariant: i >= 0 && i <= n,
-    reasoning: "I: j=1 is a valid starting antipodal candidate for edge (0,1). M: For edge (i,i+1), we advance j while cross(hull[i], hull[i+1], hull[j+1]) > cross(hull[i], hull[i+1], hull[j]), finding the vertex farthest from the edge (maximum perpendicular distance = maximum cross product). Key insight: as we rotate the edge (i→i+1), the antipodal point j only moves forward (never backward) due to convexity. We compute distances from both edge endpoints to j and update max_dist. T: After processing all edges, max_dist is the squared diameter. O(n) time because j advances at most n times total across all iterations of i.",
+    reasoning: (
+      #|INVARIANT (rotating calipers):
+      #|j is the current antipodal candidate for edge (i, i+1), and max_dist
+      #|tracks the best diameter so far.
+      #|MAINTENANCE:
+      #|Advance j while area increases, then update distances for edge endpoints.
+      #|Convexity ensures j only moves forward.
+      #|TERMINATION:
+      #|After all edges, max_dist is the squared diameter; total time is O(n).
+    ),
   }
   max_dist
 }
