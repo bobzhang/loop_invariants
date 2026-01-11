@@ -72,7 +72,12 @@ fn LinkCutTree::new(n : Int) -> LinkCutTree {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Initialize all nodes with default values.
+      #|INVARIANT (init nodes):
+      #|nodes[0..i) are initialized with default values.
+      #|MAINTENANCE:
+      #|Push a node initialized with zero value and empty pointers.
+      #|TERMINATION:
+      #|At i = n, all nodes are initialized.
     ),
   }
   { nodes, }
@@ -206,7 +211,12 @@ fn LinkCutTree::splay(self : LinkCutTree, v : Int) -> Unit {
   } where {
     invariant: i >= -1 && i < path.length(),
     reasoning: (
-      #|Apply pending reversals from splay root down to v.
+      #|INVARIANT (push down path):
+      #|Nodes above index i in path have been pushed down.
+      #|MAINTENANCE:
+      #|Apply push_down at path[i] to propagate reversals.
+      #|TERMINATION:
+      #|At i = -1, all nodes on the path are pushed down.
     ),
   }
 
@@ -580,7 +590,12 @@ test "linkcut star topology" {
   } where {
     invariant: i >= 1 && i <= 6,
     reasoning: (
-      #|Attach each leaf to the center node.
+      #|INVARIANT (build star):
+      #|Leaves [1..i) are linked to the center 0.
+      #|MAINTENANCE:
+      #|Link leaf i to the center.
+      #|TERMINATION:
+      #|At i = 6, the star is fully built.
     ),
   }
 
@@ -590,7 +605,12 @@ test "linkcut star topology" {
   } where {
     invariant: i >= 1 && i <= 6,
     reasoning: (
-      #|Verify each leaf remains connected to the center.
+      #|INVARIANT (verify star):
+      #|Leaves [1..i) have been verified connected to the center.
+      #|MAINTENANCE:
+      #|Check connectivity for leaf i.
+      #|TERMINATION:
+      #|At i = 6, all leaves are verified connected.
     ),
   }
 

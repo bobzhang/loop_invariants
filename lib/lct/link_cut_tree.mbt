@@ -69,7 +69,12 @@ fn LinkCutTree::new(n : Int) -> LinkCutTree {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Initialize all nodes with default values.
+      #|INVARIANT (init nodes):
+      #|nodes[0..i) are initialized with default values.
+      #|MAINTENANCE:
+      #|Push a freshly initialized node for index i.
+      #|TERMINATION:
+      #|At i = n, all nodes are initialized.
     ),
   }
   { nodes, }
@@ -84,7 +89,12 @@ fn LinkCutTree::with_values(values : Array[Int]) -> LinkCutTree {
   } where {
     invariant: i >= 0 && i <= values.length(),
     reasoning: (
-      #|Initialize nodes from the provided values array.
+      #|INVARIANT (init values):
+      #|nodes[0..i) reflect values[0..i) in node.value.
+      #|MAINTENANCE:
+      #|Push a node initialized with values[i].
+      #|TERMINATION:
+      #|At i = values.length(), all values are loaded.
     ),
   }
   { nodes, }
@@ -247,7 +257,12 @@ fn LinkCutTree::push_down_path(self : LinkCutTree, x : Int) -> Unit {
   } where {
     invariant: node >= 0 && node < self.nodes.length(),
     reasoning: (
-      #|Collect the path from x up to its current splay root.
+      #|INVARIANT (collect path):
+      #|node is a valid ancestor on the path from x to the splay root.
+      #|MAINTENANCE:
+      #|Move to the parent until the splay root is reached.
+      #|TERMINATION:
+      #|At the root, the full path is collected.
     ),
   }
 
@@ -257,7 +272,12 @@ fn LinkCutTree::push_down_path(self : LinkCutTree, x : Int) -> Unit {
   } where {
     invariant: i >= -1 && i < path.length(),
     reasoning: (
-      #|Push lazy flags from root down to x to maintain correctness.
+      #|INVARIANT (push down path):
+      #|Lazy flags are pushed for nodes above index i in path.
+      #|MAINTENANCE:
+      #|Push down at path[i] to propagate reversals to its children.
+      #|TERMINATION:
+      #|At i = -1, all nodes on the path are pushed down.
     ),
   }
 }
@@ -611,7 +631,12 @@ test "lct stress test" {
   } where {
     invariant: i >= 1 && i <= n,
     reasoning: (
-      #|Link each node to its predecessor to form a chain.
+      #|INVARIANT (build chain):
+      #|Nodes [0..i) form a single chain rooted at 0.
+      #|MAINTENANCE:
+      #|Link node i to i-1 to extend the chain by one.
+      #|TERMINATION:
+      #|At i = n, the full chain is built.
     ),
   }
 
@@ -621,7 +646,12 @@ test "lct stress test" {
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|Verify that all nodes are still in the same tree.
+      #|INVARIANT (verify roots):
+      #|Nodes [0..i) have been verified to share root 0.
+      #|MAINTENANCE:
+      #|Check node i and advance.
+      #|TERMINATION:
+      #|At i = n, all nodes are verified in the same tree.
     ),
   }
 
