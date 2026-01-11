@@ -93,6 +93,10 @@ fn ConvexHullTrick::query_min(self : ConvexHullTrick, x : Int64) -> Int64 {
       #|CONVEX HULL PROPERTY: The lower envelope is convex.
       #|Moving right increases the slope of the optimal line.
       #|Binary search finds the transition point.
+      #|MAINTENANCE:
+      #|Compare mid and mid+1; move the bound toward the smaller line.
+      #|TERMINATION:
+      #|At lo == hi, the remaining line is optimal for x.
     ),
   }
 }
@@ -439,6 +443,10 @@ fn knuth_optimization(
           #|
           #|By constraining the search range, we reduce total work
           #|from O(n³) to O(n²) because sum of ranges is O(n²).
+          #|MAINTENANCE:
+          #|Evaluate dp[i][k] within the restricted range and update opt[i][j].
+          #|TERMINATION:
+          #|At k == hi_opt + 1, the optimal split for (i,j) is chosen.
         ),
       }
     } where {
@@ -531,6 +539,10 @@ fn sliding_window_dp(arr : ArrayView[Int64], k : Int) -> Array[Int64] {
       #|with dp values in increasing order.
       #|
       #|MONOTONE QUEUE INSIGHT: Each element enters/exits once -> O(n) total.
+      #|MAINTENANCE:
+      #|Drop out-of-window indices and dominated dp values, then push i.
+      #|TERMINATION:
+      #|At i == n, dp is computed for all positions.
     ),
   }
   dp
@@ -585,6 +597,10 @@ fn aliens_trick(
       #|- Adding penalty λ per item makes DP choose fewer items as λ increases
       #|- Binary search on λ to find where exactly target_k items are chosen
       #|- Final answer = dp_cost - k * λ
+      #|MAINTENANCE:
+      #|Evaluate compute_dp(mid) and tighten [lo, hi] toward target_k.
+      #|TERMINATION:
+      #|After 100 iterations, hi is a stable penalty for the target regime.
     ),
   }
   let (cost, k) = compute_dp(hi)
