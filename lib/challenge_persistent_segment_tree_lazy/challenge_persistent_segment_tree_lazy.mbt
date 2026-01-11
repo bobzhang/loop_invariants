@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Node {
+pub enum Node {
   Leaf(sum~ : Int, tag~ : Int)
   Branch(sum~ : Int, tag~ : Int, left~ : Node, right~ : Node)
 } derive(Show)
@@ -42,7 +42,12 @@ fn tree_valid(node : Node, len : Int) -> Bool {
 }
 
 ///|
-fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
+pub fn total(node : Node) -> Int {
+  node_sum(node)
+}
+
+///|
+pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(sum=arr[l], tag=0)
   } else {
@@ -63,7 +68,7 @@ fn apply(node : Node, len : Int, delta : Int) -> Node {
 }
 
 ///|
-fn range_add(
+pub fn range_add(
   node : Node,
   l : Int,
   r : Int,
@@ -99,7 +104,7 @@ fn range_add(
 }
 
 ///|
-fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
+pub fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0
   } else if ql <= l && r <= qr {
@@ -123,7 +128,7 @@ fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 ///|
 /// Apply a list of range updates (l, r, delta) where r is exclusive.
 #warnings("+missing_invariant+missing_reasoning")
-fn apply_updates(
+pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int, Int)],

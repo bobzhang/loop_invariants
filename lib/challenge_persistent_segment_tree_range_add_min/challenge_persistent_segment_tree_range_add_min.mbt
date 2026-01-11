@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Node {
+pub enum Node {
   Leaf(min~ : Int, tag~ : Int)
   Branch(min~ : Int, tag~ : Int, left~ : Node, right~ : Node)
 } derive(Show)
@@ -47,7 +47,12 @@ fn apply_add(node : Node, delta : Int) -> Node {
 }
 
 ///|
-fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
+pub fn min_value(node : Node) -> Int {
+  node_min(node)
+}
+
+///|
+pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(min=arr[l], tag=0)
   } else {
@@ -64,7 +69,7 @@ fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 }
 
 ///|
-fn range_add(
+pub fn range_add(
   node : Node,
   l : Int,
   r : Int,
@@ -97,7 +102,7 @@ fn range_add(
 }
 
 ///|
-fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
+pub fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0x3fffffff
   } else if ql <= l && r <= qr {
@@ -124,7 +129,7 @@ fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 ///|
 /// Apply range adds (l, r, delta) where r is exclusive.
 #warnings("+missing_invariant+missing_reasoning")
-fn apply_updates(
+pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int, Int)],

@@ -14,7 +14,7 @@ fn abs_int(x : Int) -> Int {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn gcd(a : Int, b : Int) -> Int {
+pub fn gcd(a : Int, b : Int) -> Int {
   let x0 = abs_int(a)
   let y0 = abs_int(b)
   for x = x0, y = y0 {
@@ -37,7 +37,7 @@ fn gcd(a : Int, b : Int) -> Int {
 }
 
 ///|
-enum Node {
+pub enum Node {
   Leaf(g~ : Int)
   Branch(g~ : Int, left~ : Node, right~ : Node)
 } derive(Show)
@@ -67,7 +67,12 @@ fn tree_valid(node : Node, len : Int) -> Bool {
 }
 
 ///|
-fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
+pub fn gcd_value(node : Node) -> Int {
+  node_gcd(node)
+}
+
+///|
+pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(g=arr[l])
   } else {
@@ -79,7 +84,7 @@ fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 }
 
 ///|
-fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
+pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(g=value)
   } else {
@@ -107,7 +112,7 @@ fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
 }
 
 ///|
-fn range_gcd(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
+pub fn range_gcd(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0
   } else if ql <= l && r <= qr {
@@ -125,7 +130,11 @@ fn range_gcd(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 ///|
 /// Apply point updates (idx, value).
 #warnings("+missing_invariant+missing_reasoning")
-fn apply_updates(root : Node, n : Int, updates : ArrayView[(Int, Int)]) -> Node {
+pub fn apply_updates(
+  root : Node,
+  n : Int,
+  updates : ArrayView[(Int, Int)],
+) -> Node {
   let m = updates.length()
   for i = 0, tree = root {
     if i >= m {

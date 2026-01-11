@@ -4,7 +4,7 @@
 // ============================================================================
 
 ///|
-enum Node {
+pub enum Node {
   Leaf(sum~ : Int, tag~ : Int?)
   Branch(sum~ : Int, tag~ : Int?, left~ : Node, right~ : Node)
 } derive(Show)
@@ -51,7 +51,12 @@ fn apply_assign(node : Node, len : Int, value : Int) -> Node {
 }
 
 ///|
-fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
+pub fn total(node : Node) -> Int {
+  node_sum(node)
+}
+
+///|
+pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(sum=arr[l], tag=None)
   } else {
@@ -63,7 +68,7 @@ fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 }
 
 ///|
-fn range_assign(
+pub fn range_assign(
   node : Node,
   l : Int,
   r : Int,
@@ -104,7 +109,7 @@ fn range_assign(
 }
 
 ///|
-fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
+pub fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0
   } else if ql <= l && r <= qr {
@@ -133,7 +138,7 @@ fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 ///|
 /// Apply range assignments (l, r, value), where r is exclusive.
 #warnings("+missing_invariant+missing_reasoning")
-fn apply_updates(
+pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int, Int)],
