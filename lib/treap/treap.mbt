@@ -396,13 +396,8 @@ test "treap duplicates" {
 ///|
 test "treap sorted insertion" {
   let t = Treap::new()
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     t.insert(i.to_int64())
-  } where {
-    invariant: i >= 0 && i <= 10,
-    reasoning: (
-      #|Values 0..i-1 have been inserted.
-    ),
   }
   inspect(t.size(), content="10")
   inspect(t.kth_element(0), content="Some(0)")
@@ -422,12 +417,7 @@ test "treap reverse sorted insertion" {
   }
   inspect(t.size(), content="10")
   let arr = t.to_array()
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     inspect(arr[i] == i.to_int64(), content="true")
-  } where {
-    invariant: i >= 0 && i <= 10,
-    reasoning: (
-      #|arr[0..i) has been verified to equal 0..i-1.
-    ),
   }
 }

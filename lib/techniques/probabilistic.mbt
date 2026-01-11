@@ -312,13 +312,8 @@ test "morris_counter" {
   let counter = make_morris_counter(rng)
 
   // Increment many times
-  for i = 0; i < 1000; i = i + 1 {
+  for _ in 0..<1000 {
     morris_increment(counter)
-  } where {
-    invariant: i >= 0 && i <= 1000,
-    reasoning: (
-      #|Drive the counter through many probabilistic increments.
-    ),
   }
 
   // Should give some positive estimate
@@ -465,13 +460,8 @@ test "simple_hll" {
   let hll = make_simple_hll()
 
   // Add many elements
-  for i = 0; i < 1000; i = i + 1 {
+  for i in 0..<1000 {
     hll_add(hll, i)
-  } where {
-    invariant: i >= 0 && i <= 1000,
-    reasoning: (
-      #|Feed sequential values to update the maximum zero count.
-    ),
   }
 
   // Estimate should be in the right ballpark

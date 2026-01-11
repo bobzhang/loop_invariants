@@ -491,13 +491,8 @@ test "lichao node efficiency" {
   let tree = LiChaoTree::new(0L, 1000000L)
 
   // Insert several lines
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     tree.insert(i.to_int64(), (10 - i).to_int64())
-  } where {
-    invariant: i >= 0 && i <= 10,
-    reasoning: (
-      #|Insert a small set of lines to stress node creation.
-    ),
   }
 
   // Should create relatively few nodes

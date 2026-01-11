@@ -508,13 +508,8 @@ test "linkcut path sum" {
   let lct = LinkCutTree::new(5)
 
   // Set values
-  for i = 0; i < 5; i = i + 1 {
+  for i in 0..<5 {
     lct.set_value(i, (i + 1).to_int64())
-  } where {
-    invariant: i >= 0 && i <= 5,
-    reasoning: (
-      #|Initialize node values for the path-sum test.
-    ),
   }
 
   // Build path: 0 - 1 - 2 - 3 - 4

@@ -580,13 +580,8 @@ test "fenwick tree large updates" {
   let ft = FenwickTree::new(10)
 
   // Add large values
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     ft.add(i, 1000000000L)
-  } where {
-    invariant: i >= 0 && i <= 10,
-    reasoning: (
-      #|All indices in [0..i) have been updated with the large delta.
-    ),
   }
   inspect(ft.prefix_sum(9), content="10000000000")
 }

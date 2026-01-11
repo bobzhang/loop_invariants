@@ -347,11 +347,8 @@ test "mo empty queries" {
 test "mo large block" {
   // Test with more elements to verify sqrt blocking
   let arr : Array[Int] = []
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     arr.push(i % 10)
-  } where {
-    invariant: i >= 0 && i <= 100,
-    reasoning: "I: arr length equals i. M: Push one element per iteration. T: After i = 100, arr has 100 elements.",
   }
   let mo = MoDistinct::new(arr)
   let queries = [(0, 99), (0, 9), (50, 59), (25, 75)]

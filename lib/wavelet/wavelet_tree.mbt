@@ -707,25 +707,15 @@ test "wavelet tree single element" {
 test "wavelet tree stress" {
   // Build tree with pattern
   let arr : Array[Int] = []
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     arr.push(i % 10)
-  } where {
-    invariant: i >= 0 && i <= 100,
-    reasoning: (
-      #|arr[0..i) filled with repeating 0..9 pattern.
-    ),
   }
   let wt = WaveletTree::build(arr, 10)
 
   // Each value 0-9 appears 10 times
-  for v = 0; v < 10; v = v + 1 {
+  for v in 0..<10 {
     let cnt = wt.count(0, 100, v)
     guard cnt is 10 else { fail("Expected count 10 for value \{v}") }
-  } where {
-    invariant: v >= 0 && v <= 10,
-    reasoning: (
-      #|Counts verified for values [0..v).
-    ),
   }
 
   // Quantile checks

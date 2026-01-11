@@ -381,26 +381,16 @@ test "union find path compression" {
   let uf = UnionFind::new(10)
 
   // Create a chain: 0 <- 1 <- 2 <- ... <- 9
-  for i = 1; i < 10; i = i + 1 {
+  for i in 1..<10 {
     let _ = uf.union(i - 1, i)
 
-  } where {
-    invariant: i >= 1 && i <= 10,
-    reasoning: (
-      #|Unions have been applied for pairs (0,1)..(i-1,i), forming a chain.
-    ),
   }
 
   // Find from deepest element
   let root = uf.find(9)
 
   // After find with path compression, all should point to root
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     inspect(uf.find(i) == root, content="true")
-  } where {
-    invariant: i >= 0 && i <= 10,
-    reasoning: (
-      #|All nodes in [0..i) have been verified to compress to the root.
-    ),
   }
 }

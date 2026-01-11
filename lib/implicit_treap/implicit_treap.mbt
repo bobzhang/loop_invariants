@@ -601,13 +601,8 @@ test "implicit treap stress" {
   let treap = ImplicitTreap::new()
 
   // Build sequence 0..99
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     treap.push_back(i.to_int64())
-  } where {
-    invariant: i >= 0 && i <= 100,
-    reasoning: (
-      #|Append sequential values to build a length-100 sequence.
-    ),
   }
   inspect(treap.size(), content="100")
   inspect(treap.range_sum(0, 100), content="4950") // Sum 0..99

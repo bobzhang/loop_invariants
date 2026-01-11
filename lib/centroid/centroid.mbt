@@ -204,13 +204,10 @@ test "centroid depth bound" {
 
   // Check all depths are reasonable (≤ log2(7) ≈ 3)
   let mut max_depth = 0
-  for i = 0; i < 7; i = i + 1 {
+  for i in 0..<7 {
     if ct.get_depth(i) > max_depth {
       max_depth = ct.get_depth(i)
     }
-  } where {
-    invariant: i >= 0 && i <= 7,
-    reasoning: "Scan all nodes to track maximum centroid depth.",
   }
   inspect(max_depth <= 3, content="true")
 }
