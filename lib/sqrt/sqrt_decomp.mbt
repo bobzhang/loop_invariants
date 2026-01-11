@@ -52,6 +52,11 @@ fn isqrt_ceil(n : Int) -> Int {
       #|is non-increasing and converges to floor(sqrt(n)).
       #|
       #|We return the ceiling by checking whether x^2 already reaches n.
+      #|MAINTENANCE:
+      #|When next < x, we replace x with a tighter upper bound, preserving
+      #|x >= sqrt(n) and moving toward the fixed point.
+      #|TERMINATION:
+      #|When next >= x, x is stable (floor sqrt), so we adjust to the ceiling.
     ),
   }
 }
@@ -91,6 +96,10 @@ fn SqrtSum::build(arr : Array[Int]) -> SqrtSum {
       #|After processing elements [0..i), each block sum equals the sum of
       #|arr entries assigned to that block within that prefix. Since every
       #|index maps to exactly one block, the invariant accumulates correctly.
+      #|MAINTENANCE:
+      #|Add arr[i] to its block, extending the prefix sums.
+      #|TERMINATION:
+      #|At i = n, all blocks contain the total sums for the full array.
     ),
   }
   { arr: arr.copy(), blocks, block_size }
@@ -143,6 +152,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
       #|sum is the sum of arr[l..i) within the left boundary block. This
       #|handles the partial block exactly so no element is missed or double
       #|counted in the final range sum.
+      #|MAINTENANCE:
+      #|Add arr[i] and advance i, extending the left partial sum.
+      #|TERMINATION:
+      #|At i = left_block_end + 1, the left boundary is fully summed.
     ),
   }
 
@@ -176,6 +189,10 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
       #|INVARIANT (Right partial):
       #|sum equals the sum of arr[right_block_start..i) for the right boundary
       #|block, completing the final partial segment of the query.
+      #|MAINTENANCE:
+      #|Add arr[i] and advance i, extending the right partial sum.
+      #|TERMINATION:
+      #|At i = r + 1, the right boundary is fully summed.
     ),
   }
   left_sum + middle_sum + right_sum
@@ -240,6 +257,10 @@ fn SqrtMin::build(arr : Array[Int]) -> SqrtMin {
       #|After processing elements [0..i), blocks[b] is the minimum of all
       #|arr indices in that block that lie within the processed prefix.
       #|By scanning all indices, each block minimum becomes correct.
+      #|MAINTENANCE:
+      #|Update the current block minimum with arr[i] if needed.
+      #|TERMINATION:
+      #|At i = n, all blocks have the correct minimums.
     ),
   }
   { arr: arr.copy(), blocks, pending, block_size }
@@ -341,6 +362,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
         #|INVARIANT (Single block scan):
         #|m is the minimum of values in arr[l..i), with the block's pending
         #|lazy add applied. This yields the exact minimum for the query range.
+        #|MAINTENANCE:
+        #|Compare val against m and advance i, extending the scanned prefix.
+        #|TERMINATION:
+        #|At i = r + 1, m is the minimum on [l, r].
       ),
     }
   }
@@ -363,6 +388,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
       #|INVARIANT (Left boundary min):
       #|m tracks the minimum over arr[l..i) within the left partial block,
       #|including the block's pending add.
+      #|MAINTENANCE:
+      #|Update m with the next value and advance i.
+      #|TERMINATION:
+      #|At i = left_block_end + 1, the left boundary minimum is complete.
     ),
   }
 
@@ -384,6 +413,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
       #|INVARIANT (Middle blocks min):
       #|m is the minimum across all complete blocks processed so far, each
       #|using blocks[b] plus its pending lazy value.
+      #|MAINTENANCE:
+      #|Compare the next block_min against m and advance b.
+      #|TERMINATION:
+      #|At b = right_block, all full blocks are folded into m.
     ),
   }
 
@@ -405,6 +438,10 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
       #|INVARIANT (Right boundary min):
       #|m is the minimum over arr[right_block_start..i) with the pending add
       #|applied, completing the boundary scan.
+      #|MAINTENANCE:
+      #|Update m with the next value and advance i.
+      #|TERMINATION:
+      #|At i = r + 1, the right boundary minimum is complete.
     ),
   }
 
@@ -438,6 +475,10 @@ fn SqrtMin::range_add(self : SqrtMin, l : Int, r : Int, val : Int) -> Unit {
         #|INVARIANT (Single-block update):
         #|All elements in arr[l..i) have been incremented by val. We update
         #|individually because lazy tags are pushed for this block.
+        #|MAINTENANCE:
+        #|Increment arr[i] and advance i to extend the updated prefix.
+        #|TERMINATION:
+        #|At i = r + 1, the entire block segment is updated.
       ),
     }
     self.recompute_block(left_block)
@@ -455,6 +496,10 @@ fn SqrtMin::range_add(self : SqrtMin, l : Int, r : Int, val : Int) -> Unit {
       #|INVARIANT (Left boundary update):
       #|Elements in arr[l..i) within the left boundary block have been updated
       #|by val after pushing any pending lazy tag.
+      #|MAINTENANCE:
+      #|Increment arr[i] and advance i to extend the updated prefix.
+      #|TERMINATION:
+      #|At i = left_block_end + 1, the left boundary update is complete.
     ),
   }
   self.recompute_block(left_block)
@@ -469,6 +514,10 @@ fn SqrtMin::range_add(self : SqrtMin, l : Int, r : Int, val : Int) -> Unit {
       #|All fully covered blocks in [left_block+1..b) have had their lazy
       #|pending tag increased by val, so queries will reflect the update
       #|without touching individual elements.
+      #|MAINTENANCE:
+      #|Increment pending[b] for the next full block and advance b.
+      #|TERMINATION:
+      #|At b = right_block, all full blocks are updated lazily.
     ),
   }
 
@@ -483,6 +532,10 @@ fn SqrtMin::range_add(self : SqrtMin, l : Int, r : Int, val : Int) -> Unit {
       #|INVARIANT (Right boundary update):
       #|Elements in arr[right_block_start..i) have been incremented by val
       #|after pushing the block's lazy tag.
+      #|MAINTENANCE:
+      #|Increment arr[i] and advance i to extend the updated prefix.
+      #|TERMINATION:
+      #|At i = r + 1, the right boundary update is complete.
     ),
   }
   self.recompute_block(right_block)
@@ -664,6 +717,11 @@ fn MoSolver::solve_distinct(
       #|distinct equals the number of values with count[v] > 0 in the current
       #|window. Every increment/decrement updates count and distinct in sync,
       #|so distinct never becomes negative.
+      #|MAINTENANCE:
+      #|Each pointer move updates count[v] and adjusts distinct exactly when
+      #|a value enters or leaves the window.
+      #|TERMINATION:
+      #|At loop end, distinct matches the current query's window.
     ),
   }
   results
@@ -716,12 +774,22 @@ fn IntervalTree::new(arr : Array[Int]) -> IntervalTree {
       #|INVARIANT (Run compression):
       #|i scans one past the array end as a sentinel. When the value changes
       #|or we hit the sentinel, we close the run [start, i-1] as one interval.
+      #|MAINTENANCE:
+      #|If the run continues, increment i; if it ends, emit the interval and
+      #|reset start to the new run.
+      #|TERMINATION:
+      #|At i = arr.length() + 1, all runs are emitted.
     ),
     invariant: start >= 0 && start <= i,
     reasoning: (
       #|INVARIANT (Run start):
       #|start is the first index of the current equal-value run, so
       #|arr[start..i) all share the same value.
+      #|MAINTENANCE:
+      #|start changes only when a run ends, keeping start at the next run's
+      #|first index.
+      #|TERMINATION:
+      #|At loop end, start is positioned at the sentinel boundary.
     ),
   }
   { intervals, }
@@ -749,12 +817,21 @@ fn IntervalTree::find_interval(self : IntervalTree, pos : Int) -> Int? {
       #|INVARIANT (Binary search window):
       #|Intervals containing pos, if any, must lie in index range [lo, hi].
       #|When hi < lo, the range is empty and no interval contains pos.
+      #|MAINTENANCE:
+      #|Each comparison discards half the window while preserving all
+      #|possible intervals that could contain pos.
+      #|TERMINATION:
+      #|When lo > hi, no interval contains pos.
     ),
     invariant: hi < self.intervals.length(),
     reasoning: (
       #|INVARIANT (Index bounds):
       #|hi remains within valid indices or becomes -1 when the search window
       #|is empty, so array accesses stay safe.
+      #|MAINTENANCE:
+      #|Updates keep hi within [-1, length-1].
+      #|TERMINATION:
+      #|At exit, hi has moved past lo or a match is found.
     ),
   }
 }
@@ -808,6 +885,10 @@ fn IntervalTree::assign(self : IntervalTree, l : Int, r : Int, v : Int) -> Unit 
       #|INVARIANT (Right boundary scan):
       #|i advances while interval starts are <= r, so i-1 is the last interval
       #|that intersects [l, r]. This identifies the range to replace.
+      #|MAINTENANCE:
+      #|Advance i while the interval start remains within the assignment range.
+      #|TERMINATION:
+      #|When the condition fails, i-1 is the last overlapping interval.
     ),
   }
   if right_idx >= left_idx {
@@ -825,6 +906,10 @@ fn IntervalTree::assign(self : IntervalTree, l : Int, r : Int, v : Int) -> Unit 
         #|After removing j intervals, all original intervals in [left_idx, left_idx+j)
         #|have been deleted. This clears the overlapping range so the new
         #|single interval can be inserted.
+        #|MAINTENANCE:
+        #|Remove one more interval at left_idx, increasing j by one.
+        #|TERMINATION:
+        #|At j = num_to_remove, the entire overlapping range is cleared.
       ),
     }
     self.intervals.insert(left_idx, { l, r, v })
@@ -855,6 +940,10 @@ fn IntervalTree::query_sum(self : IntervalTree, l : Int, r : Int) -> Int {
       #|INVARIANT (Sum accumulation):
       #|s equals the total contribution of all processed intervals that
       #|overlap [l, r]. Non-overlapping intervals contribute 0.
+      #|MAINTENANCE:
+      #|Add the contribution of interval i if it overlaps [l, r].
+      #|TERMINATION:
+      #|At i = intervals.length(), s is the full range sum.
     ),
   }
   sum
@@ -883,6 +972,10 @@ fn IntervalTree::range_add(
       #|INVARIANT (Range add):
       #|All intervals in [left_idx, i) intersect [l, r] and have been incremented
       #|by val. The split ensures interval boundaries align with l and r.
+      #|MAINTENANCE:
+      #|Increment the next overlapping interval and advance i.
+      #|TERMINATION:
+      #|At i where interval.l > r, all affected intervals are updated.
     ),
   }
 }
