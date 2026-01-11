@@ -10,13 +10,13 @@ enum Stack[T] {
 } derive(Show)
 
 ///|
-struct Queue[T] {
+pub struct Queue[T] {
   front : Stack[T]
   back : Stack[T]
 } derive(Show)
 
 ///|
-fn[T] empty() -> Queue[T] {
+pub fn[T] empty() -> Queue[T] {
   { front: Stack::Nil, back: Stack::Nil }
 }
 
@@ -29,7 +29,7 @@ fn[T] size_stack(s : Stack[T]) -> Int {
 }
 
 ///|
-fn[T] size(q : Queue[T]) -> Int {
+pub fn[T] size(q : Queue[T]) -> Int {
   size_stack(q.front) + size_stack(q.back)
 }
 
@@ -63,12 +63,12 @@ fn[T] normalize(q : Queue[T]) -> Queue[T] {
 }
 
 ///|
-fn[T] enqueue(q : Queue[T], value : T) -> Queue[T] {
+pub fn[T] enqueue(q : Queue[T], value : T) -> Queue[T] {
   { front: q.front, back: Stack::Cons(head=value, tail=q.back) }
 }
 
 ///|
-fn[T] peek(q : Queue[T]) -> T? {
+pub fn[T] peek(q : Queue[T]) -> T? {
   let norm = normalize(q)
   match norm.front {
     Stack::Nil => None
@@ -77,7 +77,7 @@ fn[T] peek(q : Queue[T]) -> T? {
 }
 
 ///|
-fn[T] dequeue(q : Queue[T]) -> (T, Queue[T])? {
+pub fn[T] dequeue(q : Queue[T]) -> (T, Queue[T])? {
   let norm = normalize(q)
   match norm.front {
     Stack::Nil => None

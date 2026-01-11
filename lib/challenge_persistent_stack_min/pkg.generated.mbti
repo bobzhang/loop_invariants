@@ -2,11 +2,25 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_stack_min"
 
 // Values
+pub fn empty() -> MinStack
+
+pub fn from_array(ArrayView[Int]) -> MinStack
+
+pub fn min_value(MinStack) -> Int?
+
+pub fn pop(MinStack) -> (Int, MinStack)?
+
+pub fn push(MinStack, Int) -> MinStack
+
+pub fn size(MinStack) -> Int
 
 // Errors
 
 // Types and methods
-type MinStack
+pub enum MinStack {
+  Nil
+  Cons(value~ : Int, min~ : Int, tail~ : MinStack)
+}
 pub impl Show for MinStack
 
 // Type aliases

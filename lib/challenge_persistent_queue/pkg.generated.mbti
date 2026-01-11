@@ -2,11 +2,23 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_queue"
 
 // Values
+pub fn[T] dequeue(Queue[T]) -> (T, Queue[T])?
+
+pub fn[T] empty() -> Queue[T]
+
+pub fn[T] enqueue(Queue[T], T) -> Queue[T]
+
+pub fn[T] peek(Queue[T]) -> T?
+
+pub fn[T] size(Queue[T]) -> Int
 
 // Errors
 
 // Types and methods
-type Queue[T]
+pub struct Queue[T] {
+  front : Stack[T]
+  back : Stack[T]
+}
 pub impl[T : Show] Show for Queue[T]
 
 type Stack[T]

@@ -4,18 +4,18 @@
 // ============================================================================
 
 ///|
-enum MinStack {
+pub enum MinStack {
   Nil
   Cons(value~ : Int, min~ : Int, tail~ : MinStack)
 } derive(Show)
 
 ///|
-fn empty() -> MinStack {
+pub fn empty() -> MinStack {
   MinStack::Nil
 }
 
 ///|
-fn size(s : MinStack) -> Int {
+pub fn size(s : MinStack) -> Int {
   match s {
     MinStack::Nil => 0
     MinStack::Cons(value=_, min=_, tail~) => 1 + size(tail)
@@ -23,7 +23,7 @@ fn size(s : MinStack) -> Int {
 }
 
 ///|
-fn min_value(s : MinStack) -> Int? {
+pub fn min_value(s : MinStack) -> Int? {
   match s {
     MinStack::Nil => None
     MinStack::Cons(value=_, min~, tail=_) => Some(min)
@@ -31,7 +31,7 @@ fn min_value(s : MinStack) -> Int? {
 }
 
 ///|
-fn push(s : MinStack, value : Int) -> MinStack {
+pub fn push(s : MinStack, value : Int) -> MinStack {
   let new_min = match s {
     MinStack::Nil => value
     MinStack::Cons(value=_, min~, tail=_) =>
@@ -45,7 +45,7 @@ fn push(s : MinStack, value : Int) -> MinStack {
 }
 
 ///|
-fn pop(s : MinStack) -> (Int, MinStack)? {
+pub fn pop(s : MinStack) -> (Int, MinStack)? {
   match s {
     MinStack::Nil => None
     MinStack::Cons(value~, min=_, tail~) => Some((value, tail))
@@ -68,7 +68,7 @@ fn min_suffix(arr : ArrayView[Int], i : Int) -> Int? {
 ///|
 /// Build a min-stack that preserves array order (top is arr[0]).
 #warnings("+missing_invariant+missing_reasoning")
-fn from_array(arr : ArrayView[Int]) -> MinStack {
+pub fn from_array(arr : ArrayView[Int]) -> MinStack {
   let n = arr.length()
   for i = n, st = MinStack::Nil {
     if i <= 0 {

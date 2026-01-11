@@ -4,28 +4,28 @@
 // ============================================================================
 
 ///|
-enum Stack[T] {
+pub enum Stack[T] {
   Nil
   Cons(head~ : T, tail~ : Stack[T])
 } derive(Show)
 
 ///|
-fn[T] empty() -> Stack[T] {
+pub fn[T] empty() -> Stack[T] {
   Stack::Nil
 }
 
 ///|
-fn[T] is_empty(s : Stack[T]) -> Bool {
+pub fn[T] is_empty(s : Stack[T]) -> Bool {
   s is Stack::Nil
 }
 
 ///|
-fn[T] push(s : Stack[T], value : T) -> Stack[T] {
+pub fn[T] push(s : Stack[T], value : T) -> Stack[T] {
   Stack::Cons(head=value, tail=s)
 }
 
 ///|
-fn[T] pop(s : Stack[T]) -> (T, Stack[T])? {
+pub fn[T] pop(s : Stack[T]) -> (T, Stack[T])? {
   match s {
     Stack::Nil => None
     Stack::Cons(head~, tail~) => Some((head, tail))
@@ -33,7 +33,7 @@ fn[T] pop(s : Stack[T]) -> (T, Stack[T])? {
 }
 
 ///|
-fn[T] peek(s : Stack[T]) -> T? {
+pub fn[T] peek(s : Stack[T]) -> T? {
   match s {
     Stack::Nil => None
     Stack::Cons(head~, tail=_) => Some(head)
@@ -41,7 +41,7 @@ fn[T] peek(s : Stack[T]) -> T? {
 }
 
 ///|
-fn[T] size(s : Stack[T]) -> Int {
+pub fn[T] size(s : Stack[T]) -> Int {
   match s {
     Stack::Nil => 0
     Stack::Cons(head=_, tail~) => 1 + size(tail)
@@ -51,7 +51,7 @@ fn[T] size(s : Stack[T]) -> Int {
 ///|
 /// Build a stack that preserves array order (top is arr[0]).
 #warnings("+missing_invariant+missing_reasoning")
-fn[T] from_array(arr : ArrayView[T]) -> Stack[T] {
+pub fn[T] from_array(arr : ArrayView[T]) -> Stack[T] {
   let n = arr.length()
   for i = n, st = Stack::Nil {
     if i <= 0 {
@@ -77,7 +77,7 @@ fn[T] from_array(arr : ArrayView[T]) -> Stack[T] {
 ///|
 /// Convert a stack to an array in top-to-bottom order.
 #warnings("+missing_invariant+missing_reasoning")
-fn[T] to_array(s : Stack[T]) -> Array[T] {
+pub fn[T] to_array(s : Stack[T]) -> Array[T] {
   let out = Array::new()
   for cur = s, idx = 0 {
     match cur {

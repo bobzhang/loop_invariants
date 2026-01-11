@@ -2,11 +2,29 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_stack"
 
 // Values
+pub fn[T] empty() -> Stack[T]
+
+pub fn[T] from_array(ArrayView[T]) -> Stack[T]
+
+pub fn[T] is_empty(Stack[T]) -> Bool
+
+pub fn[T] peek(Stack[T]) -> T?
+
+pub fn[T] pop(Stack[T]) -> (T, Stack[T])?
+
+pub fn[T] push(Stack[T], T) -> Stack[T]
+
+pub fn[T] size(Stack[T]) -> Int
+
+pub fn[T] to_array(Stack[T]) -> Array[T]
 
 // Errors
 
 // Types and methods
-type Stack[T]
+pub enum Stack[T] {
+  Nil
+  Cons(head~ : T, tail~ : Stack[T])
+}
 pub impl[T : Show] Show for Stack[T]
 
 // Type aliases

@@ -10,13 +10,13 @@ enum MinStack {
 } derive(Show)
 
 ///|
-struct MinQueue {
+pub struct MinQueue {
   front : MinStack
   back : MinStack
 } derive(Show)
 
 ///|
-fn empty() -> MinQueue {
+pub fn empty() -> MinQueue {
   { front: MinStack::Nil, back: MinStack::Nil }
 }
 
@@ -29,7 +29,7 @@ fn size_stack(s : MinStack) -> Int {
 }
 
 ///|
-fn size(q : MinQueue) -> Int {
+pub fn size(q : MinQueue) -> Int {
   size_stack(q.front) + size_stack(q.back)
 }
 
@@ -88,12 +88,12 @@ fn normalize(q : MinQueue) -> MinQueue {
 }
 
 ///|
-fn enqueue(q : MinQueue, value : Int) -> MinQueue {
+pub fn enqueue(q : MinQueue, value : Int) -> MinQueue {
   { front: q.front, back: push(q.back, value) }
 }
 
 ///|
-fn peek(q : MinQueue) -> Int? {
+pub fn peek(q : MinQueue) -> Int? {
   let norm = normalize(q)
   match norm.front {
     MinStack::Nil => None
@@ -102,7 +102,7 @@ fn peek(q : MinQueue) -> Int? {
 }
 
 ///|
-fn dequeue(q : MinQueue) -> (Int, MinQueue)? {
+pub fn dequeue(q : MinQueue) -> (Int, MinQueue)? {
   let norm = normalize(q)
   match norm.front {
     MinStack::Nil => None
@@ -112,7 +112,7 @@ fn dequeue(q : MinQueue) -> (Int, MinQueue)? {
 }
 
 ///|
-fn min_queue(q : MinQueue) -> Int? {
+pub fn min_queue(q : MinQueue) -> Int? {
   match (min_value(q.front), min_value(q.back)) {
     (None, None) => None
     (Some(x), None) => Some(x)

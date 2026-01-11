@@ -2,11 +2,25 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_queue_min"
 
 // Values
+pub fn dequeue(MinQueue) -> (Int, MinQueue)?
+
+pub fn empty() -> MinQueue
+
+pub fn enqueue(MinQueue, Int) -> MinQueue
+
+pub fn min_queue(MinQueue) -> Int?
+
+pub fn peek(MinQueue) -> Int?
+
+pub fn size(MinQueue) -> Int
 
 // Errors
 
 // Types and methods
-type MinQueue
+pub struct MinQueue {
+  front : MinStack
+  back : MinStack
+}
 pub impl Show for MinQueue
 
 type MinStack
