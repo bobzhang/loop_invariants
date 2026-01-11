@@ -91,7 +91,7 @@ fn Treap::new() -> Treap {
 fn split(node : TreapNode?, key : Int64) -> (TreapNode?, TreapNode?) {
   match node {
     None => (None, None)
-    Some(n) => {
+    Some(n) =>
       if n.key < key {
         let (l, r) = split(n.right, key)
         n.right = l
@@ -103,7 +103,6 @@ fn split(node : TreapNode?, key : Int64) -> (TreapNode?, TreapNode?) {
         update_size(n)
         (l, Some(n))
       }
-    }
   }
 }
 
@@ -113,7 +112,7 @@ fn merge(l : TreapNode?, r : TreapNode?) -> TreapNode? {
   match (l, r) {
     (None, r) => r
     (l, None) => l
-    (Some(ln), Some(rn)) => {
+    (Some(ln), Some(rn)) =>
       if ln.priority > rn.priority {
         ln.right = merge(ln.right, Some(rn))
         update_size(ln)
@@ -123,7 +122,6 @@ fn merge(l : TreapNode?, r : TreapNode?) -> TreapNode? {
         update_size(rn)
         Some(rn)
       }
-    }
   }
 }
 
@@ -132,7 +130,6 @@ fn merge(l : TreapNode?, r : TreapNode?) -> TreapNode? {
 fn Treap::insert(self : Treap, key : Int64) -> Unit {
   let (next_state, priority) = next_random(self.rng_state)
   self.rng_state = next_state
-
   let new_node = TreapNode::new(key, priority)
   let (l, r) = split(self.root, key)
   self.root = merge(merge(l, Some(new_node)), r)
@@ -143,7 +140,6 @@ fn Treap::insert(self : Treap, key : Int64) -> Unit {
 fn Treap::delete(self : Treap, key : Int64) -> Bool {
   let (l, r) = split(self.root, key)
   let (mid, r2) = split(r, key + 1L)
-
   match mid {
     None => {
       self.root = merge(l, r2)
@@ -170,7 +166,7 @@ fn Treap::contains(self : Treap, key : Int64) -> Bool {
 fn find_node(node : TreapNode?, key : Int64) -> TreapNode? {
   match node {
     None => None
-    Some(n) => {
+    Some(n) =>
       if key < n.key {
         find_node(n.left, key)
       } else if key > n.key {
@@ -178,7 +174,6 @@ fn find_node(node : TreapNode?, key : Int64) -> TreapNode? {
       } else {
         Some(n)
       }
-    }
   }
 }
 
@@ -215,13 +210,12 @@ fn Treap::count_less_than(self : Treap, key : Int64) -> Int {
 fn count_less_helper(node : TreapNode?, key : Int64) -> Int {
   match node {
     None => 0
-    Some(n) => {
+    Some(n) =>
       if n.key < key {
         1 + get_size(n.left) + count_less_helper(n.right, key)
       } else {
         count_less_helper(n.left, key)
       }
-    }
   }
 }
 
@@ -240,12 +234,11 @@ fn Treap::min(self : Treap) -> Int64? {
 fn min_helper(node : TreapNode?) -> Int64? {
   match node {
     None => None
-    Some(n) => {
+    Some(n) =>
       match n.left {
         None => Some(n.key)
         Some(_) => min_helper(n.left)
       }
-    }
   }
 }
 
@@ -259,12 +252,11 @@ fn Treap::max(self : Treap) -> Int64? {
 fn max_helper(node : TreapNode?) -> Int64? {
   match node {
     None => None
-    Some(n) => {
+    Some(n) =>
       match n.right {
         None => Some(n.key)
         Some(_) => max_helper(n.right)
       }
-    }
   }
 }
 
@@ -300,7 +292,6 @@ test "treap basic insert" {
   t.insert(7L)
   t.insert(1L)
   t.insert(9L)
-
   inspect(t.size(), content="5")
   inspect(t.contains(5L), content="true")
   inspect(t.contains(3L), content="true")
@@ -313,11 +304,9 @@ test "treap delete" {
   t.insert(5L)
   t.insert(3L)
   t.insert(7L)
-
   inspect(t.delete(3L), content="true")
   inspect(t.contains(3L), content="false")
   inspect(t.size(), content="2")
-
   inspect(t.delete(10L), content="false")
 }
 
@@ -345,7 +334,6 @@ test "treap count less than" {
   t.insert(7L)
   t.insert(1L)
   t.insert(9L)
-
   inspect(t.count_less_than(5L), content="2") // 1, 3
   inspect(t.count_less_than(1L), content="0")
   inspect(t.count_less_than(10L), content="5")
@@ -357,7 +345,6 @@ test "treap min max" {
   t.insert(5L)
   t.insert(3L)
   t.insert(7L)
-
   inspect(t.min(), content="Some(3)")
   inspect(t.max(), content="Some(7)")
 }
@@ -370,7 +357,6 @@ test "treap to array" {
   t.insert(7L)
   t.insert(1L)
   t.insert(9L)
-
   let arr = t.to_array()
   inspect(arr.length(), content="5")
   inspect(arr[0], content="1")
@@ -390,7 +376,6 @@ test "treap empty" {
 test "treap single element" {
   let t = Treap::new()
   t.insert(42L)
-
   inspect(t.size(), content="1")
   inspect(t.contains(42L), content="true")
   inspect(t.min(), content="Some(42)")
@@ -403,7 +388,6 @@ test "treap duplicates" {
   t.insert(5L)
   t.insert(5L)
   t.insert(5L)
-
   inspect(t.size(), content="3")
   inspect(t.delete(5L), content="true")
   inspect(t.size(), content="2")
@@ -420,7 +404,6 @@ test "treap sorted insertion" {
       #|Values 0..i-1 have been inserted.
     ),
   }
-
   inspect(t.size(), content="10")
   inspect(t.kth_element(0), content="Some(0)")
   inspect(t.kth_element(9), content="Some(9)")
@@ -437,7 +420,6 @@ test "treap reverse sorted insertion" {
       #|Values (i+1)..9 have been inserted in reverse order.
     ),
   }
-
   inspect(t.size(), content="10")
   let arr = t.to_array()
   for i = 0; i < 10; i = i + 1 {

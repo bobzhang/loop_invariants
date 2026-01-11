@@ -75,7 +75,6 @@ fn HLD::dfs_size(self : HLD, u : Int, p : Int, d : Int) -> Unit {
   self.depth[u] = d
   self.subtree_size[u] = 1
   let mut max_child_size = 0
-
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
     if v != p {
@@ -129,7 +128,6 @@ fn HLD::build(self : HLD, root : Int) -> Unit {
 fn HLD::lca(self : HLD, u : Int, v : Int) -> Int {
   let mut a = u
   let mut b = v
-
   while self.chain_head[a] != self.chain_head[b] {
     if self.depth[self.chain_head[a]] < self.depth[self.chain_head[b]] {
       b = self.parent[self.chain_head[b]]
@@ -137,8 +135,11 @@ fn HLD::lca(self : HLD, u : Int, v : Int) -> Int {
       a = self.parent[self.chain_head[a]]
     }
   }
-
-  if self.depth[a] < self.depth[b] { a } else { b }
+  if self.depth[a] < self.depth[b] {
+    a
+  } else {
+    b
+  }
 }
 
 ///|
@@ -154,7 +155,6 @@ fn HLD::count_chains(self : HLD, u : Int, v : Int) -> Int {
   let mut a = u
   let mut b = v
   let mut count = 0
-
   while self.chain_head[a] != self.chain_head[b] {
     count = count + 1
     if self.depth[self.chain_head[a]] < self.depth[self.chain_head[b]] {
@@ -163,7 +163,6 @@ fn HLD::count_chains(self : HLD, u : Int, v : Int) -> Int {
       a = self.parent[self.chain_head[a]]
     }
   }
-
   count + 1 // Include final chain
 }
 
@@ -196,7 +195,6 @@ test "hld basic" {
   hld.add_edge(2, 5)
   hld.add_edge(2, 6)
   hld.build(0)
-
   inspect(hld.lca(3, 4), content="1")
   inspect(hld.lca(3, 5), content="0")
   inspect(hld.lca(5, 6), content="2")
@@ -215,7 +213,6 @@ test "hld path length" {
   hld.add_edge(2, 3)
   hld.add_edge(3, 4)
   hld.build(0)
-
   inspect(hld.path_length(0, 4), content="4")
   inspect(hld.path_length(1, 3), content="2")
   inspect(hld.path_length(2, 2), content="0")

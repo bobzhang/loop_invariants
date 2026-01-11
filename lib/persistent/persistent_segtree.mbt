@@ -31,7 +31,7 @@
 ///|
 /// Node in persistent segment tree
 /// Nodes are never modified - updates create new nodes
-struct PSTNode {
+priv struct PSTNode {
   left : Int // Left child index (-1 if leaf)
   right : Int // Right child index (-1 if leaf)
   sum : Int64 // Aggregate value (sum in this case)
@@ -49,7 +49,7 @@ fn PSTNode::internal(left : Int, right : Int, sum : Int64) -> PSTNode {
 
 ///|
 /// Persistent Segment Tree
-struct PersistentSegTree {
+priv struct PersistentSegTree {
   nodes : Array[PSTNode] // All nodes (never deleted, only added)
   roots : Array[Int] // Root index for each version
   n : Int // Array size
@@ -339,7 +339,7 @@ test "persistent segment tree fork" {
 ///|
 /// Persistent segment tree for k-th smallest queries
 /// Uses coordinate compression and difference between versions
-struct KthSmallestTree {
+priv struct KthSmallestTree {
   pst : PersistentSegTree
   sorted_values : Array[Int] // Coordinate compressed values
   n : Int
@@ -363,6 +363,9 @@ fn KthSmallestTree::build(arr : Array[Int]) -> KthSmallestTree {
     if i == 0 || sorted[i] != sorted[i - 1] {
       unique.push(sorted[i])
     }
+  } where {
+    invariant: i >= 0 && i <= sorted.length(),
+    reasoning: "I: unique contains the distinct values from sorted[0..i) in order. M: Push sorted[i] only when it differs from the previous entry. T: After i = n, unique is the sorted list of unique values.",
   }
   let m = unique.length()
 
@@ -382,6 +385,9 @@ fn KthSmallestTree::build(arr : Array[Int]) -> KthSmallestTree {
     let old_val = pst.get(prev_ver, rank)
     let _ = pst.update(prev_ver, rank, old_val + 1L)
 
+  } where {
+    invariant: i >= 0 && i <= arr.length(),
+    reasoning: "I: Versions 0..i represent prefix counts for arr[0..i-1]. M: Update version i at the rank of arr[i], creating version i+1. T: After i = n, there are n+1 versions representing all prefixes.",
   }
   { pst, sorted_values: unique, n: arr.length() }
 }
@@ -506,7 +512,7 @@ test "kth smallest range queries" {
 /// Fully persistent array supporting:
 /// - get(version, index)
 /// - set(version, index, value) -> new_version
-struct PersistentArray {
+priv struct PersistentArray {
   pst : PersistentSegTree
 }
 
@@ -547,6 +553,8 @@ fn PersistentArray::version_count(self : PersistentArray) -> Int {
 
 ///|
 test "persistent array" {
+  let empty = PersistentArray::new(2, 7L)
+  inspect(empty.get(0, 1), content="7")
   let parr = PersistentArray::from_array([10L, 20L, 30L])
 
   // v0: [10, 20, 30]

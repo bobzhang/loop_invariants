@@ -222,7 +222,7 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
 
         // If new level exceeds current max level, update header's forward
         // and add header to update array for new levels
-        for i = self.level + 1; i <= new_level; i = i + 1 {
+        for i in (self.level + 1)..=new_level {
           update[i] = Some(self.header)
         }
 
@@ -236,7 +236,7 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
 
         // Link new node at each level
         // This loop links the new node into the skip list at all levels
-        for i = 0; i <= new_level; i = i + 1 {
+        for i in 0..=new_level {
           match update[i] {
             Some(prev) => {
               // new_node.forward[i] = prev.forward[i]
@@ -298,7 +298,7 @@ fn SkipList::delete(self : SkipList, key : Int) -> Bool {
     match current.forward[0] {
       Some(target) if target.key == key => {
         // Found the node - unlink it at all levels
-        for i = 0; i <= self.level; i = i + 1 {
+        for i in 0..=self.level {
           match update[i] {
             Some(prev) =>
               match prev.forward[i] {
@@ -645,7 +645,7 @@ test "skip list delete" {
 ///|
 test "skip list range query" {
   let sl = SkipList::new()
-  for i = 0; i < 10; i = i + 1 {
+  for i in 0..<10 {
     sl.insert(i * 2, i * 20) // Insert 0, 2, 4, ..., 18
   }
 
@@ -677,7 +677,7 @@ test "skip list ceil floor" {
   let sl = SkipList::new()
 
   // Insert 10, 20, 30, 40, 50
-  for i = 1; i <= 5; i = i + 1 {
+  for i in 1..=5 {
     sl.insert(i * 10, i * 100)
   }
 
@@ -699,7 +699,7 @@ test "skip list ordered statistics" {
   let sl = SkipList::new()
 
   // Insert 1, 3, 5, 7, 9
-  for i = 0; i < 5; i = i + 1 {
+  for i in 0..<5 {
     sl.insert(i * 2 + 1, (i + 1) * 10)
   }
 
@@ -720,24 +720,26 @@ test "skip list stress test" {
   let sl = SkipList::new()
 
   // Insert 100 elements
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     sl.insert(i, i * 10)
   }
   inspect(sl.length(), content="100")
 
   // Verify all elements are searchable
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     guard sl.search(i) is Some(_) else { fail("Element not found") }
   }
 
   // Delete every other element
-  for i = 0; i < 100; i = i + 2 {
-    guard sl.delete(i) else { fail("Delete failed") }
+  for i in 0..<100 {
+    if i % 2 == 0 {
+      guard sl.delete(i) else { fail("Delete failed") }
+    }
   }
   inspect(sl.length(), content="50")
 
   // Verify deletions
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     let result = sl.search(i)
     if i % 2 == 0 {
       guard result is None else { fail("Should be deleted") }
@@ -795,6 +797,9 @@ fn MultiSkipList::random_level(self : MultiSkipList) -> Int {
     }
   } else {
     max_level - 1
+  } where {
+    invariant: lvl >= 0 && lvl < max_level,
+    reasoning: "I: lvl is the current candidate level in [0, max_level-1]. M: With probability 1/promotion_probability, increase lvl by 1; otherwise stop. T: lvl increases monotonically and is bounded, so the loop terminates with a valid level.",
   }
 }
 
@@ -820,14 +825,14 @@ fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
       _ => {
         // New key - insert new node
         let new_level = self.random_level()
-        for i = self.level + 1; i <= new_level; i = i + 1 {
+        for i in (self.level + 1)..=new_level {
           update[i] = Some(self.header)
         }
         if new_level > self.level {
           self.level = new_level
         }
         let new_node = MultiSkipNode::new(key, value, new_level + 1)
-        for i = 0; i <= new_level; i = i + 1 {
+        for i in 0..=new_level {
           match update[i] {
             Some(prev) => {
               new_node.forward[i] = prev.forward[i]
@@ -865,6 +870,9 @@ fn MultiSkipList::search(self : MultiSkipList, key : Int) -> Array[Int]? {
       Some(node) if node.key == key => Some(node.values)
       _ => None
     }
+  } where {
+    invariant: lvl >= -1,
+    reasoning: "I: At each level, current is the rightmost node with key < target reachable at that level. M: Move right while next.key < key, otherwise drop one level. T: When lvl < 0, current.forward[0] is the first node with key >= target, so the final check decides membership.",
   }
 }
 

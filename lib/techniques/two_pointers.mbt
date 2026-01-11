@@ -94,6 +94,11 @@ fn three_sum(arr : Array[Int], target : Int) -> Array[(Int, Int, Int)] {
       } else {
         continue left, right - 1
       }
+    } where {
+      invariant: left >= i + 1 && right < n && left <= right,
+      reasoning: (
+        #|Two-pointer search maintains that any valid pair lies in [left, right].
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n - 2,
@@ -285,6 +290,11 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
       } else {
         break
       }
+    } where {
+      invariant: deque.length() >= 0,
+      reasoning: (
+        #|Drop indices that fell out of the current window.
+      ),
     }
 
     // Remove smaller elements from back
@@ -295,6 +305,11 @@ fn sliding_window_max_deque(nums : ArrayView[Int], k : Int) -> Array[Int] {
       } else {
         break
       }
+    } where {
+      invariant: deque.length() >= 0,
+      reasoning: (
+        #|Maintain decreasing order by discarding dominated indices.
+      ),
     }
     deque.push(i)
 
@@ -357,6 +372,11 @@ fn min_window_substring(s : String, t : String) -> String {
   let required : Array[Int] = Array::make(128, 0)
   for i = 0; i < t_len; i = i + 1 {
     required[t_chars[i].to_int()] = required[t_chars[i].to_int()] + 1
+  } where {
+    invariant: i >= 0 && i <= t_len,
+    reasoning: (
+      #|Count frequency of each target character.
+    ),
   }
 
   // Count distinct required characters
@@ -365,6 +385,11 @@ fn min_window_substring(s : String, t : String) -> String {
     if required[i] > 0 {
       required_count = required_count + 1
     }
+  } where {
+    invariant: i >= 0 && i <= 128,
+    reasoning: (
+      #|Count how many distinct characters are required.
+    ),
   }
 
   // Window character counts
@@ -401,6 +426,11 @@ fn min_window_substring(s : String, t : String) -> String {
       let result : Array[Char] = []
       for i = min_left; i < min_left + min_len; i = i + 1 {
         result.push(s_chars[i])
+      } where {
+        invariant: i >= min_left && i <= min_left + min_len,
+        reasoning: (
+          #|Collect the minimal window's characters in order.
+        ),
       }
       String::from_array(result)
     }
@@ -639,10 +669,6 @@ fn fruit_into_baskets(fruits : ArrayView[Int]) -> Int {
     return 0
   }
 
-  // Track fruits in current window (at most 2 distinct)
-  let basket1 : (Int, Int) = (-1, 0) // (fruit_type, count)
-  let basket2 : (Int, Int) = (-1, 0)
-
   // Use a simpler approach: track last occurrence of each fruit type
   let last_seen : Array[Int] = Array::make(40001, -1) // Assume fruit types 0-40000
   for left = 0, right = 0, distinct = 0, max_len = 0; right < n; {
@@ -877,8 +903,24 @@ test "partition" {
   // All elements after p should be >= arr[p]
   for i = 0; i < p; i = i + 1 {
     assert_true(arr[i] < arr[p])
+  } where {
+    invariant: i >= 0 && i <= p,
+    reasoning: (
+      #|Verify all elements before p are less than the pivot.
+    ),
   }
   for i = p + 1; i < 8; i = i + 1 {
     assert_true(arr[i] >= arr[p])
+  } where {
+    invariant: i >= p + 1 && i <= 8,
+    reasoning: (
+      #|Verify all elements after p are greater than or equal to the pivot.
+    ),
   }
+}
+
+///|
+test "fruit into baskets" {
+  let fruits = [1, 2, 1, 2]
+  inspect(fruit_into_baskets(fruits[:]), content="4")
 }

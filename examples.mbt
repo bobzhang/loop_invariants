@@ -425,6 +425,7 @@ test "dutch_flag" {
     assert_true(not(seen_greater2) || x > 5)
     (seen_equal2, seen_greater2)
   })
+
 }
 
 // ============================================================================

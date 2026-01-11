@@ -45,7 +45,6 @@ fn compute_z(s : String) -> Array[Int] {
   if n == 0 {
     return []
   }
-
   let z = Array::make(n, 0)
   z[0] = n // By definition, entire string matches prefix
 
@@ -68,7 +67,6 @@ fn compute_z(s : String) -> Array[Int] {
       // Case 2: i is inside Z-box [l, r]
       let k = i - l // Corresponding position in prefix
       let remaining = r - i + 1 // How much of Z-box is left
-
       if z[k] < remaining {
         // Case 2a: Z[k] fits entirely within remaining Z-box
         // s[i..i+z[k]-1] matches s[k..k+z[k]-1] which matches s[0..z[k]-1]
@@ -101,7 +99,6 @@ fn compute_z(s : String) -> Array[Int] {
       #|When we extend a match, we reset l to i; otherwise l stays behind i.
     ),
   }
-
   z
 }
 
@@ -110,10 +107,8 @@ fn compute_z(s : String) -> Array[Int] {
 /// Returns array of starting indices where pattern occurs
 fn find_pattern(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
-
   let m = pattern.length()
   let n = text.length()
-
   if m == 0 || m > n {
     return result
   }
@@ -125,7 +120,6 @@ fn find_pattern(text : String, pattern : String) -> Array[Int] {
   sb.write_char('$')
   sb.write_string(text)
   let concat = sb.to_string()
-
   let z = compute_z(concat)
 
   // Find positions where Z[i] = m (full pattern match)
@@ -142,7 +136,6 @@ fn find_pattern(text : String, pattern : String) -> Array[Int] {
       #|We only check Z-values aligned with the text portion.
     ),
   }
-
   result
 }
 
@@ -160,7 +153,6 @@ fn longest_prefix_suffix(s : String) -> Int {
   if n <= 1 {
     return 0
   }
-
   let z = compute_z(s)
 
   // Find longest i where Z[i] + i = n (s[i..] matches prefix)
@@ -194,7 +186,6 @@ fn all_borders(s : String) -> Array[Int] {
   if n == 0 {
     return []
   }
-
   let z = compute_z(s)
   let borders : Array[Int] = []
 
@@ -224,7 +215,6 @@ fn string_period(s : String) -> Int {
   if n == 0 {
     return 0
   }
-
   let z = compute_z(s)
 
   // Period p means n - p is a border length, or equivalently
@@ -241,7 +231,6 @@ fn string_period(s : String) -> Int {
       #|We return the smallest p meeting Z[p] >= n - p.
     ),
   }
-
   n // No repetition, period is entire string
 }
 
@@ -308,7 +297,6 @@ test "z algorithm empty" {
 ///|
 test "find pattern basic" {
   let matches = find_pattern("aabcaabxaab", "aab")
-
   inspect(matches.length(), content="3")
   inspect(matches[0], content="0")
   inspect(matches[1], content="4")
@@ -324,7 +312,6 @@ test "find pattern no match" {
 ///|
 test "find pattern full match" {
   let matches = find_pattern("abc", "abc")
-
   inspect(matches.length(), content="1")
   inspect(matches[0], content="0")
 }

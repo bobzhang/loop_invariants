@@ -85,17 +85,15 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
   if k >= n {
     // Single window containing all elements
     let mut m = arr[0]
-    for i = 1; i < n; i = i + 1 {
+    for i in 1..<n {
       if arr[i] > m {
         m = arr[i]
       }
     }
     return [m]
   }
-
   let result : Array[Int64] = []
   let dq = Deque::new(n)
-
   for i = 0; i < n; i = i + 1 {
     // Remove elements outside window
     while not(dq.is_empty()) && dq.peek_front() <= i - k {
@@ -118,7 +116,6 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
     invariant: i >= 0 && i <= n,
     reasoning: "I: Empty deque, no windows processed. M: (1) Remove front if outside [i-k+1, i]. (2) Remove back elements with values <= arr[i] (they can never be max while arr[i] exists). (3) Add i. Deque maintains decreasing values, so front is always max. T: After processing all elements, result contains max for each window.",
   }
-
   result
 }
 
@@ -134,17 +131,15 @@ fn sliding_window_min(arr : Array[Int64], k : Int) -> Array[Int64] {
   }
   if k >= n {
     let mut m = arr[0]
-    for i = 1; i < n; i = i + 1 {
+    for i in 1..<n {
       if arr[i] < m {
         m = arr[i]
       }
     }
     return [m]
   }
-
   let result : Array[Int64] = []
   let dq = Deque::new(n)
-
   for i = 0; i < n; i = i + 1 {
     while not(dq.is_empty()) && dq.peek_front() <= i - k {
       dq.pop_front()
@@ -160,7 +155,6 @@ fn sliding_window_min(arr : Array[Int64], k : Int) -> Array[Int64] {
     invariant: i >= 0 && i <= n,
     reasoning: "I: Empty deque. M: Maintain increasing values in deque. Front is minimum for current window. T: All window minimums computed.",
   }
-
   result
 }
 
@@ -175,12 +169,11 @@ fn sliding_window_sum(arr : Array[Int64], k : Int) -> Array[Int64] {
   if n == 0 || k <= 0 || k > n {
     return []
   }
-
   let result : Array[Int64] = []
   let mut window_sum = 0L
 
   // Initialize first window
-  for i = 0; i < k; i = i + 1 {
+  for i in 0..<k {
     window_sum = window_sum + arr[i]
   }
   result.push(window_sum)
@@ -193,7 +186,6 @@ fn sliding_window_sum(arr : Array[Int64], k : Int) -> Array[Int64] {
     invariant: i >= k && i <= n,
     reasoning: "I: window_sum = sum of arr[0..k). M: Add new element arr[i], remove old arr[i-k]. window_sum always equals sum of current window. T: All window sums computed.",
   }
-
   result
 }
 
@@ -208,11 +200,9 @@ fn longest_subarray_with_sum_le(arr : Array[Int64], target : Int64) -> Int {
   if n == 0 {
     return 0
   }
-
   let mut left = 0
   let mut sum = 0L
   let mut max_len = 0
-
   for right = 0; right < n; right = right + 1 {
     sum = sum + arr[right]
 
@@ -221,7 +211,6 @@ fn longest_subarray_with_sum_le(arr : Array[Int64], target : Int64) -> Int {
       sum = sum - arr[left]
       left = left + 1
     }
-
     if sum <= target {
       let len = right - left + 1
       if len > max_len {
@@ -232,7 +221,6 @@ fn longest_subarray_with_sum_le(arr : Array[Int64], target : Int64) -> Int {
     invariant: right >= 0 && right <= n && left <= right + 1,
     reasoning: "I: Empty window, sum=0. M: Expand right, shrink left if sum > target. Window [left, right] always valid (sum <= target) after shrinking. Track maximum length. T: All subarrays considered, max_len is answer.",
   }
-
   max_len
 }
 
@@ -243,11 +231,9 @@ fn min_subarray_with_sum_ge(arr : Array[Int64], target : Int64) -> Int {
   if n == 0 {
     return 0
   }
-
   let mut left = 0
   let mut sum = 0L
   let mut min_len = n + 1 // Impossible value
-
   for right = 0; right < n; right = right + 1 {
     sum = sum + arr[right]
 
@@ -264,8 +250,11 @@ fn min_subarray_with_sum_ge(arr : Array[Int64], target : Int64) -> Int {
     invariant: right >= 0 && right <= n && left <= right + 1,
     reasoning: "I: Empty window, sum=0, min_len=impossible. M: Expand right. While sum >= target, record length and shrink left. T: min_len is shortest subarray with sum >= target, or n+1 if none.",
   }
-
-  if min_len > n { 0 } else { min_len }
+  if min_len > n {
+    0
+  } else {
+    min_len
+  }
 }
 
 // ============================================================================

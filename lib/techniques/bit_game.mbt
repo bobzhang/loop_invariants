@@ -174,7 +174,7 @@ fn generate_subsets(elements : ArrayView[Int]) -> Array[Array[Int]] {
   let result : Array[Array[Int]] = []
   for mask = 0; mask < total; mask = mask + 1 {
     let subset : Array[Int] = []
-    for i = 0; i < n; i = i + 1 {
+    for i in 0..<n {
       if ((mask >> i) & 1) == 1 {
         subset.push(elements[i])
       }
@@ -230,7 +230,7 @@ test "gray code" {
   let codes = gray_code(3)
   assert_eq(codes.length(), 8)
   // Verify adjacent codes differ by one bit
-  for i = 0; i < 7; i = i + 1 {
+  for i in 0..<7 {
     assert_eq(count_set_bits(codes[i] ^ codes[i + 1]), 1)
   }
 }
@@ -364,7 +364,7 @@ fn sprague_grundy_simple(n : Int) -> Int {
 fn mex(values : ArrayView[Int]) -> Int {
   // Find minimum excludant (smallest non-negative integer not in values)
   let present = Array::make(values.length() + 1, false)
-  for i = 0; i < values.length(); i = i + 1 {
+  for i in 0..<values.length() {
     if values[i] < present.length() {
       present[values[i]] = true
     }
@@ -437,6 +437,11 @@ fn maximum_xor_pair(nums : ArrayView[Int]) -> Int {
       if xor_val > max_xor {
         max_xor = xor_val
       }
+    } where {
+      invariant: j >= i + 1 && j <= n,
+      reasoning: (
+        #|Compare nums[i] with all later elements to update max_xor.
+      ),
     }
   } where {
     invariant: i >= 0 && i <= n,

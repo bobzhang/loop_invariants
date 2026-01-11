@@ -47,7 +47,7 @@ fn mos_algorithm_range_sum(
   let block_size = mo_isqrt(n)
 
   // Create and sort query indices using bubble sort
-  let query_order = Array::makei(q, (i) => i)
+  let query_order = Array::makei(q, i => i)
   for i = 0; i < q - 1; i = i + 1 {
     let last = q - 1 - i
     for j = 0; j < last; j = j + 1 {
@@ -242,10 +242,7 @@ fn SqrtDecomposition::update_sqrt(
   self.arr[idx] = val
   let block_idx = idx / self.block_size
   let block_start = block_idx * self.block_size
-  let block_end = @cmp.minimum(
-    block_start + self.block_size,
-    self.arr.length(),
-  )
+  let block_end = @cmp.minimum(block_start + self.block_size, self.arr.length())
   self.block_mins[block_idx] = 2147483647
   for i = block_start; i < block_end; i = i + 1 {
     if self.arr[i] < self.block_mins[block_idx] {
@@ -437,7 +434,7 @@ priv struct MoUnionFind {
 
 ///|
 fn MoUnionFind::new(n : Int) -> MoUnionFind {
-  let parent = Array::makei(n, (i) => i)
+  let parent = Array::makei(n, i => i)
   let rank : Array[Int] = Array::make(n, 0)
   { parent, rank }
 }
@@ -739,7 +736,7 @@ priv struct BinaryLifting {
 fn build_binary_lifting(adj : Array[Array[Int]], root : Int) -> BinaryLifting {
   let n = adj.length()
   let log_n = 20
-  let up = Array::makei(n, (_) => Array::make(log_n, -1))
+  let up = Array::makei(n, _ => Array::make(log_n, -1))
   let depth : Array[Int] = Array::make(n, 0)
   let queue : Array[Int] = []
   let visited : Array[Bool] = Array::make(n, false)

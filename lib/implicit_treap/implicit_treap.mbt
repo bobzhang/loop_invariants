@@ -51,19 +51,18 @@ priv struct ImplicitTreap {
 
 ///|
 fn ImplicitTreap::new() -> ImplicitTreap {
-  {
-    nodes: [],
-    root: -1,
-    rand_state: 12345,
-    free_list: [],
-  }
+  { nodes: [], root: -1, rand_state: 12345, free_list: [] }
 }
 
 ///|
 /// Generate random priority
 fn ImplicitTreap::random_priority(self : ImplicitTreap) -> Int {
   self.rand_state = (self.rand_state * 1103515245 + 12345) % 2147483647
-  if self.rand_state < 0 { -self.rand_state } else { self.rand_state }
+  if self.rand_state < 0 {
+    -self.rand_state
+  } else {
+    self.rand_state
+  }
 }
 
 ///|
@@ -86,19 +85,17 @@ fn ImplicitTreap::alloc_node(self : ImplicitTreap, val : Int64) -> Int {
     idx
   } else {
     let idx = self.nodes.length()
-    self.nodes.push(
-      {
-        val,
-        priority,
-        size: 1,
-        sum: val,
-        min_val: val,
-        max_val: val,
-        rev: false,
-        left: -1,
-        right: -1,
-      },
-    )
+    self.nodes.push({
+      val,
+      priority,
+      size: 1,
+      sum: val,
+      min_val: val,
+      max_val: val,
+      rev: false,
+      left: -1,
+      right: -1,
+    })
     idx
   }
 }
@@ -106,22 +103,38 @@ fn ImplicitTreap::alloc_node(self : ImplicitTreap, val : Int64) -> Int {
 ///|
 /// Get size of subtree (handles -1 for null)
 fn ImplicitTreap::get_size(self : ImplicitTreap, node : Int) -> Int {
-  if node < 0 { 0 } else { self.nodes[node].size }
+  if node < 0 {
+    0
+  } else {
+    self.nodes[node].size
+  }
 }
 
 ///|
 fn ImplicitTreap::get_sum(self : ImplicitTreap, node : Int) -> Int64 {
-  if node < 0 { 0L } else { self.nodes[node].sum }
+  if node < 0 {
+    0L
+  } else {
+    self.nodes[node].sum
+  }
 }
 
 ///|
 fn ImplicitTreap::get_min(self : ImplicitTreap, node : Int) -> Int64 {
-  if node < 0 { 9223372036854775807L } else { self.nodes[node].min_val }
+  if node < 0 {
+    9223372036854775807L
+  } else {
+    self.nodes[node].min_val
+  }
 }
 
 ///|
 fn ImplicitTreap::get_max(self : ImplicitTreap, node : Int) -> Int64 {
-  if node < 0 { -9223372036854775807L } else { self.nodes[node].max_val }
+  if node < 0 {
+    -9223372036854775807L
+  } else {
+    self.nodes[node].max_val
+  }
 }
 
 ///|
@@ -133,15 +146,12 @@ fn ImplicitTreap::update(self : ImplicitTreap, node : Int) -> Unit {
   let left = self.nodes[node].left
   let right = self.nodes[node].right
   let val = self.nodes[node].val
-
   self.nodes[node].size = self.get_size(left) + self.get_size(right) + 1
   self.nodes[node].sum = self.get_sum(left) + self.get_sum(right) + val
-
   let left_min = self.get_min(left)
   let right_min = self.get_min(right)
   let min1 = if val < left_min { val } else { left_min }
   self.nodes[node].min_val = if min1 < right_min { min1 } else { right_min }
-
   let left_max = self.get_max(left)
   let right_max = self.get_max(right)
   let max1 = if val > left_max { val } else { left_max }
@@ -169,7 +179,6 @@ fn ImplicitTreap::push_down(self : ImplicitTreap, node : Int) -> Unit {
   if right >= 0 {
     self.nodes[right].rev = not(self.nodes[right].rev)
   }
-
   self.nodes[node].rev = false
 }
 
@@ -184,16 +193,13 @@ fn ImplicitTreap::push_down(self : ImplicitTreap, node : Int) -> Unit {
 fn ImplicitTreap::split(
   self : ImplicitTreap,
   node : Int,
-  k : Int
+  k : Int,
 ) -> (Int, Int) {
   if node < 0 {
     return (-1, -1)
   }
-
   self.push_down(node)
-
   let left_size = self.get_size(self.nodes[node].left)
-
   if k <= left_size {
     // Current node and its right subtree go to right part
     // Recursively split left subtree
@@ -222,10 +228,8 @@ fn ImplicitTreap::merge(self : ImplicitTreap, left : Int, right : Int) -> Int {
   if right < 0 {
     return left
   }
-
   self.push_down(left)
   self.push_down(right)
-
   if self.nodes[left].priority > self.nodes[right].priority {
     // Left becomes root
     self.nodes[left].right = self.merge(self.nodes[left].right, right)
@@ -257,15 +261,12 @@ fn ImplicitTreap::delete(self : ImplicitTreap, pos : Int) -> Int64? {
   if pos < 0 || pos >= self.size() {
     return None
   }
-
   let (left, mid_right) = self.split(self.root, pos)
   let (mid, right) = self.split(mid_right, 1)
-
   if mid < 0 {
     self.root = self.merge(left, right)
     return None
   }
-
   let val = self.nodes[mid].val
   self.free_list.push(mid)
   self.root = self.merge(left, right)
@@ -283,7 +284,6 @@ fn ImplicitTreap::get(self : ImplicitTreap, pos : Int) -> Int64? {
   for node = self.root, target = pos; node >= 0; {
     self.push_down(node)
     let left_size = self.get_size(self.nodes[node].left)
-
     if target < left_size {
       continue self.nodes[node].left, target
     } else if target == left_size {
@@ -319,7 +319,6 @@ fn ImplicitTreap::set(self : ImplicitTreap, pos : Int, val : Int64) -> Unit {
   for node = self.root, target = pos; node >= 0; {
     self.push_down(node)
     let left_size = self.get_size(self.nodes[node].left)
-
     if target < left_size {
       continue self.nodes[node].left, target
     } else if target == left_size {
@@ -366,7 +365,6 @@ fn ImplicitTreap::range_sum(self : ImplicitTreap, l : Int, r : Int) -> Int64 {
   // Split into [0, l) + [l, r) + [r, n)
   let (left, mid_right) = self.split(self.root, l)
   let (mid, right) = self.split(mid_right, r - l)
-
   let result = self.get_sum(mid)
 
   // Merge back
@@ -380,12 +378,9 @@ fn ImplicitTreap::range_min(self : ImplicitTreap, l : Int, r : Int) -> Int64? {
   if l >= r || l < 0 || r > self.size() {
     return None
   }
-
   let (left, mid_right) = self.split(self.root, l)
   let (mid, right) = self.split(mid_right, r - l)
-
   let result = if mid >= 0 { Some(self.nodes[mid].min_val) } else { None }
-
   self.root = self.merge(left, self.merge(mid, right))
   result
 }
@@ -396,12 +391,9 @@ fn ImplicitTreap::range_max(self : ImplicitTreap, l : Int, r : Int) -> Int64? {
   if l >= r || l < 0 || r > self.size() {
     return None
   }
-
   let (left, mid_right) = self.split(self.root, l)
   let (mid, right) = self.split(mid_right, r - l)
-
   let result = if mid >= 0 { Some(self.nodes[mid].max_val) } else { None }
-
   self.root = self.merge(left, self.merge(mid, right))
   result
 }
@@ -412,14 +404,11 @@ fn ImplicitTreap::reverse(self : ImplicitTreap, l : Int, r : Int) -> Unit {
   if l >= r || l < 0 || r > self.size() {
     return
   }
-
   let (left, mid_right) = self.split(self.root, l)
   let (mid, right) = self.split(mid_right, r - l)
-
   if mid >= 0 {
     self.nodes[mid].rev = not(self.nodes[mid].rev)
   }
-
   self.root = self.merge(left, self.merge(mid, right))
 }
 
@@ -446,7 +435,6 @@ fn ImplicitTreap::from_array(arr : Array[Int64]) -> ImplicitTreap {
 /// Convert to array
 fn ImplicitTreap::to_array(self : ImplicitTreap) -> Array[Int64] {
   let result : Array[Int64] = []
-
   fn inorder(treap : ImplicitTreap, node : Int, result : Array[Int64]) -> Unit {
     if node < 0 {
       return
@@ -503,7 +491,6 @@ test "implicit treap basic" {
   treap.insert(0, 10L)
   treap.insert(1, 20L)
   treap.insert(2, 30L)
-
   inspect(treap.size(), content="3")
   inspect(treap.get(0), content="Some(10)")
   inspect(treap.get(1), content="Some(20)")
@@ -521,14 +508,12 @@ test "implicit treap insert at position" {
 
   // Insert 20 at position 1: [10, 20, 30]
   treap.insert(1, 20L)
-
   inspect(treap.to_array(), content="[10, 20, 30]")
 }
 
 ///|
 test "implicit treap delete" {
   let treap = ImplicitTreap::from_array([10L, 20L, 30L, 40L, 50L])
-
   inspect(treap.size(), content="5")
 
   // Delete at position 2 (value 30)
@@ -562,7 +547,6 @@ test "implicit treap range sum" {
 ///|
 test "implicit treap range min max" {
   let treap = ImplicitTreap::from_array([5L, 2L, 8L, 1L, 9L])
-
   inspect(treap.range_min(0, 5), content="Some(1)")
   inspect(treap.range_max(0, 5), content="Some(9)")
 
@@ -591,7 +575,6 @@ test "implicit treap reverse" {
 ///|
 test "implicit treap set" {
   let treap = ImplicitTreap::from_array([1L, 2L, 3L, 4L, 5L])
-
   treap.set(2, 100L)
   inspect(treap.get(2), content="Some(100)")
   inspect(treap.to_array(), content="[1, 2, 100, 4, 5]")
@@ -603,13 +586,11 @@ test "implicit treap set" {
 ///|
 test "implicit treap push pop" {
   let treap = ImplicitTreap::new()
-
   treap.push_back(1L)
   treap.push_back(2L)
   treap.push_front(0L)
   // Now: [0, 1, 2]
   inspect(treap.to_array(), content="[0, 1, 2]")
-
   inspect(treap.pop_back(), content="Some(2)")
   inspect(treap.pop_front(), content="Some(0)")
   inspect(treap.to_array(), content="[1]")
@@ -628,7 +609,6 @@ test "implicit treap stress" {
       #|Append sequential values to build a length-100 sequence.
     ),
   }
-
   inspect(treap.size(), content="100")
   inspect(treap.range_sum(0, 100), content="4950") // Sum 0..99
 
@@ -676,12 +656,12 @@ test "implicit treap rope operations" {
       #|Read each element of treap2 and append it to treap1.
     ),
   }
-
   inspect(treap1.to_array(), content="[1, 2, 3, 4, 5, 6]")
 
   // Split simulation: delete elements
   for i = 0; i < 3; i = i + 1 {
     let _ = treap1.pop_front()
+
   } where {
     invariant: i >= 0 && i <= 3,
     reasoning: (

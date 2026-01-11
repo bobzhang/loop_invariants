@@ -72,12 +72,9 @@ fn BridgeFinder::dfs(self : BridgeFinder, u : Int, p : Int) -> Unit {
   self.low[u] = self.timer
   self.timer = self.timer + 1
   self.parent[u] = p
-
   let mut children = 0
-
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
-
     if self.disc[v] < 0 {
       // Tree edge
       children = children + 1
@@ -133,8 +130,7 @@ fn BridgeFinder::get_articulation_points(self : BridgeFinder) -> Array[Int] {
     if self.articulation_points[i] {
       result.push(i)
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= self.n,
     reasoning: "Scan all vertices to collect articulation points.",
   }
@@ -190,7 +186,6 @@ test "bridges cycle" {
   bf.add_edge(2, 3)
   bf.add_edge(3, 0)
   bf.find()
-
   inspect(bf.get_bridges().length(), content="0")
   inspect(bf.get_articulation_points().length(), content="0")
 }
@@ -204,7 +199,6 @@ test "bridges linear" {
   bf.add_edge(1, 2)
   bf.add_edge(2, 3)
   bf.find()
-
   inspect(bf.get_bridges().length(), content="3")
   inspect(bf.get_articulation_points().length(), content="2")
 }
@@ -218,7 +212,6 @@ test "bridges star" {
   bf.add_edge(0, 3)
   bf.add_edge(0, 4)
   bf.find()
-
   inspect(bf.is_articulation_point(0), content="true")
   inspect(bf.get_bridges().length(), content="4")
 }
@@ -237,6 +230,5 @@ test "bridges two components" {
   bf.add_edge(0, 1)
   bf.add_edge(2, 3)
   bf.find()
-
   inspect(bf.get_bridges().length(), content="2")
 }

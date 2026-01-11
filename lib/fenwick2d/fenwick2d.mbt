@@ -54,7 +54,7 @@ fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
 ///|
 /// Get lowest set bit
 fn lowbit(x : Int) -> Int {
-  x & (-x)
+  x & -x
 }
 
 ///|
@@ -92,7 +92,6 @@ fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
   if x <= 0 || y <= 0 {
     return 0L
   }
-
   let x_clamped = if x > self.rows { self.rows } else { x }
   let y_clamped = if y > self.cols { self.cols } else { y }
 
@@ -131,16 +130,15 @@ fn Fenwick2D::range_sum(
   x1 : Int,
   y1 : Int,
   x2 : Int,
-  y2 : Int
+  y2 : Int,
 ) -> Int64 {
   if x1 > x2 || y1 > y2 {
     return 0L
   }
-
-  self.prefix_sum(x2, y2) - self.prefix_sum(x1 - 1, y2) - self.prefix_sum(
-      x2, y1 - 1,
-    ) +
-    self.prefix_sum(x1 - 1, y1 - 1)
+  self.prefix_sum(x2, y2) -
+  self.prefix_sum(x1 - 1, y2) -
+  self.prefix_sum(x2, y1 - 1) +
+  self.prefix_sum(x1 - 1, y1 - 1)
 }
 
 ///|
@@ -151,7 +149,7 @@ fn Fenwick2D::set(
   x : Int,
   y : Int,
   old_val : Int64,
-  new_val : Int64
+  new_val : Int64,
 ) -> Unit {
   self.update(x, y, new_val - old_val)
 }
@@ -211,12 +209,11 @@ fn Fenwick2DRange::internal_update(
   self : Fenwick2DRange,
   x : Int,
   y : Int,
-  delta : Int64
+  delta : Int64,
 ) -> Unit {
   if x <= 0 || x > self.rows || y <= 0 || y > self.cols {
     return
   }
-
   for i = x; i <= self.rows; i = i + lowbit(i) {
     for j = y; j <= self.cols; j = j + lowbit(j) {
       self.tree[i][j] = self.tree[i][j] + delta
@@ -236,14 +233,16 @@ fn Fenwick2DRange::internal_update(
 
 ///|
 /// Internal prefix sum (same as Fenwick2D::prefix_sum)
-fn Fenwick2DRange::internal_prefix(self : Fenwick2DRange, x : Int, y : Int) -> Int64 {
+fn Fenwick2DRange::internal_prefix(
+  self : Fenwick2DRange,
+  x : Int,
+  y : Int,
+) -> Int64 {
   if x <= 0 || y <= 0 {
     return 0L
   }
-
   let x_clamped = if x > self.rows { self.rows } else { x }
   let y_clamped = if y > self.cols { self.cols } else { y }
-
   for i = x_clamped, sum = 0L; i > 0; i = i - lowbit(i) {
     let row_sum = for j = y_clamped, row_sum = 0L; j > 0; j = j - lowbit(j) {
       continue j - lowbit(j), row_sum + self.tree[i][j]
@@ -277,12 +276,11 @@ fn Fenwick2DRange::range_add(
   y1 : Int,
   x2 : Int,
   y2 : Int,
-  delta : Int64
+  delta : Int64,
 ) -> Unit {
   if x1 > x2 || y1 > y2 {
     return
   }
-
   self.internal_update(x1, y1, delta)
   self.internal_update(x1, y2 + 1, -delta)
   self.internal_update(x2 + 1, y1, -delta)
@@ -350,11 +348,9 @@ test "fenwick2d range sum" {
 ///|
 test "fenwick2d get" {
   let ft = Fenwick2D::new(3, 3)
-
   ft.update(1, 1, 5L)
   ft.update(2, 2, 10L)
   ft.update(3, 3, 15L)
-
   inspect(ft.get(1, 1), content="5")
   inspect(ft.get(2, 2), content="10")
   inspect(ft.get(3, 3), content="15")
@@ -364,13 +360,10 @@ test "fenwick2d get" {
 ///|
 test "fenwick2d update multiple times" {
   let ft = Fenwick2D::new(3, 3)
-
   ft.update(1, 1, 5L)
   inspect(ft.get(1, 1), content="5")
-
   ft.update(1, 1, 3L)
   inspect(ft.get(1, 1), content="8") // 5 + 3
-
   ft.update(1, 1, -2L)
   inspect(ft.get(1, 1), content="6") // 8 - 2
 
@@ -406,7 +399,6 @@ test "fenwick2d range update basic" {
 
   // Add 5 to rectangle [(1,1), (2,2)]
   ft.range_add(1, 1, 2, 2, 5L)
-
   inspect(ft.query(1, 1), content="5")
   inspect(ft.query(1, 2), content="5")
   inspect(ft.query(2, 1), content="5")
@@ -423,7 +415,6 @@ test "fenwick2d range update overlapping" {
 
   // Add 3 to [(2,2), (3,3)]
   ft.range_add(2, 2, 3, 3, 3L)
-
   inspect(ft.query(1, 1), content="5")
   inspect(ft.query(2, 2), content="8") // 5 + 3 (overlap)
   inspect(ft.query(3, 3), content="3")
@@ -433,7 +424,6 @@ test "fenwick2d range update overlapping" {
 ///|
 test "fenwick2d empty" {
   let ft = Fenwick2D::new(3, 3)
-
   inspect(ft.prefix_sum(3, 3), content="0")
   inspect(ft.range_sum(1, 1, 3, 3), content="0")
   inspect(ft.get(2, 2), content="0")
@@ -442,9 +432,7 @@ test "fenwick2d empty" {
 ///|
 test "fenwick2d boundary" {
   let ft = Fenwick2D::new(3, 3)
-
   ft.update(3, 3, 100L)
-
   inspect(ft.prefix_sum(3, 3), content="100")
   inspect(ft.prefix_sum(2, 3), content="0")
   inspect(ft.prefix_sum(3, 2), content="0")
@@ -457,7 +445,6 @@ test "fenwick2d boundary" {
 ///|
 test "fenwick2d dimensions" {
   let ft = Fenwick2D::new(10, 20)
-
   inspect(ft.get_rows(), content="10")
   inspect(ft.get_cols(), content="20")
 }
@@ -465,7 +452,6 @@ test "fenwick2d dimensions" {
 ///|
 test "fenwick2d range dimensions" {
   let ft = Fenwick2DRange::new(15, 25)
-
   inspect(ft.get_rows(), content="15")
   inspect(ft.get_cols(), content="25")
 }

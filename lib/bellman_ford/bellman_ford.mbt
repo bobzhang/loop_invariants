@@ -49,7 +49,7 @@ fn BellmanFord::add_edge(
   self : BellmanFord,
   from : Int,
   to : Int,
-  weight : Int64
+  weight : Int64,
 ) -> Unit {
   self.edges.push((from, to, weight))
 }
@@ -87,7 +87,6 @@ fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
     let (u, v, w) = edge
     self.dist[u] < BF_INF && self.dist[u] + w < self.dist[v]
   })
-
   {
     n: self.n,
     edges: self.edges,
@@ -117,7 +116,6 @@ fn BellmanFord::get_path(self : BellmanFord, target : Int) -> Array[Int]? {
   if target < 0 || target >= self.n || self.dist[target] == BF_INF {
     return None
   }
-
   let path : Array[Int] = []
   let mut current = target
   while current >= 0 {
@@ -166,18 +164,15 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
   self.dist.fill(BF_INF)
   self.in_queue.fill(false)
   self.count.fill(0)
-
   self.dist[source] = 0L
   let queue : Array[Int] = [source]
   self.in_queue[source] = true
   self.count[source] = 1
-
   let mut front = 0
   while front < queue.length() {
     let u = queue[front]
     front = front + 1
     self.in_queue[u] = false
-
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let (v, w) = self.adj[u][i]
       if self.dist[u] + w < self.dist[v] {
@@ -192,13 +187,11 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
           }
         }
       }
-    }
-    where {
+    } where {
       invariant: i >= 0 && i <= self.adj[u].length(),
       reasoning: "Scan neighbors of u; index stays within adjacency bounds.",
     }
   }
-
   Some(self.dist)
 }
 
@@ -218,7 +211,6 @@ test "bellman_ford basic" {
   bf.add_edge(2, 4, 9L)
   bf.add_edge(3, 1, -2L)
   bf.add_edge(4, 3, 7L)
-
   let result = bf.compute(0)
   inspect(result.get_distance(0), content="Some(0)")
   inspect(result.get_distance(1), content="Some(2)")
@@ -234,7 +226,6 @@ test "bellman_ford negative cycle" {
   bf.add_edge(0, 1, 1L)
   bf.add_edge(1, 2, -1L)
   bf.add_edge(2, 0, -1L) // Creates negative cycle: 0->1->2->0 = -1
-
   let result = bf.compute(0)
   inspect(result.has_negative_cycle(), content="true")
 }
@@ -244,7 +235,6 @@ test "bellman_ford disconnected" {
   let bf = BellmanFord::new(4)
   bf.add_edge(0, 1, 1L)
   bf.add_edge(2, 3, 1L)
-
   let result = bf.compute(0)
   inspect(result.get_distance(1), content="Some(1)")
   inspect(result.get_distance(2), content="None")
@@ -257,7 +247,6 @@ test "bellman_ford path reconstruction" {
   bf.add_edge(0, 1, 1L)
   bf.add_edge(1, 2, 2L)
   bf.add_edge(2, 3, 3L)
-
   let result = bf.compute(0)
   inspect(result.get_path(3), content="Some([0, 1, 2, 3])")
 }
@@ -274,7 +263,6 @@ test "spfa basic" {
   spfa.add_edge(2, 4, 9L)
   spfa.add_edge(3, 1, -2L)
   spfa.add_edge(4, 3, 7L)
-
   let result = spfa.compute(0)
   guard result is Some(dist) else { fail("Expected distances") }
   inspect(dist[0], content="0")
@@ -288,6 +276,5 @@ test "spfa negative cycle" {
   spfa.add_edge(0, 1, 1L)
   spfa.add_edge(1, 2, -1L)
   spfa.add_edge(2, 0, -1L)
-
   inspect(spfa.compute(0), content="None")
 }

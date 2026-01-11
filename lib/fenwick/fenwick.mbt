@@ -75,7 +75,7 @@ fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
 
   // Build tree in O(n) by propagating each element to its parent
   for i = 1; i <= n; i = i + 1 {
-    let parent = i + (i & (-i))
+    let parent = i + (i & -i)
     if parent <= n {
       tree[parent] = tree[parent] + tree[i]
     }
@@ -83,7 +83,6 @@ fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
     invariant: i >= 1 && i <= n + 1,
     reasoning: "I: tree[i] = arr[i-1] for all i (values copied from input array). M: For each i, compute parent = i + lowbit(i). By BIT structure, tree[parent] must include tree[i]'s range. Since parent > i (lowbit >= 1), when we process i, all indices < i are already finalized, so tree[i] is complete. We propagate tree[i] to tree[parent], building the partial sums bottom-up. T: After i=n, each tree[j] contains the sum of elements in range [j - lowbit(j) + 1, j], exactly the BIT invariant. O(n) time since each index is visited once.",
   }
-
   { n, tree }
 }
 
@@ -91,7 +90,7 @@ fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
 /// Get lowest set bit (isolate rightmost 1)
 /// lowbit(6) = lowbit(110₂) = 2 = 10₂
 fn lowbit(x : Int) -> Int {
-  x & (-x)
+  x & -x
 }
 
 ///|
@@ -127,7 +126,6 @@ fn FenwickTree::prefix_sum(self : FenwickTree, i : Int) -> Int64 {
 
   // Convert to 1-indexed and clamp
   let idx_start = if i >= self.n { self.n } else { i + 1 }
-
   for idx = idx_start, sum = 0L; idx > 0; {
     continue idx - lowbit(idx), sum + self.tree[idx]
   } else {
@@ -148,7 +146,6 @@ fn FenwickTree::range_sum(self : FenwickTree, l : Int, r : Int) -> Int64 {
   if l > r || l < 0 || r >= self.n {
     return 0L
   }
-
   if l == 0 {
     self.prefix_sum(r)
   } else {
@@ -202,11 +199,15 @@ fn FenwickTree2D::new(rows : Int, cols : Int) -> FenwickTree2D {
 
 ///|
 /// Add delta to cell (r, c) (0-indexed)
-fn FenwickTree2D::add(self : FenwickTree2D, r : Int, c : Int, delta : Int64) -> Unit {
+fn FenwickTree2D::add(
+  self : FenwickTree2D,
+  r : Int,
+  c : Int,
+  delta : Int64,
+) -> Unit {
   if r < 0 || r >= self.rows || c < 0 || c >= self.cols {
     return
   }
-
   let mut i = r + 1
   while i <= self.rows {
     let mut j = c + 1
@@ -224,10 +225,8 @@ fn FenwickTree2D::prefix_sum(self : FenwickTree2D, r : Int, c : Int) -> Int64 {
   if r < 0 || c < 0 {
     return 0L
   }
-
   let ri = if r >= self.rows { self.rows } else { r + 1 }
   let ci = if c >= self.cols { self.cols } else { c + 1 }
-
   let mut sum = 0L
   let mut i = ri
   while i > 0 {
@@ -243,15 +242,21 @@ fn FenwickTree2D::prefix_sum(self : FenwickTree2D, r : Int, c : Int) -> Int64 {
 
 ///|
 /// Query sum of rectangle [r1, c1] to [r2, c2] (inclusive, 0-indexed)
-fn FenwickTree2D::range_sum(self : FenwickTree2D, r1 : Int, c1 : Int, r2 : Int, c2 : Int) -> Int64 {
+fn FenwickTree2D::range_sum(
+  self : FenwickTree2D,
+  r1 : Int,
+  c1 : Int,
+  r2 : Int,
+  c2 : Int,
+) -> Int64 {
   if r1 > r2 || c1 > c2 {
     return 0L
   }
   // Inclusion-exclusion principle
   self.prefix_sum(r2, c2) -
-    self.prefix_sum(r1 - 1, c2) -
-    self.prefix_sum(r2, c1 - 1) +
-    self.prefix_sum(r1 - 1, c1 - 1)
+  self.prefix_sum(r1 - 1, c2) -
+  self.prefix_sum(r2, c1 - 1) +
+  self.prefix_sum(r1 - 1, c1 - 1)
 }
 
 // ============================================================================
@@ -273,7 +278,11 @@ fn FenwickTreeRangeUpdate::new(n : Int) -> FenwickTreeRangeUpdate {
 
 ///|
 /// Internal: add delta at index
-fn FenwickTreeRangeUpdate::point_add(self : FenwickTreeRangeUpdate, i : Int, delta : Int64) -> Unit {
+fn FenwickTreeRangeUpdate::point_add(
+  self : FenwickTreeRangeUpdate,
+  i : Int,
+  delta : Int64,
+) -> Unit {
   if i < 0 || i >= self.n {
     return
   }
@@ -286,12 +295,16 @@ fn FenwickTreeRangeUpdate::point_add(self : FenwickTreeRangeUpdate, i : Int, del
 
 ///|
 /// Add delta to range [l, r] (inclusive, 0-indexed)
-fn FenwickTreeRangeUpdate::range_add(self : FenwickTreeRangeUpdate, l : Int, r : Int, delta : Int64) -> Unit {
+fn FenwickTreeRangeUpdate::range_add(
+  self : FenwickTreeRangeUpdate,
+  l : Int,
+  r : Int,
+  delta : Int64,
+) -> Unit {
   if l > r || l < 0 {
     return
   }
   let r_clamped = if r >= self.n { self.n - 1 } else { r }
-
   self.point_add(l, delta)
   if r_clamped + 1 < self.n {
     self.point_add(r_clamped + 1, -delta)
@@ -300,11 +313,13 @@ fn FenwickTreeRangeUpdate::range_add(self : FenwickTreeRangeUpdate, l : Int, r :
 
 ///|
 /// Query value at index i (0-indexed)
-fn FenwickTreeRangeUpdate::query(self : FenwickTreeRangeUpdate, i : Int) -> Int64 {
+fn FenwickTreeRangeUpdate::query(
+  self : FenwickTreeRangeUpdate,
+  i : Int,
+) -> Int64 {
   if i < 0 || i >= self.n {
     return 0L
   }
-
   let mut idx = i + 1
   let mut sum = 0L
   while idx > 0 {
@@ -354,7 +369,12 @@ fn query_internal(arr : Array[Int64], i : Int) -> Int64 {
 
 ///|
 /// Add delta to range [l, r] (inclusive, 0-indexed)
-fn FenwickTreeRangeRange::range_add(self : FenwickTreeRangeRange, l : Int, r : Int, delta : Int64) -> Unit {
+fn FenwickTreeRangeRange::range_add(
+  self : FenwickTreeRangeRange,
+  l : Int,
+  r : Int,
+  delta : Int64,
+) -> Unit {
   if l > r || l < 0 {
     return
   }
@@ -370,17 +390,25 @@ fn FenwickTreeRangeRange::range_add(self : FenwickTreeRangeRange, l : Int, r : I
 
 ///|
 /// Query prefix sum [0, i] (inclusive, 0-indexed)
-fn FenwickTreeRangeRange::prefix_sum(self : FenwickTreeRangeRange, i : Int) -> Int64 {
+fn FenwickTreeRangeRange::prefix_sum(
+  self : FenwickTreeRangeRange,
+  i : Int,
+) -> Int64 {
   if i < 0 {
     return 0L
   }
   let idx = if i >= self.n { self.n } else { i + 1 }
-  query_internal(self.bit1, idx) * idx.to_int64() - query_internal(self.bit2, idx)
+  query_internal(self.bit1, idx) * idx.to_int64() -
+  query_internal(self.bit2, idx)
 }
 
 ///|
 /// Query range sum [l, r] (inclusive, 0-indexed)
-fn FenwickTreeRangeRange::range_sum(self : FenwickTreeRangeRange, l : Int, r : Int) -> Int64 {
+fn FenwickTreeRangeRange::range_sum(
+  self : FenwickTreeRangeRange,
+  l : Int,
+  r : Int,
+) -> Int64 {
   if l > r || l < 0 {
     return 0L
   }
@@ -403,7 +431,6 @@ test "fenwick tree basic" {
   ft.add(2, 3L)
   ft.add(3, 4L)
   ft.add(4, 5L)
-
   inspect(ft.prefix_sum(0), content="1")
   inspect(ft.prefix_sum(1), content="3")
   inspect(ft.prefix_sum(2), content="6")
@@ -414,7 +441,6 @@ test "fenwick tree basic" {
 test "fenwick tree from array" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let ft = FenwickTree::from_array(arr)
-
   inspect(ft.prefix_sum(0), content="1")
   inspect(ft.prefix_sum(2), content="6")
   inspect(ft.prefix_sum(4), content="15")
@@ -424,7 +450,6 @@ test "fenwick tree from array" {
 test "fenwick tree range sum" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let ft = FenwickTree::from_array(arr)
-
   inspect(ft.range_sum(0, 4), content="15")
   inspect(ft.range_sum(1, 3), content="9")
   inspect(ft.range_sum(2, 2), content="3")
@@ -434,9 +459,7 @@ test "fenwick tree range sum" {
 test "fenwick tree get and set" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let ft = FenwickTree::from_array(arr)
-
   inspect(ft.get(2), content="3")
-
   ft.set(2, 10L)
   inspect(ft.get(2), content="10")
   inspect(ft.prefix_sum(4), content="22")
@@ -459,7 +482,6 @@ test "fenwick tree 2d" {
   ft.add(2, 0, 7L)
   ft.add(2, 1, 8L)
   ft.add(2, 2, 9L)
-
   inspect(ft.prefix_sum(0, 0), content="1")
   inspect(ft.prefix_sum(1, 1), content="12") // 1+2+4+5
   inspect(ft.prefix_sum(2, 2), content="45") // sum of all
@@ -495,7 +517,6 @@ test "fenwick tree range update point query" {
 
   // Add 10 to range [1, 3]
   ft.range_add(1, 3, 10L)
-
   inspect(ft.query(0), content="0")
   inspect(ft.query(1), content="10")
   inspect(ft.query(2), content="10")
@@ -539,7 +560,6 @@ test "fenwick tree negative values" {
   ft.add(0, -5L)
   ft.add(1, 10L)
   ft.add(2, -3L)
-
   inspect(ft.prefix_sum(0), content="-5")
   inspect(ft.prefix_sum(1), content="5")
   inspect(ft.prefix_sum(2), content="2")
@@ -568,7 +588,6 @@ test "fenwick tree large updates" {
       #|All indices in [0..i) have been updated with the large delta.
     ),
   }
-
   inspect(ft.prefix_sum(9), content="10000000000")
 }
 
@@ -577,7 +596,6 @@ test "fenwick tree boundary" {
   let ft = FenwickTree::new(5)
   ft.add(0, 1L)
   ft.add(4, 5L)
-
   inspect(ft.prefix_sum(-1), content="0")
   inspect(ft.prefix_sum(0), content="1")
   inspect(ft.prefix_sum(4), content="6")

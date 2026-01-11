@@ -68,7 +68,12 @@ fn MaxFlow::new(n : Int) -> MaxFlow {
 
 ///|
 /// Add edge from u to v with given capacity
-fn MaxFlow::add_edge(self : MaxFlow, from : Int, to : Int, capacity : Int64) -> Unit {
+fn MaxFlow::add_edge(
+  self : MaxFlow,
+  from : Int,
+  to : Int,
+  capacity : Int64,
+) -> Unit {
   let from_idx = self.adj[from].length()
   let to_idx = self.adj[to].length()
 
@@ -80,10 +85,14 @@ fn MaxFlow::add_edge(self : MaxFlow, from : Int, to : Int, capacity : Int64) -> 
 
 ///|
 /// Add undirected edge (two directed edges with same capacity)
-fn MaxFlow::add_undirected_edge(self : MaxFlow, u : Int, v : Int, capacity : Int64) -> Unit {
+fn MaxFlow::add_undirected_edge(
+  self : MaxFlow,
+  u : Int,
+  v : Int,
+  capacity : Int64,
+) -> Unit {
   let u_idx = self.adj[u].length()
   let v_idx = self.adj[v].length()
-
   self.adj[u].push({ to: v, capacity, flow: 0L, rev_idx: v_idx })
   self.adj[v].push({ to: u, capacity, flow: 0L, rev_idx: u_idx })
 }
@@ -93,8 +102,12 @@ fn MaxFlow::add_undirected_edge(self : MaxFlow, u : Int, v : Int, capacity : Int
 fn MaxFlow::bfs(self : MaxFlow, source : Int, sink : Int) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.level[i] = -1
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: (
+      #|Reset levels before BFS.
+    ),
   }
-
   self.level[source] = 0
   let queue : Array[Int] = [source]
   let mut head = 0
@@ -108,16 +121,19 @@ fn MaxFlow::bfs(self : MaxFlow, source : Int, sink : Int) -> Bool {
   while head < queue.length() {
     let u = queue[head]
     head = head + 1
-
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let e = self.adj[u][i]
       if self.level[e.to] < 0 && e.capacity > e.flow {
         self.level[e.to] = self.level[u] + 1
         queue.push(e.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Scan outgoing edges to build the level graph.
+      ),
     }
   }
-
   self.level[sink] >= 0
 }
 
@@ -127,16 +143,13 @@ fn MaxFlow::dfs(self : MaxFlow, u : Int, sink : Int, pushed : Int64) -> Int64 {
   if u == sink {
     return pushed
   }
-
   while self.iter[u] < self.adj[u].length() {
     let idx = self.iter[u]
     let e = self.adj[u][idx]
-
     if self.level[u] + 1 == self.level[e.to] && e.capacity > e.flow {
       let residual = e.capacity - e.flow
       let can_push = if pushed < residual { pushed } else { residual }
       let d = self.dfs(e.to, sink, can_push)
-
       if d > 0L {
         self.adj[u][idx].flow = e.flow + d
         self.adj[e.to][e.rev_idx].flow = self.adj[e.to][e.rev_idx].flow - d
@@ -145,7 +158,6 @@ fn MaxFlow::dfs(self : MaxFlow, u : Int, sink : Int, pushed : Int64) -> Int64 {
     }
     self.iter[u] = self.iter[u] + 1
   }
-
   0L
 }
 
@@ -168,6 +180,11 @@ fn MaxFlow::max_flow(self : MaxFlow, source : Int, sink : Int) -> Int64 {
     // Reset iteration pointers for dead-end pruning
     for i = 0; i < self.n; i = i + 1 {
       self.iter[i] = 0
+    } where {
+      invariant: i >= 0 && i <= self.n,
+      reasoning: (
+        #|Reset DFS iterators for the new level graph.
+      ),
     }
 
     // Find blocking flow
@@ -177,9 +194,13 @@ fn MaxFlow::max_flow(self : MaxFlow, source : Int, sink : Int) -> Int64 {
         break
       }
       flow = flow + pushed
+    } where {
+      invariant: flow >= 0L,
+      reasoning: (
+        #|Accumulate augmenting paths until blocking flow is reached.
+      ),
     }
   }
-
   flow
 }
 
@@ -191,7 +212,6 @@ fn MaxFlow::min_cut(self : MaxFlow, source : Int) -> Array[(Int, Int, Int64)] {
   let queue : Array[Int] = [source]
   visited[source] = true
   let mut head = 0
-
   while head < queue.length() {
     let u = queue[head]
     head = head + 1
@@ -201,6 +221,11 @@ fn MaxFlow::min_cut(self : MaxFlow, source : Int) -> Array[(Int, Int, Int64)] {
         visited[e.to] = true
         queue.push(e.to)
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length(),
+      reasoning: (
+        #|Traverse residual edges to mark reachable vertices.
+      ),
     }
   }
 
@@ -213,10 +238,19 @@ fn MaxFlow::min_cut(self : MaxFlow, source : Int) -> Array[(Int, Int, Int64)] {
         if not(visited[e.to]) && e.capacity > 0L {
           cut.push((u, e.to, e.capacity))
         }
+      } where {
+        invariant: i >= 0 && i <= self.adj[u].length(),
+        reasoning: (
+          #|Collect crossing edges from reachable to unreachable nodes.
+        ),
       }
     }
+  } where {
+    invariant: u >= 0 && u <= self.n,
+    reasoning: (
+      #|Scan all reachable vertices for cut edges.
+    ),
   }
-
   cut
 }
 
@@ -236,7 +270,6 @@ test "max flow basic" {
   let mf = MaxFlow::new(6)
   let s = 0
   let t = 5
-
   mf.add_edge(s, 1, 10L)
   mf.add_edge(s, 3, 10L)
   mf.add_edge(1, 2, 4L)
@@ -257,7 +290,6 @@ test "max flow simple path" {
   mf.add_edge(0, 1, 5L)
   mf.add_edge(1, 2, 5L)
   mf.add_edge(2, 3, 5L)
-
   inspect(mf.max_flow(0, 3), content="5")
 }
 
@@ -268,7 +300,6 @@ test "max flow parallel edges" {
   mf.add_edge(0, 1, 5L)
   mf.add_edge(0, 1, 3L)
   mf.add_edge(0, 1, 2L)
-
   inspect(mf.max_flow(0, 1), content="10")
 }
 
@@ -279,7 +310,6 @@ test "max flow bottleneck" {
   mf.add_edge(0, 1, 100L)
   mf.add_edge(1, 2, 1L)
   mf.add_edge(2, 3, 100L)
-
   inspect(mf.max_flow(0, 3), content="1")
 }
 
@@ -289,7 +319,6 @@ test "max flow no path" {
   let mf = MaxFlow::new(4)
   mf.add_edge(0, 1, 10L)
   mf.add_edge(2, 3, 10L)
-
   inspect(mf.max_flow(0, 3), content="0")
 }
 
@@ -327,19 +356,29 @@ test "max flow min cut" {
   mf.add_edge(0, 2, 2L)
   mf.add_edge(1, 3, 2L)
   mf.add_edge(2, 3, 3L)
-
   let flow = mf.max_flow(0, 3)
   // Max flow: 0->1->3 (2) + 0->2->3 (2) = 4
   inspect(flow, content="4")
-
   let cut = mf.min_cut(0)
   // Cut should have total capacity = max flow
   let mut cut_capacity = 0L
   for i = 0; i < cut.length(); i = i + 1 {
     let (_, _, cap) = cut[i]
     cut_capacity = cut_capacity + cap
+  } where {
+    invariant: i >= 0 && i <= cut.length(),
+    reasoning: (
+      #|Sum capacities of cut edges.
+    ),
   }
   inspect(cut_capacity, content="4")
+}
+
+///|
+test "max flow undirected edge" {
+  let mf = MaxFlow::new(2)
+  mf.add_undirected_edge(0, 1, 7L)
+  inspect(mf.max_flow(0, 1), content="7")
 }
 
 ///|
@@ -355,6 +394,5 @@ test "max flow self loop ignored" {
   mf.add_edge(1, 2, 10L)
   // Self loop doesn't affect flow
   mf.add_edge(1, 1, 100L)
-
   inspect(mf.max_flow(0, 2), content="10")
 }

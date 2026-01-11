@@ -6,7 +6,7 @@
 // ============================================================================
 
 ///|
-struct Complex {
+priv struct Complex {
   re : Double
   im : Double
 }
@@ -40,10 +40,6 @@ fn Complex::mul(self : Complex, other : Complex) -> Complex {
 }
 
 ///|
-fn Complex::magnitude_squared(self : Complex) -> Double {
-  self.re * self.re + self.im * self.im
-}
-
 // ============================================================================
 // BIT REVERSAL
 // ============================================================================
@@ -165,6 +161,12 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
 
   } else {
     i
+  } where {
+    invariant: i >= 0,
+    invariant: temp == n >> i,
+    reasoning: (
+      #|Repeatedly shift n to count log2(n).
+    ),
   }
   // Bit-reversal permutation
   bit_reverse_permute(arr, n, log_n)
@@ -206,6 +208,11 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
           #|        O = DFT of odd-indexed elements
         ),
       }
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|Process each contiguous block of size len.
+      ),
     }
   } where {
     invariant: len >= 2 && len <= 2 * n,
@@ -230,6 +237,11 @@ fn fft_in_place(arr : Array[Complex], n : Int, inverse : Bool) -> Unit {
     let scale = 1.0 / n.to_double()
     for i = 0; i < n; i = i + 1 {
       arr[i] = Complex::new(arr[i].re * scale, arr[i].im * scale)
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|Normalize inverse FFT by dividing each term by n.
+      ),
     }
   }
 }
@@ -248,15 +260,30 @@ fn polynomial_multiply_fft(a : Array[Int], b : Array[Int]) -> Array[Int] {
 
   } else {
     size
+  } where {
+    invariant: size >= 1,
+    reasoning: (
+      #|Grow size by powers of two until it covers the result length.
+    ),
   }
   // Convert to complex arrays
   let fa : Array[Complex] = Array::make(n, Complex::from_real(0.0))
   let fb : Array[Complex] = Array::make(n, Complex::from_real(0.0))
   for i = 0; i < n1; i = i + 1 {
     fa[i] = Complex::from_real(a[i].to_double())
+  } where {
+    invariant: i >= 0 && i <= n1,
+    reasoning: (
+      #|Load polynomial a into the complex buffer.
+    ),
   }
   for i = 0; i < n2; i = i + 1 {
     fb[i] = Complex::from_real(b[i].to_double())
+  } where {
+    invariant: i >= 0 && i <= n2,
+    reasoning: (
+      #|Load polynomial b into the complex buffer.
+    ),
   }
   // Forward FFT
   fft_in_place(fa, n, false)
@@ -336,25 +363,6 @@ fn ntt_mod_pow(base_in : Int64, exp_in : Int64, m : Int64) -> Int64 {
   }
 }
 
-///|
-/// Find primitive root modulo p (assumes p is prime of form k*2^n + 1)
-fn find_primitive_root(p : Int64, max_pow2 : Int) -> Int64 {
-  // For NTT-friendly primes, 3 is often a primitive root
-  // We verify by checking that 3^((p-1)/2) ≡ -1 (mod p)
-  let g = 3L
-  let half = (p - 1L) / 2L
-  let check = ntt_mod_pow(g, half, p)
-  if check == p - 1L {
-    // g is a primitive root, find primitive 2^max_pow2-th root of unity
-    let order = p - 1L
-    let exp = order / (1L << max_pow2)
-    ntt_mod_pow(g, exp, p)
-  } else {
-    // Fallback: try other small primes
-    1L
-  }
-}
-
 // Common NTT-friendly prime: 998244353 = 119 * 2^23 + 1
 // Primitive root: 3
 
@@ -372,6 +380,12 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
 
   } else {
     i
+  } where {
+    invariant: i >= 0,
+    invariant: temp == n >> i,
+    reasoning: (
+      #|Count log2(n) by shifting until temp becomes 1.
+    ),
   }
   // Bit-reversal permutation
   for i = 0; i < n; i = i + 1 {
@@ -381,6 +395,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
       arr[i] = arr[j]
       arr[j] = temp
     }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Reorder elements by bit-reversed index.
+    ),
   }
   // Iterative NTT
   for len = 2; len <= n; len = len * 2 {
@@ -419,6 +438,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
           #|  So g^((p-1)/n) is an n-th root of unity modulo p.
         ),
       }
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|Process each length-len block in the NTT array.
+      ),
     }
   } where {
     invariant: len >= 2 && len <= 2 * n,
@@ -433,6 +457,11 @@ fn ntt_in_place(arr : Array[Int64], n : Int, inverse : Bool) -> Unit {
     let n_inv = ntt_mod_pow(n.to_int64(), ntt_mod - 2L, ntt_mod)
     for i = 0; i < n; i = i + 1 {
       arr[i] = arr[i] * n_inv % ntt_mod
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: (
+        #|Normalize inverse NTT by multiplying by n^{-1}.
+      ),
     }
   }
 }
@@ -451,15 +480,30 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
 
   } else {
     size
+  } where {
+    invariant: size >= 1,
+    reasoning: (
+      #|Grow size by powers of two until it covers the result length.
+    ),
   }
   // Prepare arrays
   let fa : Array[Int64] = Array::make(n, 0L)
   let fb : Array[Int64] = Array::make(n, 0L)
   for i = 0; i < n1; i = i + 1 {
     fa[i] = a[i] % ntt_mod
+  } where {
+    invariant: i >= 0 && i <= n1,
+    reasoning: (
+      #|Load polynomial a into NTT buffer.
+    ),
   }
   for i = 0; i < n2; i = i + 1 {
     fb[i] = b[i] % ntt_mod
+  } where {
+    invariant: i >= 0 && i <= n2,
+    reasoning: (
+      #|Load polynomial b into NTT buffer.
+    ),
   }
   // Forward NTT
   ntt_in_place(fa, n, false)
@@ -481,6 +525,11 @@ fn polynomial_multiply_ntt(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   let result : Array[Int64] = Array::make(result_len, 0L)
   for i = 0; i < result_len; i = i + 1 {
     result[i] = fa[i]
+  } where {
+    invariant: i >= 0 && i <= result_len,
+    reasoning: (
+      #|Extract the first result_len coefficients from the inverse NTT.
+    ),
   }
   result
 }
@@ -500,7 +549,8 @@ fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
   result[0] = 1 // Base case: 1 way to make 0
   // For each coin, update the DP array (standard knapsack approach)
   // This is equivalent to polynomial multiplication with truncation
-  for coin in coins {
+  for i = 0; i < coins.length(); i = i + 1 {
+    let coin = coins[i]
     for amount = coin; amount <= max_amount; amount = amount + 1 {
       result[amount] = result[amount] + result[amount - coin]
     } where {
@@ -515,6 +565,11 @@ fn count_change_polynomial(coins : Array[Int], max_amount : Int) -> Array[Int] {
         #|This is convolution with the geometric series for each coin.
       ),
     }
+  } where {
+    invariant: i >= 0 && i <= coins.length(),
+    reasoning: (
+      #|Process each coin's generating function in sequence.
+    ),
   }
   result
 }
@@ -538,6 +593,11 @@ fn pattern_match_fft(text : Array[Int], pattern : Array[Int]) -> Array[Int] {
   let pattern_rev : Array[Int] = Array::make(m, 0)
   for i = 0; i < m; i = i + 1 {
     pattern_rev[i] = pattern[m - 1 - i]
+  } where {
+    invariant: i >= 0 && i <= m,
+    reasoning: (
+      #|Reverse the pattern for convolution-based matching.
+    ),
   }
   // Compute convolution of text and reversed pattern
   let conv = polynomial_multiply_fft(text, pattern_rev)

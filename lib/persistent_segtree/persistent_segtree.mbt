@@ -73,14 +73,12 @@ fn PersistentSegTree::new(arr : Array[Int64]) -> PersistentSegTree {
   if n == 0 {
     return { nodes: [], roots: [], n: 0 }
   }
-
   let nodes : Array[PNode] = []
   let roots : Array[Int] = []
 
   // Build initial tree recursively
   let root = build_tree(nodes, arr, 0, n - 1)
   roots.push(root)
-
   { nodes, roots, n }
 }
 
@@ -92,7 +90,7 @@ fn build_tree(
   nodes : Array[PNode],
   arr : Array[Int64],
   lo : Int,
-  hi : Int
+  hi : Int,
 ) -> Int {
   if lo == hi {
     // Leaf node
@@ -103,7 +101,6 @@ fn build_tree(
   let mid = (lo + hi) / 2
   let left_idx = build_tree(nodes, arr, lo, mid)
   let right_idx = build_tree(nodes, arr, mid + 1, hi)
-
   let sum = nodes[left_idx].sum + nodes[right_idx].sum
   push_node(nodes, sum, left_idx, right_idx)
 }
@@ -117,15 +114,11 @@ fn PersistentSegTree::update(
   self : PersistentSegTree,
   version : Int,
   pos : Int,
-  val : Int64
+  val : Int64,
 ) -> Int {
-  if version < 0 ||
-    version >= self.roots.length() ||
-    pos < 0 ||
-    pos >= self.n {
+  if version < 0 || version >= self.roots.length() || pos < 0 || pos >= self.n {
     return version
   }
-
   let new_root = update_tree(
     self.nodes,
     self.roots[version],
@@ -148,13 +141,12 @@ fn update_tree(
   lo : Int,
   hi : Int,
   pos : Int,
-  val : Int64
+  val : Int64,
 ) -> Int {
   if lo == hi {
     // Create new leaf with updated value
     return push_node(nodes, val, -1, -1)
   }
-
   let mid = (lo + hi) / 2
   let old_node = nodes[node_idx]
 
@@ -179,7 +171,7 @@ fn PersistentSegTree::query(
   self : PersistentSegTree,
   version : Int,
   l : Int,
-  r : Int
+  r : Int,
 ) -> Int64 {
   if version < 0 ||
     version >= self.roots.length() ||
@@ -188,11 +180,16 @@ fn PersistentSegTree::query(
     r < 0 {
     return 0L
   }
-
   let l_clamped = if l < 0 { 0 } else { l }
   let r_clamped = if r >= self.n { self.n - 1 } else { r }
-
-  query_tree(self.nodes, self.roots[version], 0, self.n - 1, l_clamped, r_clamped)
+  query_tree(
+    self.nodes,
+    self.roots[version],
+    0,
+    self.n - 1,
+    l_clamped,
+    r_clamped,
+  )
 }
 
 ///|
@@ -204,13 +201,12 @@ fn query_tree(
   lo : Int,
   hi : Int,
   l : Int,
-  r : Int
+  r : Int,
 ) -> Int64 {
   if l > hi || r < lo {
     // No intersection
     return 0L
   }
-
   if l <= lo && hi <= r {
     // Fully contained
     return nodes[node_idx].sum
@@ -241,7 +237,7 @@ fn PersistentSegTree::node_count(self : PersistentSegTree) -> Int {
 fn PersistentSegTree::get(
   self : PersistentSegTree,
   version : Int,
-  pos : Int
+  pos : Int,
 ) -> Int64 {
   self.query(version, pos, pos)
 }
@@ -252,7 +248,7 @@ fn PersistentSegTree::add(
   self : PersistentSegTree,
   version : Int,
   pos : Int,
-  delta : Int64
+  delta : Int64,
 ) -> Int {
   let old_val = self.get(version, pos)
   self.update(version, pos, old_val + delta)
@@ -292,6 +288,9 @@ fn KthSmallest::new(arr : Array[Int64]) -> KthSmallest {
   let sorted_vals : Array[Int64] = []
   for i = 0; i < n; i = i + 1 {
     sorted_vals.push(arr[i])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: sorted_vals contains arr[0..i). M: Append arr[i]. T: After i = n, sorted_vals is a copy of arr.",
   }
   sorted_vals.sort_by(fn(a, b) {
     if a < b {
@@ -311,8 +310,10 @@ fn KthSmallest::new(arr : Array[Int64]) -> KthSmallest {
       val_to_idx[sorted_vals[i]] = unique_vals.length()
       unique_vals.push(sorted_vals[i])
     }
+  } where {
+    invariant: i >= 0 && i <= sorted_vals.length(),
+    reasoning: "I: unique_vals holds distinct values from sorted_vals[0..i) in order; val_to_idx maps those values to indices. M: On a new value, record its index and append to unique_vals. T: After i = n, unique_vals is the sorted list of unique values with a complete map.",
   }
-
   let m = unique_vals.length()
   let nodes : Array[PNode] = []
   let roots : Array[Int] = []
@@ -331,8 +332,10 @@ fn KthSmallest::new(arr : Array[Int64]) -> KthSmallest {
     let prev_root = roots[roots.length() - 1]
     let new_root = kth_insert_tree(nodes, prev_root, 0, m - 1, idx)
     roots.push(new_root)
+  } where {
+    invariant: i >= 0 && i <= n && roots.length() == i + 1,
+    reasoning: "I: roots[k] stores frequencies for prefix arr[0..k-1], so roots.length() == i+1 before insertion. M: Insert arr[i] to create new_root for prefix i+1. T: After i = n, roots has n+1 versions for all prefixes.",
   }
-
   { nodes, roots, sorted_vals: unique_vals }
 }
 
@@ -342,7 +345,6 @@ fn build_empty_tree(nodes : Array[PNode], lo : Int, hi : Int) -> Int {
   if lo == hi {
     return push_node(nodes, 0L, -1, -1)
   }
-
   let mid = (lo + hi) / 2
   let left = build_empty_tree(nodes, lo, mid)
   let right = build_empty_tree(nodes, mid + 1, hi)
@@ -356,14 +358,12 @@ fn kth_insert_tree(
   node_idx : Int,
   lo : Int,
   hi : Int,
-  pos : Int
+  pos : Int,
 ) -> Int {
   let old = nodes[node_idx]
-
   if lo == hi {
     return push_node(nodes, old.sum + 1L, -1, -1)
   }
-
   let mid = (lo + hi) / 2
   if pos <= mid {
     let new_left = kth_insert_tree(nodes, old.left, lo, mid, pos)
@@ -377,12 +377,7 @@ fn kth_insert_tree(
 ///|
 /// Find k-th smallest in range [l, r] (1-indexed k)
 /// Returns None if k is out of range
-fn KthSmallest::query(
-  self : KthSmallest,
-  l : Int,
-  r : Int,
-  k : Int
-) -> Int64? {
+fn KthSmallest::query(self : KthSmallest, l : Int, r : Int, k : Int) -> Int64? {
   if l < 0 ||
     r >= self.roots.length() - 1 ||
     l > r ||
@@ -390,16 +385,13 @@ fn KthSmallest::query(
     self.sorted_vals.length() == 0 {
     return None
   }
-
   let range_size = r - l + 1
   if k > range_size {
     return None
   }
-
   let m = self.sorted_vals.length()
   let left_root = self.roots[l] // Tree for prefix [0, l-1]
   let right_root = self.roots[r + 1] // Tree for prefix [0, r]
-
   let idx = kth_query_tree(self.nodes, left_root, right_root, 0, m - 1, k)
   Some(self.sorted_vals[idx])
 }
@@ -415,12 +407,11 @@ fn kth_query_tree(
   right_root : Int,
   lo : Int,
   hi : Int,
-  k : Int
+  k : Int,
 ) -> Int {
   if lo == hi {
     return lo
   }
-
   let mid = (lo + hi) / 2
   let left_node_l = nodes[nodes[left_root].left]
   let left_node_r = nodes[nodes[right_root].left]
@@ -514,7 +505,6 @@ test "persistent segtree branching versions" {
   // Branch from version 0
   let _ = tree.update(0, 0, 10L) // [10, 2, 3]
   let _ = tree.update(0, 1, 20L) // [1, 20, 3] - branch from v0
-
   inspect(tree.query(1, 0, 2), content="15") // 10+2+3
   inspect(tree.query(2, 0, 2), content="24") // 1+20+3
 }
@@ -523,7 +513,6 @@ test "persistent segtree branching versions" {
 test "persistent segtree space efficiency" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L]
   let tree = PersistentSegTree::new(arr)
-
   let initial_nodes = tree.node_count()
 
   // Each update should create O(log n) new nodes
@@ -539,9 +528,7 @@ test "persistent segtree space efficiency" {
 test "persistent segtree get and add" {
   let arr : Array[Int64] = [5L, 10L, 15L]
   let tree = PersistentSegTree::new(arr)
-
   inspect(tree.get(0, 1), content="10")
-
   let v1 = tree.add(0, 1, 5L) // Add 5 to position 1
   inspect(tree.get(v1, 1), content="15")
   inspect(tree.get(0, 1), content="10") // Original unchanged
@@ -551,7 +538,6 @@ test "persistent segtree get and add" {
 test "persistent segtree empty" {
   let arr : Array[Int64] = []
   let tree = PersistentSegTree::new(arr)
-
   inspect(tree.version_count(), content="0")
   inspect(tree.query(0, 0, 0), content="0")
 }
@@ -560,9 +546,7 @@ test "persistent segtree empty" {
 test "persistent segtree single element" {
   let arr : Array[Int64] = [42L]
   let tree = PersistentSegTree::new(arr)
-
   inspect(tree.query(0, 0, 0), content="42")
-
   let v1 = tree.update(0, 0, 100L)
   inspect(tree.query(v1, 0, 0), content="100")
   inspect(tree.query(0, 0, 0), content="42")
@@ -600,7 +584,6 @@ test "kth smallest range" {
 test "kth smallest out of range" {
   let arr : Array[Int64] = [1L, 2L, 3L]
   let kth = KthSmallest::new(arr)
-
   inspect(kth.query(0, 2, 4), content="None") // k > range size
   inspect(kth.query(0, 2, 0), content="None") // k <= 0
 }
@@ -609,7 +592,6 @@ test "kth smallest out of range" {
 test "kth smallest single element" {
   let arr : Array[Int64] = [42L]
   let kth = KthSmallest::new(arr)
-
   inspect(kth.query(0, 0, 1), content="Some(42)")
   inspect(kth.query(0, 0, 2), content="None")
 }
@@ -628,6 +610,5 @@ test "kth smallest duplicates" {
 test "kth smallest size" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let kth = KthSmallest::new(arr)
-
   inspect(kth.size(), content="5")
 }

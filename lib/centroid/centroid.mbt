@@ -63,15 +63,18 @@ fn CentroidTree::add_edge(self : CentroidTree, u : Int, v : Int) -> Unit {
 
 ///|
 /// Compute subtree sizes rooted at u, ignoring removed nodes
-fn CentroidTree::compute_size(self : CentroidTree, u : Int, parent : Int) -> Int {
+fn CentroidTree::compute_size(
+  self : CentroidTree,
+  u : Int,
+  parent : Int,
+) -> Int {
   self.subtree_size[u] = 1
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
     if v != parent && not(self.removed[v]) {
       self.subtree_size[u] = self.subtree_size[u] + self.compute_size(v, u)
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
     reasoning: "Accumulate subtree sizes by scanning all neighbors of u.",
   }
@@ -80,14 +83,20 @@ fn CentroidTree::compute_size(self : CentroidTree, u : Int, parent : Int) -> Int
 
 ///|
 /// Find centroid of subtree containing u
-fn CentroidTree::find_centroid(self : CentroidTree, u : Int, parent : Int, tree_size : Int) -> Int {
+fn CentroidTree::find_centroid(
+  self : CentroidTree,
+  u : Int,
+  parent : Int,
+  tree_size : Int,
+) -> Int {
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
-    if v != parent && not(self.removed[v]) && self.subtree_size[v] > tree_size / 2 {
+    if v != parent &&
+      not(self.removed[v]) &&
+      self.subtree_size[v] > tree_size / 2 {
       return self.find_centroid(v, u, tree_size)
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
     reasoning: "Search neighbors to find a child subtree larger than half.",
   }
@@ -96,14 +105,17 @@ fn CentroidTree::find_centroid(self : CentroidTree, u : Int, parent : Int, tree_
 
 ///|
 /// Decompose tree and build centroid tree
-fn CentroidTree::decompose(self : CentroidTree, u : Int, parent : Int, depth : Int) -> Int {
+fn CentroidTree::decompose(
+  self : CentroidTree,
+  u : Int,
+  parent : Int,
+  depth : Int,
+) -> Int {
   let tree_size = self.compute_size(u, -1)
   let centroid = self.find_centroid(u, -1, tree_size)
-
   self.removed[centroid] = true
   self.centroid_parent[centroid] = parent
   self.centroid_depth[centroid] = depth
-
   for i = 0; i < self.adj[centroid].length(); i = i + 1 {
     let v = self.adj[centroid][i]
     if not(self.removed[v]) {
@@ -114,7 +126,6 @@ fn CentroidTree::decompose(self : CentroidTree, u : Int, parent : Int, depth : I
     invariant: i >= 0 && i <= self.adj[centroid].length(),
     reasoning: "I: centroid found and marked removed. M: For each non-removed neighbor, recursively decompose its subtree. Since centroid is removed, neighbor's subtree has size ≤ tree_size/2. T: All subtrees decomposed, depth increases by 1 each level, giving O(log n) total depth.",
   }
-
   centroid
 }
 
@@ -197,8 +208,7 @@ test "centroid depth bound" {
     if ct.get_depth(i) > max_depth {
       max_depth = ct.get_depth(i)
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= 7,
     reasoning: "Scan all nodes to track maximum centroid depth.",
   }

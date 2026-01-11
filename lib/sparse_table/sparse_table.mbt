@@ -44,33 +44,25 @@ fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
 
   // Precompute log values
   let log_table = Array::make(n + 1, 0)
-  for i = 2; i <= n; i = i + 1 {
+  for i in 2..=n {
     log_table[i] = log_table[i / 2] + 1
-  } where {
-    invariant: i >= 2 && i <= n + 1,
-    reasoning: "I: log_table[0]=log_table[1]=0. M: log_table[i] = floor(log2(i)). T: All log values computed for quick lookup.",
   }
-
   let k = log_table[n] + 1
   let table = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     table[i] = Array::make(k, 0L)
     table[i][0] = arr[i]
   }
 
   // Build sparse table
-  for j = 1; j < k; j = j + 1 {
+  for j in 1..<k {
     let len = 1 << j // 2^j
-    for i = 0; i + len <= n; i = i + 1 {
+    for i in 0..<(n - len + 1) {
       let left = table[i][j - 1]
       let right = table[i + (1 << (j - 1))][j - 1]
       table[i][j] = if left < right { left } else { right }
     }
-  } where {
-    invariant: j >= 1 && j <= k,
-    reasoning: "I: table[i][0] = arr[i] for all i. M: table[i][j] = min(table[i][j-1], table[i+2^(j-1)][j-1]), combining two ranges of length 2^(j-1) into one of length 2^j. T: After j = k-1, table[i][j] stores minimum of arr[i..i+2^j).",
   }
-
   { table, log_table, n }
 }
 
@@ -84,7 +76,11 @@ fn SparseTableMin::query(self : SparseTableMin, l : Int, r : Int) -> Int64 {
   let k = self.log_table[len]
   let left = self.table[l][k]
   let right = self.table[r - (1 << k) + 1][k]
-  if left < right { left } else { right }
+  if left < right {
+    left
+  } else {
+    right
+  }
 }
 
 // ============================================================================
@@ -104,28 +100,24 @@ fn SparseTableMax::new(arr : Array[Int64]) -> SparseTableMax {
   if n == 0 {
     return { table: [], log_table: [], n: 0 }
   }
-
   let log_table = Array::make(n + 1, 0)
-  for i = 2; i <= n; i = i + 1 {
+  for i in 2..=n {
     log_table[i] = log_table[i / 2] + 1
   }
-
   let k = log_table[n] + 1
   let table = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     table[i] = Array::make(k, 0L)
     table[i][0] = arr[i]
   }
-
-  for j = 1; j < k; j = j + 1 {
+  for j in 1..<k {
     let len = 1 << j
-    for i = 0; i + len <= n; i = i + 1 {
+    for i in 0..<(n - len + 1) {
       let left = table[i][j - 1]
       let right = table[i + (1 << (j - 1))][j - 1]
       table[i][j] = if left > right { left } else { right }
     }
   }
-
   { table, log_table, n }
 }
 
@@ -138,7 +130,11 @@ fn SparseTableMax::query(self : SparseTableMax, l : Int, r : Int) -> Int64 {
   let k = self.log_table[len]
   let left = self.table[l][k]
   let right = self.table[r - (1 << k) + 1][k]
-  if left > right { left } else { right }
+  if left > right {
+    left
+  } else {
+    right
+  }
 }
 
 // ============================================================================
@@ -170,26 +166,22 @@ fn SparseTableGCD::new(arr : Array[Int64]) -> SparseTableGCD {
   if n == 0 {
     return { table: [], log_table: [], n: 0 }
   }
-
   let log_table = Array::make(n + 1, 0)
-  for i = 2; i <= n; i = i + 1 {
+  for i in 2..=n {
     log_table[i] = log_table[i / 2] + 1
   }
-
   let k = log_table[n] + 1
   let table = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     table[i] = Array::make(k, 0L)
     table[i][0] = arr[i]
   }
-
-  for j = 1; j < k; j = j + 1 {
+  for j in 1..<k {
     let len = 1 << j
-    for i = 0; i + len <= n; i = i + 1 {
+    for i in 0..<(n - len + 1) {
       table[i][j] = gcd(table[i][j - 1], table[i + (1 << (j - 1))][j - 1])
     }
   }
-
   { table, log_table, n }
 }
 
@@ -211,7 +203,6 @@ fn SparseTableGCD::query(self : SparseTableGCD, l : Int, r : Int) -> Int64 {
 test "sparse table min basic" {
   let arr : Array[Int64] = [3L, 1L, 4L, 1L, 5L, 9L, 2L, 6L]
   let st = SparseTableMin::new(arr)
-
   inspect(st.query(0, 7), content="1")
   inspect(st.query(0, 1), content="1")
   inspect(st.query(4, 7), content="2")
@@ -229,7 +220,6 @@ test "sparse table min single" {
 test "sparse table max basic" {
   let arr : Array[Int64] = [3L, 1L, 4L, 1L, 5L, 9L, 2L, 6L]
   let st = SparseTableMax::new(arr)
-
   inspect(st.query(0, 7), content="9")
   inspect(st.query(0, 2), content="4")
   inspect(st.query(6, 7), content="6")
@@ -239,7 +229,6 @@ test "sparse table max basic" {
 test "sparse table gcd" {
   let arr : Array[Int64] = [12L, 18L, 24L, 36L]
   let st = SparseTableGCD::new(arr)
-
   inspect(st.query(0, 3), content="6")
   inspect(st.query(0, 1), content="6")
   inspect(st.query(2, 3), content="12")

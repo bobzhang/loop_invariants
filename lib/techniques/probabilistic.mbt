@@ -40,6 +40,11 @@ fn reservoir_sample(stream : ArrayView[Int], k : Int, rng : RNG) -> Array[Int] {
   let reservoir : Array[Int] = []
   for i = 0; i < k; i = i + 1 {
     reservoir.push(stream[i])
+  } where {
+    invariant: i >= 0 && i <= k,
+    reasoning: (
+      #|Seed the reservoir with the first k items.
+    ),
   }
 
   // Process remaining elements
@@ -309,6 +314,11 @@ test "morris_counter" {
   // Increment many times
   for i = 0; i < 1000; i = i + 1 {
     morris_increment(counter)
+  } where {
+    invariant: i >= 0 && i <= 1000,
+    reasoning: (
+      #|Drive the counter through many probabilistic increments.
+    ),
   }
 
   // Should give some positive estimate
@@ -415,6 +425,11 @@ fn count_leading_zeros(x : Int) -> Int {
       } else {
         continue n + 1, val << 1
       }
+    } where {
+      invariant: n >= 0,
+      reasoning: (
+        #|Shift left until the sign bit becomes 1 to count leading zeros.
+      ),
     }
   }
 }
@@ -452,6 +467,11 @@ test "simple_hll" {
   // Add many elements
   for i = 0; i < 1000; i = i + 1 {
     hll_add(hll, i)
+  } where {
+    invariant: i >= 0 && i <= 1000,
+    reasoning: (
+      #|Feed sequential values to update the maximum zero count.
+    ),
   }
 
   // Estimate should be in the right ballpark

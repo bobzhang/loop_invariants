@@ -68,13 +68,11 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   if n == 0 {
     return { num_sccs: 0, component: [], scc_sizes: [], scc_adj: [] }
   }
-
   let disc = Array::make(n, -1)
   let low = Array::make(n, -1)
   let on_stack = Array::make(n, false)
   let component = Array::make(n, -1)
   let stack : Array[Int] = []
-
   let timer : Counter = { val: 0 }
   let scc_count : Counter = { val: 0 }
   let scc_sizes : Array[Int] = []
@@ -82,7 +80,9 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   // Run DFS from each unvisited vertex
   for v = 0; v < n; v = v + 1 {
     if disc[v] == -1 {
-      tarjan_dfs(v, adj, disc, low, on_stack, stack, component, timer, scc_count, scc_sizes)
+      tarjan_dfs(
+        v, adj, disc, low, on_stack, stack, component, timer, scc_count, scc_sizes,
+      )
     }
   } where {
     invariant: v >= 0 && v <= n,
@@ -94,6 +94,9 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   let scc_adj : Array[Array[Int]] = []
   for i = 0; i < num_sccs; i = i + 1 {
     scc_adj.push([])
+  } where {
+    invariant: i >= 0 && i <= num_sccs,
+    reasoning: "I: scc_adj is empty. M: Push one empty adjacency list per SCC. T: After i = num_sccs, scc_adj has a slot for every SCC.",
   }
 
   // Add edges between SCCs (avoiding duplicates with set-like approach)
@@ -110,14 +113,22 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
             exists = true
             break
           }
+        } where {
+          invariant: k >= 0 && k <= scc_adj[comp_u].length(),
+          reasoning: "I: exists indicates whether comp_v appears in scc_adj[comp_u][0..k). M: Scan entries until comp_v found. T: After k = len, exists is true iff edge already recorded.",
         }
         if not(exists) {
           scc_adj[comp_u].push(comp_v)
         }
       }
+    } where {
+      invariant: j >= 0 && j <= adj[u].length(),
+      reasoning: "I: For fixed u, edges from adj[u][0..j) have been considered. M: For each neighbor v, if comp_u != comp_v, check for duplicates and add edge once. T: After j = deg(u), all outgoing SCC edges from u are recorded.",
     }
+  } where {
+    invariant: u >= 0 && u <= n,
+    reasoning: "I: SCC edges for vertices [0,u) are added. M: Process all adjacency lists for vertex u. T: After u = n, all SCC edges are collected.",
   }
-
   { num_sccs, component, scc_sizes, scc_adj }
 }
 
@@ -137,7 +148,7 @@ fn tarjan_dfs(
   component : Array[Int],
   timer : Counter,
   scc_count : Counter,
-  scc_sizes : Array[Int]
+  scc_sizes : Array[Int],
 ) -> Unit {
   // Initialize discovery time and low-link value
   disc[v] = timer.val
@@ -150,10 +161,11 @@ fn tarjan_dfs(
   // INVARIANT: low[v] is min disc[] reachable from v's subtree so far
   for i = 0; i < adj[v].length(); i = i + 1 {
     let u = adj[v][i]
-
     if disc[u] == -1 {
       // Tree edge: recurse
-      tarjan_dfs(u, adj, disc, low, on_stack, stack, component, timer, scc_count, scc_sizes)
+      tarjan_dfs(
+        u, adj, disc, low, on_stack, stack, component, timer, scc_count, scc_sizes,
+      )
       // After returning, update low[v]
       if low[u] < low[v] {
         low[v] = low[u]
@@ -187,8 +199,10 @@ fn tarjan_dfs(
       if u == v {
         break
       }
+    } where {
+      invariant: stack.length() > 0 && size >= 0,
+      reasoning: "I: v is on stack and all vertices popped so far belong to this SCC. M: Pop one vertex u, assign it to scc_id, and stop when u == v. T: The loop terminates when v is popped; all vertices in this SCC are removed from stack exactly once.",
     }
-
     scc_sizes.push(size)
   }
 }
@@ -209,7 +223,6 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   if n == 0 {
     return { num_sccs: 0, component: [], scc_sizes: [], scc_adj: [] }
   }
-
   let visited = Array::make(n, false)
   let order : Array[Int] = []
 
@@ -227,19 +240,27 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   let radj : Array[Array[Int]] = []
   for i = 0; i < n; i = i + 1 {
     radj.push([])
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: radj has i empty lists. M: Add one empty list per vertex. T: After i = n, radj has n adjacency lists.",
   }
   for u = 0; u < n; u = u + 1 {
     for j = 0; j < adj[u].length(); j = j + 1 {
       let v = adj[u][j]
       radj[v].push(u)
+    } where {
+      invariant: j >= 0 && j <= adj[u].length(),
+      reasoning: "I: For fixed u, edges adj[u][0..j) are transposed into radj. M: Add reversed edge v→u for each neighbor. T: After j = deg(u), all edges from u are transposed.",
     }
+  } where {
+    invariant: u >= 0 && u <= n,
+    reasoning: "I: radj includes transposed edges from vertices [0,u). M: For each edge u→v, add v→u in radj. T: After u = n, radj is the full transpose.",
   }
 
   // Second DFS: process in reverse finish order
   let component = Array::make(n, -1)
   let scc_sizes : Array[Int] = []
   let mut scc_count = 0
-
   for i = n - 1; i >= 0; i = i - 1 {
     let v = order[i]
     if component[v] == -1 {
@@ -257,8 +278,10 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
   let scc_adj : Array[Array[Int]] = []
   for i = 0; i < scc_count; i = i + 1 {
     scc_adj.push([])
+  } where {
+    invariant: i >= 0 && i <= scc_count,
+    reasoning: "I: scc_adj has i empty lists. M: Add one list per SCC. T: After i = scc_count, scc_adj is sized for all SCCs.",
   }
-
   for u = 0; u < n; u = u + 1 {
     let comp_u = component[u]
     for j = 0; j < adj[u].length(); j = j + 1 {
@@ -271,31 +294,53 @@ pub fn find_sccs_kosaraju(n : Int, adj : Array[Array[Int]]) -> SCCResult {
             exists = true
             break
           }
+        } where {
+          invariant: k >= 0 && k <= scc_adj[comp_u].length(),
+          reasoning: "I: exists indicates whether comp_v appears in scc_adj[comp_u][0..k). M: Scan entries until comp_v found. T: After k = len, exists is true iff edge already recorded.",
         }
         if not(exists) {
           scc_adj[comp_u].push(comp_v)
         }
       }
+    } where {
+      invariant: j >= 0 && j <= adj[u].length(),
+      reasoning: "I: For fixed u, edges from adj[u][0..j) have been considered. M: For each neighbor v, add SCC edge if it crosses components and is not yet recorded. T: After j = deg(u), all outgoing SCC edges from u are recorded.",
     }
+  } where {
+    invariant: u >= 0 && u <= n,
+    reasoning: "I: SCC edges for vertices [0,u) are added. M: Process all adjacency lists for vertex u. T: After u = n, all SCC edges are collected.",
   }
-
   { num_sccs: scc_count, component, scc_sizes, scc_adj }
 }
 
 ///|
-fn dfs_order(v : Int, adj : Array[Array[Int]], visited : Array[Bool], order : Array[Int]) -> Unit {
+fn dfs_order(
+  v : Int,
+  adj : Array[Array[Int]],
+  visited : Array[Bool],
+  order : Array[Int],
+) -> Unit {
   visited[v] = true
   for i = 0; i < adj[v].length(); i = i + 1 {
     let u = adj[v][i]
     if not(visited[u]) {
       dfs_order(u, adj, visited, order)
     }
+  } where {
+    invariant: i >= 0 && i <= adj[v].length(),
+    reasoning: "I: visited[u] is true for all neighbors in adj[v][0..i) and their reachable descendants. M: DFS into unvisited neighbor u, marking its reachable vertices. T: After i = deg(v), all neighbors of v are explored and visited.",
   }
   order.push(v)
 }
 
 ///|
-fn dfs_assign(v : Int, radj : Array[Array[Int]], component : Array[Int], scc_id : Int, size : Counter) -> Unit {
+fn dfs_assign(
+  v : Int,
+  radj : Array[Array[Int]],
+  component : Array[Int],
+  scc_id : Int,
+  size : Counter,
+) -> Unit {
   component[v] = scc_id
   size.val = size.val + 1
   for i = 0; i < radj[v].length(); i = i + 1 {
@@ -303,6 +348,9 @@ fn dfs_assign(v : Int, radj : Array[Array[Int]], component : Array[Int], scc_id 
     if component[u] == -1 {
       dfs_assign(u, radj, component, scc_id, size)
     }
+  } where {
+    invariant: i >= 0 && i <= radj[v].length(),
+    reasoning: "I: component[u] == scc_id for all neighbors in radj[v][0..i) reachable via DFS. M: Recurse to unassigned neighbor u, assigning it to current SCC. T: After i = deg(v), all vertices reachable in transpose are assigned to this SCC.",
   }
 }
 
@@ -323,6 +371,9 @@ fn TwoSAT::new(n : Int) -> TwoSAT {
   let adj : Array[Array[Int]] = []
   for i = 0; i < 2 * n; i = i + 1 {
     adj.push([])
+  } where {
+    invariant: i >= 0 && i <= 2 * n,
+    reasoning: "I: adj has i empty lists. M: Add one list for each literal vertex. T: After i = 2n, implication graph has an adjacency list for every literal.",
   }
   { n, adj }
 }
@@ -331,13 +382,23 @@ fn TwoSAT::new(n : Int) -> TwoSAT {
 /// Convert variable and sign to vertex index
 /// x: variable (0 to n-1), neg: true if negated
 fn var_to_vertex(n : Int, x : Int, neg : Bool) -> Int {
-  if neg { x + n } else { x }
+  if neg {
+    x + n
+  } else {
+    x
+  }
 }
 
 ///|
 /// Add clause (a OR b)
 /// Equivalent to: NOT a => b AND NOT b => a
-fn TwoSAT::add_clause(self : TwoSAT, a : Int, neg_a : Bool, b : Int, neg_b : Bool) -> Unit {
+fn TwoSAT::add_clause(
+  self : TwoSAT,
+  a : Int,
+  neg_a : Bool,
+  b : Int,
+  neg_b : Bool,
+) -> Unit {
   // NOT a => b
   let from_a = var_to_vertex(self.n, a, not(neg_a))
   let to_b = var_to_vertex(self.n, b, neg_b)
@@ -360,6 +421,9 @@ fn TwoSAT::solve(self : TwoSAT) -> Array[Bool]? {
     if result.component[x] == result.component[x + self.n] {
       return None // x and NOT x in same SCC - unsatisfiable
     }
+  } where {
+    invariant: x >= 0 && x <= self.n,
+    reasoning: "I: Variables [0,x) are satisfiable (x and ¬x in different SCCs). M: Check variable x against its negation. T: After x = n, all variables pass the SCC consistency check.",
   }
 
   // Assign values: x = true if x's SCC has higher index than NOT x's SCC
@@ -367,8 +431,10 @@ fn TwoSAT::solve(self : TwoSAT) -> Array[Bool]? {
   let assignment = Array::make(self.n, false)
   for x = 0; x < self.n; x = x + 1 {
     assignment[x] = result.component[x] > result.component[x + self.n]
+  } where {
+    invariant: x >= 0 && x <= self.n,
+    reasoning: "I: assignment for [0,x) set using SCC topological order. M: Assign x based on component order (higher id means earlier in reverse topo). T: After x = n, all variables are assigned consistently.",
   }
-
   Some(assignment)
 }
 
@@ -381,7 +447,6 @@ test "scc single cycle" {
   // 0 → 1 → 2 → 0 (single SCC)
   let adj : Array[Array[Int]] = [[1], [2], [0]]
   let result = find_sccs(3, adj)
-
   inspect(result.num_sccs, content="1")
   inspect(result.component[0] == result.component[1], content="true")
   inspect(result.component[1] == result.component[2], content="true")
@@ -392,7 +457,6 @@ test "scc two components" {
   // 0 → 1, 2 → 3 (two separate edges, no cycles)
   let adj : Array[Array[Int]] = [[1], [], [3], []]
   let result = find_sccs(4, adj)
-
   inspect(result.num_sccs, content="4") // Each node is its own SCC
 }
 
@@ -402,7 +466,6 @@ test "scc with dag" {
   // SCC: {0,1,2}, {3}
   let adj : Array[Array[Int]] = [[1], [2], [0, 3], []]
   let result = find_sccs(4, adj)
-
   inspect(result.num_sccs, content="2")
   // {0,1,2} should be in same SCC
   inspect(result.component[0] == result.component[1], content="true")
@@ -416,7 +479,6 @@ test "scc kosaraju same result" {
   let adj : Array[Array[Int]] = [[1], [2], [0, 3], []]
   let tarjan = find_sccs(4, adj)
   let kosaraju = find_sccs_kosaraju(4, adj)
-
   inspect(tarjan.num_sccs == kosaraju.num_sccs, content="true")
 }
 
@@ -429,12 +491,14 @@ test "scc condensation graph" {
   // Condensation graph should have edge from {0,1,2}'s SCC to {3}'s SCC
   let scc_012 = result.component[0]
   let scc_3 = result.component[3]
-
   let mut has_edge = false
   for i = 0; i < result.scc_adj[scc_012].length(); i = i + 1 {
     if result.scc_adj[scc_012][i] == scc_3 {
       has_edge = true
     }
+  } where {
+    invariant: i >= 0 && i <= result.scc_adj[scc_012].length(),
+    reasoning: "I: has_edge reflects whether scc_3 appears in positions [0,i). M: Scan adjacency list for scc_012. T: After i = len, has_edge is true iff the edge exists.",
   }
   inspect(has_edge, content="true")
 }
@@ -468,12 +532,10 @@ test "two sat satisfiable" {
   sat.add_clause(0, false, 1, false) // x0 OR x1
   sat.add_clause(0, true, 1, false) // NOT x0 OR x1
   sat.add_clause(0, false, 1, true) // x0 OR NOT x1
-
   match sat.solve() {
-    Some(assignment) => {
+    Some(assignment) =>
       // x0=true, x1=true satisfies all clauses
       inspect(assignment.length(), content="2")
-    }
     None => fail("Should be satisfiable")
   }
 }
@@ -484,7 +546,6 @@ test "two sat unsatisfiable" {
   let sat = TwoSAT::new(1)
   sat.add_clause(0, false, 0, false) // x0 OR x0 = x0
   sat.add_clause(0, true, 0, true) // NOT x0 OR NOT x0 = NOT x0
-
   match sat.solve() {
     Some(_) => fail("Should be unsatisfiable")
     None => ()
@@ -500,6 +561,9 @@ test "scc sizes" {
   let mut total = 0
   for i = 0; i < result.scc_sizes.length(); i = i + 1 {
     total = total + result.scc_sizes[i]
+  } where {
+    invariant: i >= 0 && i <= result.scc_sizes.length(),
+    reasoning: "I: total is sum of sizes for indices [0,i). M: Add size[i]. T: After i = len, total equals n.",
   }
   inspect(total, content="4")
 }
@@ -510,7 +574,6 @@ test "scc complex" {
   // 0 → 1 → 0, 2 → 3 → 2, 1 → 2
   let adj : Array[Array[Int]] = [[1], [0, 2], [3], [2]]
   let result = find_sccs(4, adj)
-
   inspect(result.num_sccs, content="2")
   // {0,1} same SCC
   inspect(result.component[0] == result.component[1], content="true")

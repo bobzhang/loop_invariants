@@ -20,7 +20,7 @@
 
 ///|
 /// State in the suffix automaton
-struct SAMState {
+priv struct SAMState {
   trans : Array[Int] // transitions: char_code -> state_id (-1 if none)
   mut link : Int // suffix link (-1 for initial)
   mut len : Int // length of longest string in this equivalence class
@@ -47,6 +47,9 @@ fn SAMState::copy_trans(self : SAMState) -> SAMState {
   let new_trans : Array[Int] = Array::make(alphabet_size, -1)
   for i = 0; i < alphabet_size; i = i + 1 {
     new_trans[i] = self.trans[i]
+  } where {
+    invariant: i >= 0 && i <= alphabet_size,
+    reasoning: "I: new_trans[0..i) matches self.trans[0..i). M: Copy transition i. T: After i = alphabet_size, all transitions are copied.",
   }
   {
     trans: new_trans,
@@ -59,7 +62,7 @@ fn SAMState::copy_trans(self : SAMState) -> SAMState {
 
 ///|
 /// Suffix Automaton data structure
-struct SuffixAutomaton {
+priv struct SuffixAutomaton {
   states : Array[SAMState]
   mut last : Int // index of last state
 }
@@ -221,15 +224,24 @@ fn SuffixAutomaton::compute_counts(self : SuffixAutomaton) -> Unit {
   let cnt_by_len : Array[Int] = Array::make(max_len + 1, 0)
   for i = 0; i < n; i = i + 1 {
     cnt_by_len[self.states[i].len] = cnt_by_len[self.states[i].len] + 1
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: cnt_by_len reflects counts for states [0,i). M: Increment bucket for state i length. T: After i = n, counts per length are complete.",
   }
   for i = 1; i <= max_len; i = i + 1 {
     cnt_by_len[i] = cnt_by_len[i] + cnt_by_len[i - 1]
+  } where {
+    invariant: i >= 1 && i <= max_len + 1,
+    reasoning: "I: cnt_by_len[0..i) stores prefix sums. M: Accumulate prefix sum at i. T: After i = max_len+1, cnt_by_len has cumulative counts.",
   }
   let sorted : Array[Int] = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     let len = self.states[i].len
     cnt_by_len[len] = cnt_by_len[len] - 1
     sorted[cnt_by_len[len]] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: sorted contains states [0,i) placed by length. M: Place state i into its bucket position. T: After i = n, states are sorted by non-decreasing length.",
   }
 
   // Propagate counts (longest to shortest)
@@ -363,6 +375,15 @@ fn SuffixAutomaton::longest_common_substring(
       let result = find_suffix_match(self, state, c)
       continue result.0, result.1, i + 1
     }
+  } where {
+    invariant: state >= 0 && cur_len >= 0 && i >= 0,
+    reasoning: (
+      #|LCS STRING INVARIANT:
+      #|
+      #|state and cur_len describe the longest suffix of other[0..i)
+      #|that is recognized by the SAM. best_len/best_end track the
+      #|best substring seen so far.
+    ),
   }
   if best_len == 0 {
     ""
@@ -371,6 +392,9 @@ fn SuffixAutomaton::longest_common_substring(
     for j = best_end - best_len; j < best_end; j = j + 1 {
       let ch = other[j].to_int()
       sb.write_char(ch.unsafe_to_char())
+    } where {
+      invariant: j >= best_end - best_len && j <= best_end,
+      reasoning: "I: sb contains other[best_end-best_len..j). M: Append other[j]. T: After j = best_end, sb holds the best substring.",
     }
     sb.to_string()
   }
@@ -395,6 +419,9 @@ fn SuffixAutomaton::compute_path_counts(self : SuffixAutomaton) -> Array[Int64] 
       if next >= 0 {
         cnt = cnt + dfs(sam, next, memo)
       }
+    } where {
+      invariant: c >= 0 && c <= alphabet_size,
+      reasoning: "I: cnt accounts for paths through transitions [0,c). M: Add counts from transition c when it exists. T: After c = alphabet_size, cnt is total paths from this state.",
     }
     memo[state] = cnt
     cnt
@@ -424,6 +451,9 @@ fn find_next_transition(
         rem = rem - cnt
       }
     }
+  } where {
+    invariant: c >= 0 && c <= alphabet_size && rem >= 0L,
+    reasoning: "I: rem is the rank among substrings starting from transitions < c. M: Skip transitions by subtracting their counts until rem fits. T: After c = alphabet_size, no transition satisfies remaining.",
   }
   None
 }
@@ -453,6 +483,9 @@ fn SuffixAutomaton::kth_substring(self : SuffixAutomaton, k : Int64) -> String? 
       }
       None => break
     }
+  } where {
+    invariant: state >= 0 && remaining >= 0L,
+    reasoning: "I: remaining is the rank among substrings from current state. M: Follow the next transition based on path counts. T: Loop ends when we select the stop option or no transition exists.",
   }
   Some(result.to_string())
 }
@@ -508,6 +541,7 @@ test "suffix automaton longest common substring" {
   let sam = SuffixAutomaton::build("abracadabra")
   let lcs1 = sam.longest_common_substring("cadaver")
   inspect(lcs1, content="cada")
+  inspect(sam.longest_common_substring_length("cadaver"), content="4")
   let lcs2 = sam.longest_common_substring("abra")
   inspect(lcs2, content="abra")
   let lcs3 = sam.longest_common_substring("xyz")
@@ -565,8 +599,14 @@ fn SuffixAutomaton::all_substrings(self : SuffixAutomaton) -> Array[String] {
         for i = 0; i < s.length() - 1; i = i + 1 {
           let ch = s[i].to_int()
           current.write_char(ch.unsafe_to_char())
+        } where {
+          invariant: i >= 0 && i <= s.length() - 1,
+          reasoning: "I: current holds the first i characters of s (excluding the last). M: Append s[i] to rebuild prefix. T: After i = len-1, current restores the path before backtracking.",
         }
       }
+    } where {
+      invariant: c >= 0 && c <= alphabet_size,
+      reasoning: "I: All transitions for chars < c have been explored. M: Follow transition c and backtrack. T: After c = alphabet_size, all substrings from this state are generated.",
     }
   }
 

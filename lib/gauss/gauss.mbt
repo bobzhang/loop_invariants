@@ -49,14 +49,14 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
       has_unique_solution: true,
     }
   }
-
   let m = a[0].length()
 
   // Create augmented matrix [A|b]
-  let aug = Array::makei(n, (i) => {
-    Array::makei(m + 1, (j) => if j < m { a[i][j] } else { b[i] })
-  })
-
+  let aug = Array::makei(n, i => Array::makei(m + 1, j => if j < m {
+    a[i][j]
+  } else {
+    b[i]
+  }))
   let mut rank = 0
   let mut row = 0
 
@@ -140,7 +140,6 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         #|Pivot row is normalized, so the pivot entry stays 1 throughout elimination.
       ),
     }
-
     rank = rank + 1
     row = row + 1
   } where {
@@ -195,8 +194,12 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
       ),
     }
   }
-
-  { solution, rank, has_solution, has_unique_solution: has_solution && rank == m }
+  {
+    solution,
+    rank,
+    has_solution,
+    has_unique_solution: has_solution && rank == m,
+  }
 }
 
 // ============================================================================
@@ -209,7 +212,6 @@ fn mod_inverse(a : Int64, m : Int64) -> Int64 {
   let mut result = 1L
   let mut base = a % m
   let mut exp = m - 2L
-
   while exp > 0L {
     if exp % 2L == 1L {
       result = result * base % m
@@ -217,7 +219,6 @@ fn mod_inverse(a : Int64, m : Int64) -> Int64 {
     base = base * base % m
     exp = exp / 2L
   }
-
   result
 }
 
@@ -226,26 +227,20 @@ fn mod_inverse(a : Int64, m : Int64) -> Int64 {
 fn gauss_mod(
   a : Array[Array[Int64]],
   b : Array[Int64],
-  p : Int64
+  p : Int64,
 ) -> (Array[Int64], Bool) {
   let n = a.length()
   if n == 0 {
     return ([], true)
   }
-
   let m = a[0].length()
 
   // Create augmented matrix
-  let aug = Array::makei(n, (i) => {
-    Array::makei(m + 1, (j) => {
-      if j < m {
-        ((a[i][j] % p) + p) % p
-      } else {
-        ((b[i] % p) + p) % p
-      }
-    })
-  })
-
+  let aug = Array::makei(n, i => Array::makei(m + 1, j => if j < m {
+    (a[i][j] % p + p) % p
+  } else {
+    (b[i] % p + p) % p
+  }))
   let mut row = 0
 
   // Forward elimination
@@ -268,7 +263,6 @@ fn gauss_mod(
         #|pivot_row is either unset (-1) or points to a valid candidate row.
       ),
     }
-
     if pivot_row < 0 {
       continue
     }
@@ -315,7 +309,6 @@ fn gauss_mod(
         #|Pivot row is normalized, so the pivot entry remains 1 in GF(p).
       ),
     }
-
     row = row + 1
   } where {
     invariant: 0 <= row && row <= n && 0 <= col && col <= m,
@@ -357,7 +350,6 @@ fn gauss_mod(
       #|Each pivot row contributes one variable assignment in the solution.
     ),
   }
-
   (solution, true)
 }
 
@@ -372,16 +364,15 @@ fn gauss_xor(a : Array[Array[Int]], b : Array[Int]) -> (Array[Int], Bool) {
   if n == 0 {
     return ([], true)
   }
-
   let m = a[0].length()
 
   // Create augmented matrix
-  let aug = Array::makei(n, (i) => {
-    Array::makei(m + 1, (j) => if j < m { a[i][j] % 2 } else { b[i] % 2 })
-  })
-
+  let aug = Array::makei(n, i => Array::makei(m + 1, j => if j < m {
+    a[i][j] % 2
+  } else {
+    b[i] % 2
+  }))
   let mut row = 0
-
   for col = 0; col < m && row < n; col = col + 1 {
     // Find pivot
     let mut pivot_row = -1
@@ -400,7 +391,6 @@ fn gauss_xor(a : Array[Array[Int]], b : Array[Int]) -> (Array[Int], Bool) {
         #|pivot_row is unset or points to a valid candidate row.
       ),
     }
-
     if pivot_row < 0 {
       continue
     }
@@ -416,7 +406,7 @@ fn gauss_xor(a : Array[Array[Int]], b : Array[Int]) -> (Array[Int], Bool) {
     for i = 0; i < n; i = i + 1 {
       if i != row && aug[i][col] == 1 {
         for j = col; j <= m; j = j + 1 {
-          aug[i][j] = aug[i][j].lxor(aug[row][j])
+          aug[i][j] = aug[i][j] ^ aug[row][j]
         } where {
           invariant: j >= col && j <= m + 1,
           reasoning: (
@@ -434,7 +424,6 @@ fn gauss_xor(a : Array[Array[Int]], b : Array[Int]) -> (Array[Int], Bool) {
         #|Pivot entry stays 1 since swaps preserve it and XOR does not change it.
       ),
     }
-
     row = row + 1
   } where {
     invariant: 0 <= row && row <= n && 0 <= col && col <= m,
@@ -475,13 +464,16 @@ fn gauss_xor(a : Array[Array[Int]], b : Array[Int]) -> (Array[Int], Bool) {
       #|Each pivot row yields one variable value in the solution.
     ),
   }
-
   (solution, true)
 }
 
 ///|
 fn abs(x : Double) -> Double {
-  if x < 0.0 { -x } else { x }
+  if x < 0.0 {
+    -x
+  } else {
+    x
+  }
 }
 
 // ============================================================================
@@ -496,7 +488,6 @@ test "gauss basic 2x2" {
   let a : Array[Array[Double]] = [[1.0, 1.0], [2.0, -1.0]]
   let b : Array[Double] = [3.0, 3.0]
   let result = gauss_eliminate(a, b)
-
   inspect(result.has_unique_solution, content="true")
   inspect(abs(result.solution[0] - 2.0) < 0.001, content="true")
   inspect(abs(result.solution[1] - 1.0) < 0.001, content="true")
@@ -508,12 +499,13 @@ test "gauss 3x3" {
   // 2x - y + z = 3
   // x + 2y - z = 2
   // Solution: x = 1, y = 2, z = 3
-  let a : Array[Array[Double]] = [[1.0, 1.0, 1.0], [2.0, -1.0, 1.0], [
-      1.0, 2.0, -1.0,
-    ]]
+  let a : Array[Array[Double]] = [
+    [1.0, 1.0, 1.0],
+    [2.0, -1.0, 1.0],
+    [1.0, 2.0, -1.0],
+  ]
   let b : Array[Double] = [6.0, 3.0, 2.0]
   let result = gauss_eliminate(a, b)
-
   inspect(result.has_unique_solution, content="true")
   inspect(abs(result.solution[0] - 1.0) < 0.001, content="true")
   inspect(abs(result.solution[1] - 2.0) < 0.001, content="true")
@@ -527,7 +519,6 @@ test "gauss no solution" {
   let a : Array[Array[Double]] = [[1.0, 1.0], [1.0, 1.0]]
   let b : Array[Double] = [1.0, 2.0]
   let result = gauss_eliminate(a, b)
-
   inspect(result.has_solution, content="false")
 }
 
@@ -538,7 +529,6 @@ test "gauss infinite solutions" {
   let a : Array[Array[Double]] = [[1.0, 1.0], [2.0, 2.0]]
   let b : Array[Double] = [2.0, 4.0]
   let result = gauss_eliminate(a, b)
-
   inspect(result.has_solution, content="true")
   inspect(result.has_unique_solution, content="false")
   inspect(result.rank, content="1")
@@ -552,7 +542,6 @@ test "gauss_mod basic" {
   let a : Array[Array[Int64]] = [[1L, 1L], [2L, 1L]]
   let b : Array[Int64] = [3L, 5L]
   let (solution, success) = gauss_mod(a, b, 7L)
-
   inspect(success, content="true")
   inspect(solution[0], content="2")
   inspect(solution[1], content="1")
@@ -566,7 +555,6 @@ test "gauss_xor basic" {
   let a : Array[Array[Int]] = [[1, 1], [0, 1]]
   let b : Array[Int] = [1, 1]
   let (solution, success) = gauss_xor(a, b)
-
   inspect(success, content="true")
   inspect(solution[0], content="0")
   inspect(solution[1], content="1")
@@ -581,7 +569,6 @@ test "gauss_xor lights out" {
   let a : Array[Array[Int]] = [[1, 1, 0], [0, 1, 1], [1, 0, 1]]
   let b : Array[Int] = [1, 0, 1]
   let (_, success) = gauss_xor(a, b)
-
   inspect(success, content="true")
 }
 
@@ -590,7 +577,6 @@ test "gauss empty" {
   let a : Array[Array[Double]] = []
   let b : Array[Double] = []
   let result = gauss_eliminate(a, b)
-
   inspect(result.has_solution, content="true")
   inspect(result.rank, content="0")
 }

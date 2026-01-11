@@ -38,6 +38,11 @@ fn Matrix::new(rows : Int, cols : Int) -> Matrix {
   let data = Array::make(rows, [])
   for i = 0; i < rows; i = i + 1 {
     data[i] = Array::make(cols, 0L)
+  } where {
+    invariant: i >= 0 && i <= rows,
+    reasoning: (
+      #|Allocate each row with zero-initialized columns.
+    ),
   }
   { data, rows, cols }
 }
@@ -47,6 +52,11 @@ fn Matrix::identity(n : Int) -> Matrix {
   let m = Matrix::new(n, n)
   for i = 0; i < n; i = i + 1 {
     m.data[i][i] = 1L
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Set diagonal entries to 1 to form the identity matrix.
+    ),
   }
   m
 }
@@ -63,7 +73,17 @@ fn Matrix::from_array(arr : Array[Array[Int64]]) -> Matrix {
     data[i] = Array::make(cols, 0L)
     for j = 0; j < cols; j = j + 1 {
       data[i][j] = arr[i][j]
+    } where {
+      invariant: j >= 0 && j <= cols,
+      reasoning: (
+        #|Copy row elements into the new matrix.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= rows,
+    reasoning: (
+      #|Initialize each row before copying its elements.
+    ),
   }
   { data, rows, cols }
 }
@@ -82,17 +102,30 @@ fn Matrix::set(self : Matrix, i : Int, j : Int, v : Int64) -> Unit {
 /// Matrix multiplication with modulo
 fn Matrix::multiply(self : Matrix, other : Matrix) -> Matrix {
   let result = Matrix::new(self.rows, other.cols)
-
   for i = 0; i < self.rows; i = i + 1 {
     for j = 0; j < other.cols; j = j + 1 {
       let mut sum = 0L
       for k = 0; k < self.cols; k = k + 1 {
         sum = (sum + self.data[i][k] * other.data[k][j]) % MATRIX_MOD
+      } where {
+        invariant: k >= 0 && k <= self.cols,
+        reasoning: (
+          #|Accumulate the dot product for result[i][j] modulo MATRIX_MOD.
+        ),
       }
       result.data[i][j] = sum
+    } where {
+      invariant: j >= 0 && j <= other.cols,
+      reasoning: (
+        #|Compute each column entry for row i.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= self.rows,
+    reasoning: (
+      #|Compute all rows of the result matrix.
+    ),
   }
-
   result
 }
 
@@ -100,17 +133,30 @@ fn Matrix::multiply(self : Matrix, other : Matrix) -> Matrix {
 /// Matrix multiplication without modulo
 fn Matrix::multiply_no_mod(self : Matrix, other : Matrix) -> Matrix {
   let result = Matrix::new(self.rows, other.cols)
-
   for i = 0; i < self.rows; i = i + 1 {
     for j = 0; j < other.cols; j = j + 1 {
       let mut sum = 0L
       for k = 0; k < self.cols; k = k + 1 {
         sum = sum + self.data[i][k] * other.data[k][j]
+      } where {
+        invariant: k >= 0 && k <= self.cols,
+        reasoning: (
+          #|Accumulate the dot product for result[i][j].
+        ),
       }
       result.data[i][j] = sum
+    } where {
+      invariant: j >= 0 && j <= other.cols,
+      reasoning: (
+        #|Compute each column entry for row i.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= self.rows,
+    reasoning: (
+      #|Compute all rows of the result matrix.
+    ),
   }
-
   result
 }
 
@@ -120,7 +166,6 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
   if self.rows != self.cols {
     return self // Cannot exponentiate non-square matrix
   }
-
   let n = self.rows
   let mut result = Matrix::identity(n)
   let mut base = self.copy()
@@ -133,8 +178,12 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
       result = result.multiply(base)
     }
     base = base.multiply(base)
+  } where {
+    invariant: e >= 0L,
+    reasoning: (
+      #|Binary exponentiation maintains result * base^e = M^exp.
+    ),
   }
-
   result
 }
 
@@ -145,7 +194,17 @@ fn Matrix::copy(self : Matrix) -> Matrix {
   for i = 0; i < self.rows; i = i + 1 {
     for j = 0; j < self.cols; j = j + 1 {
       m.data[i][j] = self.data[i][j]
+    } where {
+      invariant: j >= 0 && j <= self.cols,
+      reasoning: (
+        #|Copy a single row's entries.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= self.rows,
+    reasoning: (
+      #|Copy each row of the matrix.
+    ),
   }
   m
 }
@@ -161,7 +220,17 @@ fn Matrix::equals(self : Matrix, other : Matrix) -> Bool {
       if self.data[i][j] != other.data[i][j] {
         return false
       }
+    } where {
+      invariant: j >= 0 && j <= self.cols,
+      reasoning: (
+        #|Compare all entries in row i.
+      ),
     }
+  } where {
+    invariant: i >= 0 && i <= self.rows,
+    reasoning: (
+      #|Compare rows sequentially until a mismatch is found.
+    ),
   }
   true
 }
@@ -196,13 +265,12 @@ fn fibonacci(n : Int64) -> Int64 {
 fn solve_recurrence(
   coefficients : Array[Int64],
   initial : Array[Int64],
-  n : Int64
+  n : Int64,
 ) -> Int64 {
   let k = coefficients.length()
   if k == 0 {
     return 0L
   }
-
   if n < k.to_int64() {
     return initial[n.to_int()]
   }
@@ -216,18 +284,30 @@ fn solve_recurrence(
   let m = Matrix::new(k, k)
   for j = 0; j < k; j = j + 1 {
     m.data[0][j] = coefficients[j]
+  } where {
+    invariant: j >= 0 && j <= k,
+    reasoning: (
+      #|Fill the first row with recurrence coefficients.
+    ),
   }
   for i = 1; i < k; i = i + 1 {
     m.data[i][i - 1] = 1L
+  } where {
+    invariant: i >= 1 && i <= k,
+    reasoning: (
+      #|Set the subdiagonal to shift state in the transition matrix.
+    ),
   }
-
   let result = m.power(n - k.to_int64() + 1L)
-
   let mut ans = 0L
   for j = 0; j < k; j = j + 1 {
     ans = (ans + result.data[0][j] * initial[k - 1 - j]) % MATRIX_MOD
+  } where {
+    invariant: j >= 0 && j <= k,
+    reasoning: (
+      #|Compute the dot product of the first row with initial values.
+    ),
   }
-
   ans
 }
 
@@ -268,6 +348,13 @@ test "matrix identity" {
 }
 
 ///|
+test "matrix set" {
+  let m = Matrix::new(1, 1)
+  m.set(0, 0, 7L)
+  inspect(m.get(0, 0), content="7")
+}
+
+///|
 test "matrix power" {
   let a = Matrix::from_array([[1L, 1L], [1L, 0L]])
   let a2 = a.power(2L)
@@ -301,7 +388,6 @@ test "solve_recurrence fibonacci" {
   // Fibonacci: f(n) = f(n-1) + f(n-2)
   let coeffs : Array[Int64] = [1L, 1L]
   let initial : Array[Int64] = [0L, 1L] // f(0)=0, f(1)=1
-
   inspect(solve_recurrence(coeffs, initial, 0L), content="0")
   inspect(solve_recurrence(coeffs, initial, 1L), content="1")
   inspect(solve_recurrence(coeffs, initial, 10L), content="55")
@@ -324,11 +410,9 @@ test "solve_recurrence tribonacci" {
 test "count_paths" {
   // Graph: 0 -> 1 -> 2 -> 0
   let adj : Array[Array[Int64]] = [[0L, 1L, 0L], [0L, 0L, 1L], [1L, 0L, 0L]]
-
   let paths2 = count_paths(adj, 2L)
   // 2 steps from 0: 0->1->2
   inspect(paths2.get(0, 2), content="1")
-
   let paths3 = count_paths(adj, 3L)
   // 3 steps from 0 back to 0: 0->1->2->0
   inspect(paths3.get(0, 0), content="1")

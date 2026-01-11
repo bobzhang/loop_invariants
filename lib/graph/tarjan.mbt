@@ -131,7 +131,7 @@ fn TarjanSCC::dfs(self : TarjanSCC, v : Int) -> Unit {
       }
     } where {
       invariant: self.on_stack[v],
-      invariant: scc.all((x) => not(self.on_stack[x])),
+      invariant: scc.all(x => not(self.on_stack[x])),
       invariant: self.stack.length() + scc.length() <= self.n,
       reasoning: (
         #|SCC POP INVARIANT:

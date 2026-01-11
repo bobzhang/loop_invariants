@@ -46,7 +46,7 @@ priv struct Dinic {
 
 ///|
 fn Dinic::new(n : Int) -> Dinic {
-  let adj = Array::makei(n, (_) => [])
+  let adj = Array::makei(n, _ => [])
   { n, adj, level: Array::make(n, 0), iter: Array::make(n, 0) }
 }
 
@@ -69,15 +69,12 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
       #|level[0..i) have been reset to -1 before BFS.
     ),
   }
-
   self.level[source] = 0
   let queue : Array[Int] = [source]
   let mut front = 0
-
   while front < queue.length() {
     let u = queue[front]
     front = front + 1
-
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let e = self.adj[u][i]
       if e.cap > e.flow && self.level[e.to] < 0 {
@@ -92,7 +89,6 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
       ),
     }
   }
-
   self.level[sink] >= 0
 }
 
@@ -102,13 +98,15 @@ fn Dinic::dfs(self : Dinic, u : Int, sink : Int, pushed : Int64) -> Int64 {
   if u == sink || pushed == 0L {
     return pushed
   }
-
   while self.iter[u] < self.adj[u].length() {
     let i = self.iter[u]
     let e = self.adj[u][i]
-
     if self.level[e.to] == self.level[u] + 1 && e.cap > e.flow {
-      let can_push = if e.cap - e.flow < pushed { e.cap - e.flow } else { pushed }
+      let can_push = if e.cap - e.flow < pushed {
+        e.cap - e.flow
+      } else {
+        pushed
+      }
       let d = self.dfs(e.to, sink, can_push)
       if d > 0L {
         self.adj[u][i].flow = self.adj[u][i].flow + d
@@ -118,7 +116,6 @@ fn Dinic::dfs(self : Dinic, u : Int, sink : Int, pushed : Int64) -> Int64 {
     }
     self.iter[u] = self.iter[u] + 1
   }
-
   0L
 }
 
@@ -126,7 +123,6 @@ fn Dinic::dfs(self : Dinic, u : Int, sink : Int, pushed : Int64) -> Int64 {
 /// Compute maximum flow from source to sink
 fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
   let mut flow = 0L
-
   while self.bfs(source, sink) {
     // Reset edge pointers
     for i = 0; i < self.n; i = i + 1 {
@@ -145,7 +141,6 @@ fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
       f = self.dfs(source, sink, DINIC_INF)
     }
   }
-
   flow
 }
 
@@ -197,13 +192,11 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
   let result : Array[Int] = []
   let queue : Array[Int] = [source]
   visited[source] = true
-
   let mut front = 0
   while front < queue.length() {
     let u = queue[front]
     front = front + 1
     result.push(u)
-
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let e = self.adj[u][i]
       if e.cap > e.flow && not(visited[e.to]) {
@@ -218,7 +211,6 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
       ),
     }
   }
-
   result
 }
 
@@ -235,7 +227,6 @@ test "dinic basic" {
   dinic.add_edge(0, 2, 2L)
   dinic.add_edge(1, 3, 2L)
   dinic.add_edge(2, 3, 3L)
-
   inspect(dinic.max_flow(0, 3), content="4")
 }
 
@@ -243,7 +234,6 @@ test "dinic basic" {
 test "dinic simple" {
   let dinic = Dinic::new(2)
   dinic.add_edge(0, 1, 5L)
-
   inspect(dinic.max_flow(0, 1), content="5")
   inspect(dinic.get_flow(0, 1), content="5")
 }
@@ -253,7 +243,6 @@ test "dinic parallel" {
   let dinic = Dinic::new(2)
   dinic.add_edge(0, 1, 3L)
   dinic.add_edge(0, 1, 2L)
-
   inspect(dinic.max_flow(0, 1), content="5")
 }
 
@@ -264,7 +253,6 @@ test "dinic diamond" {
   dinic.add_edge(0, 2, 10L)
   dinic.add_edge(1, 3, 10L)
   dinic.add_edge(2, 3, 10L)
-
   inspect(dinic.max_flow(0, 3), content="20")
 }
 
@@ -273,7 +261,6 @@ test "dinic bottleneck" {
   let dinic = Dinic::new(3)
   dinic.add_edge(0, 1, 100L)
   dinic.add_edge(1, 2, 1L) // Bottleneck
-
   inspect(dinic.max_flow(0, 2), content="1")
 }
 
@@ -293,7 +280,6 @@ test "dinic min cut" {
   dinic.add_edge(0, 2, 2L)
   dinic.add_edge(1, 3, 2L)
   dinic.add_edge(2, 3, 3L)
-
   let _ = dinic.max_flow(0, 3)
   let source_side = dinic.min_cut_source_side(0)
   // Source side should include source
@@ -315,7 +301,6 @@ test "dinic larger" {
   dinic.add_edge(3, 5, 20L)
   dinic.add_edge(4, 3, 7L)
   dinic.add_edge(4, 5, 4L)
-
   inspect(dinic.max_flow(0, 5), content="23")
 }
 
@@ -323,7 +308,6 @@ test "dinic larger" {
 test "dinic reset" {
   let dinic = Dinic::new(2)
   dinic.add_edge(0, 1, 5L)
-
   inspect(dinic.max_flow(0, 1), content="5")
   dinic.reset()
   inspect(dinic.max_flow(0, 1), content="5")

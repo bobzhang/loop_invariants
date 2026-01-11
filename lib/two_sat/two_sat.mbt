@@ -70,7 +70,7 @@ fn literal_to_node(v : Int, negated : Bool) -> Int {
 ///|
 /// Get negation of a node
 fn negate_node(node : Int) -> Int {
-  node.lxor(1) // Flip last bit: 2k <-> 2k+1
+  node ^ 1 // Flip last bit: 2k <-> 2k+1
 }
 
 ///|
@@ -81,7 +81,7 @@ fn TwoSat::add_clause(
   var_a : Int,
   neg_a : Bool,
   var_b : Int,
-  neg_b : Bool
+  neg_b : Bool,
 ) -> Unit {
   // (a ∨ b) ≡ (¬a → b) ∧ (¬b → a)
   let node_a = literal_to_node(var_a, neg_a)
@@ -105,7 +105,7 @@ fn TwoSat::add_implication(
   var_a : Int,
   neg_a : Bool,
   var_b : Int,
-  neg_b : Bool
+  neg_b : Bool,
 ) -> Unit {
   // a → b is equivalent to (¬a ∨ b)
   let not_neg_a = if neg_a { false } else { true }
@@ -173,12 +173,16 @@ fn TwoSat::solve(self : TwoSat) -> Array[Bool]? {
     invariant: i >= 0 && i <= self.n,
     reasoning: "I: assignment uninitialized. M: For each variable i, check if x_i and ¬x_i are in same SCC (contradiction). If not, assign x_i = true iff SCC(x_i) has higher number than SCC(¬x_i). Higher SCC numbers correspond to later discovery in second DFS, meaning earlier in topological order. By implication semantics, if a → b and a is true, b must be true; processing in reverse topo ensures b is assigned before a. T: After i = n, either contradiction found or valid assignment computed.",
   }
-
   Some(assignment)
 }
 
 ///|
-fn dfs1(adj : Array[Array[Int]], visited : Array[Bool], order : Array[Int], u : Int) -> Unit {
+fn dfs1(
+  adj : Array[Array[Int]],
+  visited : Array[Bool],
+  order : Array[Int],
+  u : Int,
+) -> Unit {
   visited[u] = true
   for i = 0; i < adj[u].length(); i = i + 1 {
     let v = adj[u][i]
@@ -196,7 +200,12 @@ fn dfs1(adj : Array[Array[Int]], visited : Array[Bool], order : Array[Int], u : 
 }
 
 ///|
-fn dfs2(radj : Array[Array[Int]], comp : Array[Int], scc_id : Int, u : Int) -> Unit {
+fn dfs2(
+  radj : Array[Array[Int]],
+  comp : Array[Int],
+  scc_id : Int,
+  u : Int,
+) -> Unit {
   comp[u] = scc_id
   for i = 0; i < radj[u].length(); i = i + 1 {
     let v = radj[u][i]
@@ -218,14 +227,17 @@ fn TwoSat::verify(self : TwoSat, assignment : Array[Bool]) -> Bool {
     let var_u = u / 2
     let neg_u = u % 2 == 1
     let val_u = if neg_u { not(assignment[var_u]) } else { assignment[var_u] }
-
     if val_u {
       // If u is true, all nodes reachable from u must be true
       for i = 0; i < self.adj[u].length(); i = i + 1 {
         let v = self.adj[u][i]
         let var_v = v / 2
         let neg_v = v % 2 == 1
-        let val_v = if neg_v { not(assignment[var_v]) } else { assignment[var_v] }
+        let val_v = if neg_v {
+          not(assignment[var_v])
+        } else {
+          assignment[var_v]
+        }
         if not(val_v) {
           return false
         }
@@ -256,7 +268,6 @@ test "two sat basic satisfiable" {
   // Solution: x1 = true
   sat.add_clause(0, false, 1, false) // x0 ∨ x1
   sat.add_clause(0, true, 1, false) // ¬x0 ∨ x1
-
   match sat.solve() {
     Some(assignment) => {
       inspect(assignment[1], content="true") // x1 must be true
@@ -272,7 +283,6 @@ test "two sat unsatisfiable" {
   // (x0) ∧ (¬x0)
   sat.add_clause(0, false, 0, false) // x0 ∨ x0 = x0
   sat.add_clause(0, true, 0, true) // ¬x0 ∨ ¬x0 = ¬x0
-
   match sat.solve() {
     Some(_) => inspect(false, content="true") // Should be unsatisfiable
     None => inspect(true, content="true")
@@ -286,11 +296,8 @@ test "two sat three variables" {
   sat.add_clause(0, false, 1, false) // x0 ∨ x1
   sat.add_clause(1, true, 2, false) // ¬x1 ∨ x2
   sat.add_clause(0, true, 2, true) // ¬x0 ∨ ¬x2
-
   match sat.solve() {
-    Some(assignment) => {
-      inspect(sat.verify(assignment), content="true")
-    }
+    Some(assignment) => inspect(sat.verify(assignment), content="true")
     None => inspect(false, content="true")
   }
 }
@@ -300,7 +307,6 @@ test "two sat set value" {
   let sat = TwoSat::new(2)
   sat.set_value(0, true) // Force x0 = true
   sat.add_clause(0, false, 1, false) // x0 ∨ x1
-
   match sat.solve() {
     Some(assignment) => {
       inspect(assignment[0], content="true")
@@ -315,7 +321,6 @@ test "two sat implication" {
   let sat = TwoSat::new(2)
   sat.add_implication(0, false, 1, false) // x0 → x1
   sat.set_value(0, true) // x0 = true
-
   match sat.solve() {
     Some(assignment) => {
       inspect(assignment[0], content="true")
@@ -343,11 +348,8 @@ test "two sat complex" {
   sat.add_clause(1, false, 2, false)
   sat.add_clause(2, false, 3, false)
   sat.add_clause(0, true, 3, true)
-
   match sat.solve() {
-    Some(assignment) => {
-      inspect(sat.verify(assignment), content="true")
-    }
+    Some(assignment) => inspect(sat.verify(assignment), content="true")
     None => inspect(false, content="true")
   }
 }

@@ -54,7 +54,6 @@ const HASH_MOD : Int64 = 1000000007L
 ///|
 /// Rolling Hash structure for a string
 priv struct RollingHash {
-  s : String
   n : Int
   prefix_hash : Array[Int64] // prefix_hash[i] = hash of s[0..i-1]
   pow_base : Array[Int64] // pow_base[i] = base^i mod p
@@ -68,6 +67,9 @@ fn RollingHash::new(s : String) -> RollingHash {
   let pow_base = Array::make(n + 1, 1L)
   for i = 1; i <= n; i = i + 1 {
     pow_base[i] = pow_base[i - 1] * HASH_BASE % HASH_MOD
+  } where {
+    invariant: i >= 1 && i <= n + 1,
+    reasoning: "I: pow_base[k] is computed for k in [0,i). M: Extend by one power using pow_base[i-1]. T: After i = n+1, powers 0..n are ready.",
   }
 
   // Compute prefix hashes
@@ -76,9 +78,11 @@ fn RollingHash::new(s : String) -> RollingHash {
   for i = 0; i < n; i = i + 1 {
     let char_val = (s[i].to_int() - 'a'.to_int() + 1).to_int64()
     prefix_hash[i + 1] = (prefix_hash[i] * HASH_BASE + char_val) % HASH_MOD
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: prefix_hash[k] equals hash of s[0..k-1] for k <= i. M: Extend hash with s[i]. T: After i = n, all prefix hashes are computed.",
   }
-
-  { s, n, prefix_hash, pow_base }
+  { n, prefix_hash, pow_base }
 }
 
 ///|
@@ -88,10 +92,13 @@ fn RollingHash::get_hash(self : RollingHash, l : Int, r : Int) -> Int64? {
   if l < 0 || r >= self.n || l > r {
     return None
   }
-
   let len = r - l + 1
-  let hash = (self.prefix_hash[r + 1] -
-    self.prefix_hash[l] * self.pow_base[len] % HASH_MOD + HASH_MOD) % HASH_MOD
+  let hash = (
+      self.prefix_hash[r + 1] -
+      self.prefix_hash[l] * self.pow_base[len] % HASH_MOD +
+      HASH_MOD
+    ) %
+    HASH_MOD
   Some(hash)
 }
 
@@ -102,12 +109,11 @@ fn RollingHash::substrings_equal(
   l1 : Int,
   r1 : Int,
   l2 : Int,
-  r2 : Int
+  r2 : Int,
 ) -> Bool {
   if r1 - l1 != r2 - l2 {
     return false
   }
-
   match (self.get_hash(l1, r1), self.get_hash(l2, r2)) {
     (Some(h1), Some(h2)) => h1 == h2
     _ => false
@@ -132,7 +138,6 @@ const HASH_MOD2 : Int64 = 1000000009L
 ///|
 /// Double Rolling Hash for reduced collision probability
 priv struct DoubleRollingHash {
-  s : String
   n : Int
   prefix_hash1 : Array[Int64]
   prefix_hash2 : Array[Int64]
@@ -143,23 +148,26 @@ priv struct DoubleRollingHash {
 ///|
 fn DoubleRollingHash::new(s : String) -> DoubleRollingHash {
   let n = s.length()
-
   let pow_base1 = Array::make(n + 1, 1L)
   let pow_base2 = Array::make(n + 1, 1L)
   for i = 1; i <= n; i = i + 1 {
     pow_base1[i] = pow_base1[i - 1] * HASH_BASE % HASH_MOD
     pow_base2[i] = pow_base2[i - 1] * HASH_BASE2 % HASH_MOD2
+  } where {
+    invariant: i >= 1 && i <= n + 1,
+    reasoning: "I: pow_base1/2 are computed for powers < i. M: Extend both power tables by one exponent. T: After i = n+1, powers 0..n are ready.",
   }
-
   let prefix_hash1 = Array::make(n + 1, 0L)
   let prefix_hash2 = Array::make(n + 1, 0L)
   for i = 0; i < n; i = i + 1 {
     let char_val = (s[i].to_int() - 'a'.to_int() + 1).to_int64()
     prefix_hash1[i + 1] = (prefix_hash1[i] * HASH_BASE + char_val) % HASH_MOD
     prefix_hash2[i + 1] = (prefix_hash2[i] * HASH_BASE2 + char_val) % HASH_MOD2
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: prefix_hash1/2 are correct for prefix length i. M: Extend both hashes with s[i]. T: After i = n, all prefix hashes are computed.",
   }
-
-  { s, n, prefix_hash1, prefix_hash2, pow_base1, pow_base2 }
+  { n, prefix_hash1, prefix_hash2, pow_base1, pow_base2 }
 }
 
 ///|
@@ -167,19 +175,24 @@ fn DoubleRollingHash::new(s : String) -> DoubleRollingHash {
 fn DoubleRollingHash::get_hash(
   self : DoubleRollingHash,
   l : Int,
-  r : Int
+  r : Int,
 ) -> (Int64, Int64)? {
   if l < 0 || r >= self.n || l > r {
     return None
   }
-
   let len = r - l + 1
-  let h1 = (self.prefix_hash1[r + 1] -
-    self.prefix_hash1[l] * self.pow_base1[len] % HASH_MOD + HASH_MOD) % HASH_MOD
-  let h2 = (self.prefix_hash2[r + 1] -
-    self.prefix_hash2[l] * self.pow_base2[len] % HASH_MOD2 + HASH_MOD2) %
+  let h1 = (
+      self.prefix_hash1[r + 1] -
+      self.prefix_hash1[l] * self.pow_base1[len] % HASH_MOD +
+      HASH_MOD
+    ) %
+    HASH_MOD
+  let h2 = (
+      self.prefix_hash2[r + 1] -
+      self.prefix_hash2[l] * self.pow_base2[len] % HASH_MOD2 +
+      HASH_MOD2
+    ) %
     HASH_MOD2
-
   Some((h1, h2))
 }
 
@@ -189,12 +202,11 @@ fn DoubleRollingHash::substrings_equal(
   l1 : Int,
   r1 : Int,
   l2 : Int,
-  r2 : Int
+  r2 : Int,
 ) -> Bool {
   if r1 - l1 != r2 - l2 {
     return false
   }
-
   match (self.get_hash(l1, r1), self.get_hash(l2, r2)) {
     (Some((h1a, h1b)), Some((h2a, h2b))) => h1a == h2a && h1b == h2b
     _ => false
@@ -216,11 +228,9 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let n = text.length()
   let m = pattern.length()
-
   if m == 0 || m > n {
     return result
   }
-
   let text_hash = RollingHash::new(text)
   let pattern_hash = RollingHash::new(pattern)
 
@@ -242,6 +252,9 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
             if text[i + j] != pattern[j] {
               matches = false
             }
+          } where {
+            invariant: j >= 0 && j <= m,
+            reasoning: "I: matches implies the first j characters match. M: Compare the next character and clear matches on mismatch. T: After j = m or matches=false, matches is true iff the full pattern matches at i.",
           }
           if matches {
             result.push(i)
@@ -249,8 +262,10 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
         }
       None => ()
     }
+  } where {
+    invariant: i >= 0 && i <= n - m + 1,
+    reasoning: "I: All positions in [0,i) have been checked. M: Compare hash at position i, verify on match, record result. T: After i = n-m+1, all candidate positions are processed.",
   }
-
   result
 }
 
@@ -269,11 +284,9 @@ fn count_pattern_rabin_karp(text : String, pattern : String) -> Int {
 fn longest_common_substring(s1 : String, s2 : String) -> Int {
   let n1 = s1.length()
   let n2 = s2.length()
-
   if n1 == 0 || n2 == 0 {
     return 0
   }
-
   let hash1 = DoubleRollingHash::new(s1)
   let hash2 = DoubleRollingHash::new(s2)
 
@@ -284,7 +297,7 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
     hash1 : DoubleRollingHash,
     hash2 : DoubleRollingHash,
     n1 : Int,
-    n2 : Int
+    n2 : Int,
   ) -> Bool {
     // Collect all hashes of length `len` from s1
     let hashes : Array[(Int64, Int64)] = []
@@ -293,6 +306,9 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
         Some(h) => hashes.push(h)
         None => ()
       }
+    } where {
+      invariant: i >= 0 && i <= n1 - len + 1,
+      reasoning: "I: hashes contains all length-len substrings from s1 in [0,i). M: Add hash for position i if valid. T: After i = n1-len+1, all hashes from s1 are collected.",
     }
 
     // Sort for binary search
@@ -300,9 +316,17 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
       let (a1, a2) = a
       let (b1, b2) = b
       if a1 != b1 {
-        if a1 < b1 { -1 } else { 1 }
+        if a1 < b1 {
+          -1
+        } else {
+          1
+        }
       } else if a2 != b2 {
-        if a2 < b2 { -1 } else { 1 }
+        if a2 < b2 {
+          -1
+        } else {
+          1
+        }
       } else {
         0
       }
@@ -330,8 +354,10 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
         }
         None => ()
       }
+    } where {
+      invariant: i >= 0 && i <= n2 - len + 1,
+      reasoning: "I: No substring of s2 in [0,i) has matched s1's hashes. M: Check s2 substring at i by binary searching the sorted hashes. T: After i = n2-len+1, a match is found or none exists.",
     }
-
     false
   }
 
@@ -346,6 +372,9 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
     }
   } else {
     result
+  } where {
+    invariant: lo >= 0 && hi <= max_len && result >= 0,
+    reasoning: "I: result is the best length found so far; search space is [lo,hi]. M: Binary search on length using monotonic check_length. T: After lo > hi, result is the maximum valid length.",
   }
 }
 
@@ -360,7 +389,6 @@ fn count_distinct_substrings(s : String) -> Int {
   if n == 0 {
     return 0
   }
-
   let hash = DoubleRollingHash::new(s)
   let seen : Array[(Int64, Int64)] = []
 
@@ -371,7 +399,13 @@ fn count_distinct_substrings(s : String) -> Int {
         Some(h) => seen.push(h)
         None => ()
       }
+    } where {
+      invariant: i >= 0 && i <= n - len + 1,
+      reasoning: "I: seen has hashes for length len substrings in [0,i). M: Add hash for position i. T: After i = n-len+1, all substrings of length len are collected.",
     }
+  } where {
+    invariant: len >= 1 && len <= n + 1,
+    reasoning: "I: seen contains hashes for all substring lengths in [1,len). M: Collect all hashes of length len. T: After len = n+1, all substring hashes are collected.",
   }
 
   // Sort and count unique
@@ -379,9 +413,17 @@ fn count_distinct_substrings(s : String) -> Int {
     let (a1, a2) = a
     let (b1, b2) = b
     if a1 != b1 {
-      if a1 < b1 { -1 } else { 1 }
+      if a1 < b1 {
+        -1
+      } else {
+        1
+      }
     } else if a2 != b2 {
-      if a2 < b2 { -1 } else { 1 }
+      if a2 < b2 {
+        -1
+      } else {
+        1
+      }
     } else {
       0
     }
@@ -391,7 +433,6 @@ fn count_distinct_substrings(s : String) -> Int {
   if seen.length() == 0 {
     return 0
   }
-
   for i = 1, count = 1; i < seen.length(); i = i + 1 {
     let (prev1, prev2) = seen[i - 1]
     let (curr1, curr2) = seen[i]
@@ -402,6 +443,9 @@ fn count_distinct_substrings(s : String) -> Int {
     }
   } else {
     count
+  } where {
+    invariant: i >= 1 && i <= seen.length() && count >= 1,
+    reasoning: "I: count equals the number of distinct hashes in seen[0..i). M: Increment count when a new value appears. T: After i = len, count is the number of distinct substrings.",
   }
 }
 
@@ -416,7 +460,6 @@ test "rolling hash basic" {
   // Same substrings should have same hash
   let h1 = rh.get_hash(0, 2) // "abc"
   let h2 = rh.get_hash(3, 5) // "abc"
-
   inspect(h1 is Some(_), content="true")
   inspect(h1 == h2, content="true")
 }
@@ -424,17 +467,14 @@ test "rolling hash basic" {
 ///|
 test "rolling hash different" {
   let rh = RollingHash::new("abcdef")
-
   let h1 = rh.get_hash(0, 2) // "abc"
   let h2 = rh.get_hash(3, 5) // "def"
-
   inspect(h1 != h2, content="true")
 }
 
 ///|
 test "rolling hash substrings equal" {
   let rh = RollingHash::new("abcabcabc")
-
   inspect(rh.substrings_equal(0, 2, 3, 5), content="true") // "abc" == "abc"
   inspect(rh.substrings_equal(0, 2, 6, 8), content="true") // "abc" == "abc"
   inspect(rh.substrings_equal(0, 2, 1, 3), content="false") // "abc" != "bca"
@@ -443,7 +483,6 @@ test "rolling hash substrings equal" {
 ///|
 test "rolling hash invalid range" {
   let rh = RollingHash::new("abc")
-
   inspect(rh.get_hash(-1, 0), content="None")
   inspect(rh.get_hash(0, 10), content="None")
   inspect(rh.get_hash(2, 1), content="None")
@@ -452,10 +491,8 @@ test "rolling hash invalid range" {
 ///|
 test "double rolling hash" {
   let drh = DoubleRollingHash::new("abcabc")
-
   let h1 = drh.get_hash(0, 2)
   let h2 = drh.get_hash(3, 5)
-
   inspect(h1 == h2, content="true")
   inspect(drh.substrings_equal(0, 2, 3, 5), content="true")
 }
@@ -463,7 +500,6 @@ test "double rolling hash" {
 ///|
 test "rabin karp find pattern" {
   let matches = find_pattern_rabin_karp("aabcaabxaab", "aab")
-
   inspect(matches.length(), content="3")
   inspect(matches[0], content="0")
   inspect(matches[1], content="4")
@@ -479,7 +515,6 @@ test "rabin karp no match" {
 ///|
 test "rabin karp full match" {
   let matches = find_pattern_rabin_karp("abc", "abc")
-
   inspect(matches.length(), content="1")
   inspect(matches[0], content="0")
 }
@@ -487,7 +522,6 @@ test "rabin karp full match" {
 ///|
 test "rabin karp overlapping" {
   let matches = find_pattern_rabin_karp("aaaa", "aa")
-
   inspect(matches.length(), content="3")
   inspect(matches[0], content="0")
   inspect(matches[1], content="1")

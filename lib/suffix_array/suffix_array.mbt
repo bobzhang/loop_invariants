@@ -22,7 +22,6 @@
 ///|
 priv struct SuffixArray {
   sa : Array[Int]
-  rank : Array[Int]
   lcp : Array[Int]
   text : String
 }
@@ -31,9 +30,8 @@ priv struct SuffixArray {
 fn SuffixArray::new(text : String) -> SuffixArray {
   let n = text.length()
   if n == 0 {
-    return { sa: [], rank: [], lcp: [], text }
+    return { sa: [], lcp: [], text }
   }
-
   let sa = Array::make(n, 0)
   let rank = Array::make(n, 0)
 
@@ -54,11 +52,14 @@ fn SuffixArray::new(text : String) -> SuffixArray {
       let r2 = if i + k < n { rank[i + k] } else { -1 }
       (r1, r2)
     }
-
     sa.sort_by(fn(a, b) {
       let (a1, a2) = get_key(a)
       let (b1, b2) = get_key(b)
-      if a1 != b1 { a1 - b1 } else { a2 - b2 }
+      if a1 != b1 {
+        a1 - b1
+      } else {
+        a2 - b2
+      }
     })
 
     // Compute new ranks
@@ -67,13 +68,21 @@ fn SuffixArray::new(text : String) -> SuffixArray {
     for i = 1; i < n; i = i + 1 {
       let prev_key = get_key(sa[i - 1])
       let curr_key = get_key(sa[i])
-      tmp[sa[i]] = if prev_key == curr_key { tmp[sa[i - 1]] } else { tmp[sa[i - 1]] + 1 }
+      tmp[sa[i]] = if prev_key == curr_key {
+        tmp[sa[i - 1]]
+      } else {
+        tmp[sa[i - 1]] + 1
+      }
+    } where {
+      invariant: i >= 1 && i <= n,
+      reasoning: "I: tmp ranks are assigned for sa[0..i). M: Compare adjacent keys and assign same or incremented rank. T: After i = n, tmp holds new ranks for all suffixes.",
     }
-
     for i = 0; i < n; i = i + 1 {
       rank[i] = tmp[i]
+    } where {
+      invariant: i >= 0 && i <= n,
+      reasoning: "I: rank[0..i) updated from tmp. M: Copy tmp into rank. T: After i = n, rank reflects new ordering.",
     }
-
     if rank[sa[n - 1]] == n - 1 {
       break
     }
@@ -87,6 +96,9 @@ fn SuffixArray::new(text : String) -> SuffixArray {
   let rank_norm = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     rank_norm[sa[i]] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: rank_norm assigned for suffixes sa[0..i). M: Set rank_norm[sa[i]] = i. T: After i = n, rank_norm is the inverse permutation of sa.",
   }
 
   // Build LCP array using Kasai's algorithm
@@ -95,7 +107,9 @@ fn SuffixArray::new(text : String) -> SuffixArray {
     let mut curr_h = h
     if rank_norm[i] > 0 {
       let j = sa[rank_norm[i] - 1]
-      while i + curr_h < n && j + curr_h < n && text[i + curr_h] == text[j + curr_h] {
+      while i + curr_h < n &&
+            j + curr_h < n &&
+            text[i + curr_h] == text[j + curr_h] {
         curr_h = curr_h + 1
       }
       lcp[rank_norm[i]] = curr_h
@@ -108,8 +122,7 @@ fn SuffixArray::new(text : String) -> SuffixArray {
     invariant: i >= 0 && i <= n && h >= 0,
     reasoning: "I: i=0, h=0. M: For suffix at i, compute LCP with predecessor in sorted order. Key: LCP decreases by at most 1 between consecutive text positions. T: O(n) total.",
   }
-
-  { sa, rank, lcp, text }
+  { sa, lcp, text }
 }
 
 ///|
@@ -148,7 +161,6 @@ fn SuffixArray::search(self : SuffixArray, pattern : String) -> (Int, Int)? {
     }
   }
   let last = lo - 1
-
   if first <= last && starts_with(self.text, self.sa[first], pattern) {
     Some((first, last))
   } else {
@@ -170,6 +182,9 @@ fn compare_suffix(text : String, start : Int, pattern : String) -> Int {
     if text[start + i] > pattern[i] {
       return 1
     }
+  } where {
+    invariant: i >= 0 && i <= m,
+    reasoning: "I: text[start..start+i) matches pattern[0..i). M: Compare next character and return on first mismatch. T: After i = m, pattern matches prefix of suffix.",
   }
   0
 }
@@ -185,6 +200,9 @@ fn starts_with(text : String, start : Int, pattern : String) -> Bool {
     if text[start + i] != pattern[i] {
       return false
     }
+  } where {
+    invariant: i >= 0 && i <= m,
+    reasoning: "I: text[start..start+i) matches pattern[0..i). M: Compare next character. T: After i = m, full pattern matches.",
   }
   true
 }
@@ -197,6 +215,9 @@ fn SuffixArray::find_all(self : SuffixArray, pattern : String) -> Array[Int] {
       let result : Array[Int] = []
       for i = first; i <= last; i = i + 1 {
         result.push(self.sa[i])
+      } where {
+        invariant: i >= first && i <= last + 1,
+        reasoning: "I: result holds matches from sa[first..i). M: Append sa[i] for each match range. T: After i = last+1, all matching suffix indices are collected.",
       }
       result.sort_by(fn(a, b) { a - b })
       result
@@ -218,10 +239,8 @@ fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
   if n < 2 {
     return ""
   }
-
   let mut max_lcp = 0
   let mut max_idx = 0
-
   for i = 1; i < n; i = i + 1 {
     if self.lcp[i] > max_lcp {
       max_lcp = self.lcp[i]
@@ -231,13 +250,11 @@ fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
     invariant: i >= 1 && i <= n,
     reasoning: "I: max_lcp=0. M: Track maximum LCP. T: After loop, max_idx has longest repeated.",
   }
-
   if max_lcp == 0 {
     return ""
   }
-
   let start = self.sa[max_idx]
-  self.text.substring(start=start, end=start + max_lcp)
+  self.text.unsafe_substring(start~, end=start + max_lcp)
 }
 
 ///|
@@ -246,15 +263,13 @@ fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
   if n == 0 {
     return 0L
   }
-
-  let mut total = (n.to_int64() * (n.to_int64() + 1L)) / 2L
+  let mut total = n.to_int64() * (n.to_int64() + 1L) / 2L
   for i = 1; i < n; i = i + 1 {
     total = total - self.lcp[i].to_int64()
   } where {
     invariant: i >= 1 && i <= n,
     reasoning: "I: total = n(n+1)/2. M: Subtract overlapping prefixes. T: Count of distinct substrings.",
   }
-
   total
 }
 
@@ -264,7 +279,7 @@ fn SuffixArray::get_suffix(self : SuffixArray, i : Int) -> String {
     return ""
   }
   let start = self.sa[i]
-  self.text.substring(start=start, end=self.text.length())
+  self.text.unsafe_substring(start~, end=self.text.length())
 }
 
 // ============================================================================
@@ -307,7 +322,6 @@ test "suffix array search" {
 test "suffix array longest repeated" {
   let sa = SuffixArray::new("banana")
   inspect(sa.longest_repeated_substring(), content="ana")
-
   let sa2 = SuffixArray::new("abcabc")
   inspect(sa2.longest_repeated_substring(), content="abc")
 }

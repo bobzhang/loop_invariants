@@ -183,7 +183,7 @@ priv struct AhoCorasick {
 ///|
 fn AhoCorasick::new(patterns : Array[String]) -> AhoCorasick {
   let max_nodes = 1 + patterns.fold(init=0, fn(acc, p) { acc + p.length() })
-  let nodes : Array[ACNode] = Array::makei(max_nodes, (_) => ACNode::new())
+  let nodes : Array[ACNode] = Array::makei(max_nodes, _ => ACNode::new())
   let ac : AhoCorasick = { nodes, node_count: 1 }
   // Build trie
   patterns.eachi(fn(pattern_idx, pattern) {
@@ -923,6 +923,7 @@ test "aho_corasick_basic" {
     let first = matches[0]
     let _ = first.position
     let _ = first.pattern_idx
+
   }
 }
 
@@ -969,6 +970,7 @@ test "persistent_trie_basic" {
   let _ = trie.search_version("hello", v1)
   let _ = trie.search_version("help", v1)
   let _ = trie.search_version("help", v2)
+
 }
 
 ///|

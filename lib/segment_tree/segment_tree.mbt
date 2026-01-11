@@ -47,20 +47,23 @@ fn SegmentTree::new(arr : Array[Int64]) -> SegmentTree {
   if n == 0 {
     return { n: 0, tree: [] }
   }
-
   let tree = Array::make(4 * n, 0L)
   build_tree(arr, tree, 1, 0, n - 1)
-
   { n, tree }
 }
 
 ///|
-fn build_tree(arr : Array[Int64], tree : Array[Int64], node : Int, start : Int, end : Int) -> Unit {
+fn build_tree(
+  arr : Array[Int64],
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+) -> Unit {
   if start == end {
     tree[node] = arr[start]
     return
   }
-
   let mid = (start + end) / 2
   build_tree(arr, tree, 2 * node, start, mid)
   build_tree(arr, tree, 2 * node + 1, mid + 1, end)
@@ -77,12 +80,18 @@ fn SegmentTree::update(self : SegmentTree, i : Int, val : Int64) -> Unit {
 }
 
 ///|
-fn update_helper(tree : Array[Int64], node : Int, start : Int, end : Int, i : Int, val : Int64) -> Unit {
+fn update_helper(
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  i : Int,
+  val : Int64,
+) -> Unit {
   if start == end {
     tree[node] = val
     return
   }
-
   let mid = (start + end) / 2
   if i <= mid {
     update_helper(tree, 2 * node, start, mid, i, val)
@@ -102,15 +111,20 @@ fn SegmentTree::query(self : SegmentTree, l : Int, r : Int) -> Int64 {
 }
 
 ///|
-fn query_helper(tree : Array[Int64], node : Int, start : Int, end : Int, l : Int, r : Int) -> Int64 {
+fn query_helper(
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int,
+) -> Int64 {
   if r < start || end < l {
     return 0L // No overlap
   }
-
   if l <= start && end <= r {
     return tree[node] // Complete overlap
   }
-
   let mid = (start + end) / 2
   let left = query_helper(tree, 2 * node, start, mid, l, r)
   let right = query_helper(tree, 2 * node + 1, mid + 1, end, l, r)
@@ -141,20 +155,23 @@ fn SegmentTreeMin::new(arr : Array[Int64]) -> SegmentTreeMin {
   if n == 0 {
     return { n: 0, tree: [] }
   }
-
   let tree = Array::make(4 * n, ST_INF)
   build_min_tree(arr, tree, 1, 0, n - 1)
-
   { n, tree }
 }
 
 ///|
-fn build_min_tree(arr : Array[Int64], tree : Array[Int64], node : Int, start : Int, end : Int) -> Unit {
+fn build_min_tree(
+  arr : Array[Int64],
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+) -> Unit {
   if start == end {
     tree[node] = arr[start]
     return
   }
-
   let mid = (start + end) / 2
   build_min_tree(arr, tree, 2 * node, start, mid)
   build_min_tree(arr, tree, 2 * node + 1, mid + 1, end)
@@ -174,12 +191,18 @@ fn SegmentTreeMin::update(self : SegmentTreeMin, i : Int, val : Int64) -> Unit {
 }
 
 ///|
-fn update_min_helper(tree : Array[Int64], node : Int, start : Int, end : Int, i : Int, val : Int64) -> Unit {
+fn update_min_helper(
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  i : Int,
+  val : Int64,
+) -> Unit {
   if start == end {
     tree[node] = val
     return
   }
-
   let mid = (start + end) / 2
   if i <= mid {
     update_min_helper(tree, 2 * node, start, mid, i, val)
@@ -202,19 +225,28 @@ fn SegmentTreeMin::query(self : SegmentTreeMin, l : Int, r : Int) -> Int64 {
 }
 
 ///|
-fn query_min_helper(tree : Array[Int64], node : Int, start : Int, end : Int, l : Int, r : Int) -> Int64 {
+fn query_min_helper(
+  tree : Array[Int64],
+  node : Int,
+  start : Int,
+  end : Int,
+  l : Int,
+  r : Int,
+) -> Int64 {
   if r < start || end < l {
     return ST_INF
   }
-
   if l <= start && end <= r {
     return tree[node]
   }
-
   let mid = (start + end) / 2
   let left = query_min_helper(tree, 2 * node, start, mid, l, r)
   let right = query_min_helper(tree, 2 * node + 1, mid + 1, end, l, r)
-  if left < right { left } else { right }
+  if left < right {
+    left
+  } else {
+    right
+  }
 }
 
 // ============================================================================
@@ -234,12 +266,14 @@ fn IterativeSegTree::new(arr : Array[Int64]) -> IterativeSegTree {
   if n == 0 {
     return { n: 0, tree: [] }
   }
-
   let tree = Array::make(2 * n, 0L)
 
   // Copy leaves
   for i = 0; i < n; i = i + 1 {
     tree[n + i] = arr[i]
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: tree[n..n+i) mirrors arr[0..i). M: Copy arr[i] into leaf position n+i. T: After i = n, all leaves store the array values.",
   }
 
   // Build internal nodes from bottom up
@@ -249,12 +283,15 @@ fn IterativeSegTree::new(arr : Array[Int64]) -> IterativeSegTree {
     invariant: i >= 0 && i <= n - 1,
     reasoning: "I: Leaves tree[n..2n) contain arr values. M: For each internal node i from n-1 down to 1, compute tree[i] = tree[2*i] + tree[2*i+1]. Since we process bottom-up, children are already computed. T: After i = 1, tree[1] is the total sum, and tree[i] = sum of corresponding range for all i. O(n) time for n-1 internal nodes.",
   }
-
   { n, tree }
 }
 
 ///|
-fn IterativeSegTree::update(self : IterativeSegTree, i : Int, val : Int64) -> Unit {
+fn IterativeSegTree::update(
+  self : IterativeSegTree,
+  i : Int,
+  val : Int64,
+) -> Unit {
   if i < 0 || i >= self.n {
     return
   }
@@ -296,7 +333,6 @@ fn IterativeSegTree::query(self : IterativeSegTree, l : Int, r : Int) -> Int64 {
     left = left / 2
     right = right / 2
   }
-
   sum
 }
 
@@ -308,7 +344,6 @@ fn IterativeSegTree::query(self : IterativeSegTree, l : Int, r : Int) -> Int64 {
 test "segment tree basic" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let st = SegmentTree::new(arr)
-
   inspect(st.query(0, 4), content="15")
   inspect(st.query(0, 2), content="6")
   inspect(st.query(2, 4), content="12")
@@ -319,7 +354,6 @@ test "segment tree basic" {
 test "segment tree update" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let st = SegmentTree::new(arr)
-
   st.update(2, 10L)
   inspect(st.query(0, 4), content="22") // 1+2+10+4+5
   inspect(st.query(2, 2), content="10")
@@ -329,7 +363,6 @@ test "segment tree update" {
 test "segment tree single element" {
   let arr : Array[Int64] = [42L]
   let st = SegmentTree::new(arr)
-
   inspect(st.query(0, 0), content="42")
   st.update(0, 100L)
   inspect(st.query(0, 0), content="100")
@@ -339,7 +372,6 @@ test "segment tree single element" {
 test "segment tree min basic" {
   let arr : Array[Int64] = [5L, 2L, 8L, 1L, 9L]
   let st = SegmentTreeMin::new(arr)
-
   inspect(st.query(0, 4), content="1")
   inspect(st.query(0, 2), content="2")
   inspect(st.query(2, 4), content="1")
@@ -349,7 +381,6 @@ test "segment tree min basic" {
 test "segment tree min update" {
   let arr : Array[Int64] = [5L, 2L, 8L, 1L, 9L]
   let st = SegmentTreeMin::new(arr)
-
   st.update(3, 100L) // Change 1 to 100
   inspect(st.query(0, 4), content="2")
   inspect(st.query(2, 4), content="8")
@@ -359,7 +390,6 @@ test "segment tree min update" {
 test "iterative segment tree basic" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let st = IterativeSegTree::new(arr)
-
   inspect(st.query(0, 4), content="15")
   inspect(st.query(0, 2), content="6")
   inspect(st.query(2, 4), content="12")
@@ -369,7 +399,6 @@ test "iterative segment tree basic" {
 test "iterative segment tree update" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let st = IterativeSegTree::new(arr)
-
   st.update(2, 10L)
   inspect(st.query(0, 4), content="22")
 }
@@ -385,7 +414,6 @@ test "segment tree empty" {
 test "segment tree boundary" {
   let arr : Array[Int64] = [1L, 2L, 3L]
   let st = SegmentTree::new(arr)
-
   inspect(st.query(-1, 0), content="0") // Invalid
   inspect(st.query(0, 10), content="0") // Invalid
   inspect(st.query(2, 1), content="0") // Invalid
@@ -397,8 +425,10 @@ test "segment tree large" {
   let arr : Array[Int64] = []
   for i = 0; i < n; i = i + 1 {
     arr.push(i.to_int64())
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: arr has length i and contains 0..i-1. M: Push i. T: After i = n, arr holds 0..n-1.",
   }
-
   let st = SegmentTree::new(arr)
   // Sum of 0..99 = 99*100/2 = 4950
   inspect(st.query(0, 99), content="4950")

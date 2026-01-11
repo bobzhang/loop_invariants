@@ -81,20 +81,20 @@ fn EulerTour::dfs(self : EulerTour, u : Int, p : Int, d : Int) -> Unit {
   self.entry[u] = self.timer
   self.timer = self.timer + 1
   self.tour.push(u)
-
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
     if v != p {
       self.dfs(v, u, d + 1)
     }
   } where {
-    invariant: i >= 0 && i <= self.adj[u].length() && self.adj.length() == self.n,
+    invariant: i >= 0 &&
+    i <= self.adj[u].length() &&
+    self.adj.length() == self.n,
     reasoning: (
       #|All neighbors with index < i have been processed; any non-parent
       #|neighbor has been fully explored and its subtree tour appended.
     ),
   }
-
   self.exit[u] = self.timer
 }
 
@@ -177,11 +177,15 @@ fn EulerTourLCA::add_edge(self : EulerTourLCA, u : Int, v : Int) -> Unit {
 }
 
 ///|
-fn EulerTourLCA::dfs_euler(self : EulerTourLCA, u : Int, p : Int, d : Int) -> Unit {
+fn EulerTourLCA::dfs_euler(
+  self : EulerTourLCA,
+  u : Int,
+  p : Int,
+  d : Int,
+) -> Unit {
   self.first[u] = self.euler.length()
   self.euler.push(u)
   self.depth.push(d)
-
   for i = 0; i < self.adj[u].length(); i = i + 1 {
     let v = self.adj[u][i]
     if v != p {
@@ -190,7 +194,9 @@ fn EulerTourLCA::dfs_euler(self : EulerTourLCA, u : Int, p : Int, d : Int) -> Un
       self.depth.push(d)
     }
   } where {
-    invariant: i >= 0 && i <= self.adj[u].length() && self.adj.length() == self.n,
+    invariant: i >= 0 &&
+    i <= self.adj[u].length() &&
+    self.adj.length() == self.n,
     reasoning: (
       #|All neighbors with index < i have been visited; each visited child
       #|contributes an enter/exit pair in the euler/depth arrays.
@@ -204,7 +210,6 @@ fn EulerTourLCA::build(self : EulerTourLCA, root : Int) -> Unit {
   self.euler.clear()
   self.depth.clear()
   self.dfs_euler(root, -1, 0)
-
   let m = self.euler.length()
 
   // Precompute log values
@@ -275,12 +280,10 @@ fn EulerTourLCA::lca(self : EulerTourLCA, u : Int, v : Int) -> Int {
     r = tmp
   }
   r = r + 1
-
   let len = r - l
   let k = self.log[len]
   let left = self.sparse[k][l]
   let right = self.sparse[k][r - (1 << k)]
-
   if self.depth[left] <= self.depth[right] {
     self.euler[left]
   } else {
@@ -292,7 +295,8 @@ fn EulerTourLCA::lca(self : EulerTourLCA, u : Int, v : Int) -> Int {
 /// Get distance between two nodes
 fn EulerTourLCA::distance(self : EulerTourLCA, u : Int, v : Int) -> Int {
   let ancestor = self.lca(u, v)
-  self.depth[self.first[u]] + self.depth[self.first[v]] -
+  self.depth[self.first[u]] +
+  self.depth[self.first[v]] -
   2 * self.depth[self.first[ancestor]]
 }
 
@@ -310,7 +314,6 @@ test "euler_tour basic" {
   et.add_edge(1, 2)
   et.add_edge(1, 3)
   et.add_edge(3, 4)
-
   et.build(0)
 
   // Check entry < exit
@@ -331,7 +334,6 @@ test "euler_tour subtree" {
   et.add_edge(0, 2)
   et.add_edge(1, 3)
   et.add_edge(1, 4)
-
   et.build(0)
 
   // Subtree of 1 should include 1, 3, 4
@@ -351,9 +353,7 @@ test "euler_tour ancestor" {
   et.add_edge(0, 1)
   et.add_edge(1, 2)
   et.add_edge(2, 3)
-
   et.build(0)
-
   inspect(et.is_ancestor(0, 3), content="true")
   inspect(et.is_ancestor(1, 3), content="true")
   inspect(et.is_ancestor(3, 1), content="false")
@@ -372,9 +372,7 @@ test "euler_tour_lca basic" {
   et.add_edge(0, 2)
   et.add_edge(1, 3)
   et.add_edge(1, 4)
-
   et.build(0)
-
   inspect(et.lca(3, 4), content="1")
   inspect(et.lca(3, 2), content="0")
   inspect(et.lca(1, 4), content="1")
@@ -388,9 +386,7 @@ test "euler_tour_lca distance" {
   et.add_edge(0, 2)
   et.add_edge(1, 3)
   et.add_edge(1, 4)
-
   et.build(0)
-
   inspect(et.distance(3, 4), content="2") // 3 -> 1 -> 4
   inspect(et.distance(3, 2), content="3") // 3 -> 1 -> 0 -> 2
   inspect(et.distance(0, 0), content="0")
@@ -400,7 +396,6 @@ test "euler_tour_lca distance" {
 test "euler_tour single node" {
   let et = EulerTour::new(1)
   et.build(0)
-
   inspect(et.subtree_size(0), content="1")
   inspect(et.is_ancestor(0, 0), content="true")
 }
@@ -412,9 +407,7 @@ test "euler_tour_lca chain" {
   et.add_edge(0, 1)
   et.add_edge(1, 2)
   et.add_edge(2, 3)
-
   et.build(0)
-
   inspect(et.lca(0, 3), content="0")
   inspect(et.lca(1, 3), content="1")
   inspect(et.lca(2, 3), content="2")
@@ -427,9 +420,7 @@ test "euler_tour depth" {
   et.add_edge(0, 1)
   et.add_edge(1, 2)
   et.add_edge(2, 3)
-
   et.build(0)
-
   inspect(et.depth[0], content="0")
   inspect(et.depth[1], content="1")
   inspect(et.depth[2], content="2")

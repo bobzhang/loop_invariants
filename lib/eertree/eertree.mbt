@@ -78,7 +78,6 @@ fn Eertree::new() -> Eertree {
   // Suffix links: both roots point to odd root
   nodes[0].suffix_link = 0 // Odd root to itself
   nodes[1].suffix_link = 0 // Even root to odd root
-
   { nodes, text: [], last: 1, size: 0 }
 }
 
@@ -90,7 +89,7 @@ fn Eertree::new() -> Eertree {
 fn Eertree::get_suffix_link(self : Eertree, v : Int, i : Int, c : Int) -> Int {
   // INVARIANT: We're looking for longest palindrome ending at position i-1
   // such that character before it equals c (so we can extend to position i)
-  for cur = v; ; {
+  for cur = v {
     let len = self.nodes[cur].len
     // Check if we can extend this palindrome with c
     // Position of character before this palindrome is i - len - 1
@@ -138,10 +137,13 @@ fn Eertree::add_char(self : Eertree, c : Char) -> Unit {
     self.nodes[new_idx].suffix_link = 1
   } else {
     // Find suffix link by following parent's suffix link
-    let suffix_parent = self.get_suffix_link(self.nodes[cur].suffix_link, i, char_val)
+    let suffix_parent = self.get_suffix_link(
+      self.nodes[cur].suffix_link,
+      i,
+      char_val,
+    )
     self.nodes[new_idx].suffix_link = self.nodes[suffix_parent].edges[char_val]
   }
-
   self.last = new_idx
   self.nodes[self.last].count = 1
 }
@@ -213,7 +215,7 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
     tree : Eertree,
     node : Int,
     current : Array[Int],
-    result : Array[String]
+    result : Array[String],
   ) -> Unit {
     // Skip roots for output
     if node >= 2 {
@@ -230,7 +232,11 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
         ),
       }
       // Second half (reverse, skip middle for odd length)
-      let start = if len % 2 == 0 { current.length() - 1 } else { current.length() - 2 }
+      let start = if len % 2 == 0 {
+        current.length() - 1
+      } else {
+        current.length() - 2
+      }
       for i = start; i >= 0; i = i - 1 {
         sb.write_char(Int::unsafe_to_char(current[i]))
       } where {
@@ -249,6 +255,7 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
         current.push(c)
         dfs(tree, child, current, result)
         let _ = current.pop()
+
       }
     } where {
       invariant: c >= 0 && c <= 256,
@@ -263,7 +270,6 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
   dfs(self, 0, [], result)
   // Start from even root (empty and even palindromes)
   dfs(self, 1, [], result)
-
   result
 }
 
@@ -349,7 +355,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
     tree : Eertree,
     target : Int,
     current : Int,
-    path : Array[Int]
+    path : Array[Int],
   ) -> Bool {
     if current == target {
       return true
@@ -366,6 +372,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
           return true
         }
         let _ = path.pop()
+
       }
     } where {
       invariant: c >= 0 && c <= 256,
@@ -391,7 +398,11 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
       #|sb contains path[0..i) in order.
     ),
   }
-  let rev_start = if len % 2 == 0 { path.length() - 1 } else { path.length() - 2 }
+  let rev_start = if len % 2 == 0 {
+    path.length() - 1
+  } else {
+    path.length() - 2
+  }
   for i = rev_start; i >= 0; i = i - 1 {
     sb.write_char(Int::unsafe_to_char(path[i]))
   } where {
@@ -447,7 +458,6 @@ test "eertree abacaba" {
 ///|
 test "eertree longest" {
   let tree = Eertree::from_string("abacaba")
-
   inspect(tree.longest_length(), content="7") // "abacaba"
 }
 
@@ -464,7 +474,6 @@ test "eertree total count" {
 ///|
 test "eertree contains" {
   let tree = Eertree::from_string("abacaba")
-
   inspect(tree.contains_palindrome("aba"), content="true")
   inspect(tree.contains_palindrome("abacaba"), content="true")
   inspect(tree.contains_palindrome("a"), content="true")
@@ -475,7 +484,6 @@ test "eertree contains" {
 ///|
 test "eertree empty" {
   let tree = Eertree::from_string("")
-
   inspect(tree.count_distinct(), content="0")
   inspect(tree.longest_length(), content="0")
 }
@@ -483,7 +491,6 @@ test "eertree empty" {
 ///|
 test "eertree get palindromes" {
   let tree = Eertree::from_string("aba")
-
   let palindromes = tree.get_palindromes()
   // Should contain "a", "b", "aba"
   inspect(palindromes.length(), content="3")
@@ -503,9 +510,7 @@ test "eertree get palindromes" {
         #|All checked pairs (0..j) are symmetric for this palindrome candidate.
       ),
     }
-    guard is_palindrome else {
-      fail("Not a palindrome: " + p)
-    }
+    guard is_palindrome else { fail("Not a palindrome: " + p) }
   } where {
     invariant: i >= 0 && i <= palindromes.length(),
     reasoning: (
@@ -516,9 +521,7 @@ test "eertree get palindromes" {
   // Test get_palindrome_at for a specific node
   // Node 2 should be first palindrome after roots
   let p = tree.get_palindrome_at(2)
-  guard p.length() > 0 else {
-    fail("Expected non-empty palindrome")
-  }
+  guard p.length() > 0 else { fail("Expected non-empty palindrome") }
 }
 
 ///|
@@ -527,27 +530,20 @@ test "eertree mississippi" {
 
   // Has various palindromes including "i", "s", "p", "ss", "sis", "issi", etc.
   let count = tree.count_distinct()
-  guard count > 5 else {
-    fail("Expected more palindromes")
-  }
+  guard count > 5 else { fail("Expected more palindromes") }
 
   // Longest should be "ississi" (7) or similar
   let longest = tree.longest_length()
-  guard longest >= 3 else {
-    fail("Expected longer palindrome")
-  }
+  guard longest >= 3 else { fail("Expected longer palindrome") }
 }
 
 ///|
 test "eertree incremental" {
   let tree = Eertree::new()
-
   tree.add_char('a')
   inspect(tree.count_distinct(), content="1")
-
   tree.add_char('b')
   inspect(tree.count_distinct(), content="2")
-
   tree.add_char('a')
   // Now we have "aba" as new palindrome
   inspect(tree.count_distinct(), content="3")

@@ -89,10 +89,8 @@ fn NTT::new(size : Int) -> NTT {
     n = n * 2
     log_n = log_n + 1
   }
-
   let root = mod_pow(NTT_ROOT, (NTT_MOD - 1L) / n.to_int64(), NTT_MOD)
   let root_inv = mod_pow(root, NTT_MOD - 2L, NTT_MOD)
-
   { n, log_n, root, root_inv, mod_val: NTT_MOD }
 }
 
@@ -119,14 +117,14 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
   while len <= n {
     let w_base = if inverse { self.root_inv } else { self.root }
     let w = mod_pow(w_base, (n / len).to_int64(), self.mod_val)
-
     for i = 0; i < n; i = i + len {
       let mut wn = 1L
       for j = 0; j < len / 2; j = j + 1 {
         let u = a[i + j]
         let v = a[i + j + len / 2] * wn % self.mod_val
         a[i + j] = (u + v) % self.mod_val
-        a[i + j + len / 2] = ((u - v) % self.mod_val + self.mod_val) % self.mod_val
+        a[i + j + len / 2] = ((u - v) % self.mod_val + self.mod_val) %
+          self.mod_val
         wn = wn * w % self.mod_val
       } where {
         invariant: j >= 0 && j <= len / 2,
@@ -164,7 +162,7 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
 fn NTT::multiply(
   self : NTT,
   a : Array[Int64],
-  b : Array[Int64]
+  b : Array[Int64],
 ) -> Array[Int64] {
   let n = self.n
 
@@ -202,7 +200,6 @@ fn NTT::multiply(
 
   // Inverse transform
   self.transform(pa, true)
-
   pa
 }
 
@@ -250,7 +247,6 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
   if n < 32 || m < 32 {
     return poly_multiply_naive(a, b)
   }
-
   let half = (if n > m { n } else { m }) / 2
 
   // Split: a = a_low + x^half * a_high
@@ -268,7 +264,6 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
       #|a_low contains a[0..min(i,half)); a_high contains a[half..i) when i > half.
     ),
   }
-
   let b_low : Array[Int64] = []
   let b_high : Array[Int64] = []
   for i = 0; i < b.length(); i = i + 1 {
@@ -321,13 +316,11 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
       #|b_sum[0..i) equals (b_low + b_high) coefficient-wise.
     ),
   }
-
   let z1_full = poly_multiply_karatsuba(a_sum, b_sum)
 
   // Combine: result = z0 + x^half * z1 + x^(2*half) * z2
   let result_len = n + m - 1
   let result = Array::make(result_len, 0L)
-
   for i = 0; i < z0.length(); i = i + 1 {
     result[i] = (result[i] + z0[i]) % NTT_MOD
   } where {
@@ -340,8 +333,9 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
     if i + half < result_len {
       let sub = if i < z0.length() { z0[i] } else { 0L }
       let sub2 = if i < z2.length() { z2[i] } else { 0L }
-      result[i + half] = ((result[i + half] + z1_full[i] - sub - sub2) % NTT_MOD +
-        NTT_MOD) %
+      result[i + half] = (
+          (result[i + half] + z1_full[i] - sub - sub2) % NTT_MOD + NTT_MOD
+        ) %
         NTT_MOD
     }
   } where {
@@ -360,7 +354,6 @@ fn poly_multiply_karatsuba(a : Array[Int64], b : Array[Int64]) -> Array[Int64] {
       #|result[2*half..2*half+i) includes the z2 contribution.
     ),
   }
-
   result
 }
 
@@ -401,7 +394,6 @@ test "ntt vs naive" {
   let ntt = NTT::new(8)
   let ntt_result = ntt.multiply(a, b)
   let naive_result = poly_multiply_naive(a, b)
-
   for i = 0; i < naive_result.length(); i = i + 1 {
     inspect(ntt_result[i] == naive_result[i], content="true")
   } where {
@@ -418,7 +410,6 @@ test "karatsuba vs naive" {
   let b : Array[Int64] = [6L, 7L, 8L, 9L, 10L]
   let karatsuba_result = poly_multiply_karatsuba(a, b)
   let naive_result = poly_multiply_naive(a, b)
-
   inspect(karatsuba_result.length() == naive_result.length(), content="true")
   for i = 0; i < naive_result.length(); i = i + 1 {
     inspect(karatsuba_result[i] == naive_result[i], content="true")

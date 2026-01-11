@@ -53,6 +53,9 @@ fn MinCostMaxFlow::new(n : Int) -> MinCostMaxFlow {
   let adj = Array::make(n, [])
   for i = 0; i < n; i = i + 1 {
     adj[i] = []
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: adj has length n. M: Assign a fresh empty list at index i so lists do not alias. T: After i = n, every vertex has its own empty adjacency list.",
   }
   {
     n,
@@ -71,35 +74,38 @@ fn MinCostMaxFlow::add_edge(
   u : Int,
   v : Int,
   cap : Int64,
-  cost : Int64
+  cost : Int64,
 ) -> Unit {
   let rev_u = self.adj[v].length()
   let rev_v = self.adj[u].length()
-
   self.adj[u].push({ to: v, cap, cost, flow: 0L, rev: rev_u })
   self.adj[v].push({ to: u, cap: 0L, cost: -cost, flow: 0L, rev: rev_v })
 }
 
 ///|
 /// SPFA to find minimum cost path
-fn MinCostMaxFlow::spfa(self : MinCostMaxFlow, source : Int, sink : Int) -> Bool {
+fn MinCostMaxFlow::spfa(
+  self : MinCostMaxFlow,
+  source : Int,
+  sink : Int,
+) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.dist[i] = MCMF_INF
     self.prev_v[i] = -1
     self.prev_e[i] = -1
     self.in_queue[i] = false
+  } where {
+    invariant: i >= 0 && i <= self.n,
+    reasoning: "I: SPFA state may be stale from prior calls. M: Reset dist/prev/queue flags for indices < i. T: After i = n, all vertices are unvisited with dist = INF and no queue marks.",
   }
-
   self.dist[source] = 0L
   let queue : Array[Int] = [source]
   self.in_queue[source] = true
-
   let mut front = 0
   while front < queue.length() {
     let u = queue[front]
     front = front + 1
     self.in_queue[u] = false
-
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let e = self.adj[u][i]
       // Can we push more flow through this edge?
@@ -112,9 +118,11 @@ fn MinCostMaxFlow::spfa(self : MinCostMaxFlow, source : Int, sink : Int) -> Bool
           self.in_queue[e.to] = true
         }
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length() && self.dist[u] < MCMF_INF,
+      reasoning: "I: u was dequeued, so dist[u] is finite. M: Scan each outgoing edge once and relax dist for reachable neighbors, enqueueing if needed. T: After i = deg(u), all relaxations from u have been applied.",
     }
   }
-
   self.dist[sink] < MCMF_INF
 }
 
@@ -124,11 +132,10 @@ fn MinCostMaxFlow::spfa(self : MinCostMaxFlow, source : Int, sink : Int) -> Bool
 fn MinCostMaxFlow::compute(
   self : MinCostMaxFlow,
   source : Int,
-  sink : Int
+  sink : Int,
 ) -> (Int64, Int64) {
   let mut total_flow = 0L
   let mut total_cost = 0L
-
   while self.spfa(source, sink) {
     // Find minimum residual capacity along path
     let mut path_flow = MCMF_INF
@@ -153,11 +160,9 @@ fn MinCostMaxFlow::compute(
       self.adj[v][rev_idx].flow = self.adj[v][rev_idx].flow - path_flow
       v = u
     }
-
     total_flow = total_flow + path_flow
     total_cost = total_cost + path_flow * self.dist[sink]
   }
-
   (total_flow, total_cost)
 }
 
@@ -167,18 +172,16 @@ fn MinCostMaxFlow::compute_with_limit(
   self : MinCostMaxFlow,
   source : Int,
   sink : Int,
-  max_flow_limit : Int64
+  max_flow_limit : Int64,
 ) -> (Int64, Int64) {
   let mut total_flow = 0L
   let mut total_cost = 0L
-
   while total_flow < max_flow_limit && self.spfa(source, sink) {
     let mut path_flow = MCMF_INF
     let remaining = max_flow_limit - total_flow
     if remaining < path_flow {
       path_flow = remaining
     }
-
     let mut v = sink
     while v != source {
       let u = self.prev_v[v]
@@ -189,7 +192,6 @@ fn MinCostMaxFlow::compute_with_limit(
       }
       v = u
     }
-
     v = sink
     while v != source {
       let u = self.prev_v[v]
@@ -199,11 +201,9 @@ fn MinCostMaxFlow::compute_with_limit(
       self.adj[v][rev_idx].flow = self.adj[v][rev_idx].flow - path_flow
       v = u
     }
-
     total_flow = total_flow + path_flow
     total_cost = total_cost + path_flow * self.dist[sink]
   }
-
   (total_flow, total_cost)
 }
 
@@ -229,20 +229,31 @@ fn solve_assignment(cost : Array[Array[Int64]]) -> Int64 {
   // Source to workers
   for i = 0; i < n; i = i + 1 {
     mcmf.add_edge(source, i + 1, 1L, 0L)
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: No worker edges added yet. M: Add capacity-1 edge from source to worker i. T: After i = n, every worker has an incoming edge from source.",
   }
 
   // Workers to tasks
   for i = 0; i < n; i = i + 1 {
     for j = 0; j < cost[i].length(); j = j + 1 {
       mcmf.add_edge(i + 1, n + 1 + j, 1L, cost[i][j])
+    } where {
+      invariant: j >= 0 && j <= cost[i].length(),
+      reasoning: "I: For fixed worker i, edges to tasks [0,j) have been added. M: Add one edge to task j with its assignment cost. T: After j = tasks, worker i connects to every task exactly once.",
     }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: Workers in [0,i) already have edges to all tasks. M: For worker i, add cost edges to every task column j. T: After i = n, the bipartite worker→task layer is fully connected with given costs.",
   }
 
   // Tasks to sink
   for j = 0; j < n; j = j + 1 {
     mcmf.add_edge(n + 1 + j, sink, 1L, 0L)
+  } where {
+    invariant: j >= 0 && j <= n,
+    reasoning: "I: No task→sink edges added yet. M: Add capacity-1 edge from task j to sink. T: After j = n, each task is connected to sink.",
   }
-
   let (_, min_cost) = mcmf.compute(source, sink)
   min_cost
 }
@@ -266,7 +277,6 @@ test "mcmf basic" {
   mcmf.add_edge(1, 2, 1L, 1L)
   mcmf.add_edge(1, 3, 1L, 3L)
   mcmf.add_edge(2, 3, 2L, 1L)
-
   let (flow, cost) = mcmf.compute(0, 3)
   // Max flow = 3:
   // - 0->2->3: flow 1, cost 2+1=3
@@ -282,7 +292,6 @@ test "mcmf basic" {
 test "mcmf simple" {
   let mcmf = MinCostMaxFlow::new(2)
   mcmf.add_edge(0, 1, 5L, 2L)
-
   let (flow, cost) = mcmf.compute(0, 1)
   inspect(flow, content="5")
   inspect(cost, content="10") // 5 * 2
@@ -304,7 +313,6 @@ test "mcmf parallel edges" {
   let mcmf = MinCostMaxFlow::new(2)
   mcmf.add_edge(0, 1, 2L, 1L) // Cheap
   mcmf.add_edge(0, 1, 2L, 3L) // Expensive
-
   let (flow, cost) = mcmf.compute(0, 1)
   inspect(flow, content="4")
   // Should use cheap edge first: 2*1 + 2*3 = 8
@@ -315,7 +323,6 @@ test "mcmf parallel edges" {
 test "mcmf flow limit" {
   let mcmf = MinCostMaxFlow::new(2)
   mcmf.add_edge(0, 1, 10L, 1L)
-
   let (flow, cost) = mcmf.compute_with_limit(0, 1, 5L)
   inspect(flow, content="5")
   inspect(cost, content="5")
@@ -332,11 +339,7 @@ test "assignment basic" {
 
 ///|
 test "assignment larger" {
-  let cost : Array[Array[Int64]] = [
-    [9L, 2L, 7L],
-    [6L, 4L, 3L],
-    [5L, 8L, 1L],
-  ]
+  let cost : Array[Array[Int64]] = [[9L, 2L, 7L], [6L, 4L, 3L], [5L, 8L, 1L]]
   // Find minimum cost perfect matching
   let result = solve_assignment(cost)
   // Optimal: 0->1(2), 1->0(6), 2->2(1) = 9
@@ -354,7 +357,6 @@ test "mcmf diamond" {
   mcmf.add_edge(0, 2, 3L, 2L)
   mcmf.add_edge(1, 3, 3L, 1L)
   mcmf.add_edge(2, 3, 3L, 1L)
-
   let (flow, cost) = mcmf.compute(0, 3)
   inspect(flow, content="6") // 3 + 3
   // Min cost: 3 through top (cost 1+1=2 each) + 3 through bottom (cost 2+1=3 each)

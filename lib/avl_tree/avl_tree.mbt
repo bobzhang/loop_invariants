@@ -49,7 +49,11 @@ fn AVLTree::new() -> AVLTree {
 
 ///|
 fn AVLTree::height(self : AVLTree, node : Int) -> Int {
-  if node < 0 { 0 } else { self.nodes[node].height }
+  if node < 0 {
+    0
+  } else {
+    self.nodes[node].height
+  }
 }
 
 ///|
@@ -75,13 +79,10 @@ fn AVLTree::balance_factor(self : AVLTree, node : Int) -> Int {
 fn AVLTree::rotate_right(self : AVLTree, y : Int) -> Int {
   let x = self.nodes[y].left
   let t2 = self.nodes[x].right
-
   self.nodes[x].right = y
   self.nodes[y].left = t2
-
   self.update_height(y)
   self.update_height(x)
-
   x
 }
 
@@ -90,13 +91,10 @@ fn AVLTree::rotate_right(self : AVLTree, y : Int) -> Int {
 fn AVLTree::rotate_left(self : AVLTree, x : Int) -> Int {
   let y = self.nodes[x].right
   let t2 = self.nodes[y].left
-
   self.nodes[y].left = x
   self.nodes[x].right = t2
-
   self.update_height(x)
   self.update_height(y)
-
   y
 }
 
@@ -106,7 +104,6 @@ fn AVLTree::balance(self : AVLTree, node : Int) -> Int {
   if node < 0 {
     return node
   }
-
   self.update_height(node)
   let bf = self.balance_factor(node)
 
@@ -127,7 +124,6 @@ fn AVLTree::balance(self : AVLTree, node : Int) -> Int {
     }
     return self.rotate_left(node)
   }
-
   node
 }
 
@@ -152,13 +148,11 @@ fn AVLTree::insert_rec(self : AVLTree, node : Int, key : Int64) -> Int {
   if node < 0 {
     return self.alloc_node(key)
   }
-
   if key < self.nodes[node].key {
     self.nodes[node].left = self.insert_rec(self.nodes[node].left, key)
   } else {
     self.nodes[node].right = self.insert_rec(self.nodes[node].right, key)
   }
-
   self.balance(node)
 }
 
@@ -184,7 +178,6 @@ fn AVLTree::delete_rec(self : AVLTree, node : Int, key : Int64) -> Int {
   if node < 0 {
     return -1
   }
-
   if key < self.nodes[node].key {
     self.nodes[node].left = self.delete_rec(self.nodes[node].left, key)
   } else if key > self.nodes[node].key {
@@ -211,7 +204,6 @@ fn AVLTree::delete_rec(self : AVLTree, node : Int, key : Int64) -> Int {
       self.nodes[successor].key,
     )
   }
-
   self.balance(node)
 }
 
@@ -240,7 +232,11 @@ fn AVLTree::search(self : AVLTree, key : Int64) -> Bool {
 ///|
 fn AVLTree::min(self : AVLTree) -> Int64? {
   let m = self.find_min(self.root)
-  if m < 0 { None } else { Some(self.nodes[m].key) }
+  if m < 0 {
+    None
+  } else {
+    Some(self.nodes[m].key)
+  }
 }
 
 ///|
@@ -268,6 +264,7 @@ fn AVLTree::is_balanced(self : AVLTree) -> Bool {
     }
     check(tree, tree.nodes[node].left) && check(tree, tree.nodes[node].right)
   }
+
   check(self, self.root)
 }
 
@@ -279,6 +276,7 @@ fn AVLTree::size(self : AVLTree) -> Int {
     }
     1 + count(tree, tree.nodes[node].left) + count(tree, tree.nodes[node].right)
   }
+
   count(self, self.root)
 }
 
@@ -294,7 +292,6 @@ test "avl insert and search" {
   tree.insert(7L)
   tree.insert(1L)
   tree.insert(9L)
-
   inspect(tree.search(5L), content="true")
   inspect(tree.search(3L), content="true")
   inspect(tree.search(9L), content="true")
@@ -309,7 +306,6 @@ test "avl left rotation" {
   tree.insert(1L)
   tree.insert(2L)
   tree.insert(3L)
-
   inspect(tree.is_balanced(), content="true")
   inspect(tree.search(1L), content="true")
   inspect(tree.search(2L), content="true")
@@ -323,7 +319,6 @@ test "avl right rotation" {
   tree.insert(3L)
   tree.insert(2L)
   tree.insert(1L)
-
   inspect(tree.is_balanced(), content="true")
 }
 
@@ -333,7 +328,6 @@ test "avl left-right rotation" {
   tree.insert(3L)
   tree.insert(1L)
   tree.insert(2L) // Triggers left-right rotation
-
   inspect(tree.is_balanced(), content="true")
 }
 
@@ -343,7 +337,6 @@ test "avl right-left rotation" {
   tree.insert(1L)
   tree.insert(3L)
   tree.insert(2L) // Triggers right-left rotation
-
   inspect(tree.is_balanced(), content="true")
 }
 
@@ -355,7 +348,6 @@ test "avl delete" {
   tree.insert(7L)
   tree.insert(1L)
   tree.insert(4L)
-
   inspect(tree.search(3L), content="true")
   let _ = tree.delete(3L)
   inspect(tree.search(3L), content="false")
@@ -370,7 +362,6 @@ test "avl min max" {
   tree.insert(8L)
   tree.insert(1L)
   tree.insert(9L)
-
   inspect(tree.min(), content="Some(1)")
   inspect(tree.max(), content="Some(9)")
 }
@@ -379,7 +370,6 @@ test "avl min max" {
 test "avl size" {
   let tree = AVLTree::new()
   inspect(tree.size(), content="0")
-
   tree.insert(1L)
   tree.insert(2L)
   tree.insert(3L)
@@ -389,9 +379,7 @@ test "avl size" {
 ///|
 test "avl many insertions" {
   let tree = AVLTree::new()
-  Array::makei(100, fn(i) { i }).each(fn(i) {
-    tree.insert(i.to_int64())
-  })
+  Array::makei(100, fn(i) { i }).each(fn(i) { tree.insert(i.to_int64()) })
   inspect(tree.is_balanced(), content="true")
   inspect(tree.size(), content="100")
   // Height should be around log2(100) ≈ 7

@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/scc"
+
+// Values
+pub fn find_sccs(Int, Array[Array[Int]]) -> SCCResult
+
+pub fn find_sccs_kosaraju(Int, Array[Array[Int]]) -> SCCResult
+
+// Errors
+
+// Types and methods
+pub(all) struct SCCResult {
+  num_sccs : Int
+  component : Array[Int]
+  scc_sizes : Array[Int]
+  scc_adj : Array[Array[Int]]
+}
+
+// Type aliases
+
+// Traits
+

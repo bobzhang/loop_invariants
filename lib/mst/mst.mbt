@@ -63,6 +63,9 @@ fn UF::new(n : Int) -> UF {
   let rank = Array::make(n, 0)
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: parent initialized but not assigned. M: Set parent[i] = i to make each node its own representative. T: After i = n, all vertices are separate sets.",
   }
   { parent, rank }
 }
@@ -111,11 +114,9 @@ fn MST::kruskal(self : MST) -> (Array[Edge], Int64) {
       0
     }
   })
-
   let uf = UF::new(self.n)
   let mst_edges : Array[Edge] = []
   let mut total_weight = 0L
-
   for i = 0; i < sorted_edges.length(); i = i + 1 {
     if mst_edges.length() == self.n - 1 {
       break
@@ -129,7 +130,6 @@ fn MST::kruskal(self : MST) -> (Array[Edge], Int64) {
     invariant: i >= 0 && i <= sorted_edges.length(),
     reasoning: "I: No edges selected, empty forest. M: Consider edges in weight order. If edge (u,v) connects different components (find(u) != find(v)), add to MST and union components. This maintains forest property and by cut property, edge is in some MST. T: After n-1 edges or all edges considered, MST complete.",
   }
-
   (mst_edges, total_weight)
 }
 
@@ -150,7 +150,11 @@ fn MST::get_mst_weight(self : MST) -> Int64? {
     return Some(0L)
   }
   let (edges, weight) = self.kruskal()
-  if edges.length() == self.n - 1 { Some(weight) } else { None }
+  if edges.length() == self.n - 1 {
+    Some(weight)
+  } else {
+    None
+  }
 }
 
 // ============================================================================
@@ -168,6 +172,9 @@ fn PrimMST::new(n : Int) -> PrimMST {
   let adj = Array::make(n, [])
   for i = 0; i < n; i = i + 1 {
     adj[i] = []
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: adj has length n. M: Assign a fresh empty list at index i. T: After i = n, all vertices have empty adjacency lists.",
   }
   { n, adj }
 }
@@ -186,30 +193,27 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
   if self.n <= 1 {
     return Some(0L)
   }
-
   let in_mst = Array::make(self.n, false)
   let min_edge = Array::make(self.n, PRIM_INF)
   min_edge[0] = 0L
-
   let mut total_weight = 0L
   let mut edges_added = 0
-
   for iter = 0; iter < self.n; iter = iter + 1 {
     // Find minimum edge to non-MST vertex
     let mut u = -1
     let mut min_w = PRIM_INF
-
     for i = 0; i < self.n; i = i + 1 {
       if not(in_mst[i]) && min_edge[i] < min_w {
         min_w = min_edge[i]
         u = i
       }
+    } where {
+      invariant: i >= 0 && i <= self.n,
+      reasoning: "I: min_w is the best candidate among examined vertices. M: Scan vertices not in MST to find minimum min_edge. T: After i = n, u is the argmin of min_edge over non-MST vertices (or stays -1 if none).",
     }
-
     if u < 0 || min_w == PRIM_INF {
       break // No more reachable vertices
     }
-
     in_mst[u] = true
     total_weight = total_weight + min_w
     if iter > 0 {
@@ -222,13 +226,19 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
       if not(in_mst[v]) && w < min_edge[v] {
         min_edge[v] = w
       }
+    } where {
+      invariant: i >= 0 && i <= self.adj[u].length() && in_mst[u],
+      reasoning: "I: u is newly added to MST. M: For each neighbor v, relax min_edge[v] with edge (u,v). T: After i = deg(u), min_edge records the cheapest edge from MST to each vertex.",
     }
   } where {
     invariant: iter >= 0 && iter <= self.n,
     reasoning: "I: Start vertex 0 has min_edge=0. M: Each iteration adds the non-MST vertex with minimum connecting edge. Update min_edge for its neighbors. By cut property, this edge is in some MST. T: After n iterations or no reachable vertex, MST complete.",
   }
-
-  if edges_added == self.n - 1 { Some(total_weight) } else { None }
+  if edges_added == self.n - 1 {
+    Some(total_weight)
+  } else {
+    None
+  }
 }
 
 // ============================================================================
@@ -243,7 +253,6 @@ test "mst kruskal basic" {
   mst.add_edge(2, 3, 3L)
   mst.add_edge(0, 3, 4L)
   mst.add_edge(1, 3, 5L)
-
   let (edges, weight) = mst.kruskal()
   inspect(edges.length(), content="3")
   inspect(weight, content="6") // 1 + 2 + 3
@@ -255,7 +264,6 @@ test "mst kruskal triangle" {
   mst.add_edge(0, 1, 1L)
   mst.add_edge(1, 2, 2L)
   mst.add_edge(0, 2, 3L)
-
   inspect(mst.get_mst_weight(), content="Some(3)") // 1 + 2
 }
 
@@ -264,7 +272,6 @@ test "mst disconnected" {
   let mst = MST::new(4)
   mst.add_edge(0, 1, 1L)
   mst.add_edge(2, 3, 2L)
-
   inspect(mst.is_connected(), content="false")
   inspect(mst.get_mst_weight(), content="None")
 }
@@ -282,7 +289,6 @@ test "prim basic" {
   prim.add_edge(1, 2, 2L)
   prim.add_edge(2, 3, 3L)
   prim.add_edge(0, 3, 4L)
-
   inspect(prim.compute(), content="Some(6)")
 }
 
@@ -292,6 +298,5 @@ test "mst same weights" {
   mst.add_edge(0, 1, 1L)
   mst.add_edge(1, 2, 1L)
   mst.add_edge(0, 2, 1L)
-
   inspect(mst.get_mst_weight(), content="Some(2)")
 }

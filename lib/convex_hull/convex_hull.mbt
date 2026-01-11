@@ -54,9 +54,17 @@ fn cross(o : Point, a : Point, b : Point) -> Int64 {
 /// Compare points for sorting: by x first, then by y
 fn point_compare(a : Point, b : Point) -> Int {
   if a.x != b.x {
-    if a.x < b.x { -1 } else { 1 }
+    if a.x < b.x {
+      -1
+    } else {
+      1
+    }
   } else if a.y != b.y {
-    if a.y < b.y { -1 } else { 1 }
+    if a.y < b.y {
+      -1
+    } else {
+      1
+    }
   } else {
     0
   }
@@ -86,7 +94,6 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
   // Sort points lexicographically
   let sorted = points.copy()
   sorted.sort_by(point_compare)
-
   let hull : Array[Point] = []
 
   // Build lower hull
@@ -99,6 +106,7 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
       let second = hull[hull.length() - 2]
       if cross(second, top, sorted[i]) <= 0L {
         let _ = hull.pop()
+
       } else {
         break
       }
@@ -118,6 +126,7 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
       let second = hull[hull.length() - 2]
       if cross(second, top, sorted[i]) <= 0L {
         let _ = hull.pop()
+
       } else {
         break
       }
@@ -130,7 +139,6 @@ pub fn convex_hull_monotone(points : Array[Point]) -> Array[Point] {
 
   // Remove last point (duplicate of first)
   let _ = hull.pop()
-
   hull
 }
 
@@ -169,7 +177,6 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
   let temp = pts[0]
   pts[0] = pts[pivot_idx]
   pts[pivot_idx] = temp
-
   let pivot = pts[0]
 
   // Sort by polar angle with pivot
@@ -181,7 +188,6 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
     invariant: i >= 1 && i <= n,
     reasoning: "Collect all points except the pivot into rest.",
   }
-
   rest.sort_by(fn(a, b) {
     let cp = cross(pivot, a, b)
     if cp > 0L {
@@ -190,9 +196,15 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
       1 // b comes before a
     } else {
       // Collinear: keep the one farther from pivot first
-      let dist_a = (a.x - pivot.x) * (a.x - pivot.x) + (a.y - pivot.y) * (a.y - pivot.y)
-      let dist_b = (b.x - pivot.x) * (b.x - pivot.x) + (b.y - pivot.y) * (b.y - pivot.y)
-      if dist_a > dist_b { -1 } else { 1 }
+      let dist_a = (a.x - pivot.x) * (a.x - pivot.x) +
+        (a.y - pivot.y) * (a.y - pivot.y)
+      let dist_b = (b.x - pivot.x) * (b.x - pivot.x) +
+        (b.y - pivot.y) * (b.y - pivot.y)
+      if dist_a > dist_b {
+        -1
+      } else {
+        1
+      }
     }
   })
 
@@ -207,6 +219,7 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
       let second = hull[hull.length() - 2]
       if cross(second, top, rest[i]) <= 0L {
         let _ = hull.pop()
+
       } else {
         break
       }
@@ -216,7 +229,6 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
     invariant: i >= 0 && i <= rest.length(),
     reasoning: "I: hull = [pivot]; rest is sorted by polar angle from pivot. M: For each rest[i], while the last three points make a right turn or are collinear, pop the middle point. This maintains the convex hull property: all turns are left turns (CCW). Since points are processed in polar angle order, adding rest[i] extends the boundary; any removed point is interior. T: After processing all points, hull is the convex hull in CCW order. Correctness: polar angle ordering ensures each new point extends the boundary; cross product test ensures only convex vertices remain.",
   }
-
   hull
 }
 
@@ -254,7 +266,6 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
     invariant: i >= 1 && i <= n,
     reasoning: "Scan remaining points to find the leftmost start.",
   }
-
   let hull : Array[Point] = []
   let mut current = leftmost
 
@@ -268,7 +279,6 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
     if current == 0 {
       next = 1
     }
-
     for i = 0; i < n; i = i + 1 {
       if i == current {
         continue
@@ -279,9 +289,12 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
         next = i
       } else if cp == 0L {
         // Collinear: choose the farther point
-        let dist_next = (points[next].x - points[current].x) * (points[next].x - points[current].x) +
-          (points[next].y - points[current].y) * (points[next].y - points[current].y)
-        let dist_i = (points[i].x - points[current].x) * (points[i].x - points[current].x) +
+        let dist_next = (points[next].x - points[current].x) *
+          (points[next].x - points[current].x) +
+          (points[next].y - points[current].y) *
+          (points[next].y - points[current].y)
+        let dist_i = (points[i].x - points[current].x) *
+          (points[i].x - points[current].x) +
           (points[i].y - points[current].y) * (points[i].y - points[current].y)
         if dist_i > dist_next {
           next = i
@@ -291,7 +304,6 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
       invariant: i >= 0 && i <= n,
       reasoning: "Test each candidate point against current to choose next.",
     }
-
     current = next
 
     // Stop when we return to the starting point
@@ -305,7 +317,6 @@ pub fn convex_hull_jarvis(points : Array[Point]) -> Array[Point] {
       #|We stop upon returning to leftmost, so the hull length never exceeds n.
     ),
   }
-
   hull
 }
 
@@ -334,7 +345,11 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
     invariant: i >= 0 && i <= n,
     reasoning: "Accumulate shoelace cross terms over all edges.",
   }
-  if area < 0L { -area } else { area }
+  if area < 0L {
+    -area
+  } else {
+    area
+  }
 }
 
 ///|
@@ -348,7 +363,6 @@ pub fn point_in_hull(hull : Array[Point], p : Point) -> Int {
 
   // Check if point is on the same side of all edges
   let mut on_boundary = false
-
   for i = 0; i < n; i = i + 1 {
     let j = (i + 1) % n
     let cp = cross(hull[i], hull[j], p)
@@ -368,8 +382,11 @@ pub fn point_in_hull(hull : Array[Point], p : Point) -> Int {
     invariant: i >= 0 && i <= n,
     reasoning: "Check point p against each hull edge in order.",
   }
-
-  if on_boundary { 0 } else { 1 }
+  if on_boundary {
+    0
+  } else {
+    1
+  }
 }
 
 ///|
@@ -417,24 +434,20 @@ pub fn hull_diameter_squared(hull : Array[Point]) -> Int64 {
     let dx1 = hull[curr_j].x - hull[i].x
     let dy1 = hull[curr_j].y - hull[i].y
     let dist1 = dx1 * dx1 + dy1 * dy1
-
     let dx2 = hull[curr_j].x - hull[i_next].x
     let dy2 = hull[curr_j].y - hull[i_next].y
     let dist2 = dx2 * dx2 + dy2 * dy2
-
     if dist1 > max_dist {
       max_dist = dist1
     }
     if dist2 > max_dist {
       max_dist = dist2
     }
-
     continue i + 1, curr_j
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: "I: j=1 is a valid starting antipodal candidate for edge (0,1). M: For edge (i,i+1), we advance j while cross(hull[i], hull[i+1], hull[j+1]) > cross(hull[i], hull[i+1], hull[j]), finding the vertex farthest from the edge (maximum perpendicular distance = maximum cross product). Key insight: as we rotate the edge (i→i+1), the antipodal point j only moves forward (never backward) due to convexity. We compute distances from both edge endpoints to j and update max_dist. T: After processing all edges, max_dist is the squared diameter. O(n) time because j advances at most n times total across all iterations of i.",
   }
-
   max_dist
 }
 
@@ -451,7 +464,6 @@ test "monotone chain basic" {
     { x: 0L, y: 4L },
     { x: 2L, y: 2L }, // Interior point
   ]
-
   let hull = convex_hull_monotone(points)
   inspect(hull.length(), content="4")
 }
@@ -463,7 +475,6 @@ test "monotone chain triangle" {
     { x: 4L, y: 0L },
     { x: 2L, y: 3L },
   ]
-
   let hull = convex_hull_monotone(points)
   inspect(hull.length(), content="3")
 }
@@ -477,7 +488,6 @@ test "graham scan basic" {
     { x: 0L, y: 4L },
     { x: 2L, y: 2L },
   ]
-
   let hull = convex_hull_graham(points)
   inspect(hull.length(), content="4")
 }
@@ -491,7 +501,6 @@ test "jarvis march basic" {
     { x: 0L, y: 4L },
     { x: 2L, y: 2L },
   ]
-
   let hull = convex_hull_jarvis(points)
   inspect(hull.length(), content="4")
 }
@@ -595,7 +604,6 @@ test "convex hull complex" {
     { x: 2L, y: 8L },
     { x: 8L, y: 2L },
   ]
-
   let hull = convex_hull_monotone(points)
   inspect(hull.length(), content="4")
 
@@ -613,13 +621,15 @@ test "all algorithms agree" {
     { x: 2L, y: 7L },
     { x: 4L, y: 4L },
   ]
-
   let hull1 = convex_hull_monotone(points)
   let hull2 = convex_hull_graham(points)
   let hull3 = convex_hull_jarvis(points)
 
   // All should have the same size
-  inspect(hull1.length() == hull2.length() && hull2.length() == hull3.length(), content="true")
+  inspect(
+    hull1.length() == hull2.length() && hull2.length() == hull3.length(),
+    content="true",
+  )
   inspect(hull1.length(), content="5")
 }
 
@@ -661,10 +671,7 @@ test "convex hull all same point" {
 
 ///|
 test "hull diameter line" {
-  let points : Array[Point] = [
-    { x: 0L, y: 0L },
-    { x: 10L, y: 0L },
-  ]
+  let points : Array[Point] = [{ x: 0L, y: 0L }, { x: 10L, y: 0L }]
   // Diameter = 10, squared = 100
   inspect(hull_diameter_squared(points), content="100")
 }

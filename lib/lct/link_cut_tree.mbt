@@ -31,7 +31,7 @@
 ///|
 /// Node in the Link-Cut Tree
 /// Uses splay tree for preferred path representation
-struct LCTNode {
+priv struct LCTNode {
   mut parent : Int // Parent in splay tree (-1 if root of splay tree)
   mut left : Int // Left child in splay tree (-1 if none)
   mut right : Int // Right child in splay tree (-1 if none)
@@ -57,7 +57,7 @@ fn LCTNode::new(value : Int) -> LCTNode {
 
 ///|
 /// Link-Cut Tree data structure
-struct LinkCutTree {
+priv struct LinkCutTree {
   nodes : Array[LCTNode]
 }
 
@@ -66,6 +66,11 @@ fn LinkCutTree::new(n : Int) -> LinkCutTree {
   let nodes : Array[LCTNode] = []
   for i = 0; i < n; i = i + 1 {
     nodes.push(LCTNode::new(0))
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Initialize all nodes with default values.
+    ),
   }
   { nodes, }
 }
@@ -76,6 +81,11 @@ fn LinkCutTree::with_values(values : Array[Int]) -> LinkCutTree {
   let nodes : Array[LCTNode] = []
   for i = 0; i < values.length(); i = i + 1 {
     nodes.push(LCTNode::new(values[i]))
+  } where {
+    invariant: i >= 0 && i <= values.length(),
+    reasoning: (
+      #|Initialize nodes from the provided values array.
+    ),
   }
   { nodes, }
 }
@@ -234,11 +244,21 @@ fn LinkCutTree::push_down_path(self : LinkCutTree, x : Int) -> Unit {
     continue self.nodes[node].parent
   } else {
     path.push(node)
+  } where {
+    invariant: node >= 0 && node < self.nodes.length(),
+    reasoning: (
+      #|Collect the path from x up to its current splay root.
+    ),
   }
 
   // Push down from root to x
   for i = path.length() - 1; i >= 0; i = i - 1 {
     self.push_down(path[i])
+  } where {
+    invariant: i >= -1 && i < path.length(),
+    reasoning: (
+      #|Push lazy flags from root down to x to maintain correctness.
+    ),
   }
 }
 
@@ -531,6 +551,8 @@ test "lct path sum" {
 
   // Path sum from 0 to root (0): just 10
   inspect(lct.path_sum(0), content="10")
+  lct.update_value(2, 100)
+  inspect(lct.path_sum(4), content="220")
 }
 
 ///|
@@ -586,11 +608,21 @@ test "lct stress test" {
   // Build a path: 0 <- 1 <- 2 <- ... <- 49
   for i = 1; i < n; i = i + 1 {
     lct.link(i, i - 1)
+  } where {
+    invariant: i >= 1 && i <= n,
+    reasoning: (
+      #|Link each node to its predecessor to form a chain.
+    ),
   }
 
   // All should have root 0
   for i = 0; i < n; i = i + 1 {
     guard lct.find_root(i) == 0 else { fail("Wrong root") }
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Verify that all nodes are still in the same tree.
+    ),
   }
 
   // Cut in the middle
@@ -609,7 +641,7 @@ test "lct stress test" {
 
 ///|
 /// Dynamic forest supporting link/cut/connected queries
-struct DynamicForest {
+priv struct DynamicForest {
   lct : LinkCutTree
 }
 

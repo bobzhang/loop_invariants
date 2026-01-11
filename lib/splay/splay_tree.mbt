@@ -641,7 +641,7 @@ test "splay tree basic operations" {
 ///|
 test "splay tree delete" {
   let st = SplayTree::new()
-  for i = 1; i <= 5; i = i + 1 {
+  for i in 1..=5 {
     let _ = st.insert(i)
 
   }
@@ -681,7 +681,7 @@ test "splay tree order statistics" {
   let st = SplayTree::new()
 
   // Insert 1, 3, 5, 7, 9
-  for i = 0; i < 5; i = i + 1 {
+  for i in 0..<5 {
     let _ = st.insert(i * 2 + 1)
 
   }
@@ -715,20 +715,22 @@ test "splay tree stress" {
   let st = SplayTree::new()
 
   // Insert 100 elements
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     let _ = st.insert(i)
 
   }
   inspect(st.size(), content="100")
 
   // Search all
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     guard st.search(i) else { fail("Element not found") }
   }
 
   // Delete every other
-  for i = 0; i < 100; i = i + 2 {
-    guard st.delete(i) else { fail("Delete failed") }
+  for i in 0..<100 {
+    if i % 2 == 0 {
+      guard st.delete(i) else { fail("Delete failed") }
+    }
   }
   inspect(st.size(), content="50")
 }
@@ -736,7 +738,7 @@ test "splay tree stress" {
 ///|
 test "splay tree split join" {
   let st = SplayTree::new()
-  for i = 1; i <= 10; i = i + 1 {
+  for i in 1..=10 {
     let _ = st.insert(i)
 
   }

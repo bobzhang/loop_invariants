@@ -88,7 +88,6 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
 
   // Compute ceil(log2(n))
   let log_n = highest_bit(n - 1) + 1
-
   let table : Array[Array[Int64]] = []
 
   // Build each level
@@ -126,7 +125,6 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         } else {
           n - 1
         }
-
         row[mid + 1] = arr[mid + 1]
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] + arr[i]
@@ -144,7 +142,6 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
         #|All blocks in [0..block_start) have their suffix/prefix sums computed.
       ),
     }
-
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
@@ -153,7 +150,6 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
       #|stores suffix/prefix aggregates around each block mid.
     ),
   }
-
   { table, arr, n }
 }
 
@@ -161,11 +157,14 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
 /// Query sum in range [l, r] (inclusive)
 /// REASONING: Find level where l and r are in different halves of same block,
 /// then combine suffix[l] and prefix[r]
-fn DisjointSparseSum::query(self : DisjointSparseSum, l : Int, r : Int) -> Int64? {
+fn DisjointSparseSum::query(
+  self : DisjointSparseSum,
+  l : Int,
+  r : Int,
+) -> Int64? {
   if l < 0 || r >= self.n || l > r || self.n == 0 {
     return None
   }
-
   if l == r {
     return Some(self.arr[l])
   }
@@ -173,7 +172,6 @@ fn DisjointSparseSum::query(self : DisjointSparseSum, l : Int, r : Int) -> Int64
   // Find level k where l and r are in different halves
   // This is the highest bit position where l and r differ
   let k = highest_bit(l ^ r)
-
   Some(self.table[k][l] + self.table[k][r])
 }
 
@@ -200,15 +198,12 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
   if n == 0 {
     return { table: [], arr: [], n: 0 }
   }
-
   let log_n = highest_bit(n - 1) + 1
   let table : Array[Array[Int64]] = []
-
   for k = 0; k < log_n; k = k + 1 {
     let row = Array::make(n, 0L)
     let block_size = 2 << k
     let half = 1 << k
-
     for block_start = 0; block_start < n; block_start = block_start + block_size {
       let mid = block_start + half - 1
 
@@ -233,7 +228,6 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         } else {
           n - 1
         }
-
         row[mid + 1] = arr[mid + 1]
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] ^ arr[i]
@@ -251,7 +245,6 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
         #|All blocks in [0..block_start) have their suffix/prefix XORs computed.
       ),
     }
-
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
@@ -259,20 +252,21 @@ fn DisjointSparseXor::new(arr : Array[Int64]) -> DisjointSparseXor {
       #|Levels [0..k) are built; level k stores XOR aggregates around each mid.
     ),
   }
-
   { table, arr, n }
 }
 
 ///|
-fn DisjointSparseXor::query(self : DisjointSparseXor, l : Int, r : Int) -> Int64? {
+fn DisjointSparseXor::query(
+  self : DisjointSparseXor,
+  l : Int,
+  r : Int,
+) -> Int64? {
   if l < 0 || r >= self.n || l > r || self.n == 0 {
     return None
   }
-
   if l == r {
     return Some(self.arr[l])
   }
-
   let k = highest_bit(l ^ r)
   Some(self.table[k][l] ^ self.table[k][r])
 }
@@ -296,20 +290,20 @@ priv struct DisjointSparseProd {
 }
 
 ///|
-fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparseProd {
+fn DisjointSparseProd::new(
+  arr : Array[Int64],
+  modulo : Int64,
+) -> DisjointSparseProd {
   let n = arr.length()
   if n == 0 {
     return { table: [], arr: [], n: 0, modulo }
   }
-
   let log_n = highest_bit(n - 1) + 1
   let table : Array[Array[Int64]] = []
-
   for k = 0; k < log_n; k = k + 1 {
     let row = Array::make(n, 1L)
     let block_size = 2 << k
     let half = 1 << k
-
     for block_start = 0; block_start < n; block_start = block_start + block_size {
       let mid = block_start + half - 1
 
@@ -334,7 +328,6 @@ fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparse
         } else {
           n - 1
         }
-
         row[mid + 1] = arr[mid + 1] % modulo
         for i = mid + 2; i <= right_end; i = i + 1 {
           row[i] = row[i - 1] * arr[i] % modulo
@@ -352,7 +345,6 @@ fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparse
         #|All blocks in [0..block_start) have their suffix/prefix products computed.
       ),
     }
-
     table.push(row)
   } where {
     invariant: k >= 0 && k <= log_n,
@@ -360,20 +352,21 @@ fn DisjointSparseProd::new(arr : Array[Int64], modulo : Int64) -> DisjointSparse
       #|Levels [0..k) are built; level k stores product aggregates around each mid.
     ),
   }
-
   { table, arr, n, modulo }
 }
 
 ///|
-fn DisjointSparseProd::query(self : DisjointSparseProd, l : Int, r : Int) -> Int64? {
+fn DisjointSparseProd::query(
+  self : DisjointSparseProd,
+  l : Int,
+  r : Int,
+) -> Int64? {
   if l < 0 || r >= self.n || l > r || self.n == 0 {
     return None
   }
-
   if l == r {
     return Some(self.arr[l] % self.modulo)
   }
-
   let k = highest_bit(l ^ r)
   Some(self.table[k][l] * self.table[k][r] % self.modulo)
 }
@@ -407,7 +400,6 @@ test "disjoint sparse sum basic" {
 test "disjoint sparse sum edge cases" {
   let arr : Array[Int64] = [42L]
   let dst = DisjointSparseSum::new(arr)
-
   inspect(dst.query(0, 0), content="Some(42)")
   inspect(dst.length(), content="1")
 }
@@ -416,7 +408,6 @@ test "disjoint sparse sum edge cases" {
 test "disjoint sparse sum empty" {
   let arr : Array[Int64] = []
   let dst = DisjointSparseSum::new(arr)
-
   inspect(dst.query(0, 0), content="None")
   inspect(dst.length(), content="0")
 }
@@ -425,7 +416,6 @@ test "disjoint sparse sum empty" {
 test "disjoint sparse sum invalid range" {
   let arr : Array[Int64] = [1L, 2L, 3L]
   let dst = DisjointSparseSum::new(arr)
-
   inspect(dst.query(-1, 0), content="None")
   inspect(dst.query(0, 10), content="None")
   inspect(dst.query(2, 1), content="None")
@@ -489,7 +479,6 @@ test "disjoint sparse sum power of 2" {
   // Test with power of 2 size
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L]
   let dst = DisjointSparseSum::new(arr)
-
   inspect(dst.query(0, 7), content="Some(36)")
   inspect(dst.query(0, 1), content="Some(3)")
   inspect(dst.query(6, 7), content="Some(15)")
@@ -500,7 +489,6 @@ test "disjoint sparse sum non power of 2" {
   // Test with non-power of 2 size
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L, 6L]
   let dst = DisjointSparseSum::new(arr)
-
   inspect(dst.query(0, 5), content="Some(21)")
   inspect(dst.query(1, 4), content="Some(14)")
 }
@@ -509,7 +497,6 @@ test "disjoint sparse sum non power of 2" {
 test "disjoint sparse xor length" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let dst = DisjointSparseXor::new(arr)
-
   inspect(dst.length(), content="5")
 }
 
@@ -517,7 +504,6 @@ test "disjoint sparse xor length" {
 test "disjoint sparse prod length" {
   let arr : Array[Int64] = [1L, 2L, 3L]
   let dst = DisjointSparseProd::new(arr, 1000000007L)
-
   inspect(dst.length(), content="3")
 }
 

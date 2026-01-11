@@ -35,6 +35,9 @@ fn compute_hash(s : String, start : Int, len : Int) -> Int64 {
   for i = 0; i < len; i = i + 1 {
     let c = s[start + i].to_int() - 96 // 'a' = 97, so 'a' -> 1
     h = (h * RK_BASE + c.to_int64()) % RK_MOD
+  } where {
+    invariant: i >= 0 && i <= len,
+    reasoning: "I: h equals hash of s[start..start+i). M: Incorporate s[start+i] into rolling hash. T: After i = len, h is the hash of the full substring.",
   }
   h
 }
@@ -61,15 +64,12 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let n = text.length()
   let m = pattern.length()
-
   if m == 0 || m > n {
     return result
   }
-
   let pattern_hash = compute_hash(pattern, 0, m)
   let mut text_hash = compute_hash(text, 0, m)
   let base_pow = pow_mod(RK_BASE, m - 1, RK_MOD) // base^(m-1)
-
   for i = 0; i <= n - m; i = i + 1 {
     if text_hash == pattern_hash {
       // Verify match to handle collisions
@@ -79,6 +79,9 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
           match_found = false
           break
         }
+      } where {
+        invariant: j >= 0 && j <= m,
+        reasoning: "I: If match_found is true, the first j characters match. M: Compare the next character and flip match_found on mismatch. T: After j = m or break, match_found is true iff the full pattern matches text at i.",
       }
       if match_found {
         result.push(i)
@@ -89,15 +92,16 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
     if i < n - m {
       let old_char = (text[i].to_int() - 96).to_int64()
       let new_char = (text[i + m].to_int() - 96).to_int64()
-      text_hash = ((text_hash - old_char * base_pow % RK_MOD + RK_MOD) * RK_BASE +
-        new_char) %
+      text_hash = (
+          (text_hash - old_char * base_pow % RK_MOD + RK_MOD) * RK_BASE +
+          new_char
+        ) %
         RK_MOD
     }
   } where {
     invariant: i >= 0 && i <= n - m + 1,
     reasoning: "I: text_hash = hash(text[0..m)). M: Check if hashes match, verify on collision. Roll hash by removing leftmost char and adding next char. T: All positions checked.",
   }
-
   result
 }
 
@@ -113,18 +117,19 @@ fn rabin_karp_count(text : String, pattern : String) -> Int {
 
 ///|
 /// Search for multiple patterns simultaneously
-fn rabin_karp_multi(text : String, patterns : Array[String]) -> Array[(Int, Int)] {
+fn rabin_karp_multi(
+  text : String,
+  patterns : Array[String],
+) -> Array[(Int, Int)] {
   // Returns (pattern_index, position) pairs
   let result : Array[(Int, Int)] = []
   let n = text.length()
-
   if patterns.length() == 0 {
     return result
   }
 
   // Group patterns by length
   let by_length : Map[Int, Array[(Int, Int64)]] = {} // length -> [(pattern_idx, hash)]
-
   for i = 0; i < patterns.length(); i = i + 1 {
     let m = patterns[i].length()
     if m > 0 && m <= n {
@@ -134,13 +139,15 @@ fn rabin_karp_multi(text : String, patterns : Array[String]) -> Array[(Int, Int)
       }
       by_length[m].push((i, h))
     }
+  } where {
+    invariant: i >= 0 && i <= patterns.length(),
+    reasoning: "I: by_length groups hashes for patterns[0..i) by their length. M: Compute hash for patterns[i] (if valid) and insert into the corresponding bucket. T: After i = patterns.length(), all patterns are grouped by length.",
   }
 
   // For each pattern length, do rolling hash
   for len, pattern_list in by_length {
     let base_pow = pow_mod(RK_BASE, len - 1, RK_MOD)
     let mut text_hash = compute_hash(text, 0, len)
-
     for i = 0; i <= n - len; i = i + 1 {
       // Check against all patterns of this length
       for j = 0; j < pattern_list.length(); j = j + 1 {
@@ -153,24 +160,34 @@ fn rabin_karp_multi(text : String, patterns : Array[String]) -> Array[(Int, Int)
               match_found = false
               break
             }
+          } where {
+            invariant: k >= 0 && k <= len,
+            reasoning: "I: If match_found is true, the first k characters match. M: Compare the next character and flip match_found on mismatch. T: After k = len or break, match_found is true iff the full pattern matches at i.",
           }
           if match_found {
             result.push((pat_idx, i))
           }
         }
+      } where {
+        invariant: j >= 0 && j <= pattern_list.length(),
+        reasoning: "I: Patterns in pattern_list[0..j) have been checked for this position i. M: Compare hash and verify on matches. T: After j = len(list), all patterns of this length are tested at i.",
       }
 
       // Roll hash
       if i < n - len {
         let old_char = (text[i].to_int() - 96).to_int64()
         let new_char = (text[i + len].to_int() - 96).to_int64()
-        text_hash = ((text_hash - old_char * base_pow % RK_MOD + RK_MOD) * RK_BASE +
-          new_char) %
+        text_hash = (
+            (text_hash - old_char * base_pow % RK_MOD + RK_MOD) * RK_BASE +
+            new_char
+          ) %
           RK_MOD
       }
+    } where {
+      invariant: i >= 0 && i <= n - len + 1,
+      reasoning: "I: text_hash corresponds to text[i..i+len). M: Check all patterns of length len at position i, then roll the hash to i+1. T: After i = n-len+1, all positions have been processed.",
     }
   }
-
   result
 }
 
@@ -191,13 +208,14 @@ fn HashArray::new(s : String) -> HashArray {
   let n = s.length()
   let prefix_hash = Array::make(n + 1, 0L)
   let powers = Array::make(n + 1, 1L)
-
   for i = 0; i < n; i = i + 1 {
     let c = (s[i].to_int() - 96).to_int64()
     prefix_hash[i + 1] = (prefix_hash[i] * RK_BASE + c) % RK_MOD
     powers[i + 1] = powers[i] * RK_BASE % RK_MOD
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: prefix_hash and powers are correct for prefix length i. M: Extend hash and powers by one character. T: After i = n, all prefix hashes and powers are precomputed.",
   }
-
   { prefix_hash, powers, n }
 }
 
@@ -208,13 +226,22 @@ fn HashArray::get_hash(self : HashArray, l : Int, r : Int) -> Int64 {
     return 0L
   }
   let len = r - l
-  ((self.prefix_hash[r] - self.prefix_hash[l] * self.powers[len]) % RK_MOD + RK_MOD) %
+  (
+    (self.prefix_hash[r] - self.prefix_hash[l] * self.powers[len]) % RK_MOD +
     RK_MOD
+  ) %
+  RK_MOD
 }
 
 ///|
 /// Compare two substrings using hashes
-fn HashArray::compare(self : HashArray, l1 : Int, r1 : Int, l2 : Int, r2 : Int) -> Bool {
+fn HashArray::compare(
+  self : HashArray,
+  l1 : Int,
+  r1 : Int,
+  l2 : Int,
+  r2 : Int,
+) -> Bool {
   if r1 - l1 != r2 - l2 {
     return false
   }

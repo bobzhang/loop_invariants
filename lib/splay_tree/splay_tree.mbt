@@ -90,7 +90,6 @@ fn SplayTree::rotate_right(self : SplayTree, x : Int) -> Unit {
   if p < 0 {
     return
   }
-
   let b = self.nodes[x].right
   let g = self.nodes[p].parent
 
@@ -113,7 +112,6 @@ fn SplayTree::rotate_right(self : SplayTree, x : Int) -> Unit {
       self.nodes[g].right = x
     }
   }
-
   self.update_size(p)
   self.update_size(x)
 }
@@ -125,18 +123,14 @@ fn SplayTree::rotate_left(self : SplayTree, x : Int) -> Unit {
   if p < 0 {
     return
   }
-
   let b = self.nodes[x].left
   let g = self.nodes[p].parent
-
   self.nodes[x].left = p
   self.nodes[p].parent = x
-
   self.nodes[p].right = b
   if b >= 0 {
     self.nodes[b].parent = p
   }
-
   self.nodes[x].parent = g
   if g >= 0 {
     if self.nodes[g].left == p {
@@ -145,7 +139,6 @@ fn SplayTree::rotate_left(self : SplayTree, x : Int) -> Unit {
       self.nodes[g].right = x
     }
   }
-
   self.update_size(p)
   self.update_size(x)
 }
@@ -156,11 +149,9 @@ fn SplayTree::splay(self : SplayTree, x : Int) -> Unit {
   if x < 0 {
     return
   }
-
   while self.nodes[x].parent >= 0 {
     let p = self.nodes[x].parent
     let g = self.nodes[p].parent
-
     if g < 0 {
       // Zig: x is child of root
       if self.nodes[p].left == x {
@@ -186,7 +177,6 @@ fn SplayTree::splay(self : SplayTree, x : Int) -> Unit {
       self.rotate_left(x)
     }
   }
-
   self.root = x
 }
 
@@ -197,10 +187,8 @@ fn SplayTree::insert(self : SplayTree, key : Int64) -> Unit {
     self.root = self.alloc_node(key)
     return
   }
-
   let mut cur = self.root
   let mut parent = -1
-
   while cur >= 0 {
     parent = cur
     self.nodes[cur].size = self.nodes[cur].size + 1
@@ -210,16 +198,13 @@ fn SplayTree::insert(self : SplayTree, key : Int64) -> Unit {
       cur = self.nodes[cur].right
     }
   }
-
   let new_node = self.alloc_node(key)
   self.nodes[new_node].parent = parent
-
   if key < self.nodes[parent].key {
     self.nodes[parent].left = new_node
   } else {
     self.nodes[parent].right = new_node
   }
-
   self.splay(new_node)
 }
 
@@ -227,7 +212,6 @@ fn SplayTree::insert(self : SplayTree, key : Int64) -> Unit {
 /// Find node with given key (returns -1 if not found)
 fn SplayTree::find_node(self : SplayTree, key : Int64) -> Int {
   let mut cur = self.root
-
   while cur >= 0 {
     if key == self.nodes[cur].key {
       self.splay(cur)
@@ -238,7 +222,6 @@ fn SplayTree::find_node(self : SplayTree, key : Int64) -> Int {
       cur = self.nodes[cur].right
     }
   }
-
   -1
 }
 
@@ -289,7 +272,6 @@ fn SplayTree::delete(self : SplayTree, key : Int64) -> Bool {
   // Free the node
   self.nodes[node].left = self.free_list
   self.free_list = node
-
   if left < 0 {
     self.root = right
     if right >= 0 {
@@ -312,7 +294,6 @@ fn SplayTree::delete(self : SplayTree, key : Int64) -> Bool {
     self.nodes[right].parent = self.root
     self.update_size(self.root)
   }
-
   true
 }
 
@@ -322,17 +303,14 @@ fn SplayTree::kth_element(self : SplayTree, k : Int) -> Int64? {
   if self.root < 0 || k <= 0 {
     return None
   }
-
   let mut cur = self.root
   let mut remaining = k
-
   while cur >= 0 {
     let left_size = if self.nodes[cur].left >= 0 {
       self.nodes[self.nodes[cur].left].size
     } else {
       0
     }
-
     if remaining == left_size + 1 {
       self.splay(cur)
       return Some(self.nodes[cur].key)
@@ -343,7 +321,6 @@ fn SplayTree::kth_element(self : SplayTree, k : Int) -> Int64? {
       cur = self.nodes[cur].right
     }
   }
-
   None
 }
 
@@ -353,17 +330,14 @@ fn SplayTree::count_less(self : SplayTree, key : Int64) -> Int {
   if self.root < 0 {
     return 0
   }
-
   let mut cur = self.root
   let mut count = 0
-
   while cur >= 0 {
     let left_size = if self.nodes[cur].left >= 0 {
       self.nodes[self.nodes[cur].left].size
     } else {
       0
     }
-
     if key <= self.nodes[cur].key {
       cur = self.nodes[cur].left
     } else {
@@ -371,14 +345,17 @@ fn SplayTree::count_less(self : SplayTree, key : Int64) -> Int {
       cur = self.nodes[cur].right
     }
   }
-
   count
 }
 
 ///|
 /// Get tree size
 fn SplayTree::size(self : SplayTree) -> Int {
-  if self.root < 0 { 0 } else { self.nodes[self.root].size }
+  if self.root < 0 {
+    0
+  } else {
+    self.nodes[self.root].size
+  }
 }
 
 ///|
@@ -417,7 +394,6 @@ test "splay insert and contains" {
   tree.insert(7L)
   tree.insert(1L)
   tree.insert(9L)
-
   inspect(tree.contains(5L), content="true")
   inspect(tree.contains(3L), content="true")
   inspect(tree.contains(7L), content="true")
@@ -430,7 +406,6 @@ test "splay delete" {
   tree.insert(5L)
   tree.insert(3L)
   tree.insert(7L)
-
   inspect(tree.delete(3L), content="true")
   inspect(tree.contains(3L), content="false")
   inspect(tree.contains(5L), content="true")
@@ -441,12 +416,10 @@ test "splay delete" {
 test "splay size" {
   let tree = SplayTree::new()
   inspect(tree.size(), content="0")
-
   tree.insert(1L)
   tree.insert(2L)
   tree.insert(3L)
   inspect(tree.size(), content="3")
-
   let _ = tree.delete(2L)
   inspect(tree.size(), content="2")
 }
@@ -459,7 +432,6 @@ test "splay min max" {
   tree.insert(8L)
   tree.insert(1L)
   tree.insert(9L)
-
   inspect(tree.min(), content="Some(1)")
   inspect(tree.max(), content="Some(9)")
 }
@@ -488,7 +460,6 @@ test "splay count less" {
   tree.insert(5L)
   tree.insert(7L)
   tree.insert(9L)
-
   inspect(tree.count_less(5L), content="2") // 1, 3
   inspect(tree.count_less(10L), content="5") // all
   inspect(tree.count_less(1L), content="0") // none
@@ -514,7 +485,7 @@ test "splay delete nonexistent" {
 ///|
 test "splay sequential insert" {
   let tree = SplayTree::new()
-  for i = 0; i < 100; i = i + 1 {
+  for i in 0..<100 {
     tree.insert(i.to_int64())
   }
   inspect(tree.size(), content="100")

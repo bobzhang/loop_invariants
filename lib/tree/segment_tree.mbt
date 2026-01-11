@@ -20,18 +20,18 @@
 /// INVARIANT: For node i covering interval [l, r):
 ///   true_sum[i] = sum[i] + lazy[i] * (r - l)
 /// where true_sum[i] is what the sum would be if all lazy values were pushed down.
-struct LazySegmentTree {
+priv struct LazySegmentTree {
   n : Int
   tree : Array[Int64] // sum values
-  lazy : Array[Int64] // lazy propagation values
+  lazy_add : Array[Int64] // pending range-add values
 }
 
 ///|
 fn LazySegmentTree::new(arr : ArrayView[Int]) -> LazySegmentTree {
   let n = arr.length()
   let tree = Array::make(4 * n, 0L)
-  let lazy = Array::make(4 * n, 0L)
-  let st : LazySegmentTree = { n, tree, lazy }
+  let lazy_add = Array::make(4 * n, 0L)
+  let st : LazySegmentTree = { n, tree, lazy_add }
   if n > 0 {
     st.build(arr, 1, 0, n)
   }
@@ -73,18 +73,19 @@ fn LazySegmentTree::push_down(
   l : Int,
   r : Int,
 ) -> Unit {
-  if self.lazy[node] != 0L {
+  if self.lazy_add[node] != 0L {
     let mid = (l + r) / 2
     // Left child covers [l, mid), so (mid - l) elements
     self.tree[2 * node] = self.tree[2 * node] +
-      self.lazy[node] * (mid - l).to_int64()
-    self.lazy[2 * node] = self.lazy[2 * node] + self.lazy[node]
+      self.lazy_add[node] * (mid - l).to_int64()
+    self.lazy_add[2 * node] = self.lazy_add[2 * node] + self.lazy_add[node]
     // Right child covers [mid, r), so (r - mid) elements
     self.tree[2 * node + 1] = self.tree[2 * node + 1] +
-      self.lazy[node] * (r - mid).to_int64()
-    self.lazy[2 * node + 1] = self.lazy[2 * node + 1] + self.lazy[node]
+      self.lazy_add[node] * (r - mid).to_int64()
+    self.lazy_add[2 * node + 1] = self.lazy_add[2 * node + 1] +
+      self.lazy_add[node]
     // Clear lazy value at current node
-    self.lazy[node] = 0L
+    self.lazy_add[node] = 0L
   }
 }
 
@@ -125,7 +126,7 @@ fn LazySegmentTree::update_helper(
     // Complete overlap - apply lazy update
     // This node covers (r - l) elements, each increased by val
     self.tree[node] = self.tree[node] + val * (r - l).to_int64()
-    self.lazy[node] = self.lazy[node] + val
+    self.lazy_add[node] = self.lazy_add[node] + val
     return
   }
   // Partial overlap - push down and recurse
@@ -197,10 +198,10 @@ test "lazy segment tree basic" {
 ///
 /// INVARIANT: If lazy[node] != sentinel, then all elements in the subtree
 /// should be set to lazy[node], overriding any previous values.
-struct SetSegmentTree {
+priv struct SetSegmentTree {
   n : Int
   tree : Array[Int64] // sum values
-  lazy : Array[Int64] // lazy "set" values (sentinel = no pending)
+  lazy_set : Array[Int64] // pending "set" values (sentinel = no pending)
 }
 
 ///|
@@ -210,8 +211,8 @@ let set_sentinel : Int64 = -9223372036854775808L // Int64::min_value()
 fn SetSegmentTree::new(arr : ArrayView[Int]) -> SetSegmentTree {
   let n = arr.length()
   let tree = Array::make(4 * n, 0L)
-  let lazy = Array::make(4 * n, set_sentinel)
-  let st : SetSegmentTree = { n, tree, lazy }
+  let lazy_set = Array::make(4 * n, set_sentinel)
+  let st : SetSegmentTree = { n, tree, lazy_set }
   if n > 0 {
     st.build(arr, 1, 0, n)
   }
@@ -243,16 +244,16 @@ fn SetSegmentTree::push_down(
   l : Int,
   r : Int,
 ) -> Unit {
-  if self.lazy[node] != set_sentinel {
+  if self.lazy_set[node] != set_sentinel {
     let mid = (l + r) / 2
-    let val = self.lazy[node]
+    let val = self.lazy_set[node]
     // Set all elements in left child to val
     self.tree[2 * node] = val * (mid - l).to_int64()
-    self.lazy[2 * node] = val
+    self.lazy_set[2 * node] = val
     // Set all elements in right child to val
     self.tree[2 * node + 1] = val * (r - mid).to_int64()
-    self.lazy[2 * node + 1] = val
-    self.lazy[node] = set_sentinel
+    self.lazy_set[2 * node + 1] = val
+    self.lazy_set[node] = set_sentinel
   }
 }
 
@@ -282,7 +283,7 @@ fn SetSegmentTree::set_helper(
   }
   if ql <= l && r <= qr {
     self.tree[node] = val * (r - l).to_int64()
-    self.lazy[node] = val
+    self.lazy_set[node] = val
     return
   }
   self.push_down(node, l, r)
@@ -350,18 +351,18 @@ test "set segment tree" {
 ///   - For "add" operations: minimum shifts by the added value
 ///
 /// INVARIANT: tree[node] = min(arr[l..r]) + (accumulated lazy additions)
-struct RMQSegmentTree {
+priv struct RMQSegmentTree {
   n : Int
   tree : Array[Int64] // min values
-  lazy : Array[Int64] // lazy "add" values
+  lazy_add : Array[Int64] // pending "add" values
 }
 
 ///|
 fn RMQSegmentTree::new(arr : ArrayView[Int]) -> RMQSegmentTree {
   let n = arr.length()
   let tree = Array::make(4 * n, 0L)
-  let lazy = Array::make(4 * n, 0L)
-  let st : RMQSegmentTree = { n, tree, lazy }
+  let lazy_add = Array::make(4 * n, 0L)
+  let st : RMQSegmentTree = { n, tree, lazy_add }
   if n > 0 {
     st.build(arr, 1, 0, n)
   }
@@ -392,13 +393,14 @@ fn RMQSegmentTree::build(
 
 ///|
 fn RMQSegmentTree::push_down(self : RMQSegmentTree, node : Int) -> Unit {
-  if self.lazy[node] != 0L {
+  if self.lazy_add[node] != 0L {
     // Propagate addition to children
-    self.tree[2 * node] = self.tree[2 * node] + self.lazy[node]
-    self.lazy[2 * node] = self.lazy[2 * node] + self.lazy[node]
-    self.tree[2 * node + 1] = self.tree[2 * node + 1] + self.lazy[node]
-    self.lazy[2 * node + 1] = self.lazy[2 * node + 1] + self.lazy[node]
-    self.lazy[node] = 0L
+    self.tree[2 * node] = self.tree[2 * node] + self.lazy_add[node]
+    self.lazy_add[2 * node] = self.lazy_add[2 * node] + self.lazy_add[node]
+    self.tree[2 * node + 1] = self.tree[2 * node + 1] + self.lazy_add[node]
+    self.lazy_add[2 * node + 1] = self.lazy_add[2 * node + 1] +
+      self.lazy_add[node]
+    self.lazy_add[node] = 0L
   }
 }
 
@@ -428,7 +430,7 @@ fn RMQSegmentTree::add_helper(
   }
   if ql <= l && r <= qr {
     self.tree[node] = self.tree[node] + val
-    self.lazy[node] = self.lazy[node] + val
+    self.lazy_add[node] = self.lazy_add[node] + val
     return
   }
   self.push_down(node)
@@ -504,14 +506,14 @@ test "RMQ segment tree" {
 /// version v+1 shares O(n - log n) nodes with version v.
 ///
 /// SPACE COMPLEXITY: O(n + q log n) for n elements and q updates.
-struct PersistentNode {
+priv struct PersistentNode {
   sum : Int64
   left : Int // index into node pool, 0 = null
   right : Int // index into node pool, 0 = null
 }
 
 ///|
-struct PersistentSegmentTree {
+priv struct PersistentSegmentTree {
   n : Int
   nodes : Array[PersistentNode]
   roots : Array[Int] // root index for each version
@@ -665,7 +667,7 @@ test "persistent segment tree" {
 ///
 /// INVARIANT: tree[i] = tree[2i] op tree[2i+1] for all i in [1, n)
 /// where op is the combining operation (sum, min, max, etc.)
-struct IterativeSegmentTree {
+priv struct IterativeSegmentTree {
   n : Int
   tree : Array[Int64]
 }
@@ -832,7 +834,7 @@ test "iterative segment tree" {
 /// INVARIANT: For each node covering [l, r):
 ///   - max_val = max(arr[l..r])
 ///   - count = |{i in [l,r) : arr[i] = max_val}|
-struct MaxCountNode {
+priv struct MaxCountNode {
   max_val : Int64
   count : Int
 }
@@ -850,7 +852,7 @@ fn max_count_combine(a : MaxCountNode, b : MaxCountNode) -> MaxCountNode {
 }
 
 ///|
-struct MaxCountSegmentTree {
+priv struct MaxCountSegmentTree {
   n : Int
   tree : Array[MaxCountNode]
 }
@@ -945,7 +947,7 @@ test "max count segment tree" {
 ///
 /// INVARIANT: For outer node covering rows [r1, r2):
 ///   inner[c] = sum of matrix[r][c] for r in [r1, r2)
-struct SegmentTree2D {
+priv struct SegmentTree2D {
   rows : Int
   cols : Int
   tree : Array[Array[Int64]] // tree[outer][inner]
@@ -962,6 +964,9 @@ fn SegmentTree2D::new(matrix : Array[Array[Int]]) -> SegmentTree2D {
   // Initialize each row's tree array
   for i = 0; i < 2 * rows; i = i + 1 {
     tree[i] = Array::make(2 * cols, 0L)
+  } where {
+    invariant: i >= 0 && i <= 2 * rows,
+    reasoning: "I: Rows [0,i) each have a column tree of length 2*cols. M: Allocate a fresh array for row i. T: After i = 2*rows, all row trees are initialized.",
   }
   let st = { rows, cols, tree }
 
@@ -969,19 +974,34 @@ fn SegmentTree2D::new(matrix : Array[Array[Int]]) -> SegmentTree2D {
   for i = 0; i < rows; i = i + 1 {
     for j = 0; j < cols; j = j + 1 {
       st.tree[rows + i][cols + j] = matrix[i][j].to_int64()
+    } where {
+      invariant: j >= 0 && j <= cols,
+      reasoning: "I: For row i, leaves for columns [0,j) are set. M: Set leaf at column j from matrix. T: After j = cols, all leaves for row i are set.",
     }
     // Build inner tree for this row
     for j = cols - 1; j >= 1; j = j - 1 {
       st.tree[rows + i][j] = st.tree[rows + i][2 * j] +
         st.tree[rows + i][2 * j + 1]
+    } where {
+      invariant: j >= 0 && j <= cols - 1,
+      reasoning: "I: For row i, inner nodes in (j, cols) are computed from children. M: Compute node j from its two children. T: After j = 0, the row's inner tree is complete.",
     }
+  } where {
+    invariant: i >= 0 && i <= rows,
+    reasoning: "I: Rows [0,i) have their leaf values filled and inner trees built. M: Fill leaves for row i and compute its inner tree bottom-up. T: After i = rows, all leaf rows are built.",
   }
 
   // Build internal rows
   for i = rows - 1; i >= 1; i = i - 1 {
     for j = 0; j < 2 * cols; j = j + 1 {
       st.tree[i][j] = st.tree[2 * i][j] + st.tree[2 * i + 1][j]
+    } where {
+      invariant: j >= 0 && j <= 2 * cols,
+      reasoning: "I: For row i, columns [0,j) are updated from child rows. M: Combine column j from the two child rows. T: After j = 2*cols, row i is fully updated.",
     }
+  } where {
+    invariant: i >= 0 && i <= rows - 1,
+    reasoning: "I: All rows with index > i have been combined. M: For row i, sum corresponding columns from its two child rows. T: After i = 0, all internal row trees are built.",
   }
   st
 }
@@ -1004,6 +1024,9 @@ fn SegmentTree2D::update(
   for j = c / 2; j >= 1; j = j / 2 {
     self.tree[init_r][j] = self.tree[init_r][2 * j] +
       self.tree[init_r][2 * j + 1]
+  } where {
+    invariant: j >= 1 && j <= c / 2,
+    reasoning: "I: Nodes below j on the column path in row init_r reflect the updated leaf. M: Recompute node j from its children. T: After j = 0, the row's column aggregates are updated up to the root.",
   }
 
   // Update outer tree
@@ -1012,7 +1035,13 @@ fn SegmentTree2D::update(
     // Also update inner tree for this combined row
     for j = c / 2; j >= 1; j = j / 2 {
       self.tree[r][j] = self.tree[r][2 * j] + self.tree[r][2 * j + 1]
+    } where {
+      invariant: j >= 1 && j <= c / 2,
+      reasoning: "I: For row r, nodes below j on the column path are updated. M: Recompute node j from its children. T: After j = 0, row r's inner tree is consistent.",
     }
+  } where {
+    invariant: r >= 1 && r <= init_r / 2,
+    reasoning: "I: Rows below r on the path to the root have updated column c. M: Recompute column c at row r and fix its inner-tree ancestors. T: After r = 0, all ancestors reflect the updated cell.",
   }
 }
 

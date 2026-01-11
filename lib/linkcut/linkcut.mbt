@@ -69,8 +69,13 @@ fn LinkCutTree::new(n : Int) -> LinkCutTree {
       value: 0L,
       path_sum: 0L,
     })
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Initialize all nodes with default values.
+    ),
   }
-  { nodes: nodes }
+  { nodes, }
 }
 
 ///|
@@ -104,7 +109,6 @@ fn LinkCutTree::push_down(self : LinkCutTree, v : Int) -> Unit {
     if node.right >= 0 {
       self.nodes[node.right].flip = not(self.nodes[node.right].flip)
     }
-
     self.nodes[v].flip = false
   }
 }
@@ -134,7 +138,6 @@ fn LinkCutTree::rotate(self : LinkCutTree, v : Int) -> Unit {
   if p < 0 {
     return
   }
-
   let g = self.nodes[p].parent
   let p_is_left = g >= 0 && self.nodes[g].left == p
 
@@ -163,7 +166,6 @@ fn LinkCutTree::rotate(self : LinkCutTree, v : Int) -> Unit {
     }
     self.nodes[v].left = p
   }
-
   self.nodes[p].parent = v
   self.nodes[v].parent = g
 
@@ -201,6 +203,11 @@ fn LinkCutTree::splay(self : LinkCutTree, v : Int) -> Unit {
   // Push down along path from root to v
   for i = path.length() - 1; i >= 0; i = i - 1 {
     self.push_down(path[i])
+  } where {
+    invariant: i >= -1 && i < path.length(),
+    reasoning: (
+      #|Apply pending reversals from splay root down to v.
+    ),
   }
 
   // Splay v to root
@@ -211,7 +218,6 @@ fn LinkCutTree::splay(self : LinkCutTree, v : Int) -> Unit {
       let g = self.nodes[p].parent
       let v_is_left = self.nodes[p].left == v
       let p_is_left = self.nodes[g].left == p
-
       if v_is_left == p_is_left {
         // Zig-zig: rotate parent first
         self.rotate(p)
@@ -243,7 +249,6 @@ fn LinkCutTree::access(self : LinkCutTree, v : Int) -> Int {
     self.nodes[v].right = -1
     self.update(v)
   }
-
   let mut last = v
 
   // Walk up path-parents and merge splay trees
@@ -251,7 +256,6 @@ fn LinkCutTree::access(self : LinkCutTree, v : Int) -> Int {
   while self.nodes[v].path_parent >= 0 {
     let w = self.nodes[v].path_parent
     last = w
-
     self.splay(w)
 
     // Cut w's right child (old preferred path below w)
@@ -265,10 +269,8 @@ fn LinkCutTree::access(self : LinkCutTree, v : Int) -> Int {
     self.nodes[v].parent = w
     self.nodes[v].path_parent = -1
     self.update(w)
-
     self.splay(v)
   }
-
   last
 }
 
@@ -285,7 +287,6 @@ fn LinkCutTree::find_root(self : LinkCutTree, v : Int) -> Int {
     root = self.nodes[root].left
     self.push_down(root)
   }
-
   self.splay(root)
   root
 }
@@ -318,7 +319,6 @@ fn LinkCutTree::link(self : LinkCutTree, v : Int, w : Int) -> Bool {
   self.nodes[w].right = v
   self.nodes[v].parent = w
   self.update(w)
-
   true
 }
 
@@ -345,11 +345,9 @@ fn LinkCutTree::cut(self : LinkCutTree, v : Int, w : Int) -> Bool {
   if self.nodes[w].left != v || self.nodes[v].right >= 0 {
     return false // No direct edge
   }
-
   self.nodes[v].parent = -1
   self.nodes[w].left = -1
   self.update(w)
-
   true
 }
 
@@ -449,7 +447,6 @@ test "linkcut connected" {
   // Build tree: 0 - 1 - 2
   let _ = lct.link(1, 0)
   let _ = lct.link(2, 1)
-
   inspect(lct.connected(0, 2), content="true")
   inspect(lct.connected(1, 2), content="true")
   inspect(lct.connected(0, 3), content="false")
@@ -463,7 +460,6 @@ test "linkcut cut" {
   let _ = lct.link(1, 0)
   let _ = lct.link(2, 1)
   let _ = lct.link(3, 2)
-
   inspect(lct.connected(0, 3), content="true")
 
   // Cut edge 1-2
@@ -514,6 +510,11 @@ test "linkcut path sum" {
   // Set values
   for i = 0; i < 5; i = i + 1 {
     lct.set_value(i, (i + 1).to_int64())
+  } where {
+    invariant: i >= 0 && i <= 5,
+    reasoning: (
+      #|Initialize node values for the path-sum test.
+    ),
   }
 
   // Build path: 0 - 1 - 2 - 3 - 4
@@ -549,7 +550,6 @@ test "linkcut size" {
 ///|
 test "linkcut get value" {
   let lct = LinkCutTree::new(3)
-
   lct.set_value(1, 42L)
   inspect(lct.get_value(1), content="42")
 }
@@ -582,11 +582,21 @@ test "linkcut star topology" {
   for i = 1; i < 6; i = i + 1 {
     let _ = lct.link(i, 0)
 
+  } where {
+    invariant: i >= 1 && i <= 6,
+    reasoning: (
+      #|Attach each leaf to the center node.
+    ),
   }
 
   // All nodes should be in same tree
   for i = 1; i < 6; i = i + 1 {
     inspect(lct.connected(0, i), content="true")
+  } where {
+    invariant: i >= 1 && i <= 6,
+    reasoning: (
+      #|Verify each leaf remains connected to the center.
+    ),
   }
 
   // All pairs of leaves should be connected
@@ -602,7 +612,6 @@ test "linkcut cut_parent" {
   let _ = lct.link(1, 0)
   let _ = lct.link(2, 1)
   let _ = lct.link(3, 2)
-
   inspect(lct.connected(0, 3), content="true")
 
   // Cut 2 from its parent (1)

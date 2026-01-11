@@ -30,8 +30,7 @@ fn sqrt_f64(x : Double) -> Double {
   let mut guess = x
   for iter = 0; iter < 50; iter = iter + 1 {
     guess = (guess + x / guess) / 2.0
-  }
-  where {
+  } where {
     invariant: iter >= 0 && iter <= 50,
     reasoning: "Fixed number of Newton iterations to refine the estimate.",
   }
@@ -67,7 +66,6 @@ fn brute_force_closest(points : ArrayView[Point]) -> (Double, Int, Int) {
   let mut min_dist = CP_INF
   let mut p1 = -1
   let mut p2 = -1
-
   for i = 0; i < n; i = i + 1 {
     for j = i + 1; j < n; j = j + 1 {
       let d = distance(points[i], points[j])
@@ -76,8 +74,7 @@ fn brute_force_closest(points : ArrayView[Point]) -> (Double, Int, Int) {
         p1 = points[i].idx
         p2 = points[j].idx
       }
-    }
-    where {
+    } where {
       invariant: j >= i + 1 && j <= n,
       reasoning: "Compare point i with all later points.",
     }
@@ -85,7 +82,6 @@ fn brute_force_closest(points : ArrayView[Point]) -> (Double, Int, Int) {
     invariant: i >= 0 && i <= n,
     reasoning: "I: min_dist=INF. M: Check all pairs (i,j) with i<j. Update minimum. T: All pairs checked, minimum found.",
   }
-
   (min_dist, p1, p2)
 }
 
@@ -95,7 +91,7 @@ fn strip_closest(
   strip : Array[Point],
   delta : Double,
   best_p1 : Int,
-  best_p2 : Int
+  best_p2 : Int,
 ) -> (Double, Int, Int) {
   let n = strip.length()
   let mut min_dist = delta
@@ -122,8 +118,7 @@ fn strip_closest(
         p1 = strip[i].idx
         p2 = strip[j].idx
       }
-    }
-    where {
+    } where {
       invariant: j >= i + 1 && j <= n,
       reasoning: "Check nearby points below i within the current y-window.",
     }
@@ -131,7 +126,6 @@ fn strip_closest(
     invariant: i >= 0 && i <= n,
     reasoning: "I: min_dist=delta from recursive calls. M: For each point, check points within y-distance < min_dist. At most 6 such points exist (packing argument). T: All close pairs in strip checked.",
   }
-
   (min_dist, p1, p2)
 }
 
@@ -139,7 +133,7 @@ fn strip_closest(
 /// Recursive closest pair
 fn closest_pair_rec(
   points_x : ArrayView[Point],
-  points_y : Array[Point]
+  points_y : Array[Point],
 ) -> (Double, Int, Int) {
   let n = points_x.length()
 
@@ -147,7 +141,6 @@ fn closest_pair_rec(
   if n <= 3 {
     return brute_force_closest(points_x)
   }
-
   let mid = n / 2
   let mid_point = points_x[mid]
 
@@ -184,10 +177,8 @@ fn closest_pair_rec(
       if -dx < delta {
         strip.push(p)
       }
-    } else {
-      if dx < delta {
-        strip.push(p)
-      }
+    } else if dx < delta {
+      strip.push(p)
     }
   })
 
@@ -232,7 +223,6 @@ fn closest_pair(points : Array[(Double, Double)]) -> (Double, Int, Int) {
       0
     }
   })
-
   closest_pair_rec(pts_x[:], pts_y)
 }
 
@@ -243,11 +233,9 @@ fn closest_pair_naive(points : Array[(Double, Double)]) -> (Double, Int, Int) {
   if n < 2 {
     return (CP_INF, -1, -1)
   }
-
   let mut min_dist = CP_INF
   let mut p1 = -1
   let mut p2 = -1
-
   for i = 0; i < n; i = i + 1 {
     for j = i + 1; j < n; j = j + 1 {
       let dx = points[i].0 - points[j].0
@@ -258,17 +246,14 @@ fn closest_pair_naive(points : Array[(Double, Double)]) -> (Double, Int, Int) {
         p1 = i
         p2 = j
       }
-    }
-    where {
+    } where {
       invariant: j >= i + 1 && j <= n,
       reasoning: "Compare point i with all later points.",
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= n,
     reasoning: "Scan all points for naive pairwise comparison.",
   }
-
   (min_dist, p1, p2)
 }
 
@@ -280,24 +265,21 @@ fn closest_pair_naive(points : Array[(Double, Double)]) -> (Double, Int, Int) {
 /// Find k closest pairs using naive approach
 fn k_closest_pairs(
   points : Array[(Double, Double)],
-  k : Int
+  k : Int,
 ) -> Array[(Double, Int, Int)] {
   let n = points.length()
   let pairs : Array[(Double, Int, Int)] = []
-
   for i = 0; i < n; i = i + 1 {
     for j = i + 1; j < n; j = j + 1 {
       let dx = points[i].0 - points[j].0
       let dy = points[i].1 - points[j].1
       let d = sqrt_f64(dx * dx + dy * dy)
       pairs.push((d, i, j))
-    }
-    where {
+    } where {
       invariant: j >= i + 1 && j <= n,
       reasoning: "Enumerate all pairs with second index after i.",
     }
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= n,
     reasoning: "Enumerate all point pairs to collect distances.",
   }
@@ -317,8 +299,7 @@ fn k_closest_pairs(
   let result : Array[(Double, Int, Int)] = []
   for i = 0; i < k && i < pairs.length(); i = i + 1 {
     result.push(pairs[i])
-  }
-  where {
+  } where {
     invariant: i >= 0 && i <= k && i <= pairs.length(),
     reasoning: "Collect up to k smallest pairs from the sorted list.",
   }
@@ -425,7 +406,6 @@ test "k closest pairs" {
 test "sqrt_f64" {
   let s = sqrt_f64(4.0)
   inspect(s > 1.99 && s < 2.01, content="true")
-
   let s2 = sqrt_f64(2.0)
   inspect(s2 > 1.41 && s2 < 1.42, content="true")
 }

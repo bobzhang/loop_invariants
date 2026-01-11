@@ -138,6 +138,11 @@ fn is_prime_32(n : Int) -> Bool {
         continue i + 1
       }
     }
+  } where {
+    invariant: i >= 0 && i <= witnesses.length(),
+    reasoning: (
+      #|Try each deterministic witness; any failing witness proves composite.
+    ),
   }
 }
 
@@ -606,6 +611,11 @@ fn nth_root(n : Int, b : Int) -> Int {
         continue lo, mid - 1
       }
     }
+  } where {
+    invariant: lo >= 1 && hi <= n && lo <= hi + 1,
+    reasoning: (
+      #|Binary search keeps the true root within [lo, hi].
+    ),
   }
 }
 
@@ -626,6 +636,11 @@ fn int_pow_checked(a : Int, b : Int, max_val : Int) -> Int {
       let new_acc = if acc > max_val / base { max_val + 1 } else { acc * base }
       continue base, exp - 1, new_acc
     }
+  } where {
+    invariant: exp >= 0,
+    reasoning: (
+      #|Exponentiation by squaring with overflow guard.
+    ),
   }
 }
 
@@ -640,6 +655,11 @@ fn int_pow(a : Int, b : Int) -> Int {
     } else {
       continue base, exp - 1, acc * base
     }
+  } where {
+    invariant: exp >= 0,
+    reasoning: (
+      #|Exponentiation by squaring accumulates a^b in acc.
+    ),
   }
 }
 

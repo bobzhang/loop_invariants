@@ -36,7 +36,7 @@ fn isqrt_ceil(n : Int) -> Int {
   }
   // Newton's method for integer square root
   // INVARIANT: x is an upper bound on sqrt(n), decreasing toward the answer
-  for x = n; ; {
+  for x = n {
     let next = (x + n / x) / 2
     if next >= x {
       // x is the floor of sqrt(n), return ceiling
@@ -68,7 +68,6 @@ fn SqrtSum::build(arr : Array[Int]) -> SqrtSum {
   if n == 0 {
     return { arr: [], blocks: [], block_size: 1 }
   }
-
   let block_size = isqrt_ceil(n)
   let num_blocks = (n + block_size - 1) / block_size
   let blocks = Array::make(num_blocks, 0)
@@ -82,7 +81,6 @@ fn SqrtSum::build(arr : Array[Int]) -> SqrtSum {
     invariant: i >= 0 && i <= n,
     reasoning: "Each element contributes to exactly one block; loop processes all elements",
   }
-
   { arr: arr.copy(), blocks, block_size }
 }
 
@@ -96,7 +94,6 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
   if l > r || l < 0 || r >= self.arr.length() {
     return 0
   }
-
   let left_block = l / self.block_size
   let right_block = r / self.block_size
 
@@ -156,7 +153,6 @@ fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int {
       #|Accumulate the sum over the right partial block [right_block_start, r].
     ),
   }
-
   left_sum + middle_sum + right_sum
 }
 
@@ -201,7 +197,6 @@ fn SqrtMin::build(arr : Array[Int]) -> SqrtMin {
   if n == 0 {
     return { arr: [], blocks: [], pending: [], block_size: 1 }
   }
-
   let block_size = isqrt_ceil(n)
   let num_blocks = (n + block_size - 1) / block_size
   let blocks = Array::make(num_blocks, 2147483647) // Max int as initial min
@@ -217,7 +212,6 @@ fn SqrtMin::build(arr : Array[Int]) -> SqrtMin {
     invariant: i >= 0,
     reasoning: "Each element updates minimum of its block; all elements processed",
   }
-
   { arr: arr.copy(), blocks, pending, block_size }
 }
 
@@ -233,10 +227,13 @@ fn SqrtMin::push_block(self : SqrtMin, block_idx : Int) -> Unit {
   if self.pending[block_idx] == 0 {
     return
   }
-
   let start = block_idx * self.block_size
   let end_val = (block_idx + 1) * self.block_size
-  let end = if end_val > self.arr.length() { self.arr.length() } else { end_val }
+  let end = if end_val > self.arr.length() {
+    self.arr.length()
+  } else {
+    end_val
+  }
 
   // Apply lazy update to all elements
   for i = start; i < end; i = i + 1 {
@@ -256,8 +253,11 @@ fn SqrtMin::push_block(self : SqrtMin, block_idx : Int) -> Unit {
 fn SqrtMin::recompute_block(self : SqrtMin, block_idx : Int) -> Unit {
   let start = block_idx * self.block_size
   let end_val = (block_idx + 1) * self.block_size
-  let end = if end_val > self.arr.length() { self.arr.length() } else { end_val }
-
+  let end = if end_val > self.arr.length() {
+    self.arr.length()
+  } else {
+    end_val
+  }
   let min = for i = start, m = 2147483647; i < end; i = i + 1 {
     if self.arr[i] < m {
       continue i + 1, self.arr[i]
@@ -282,7 +282,6 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
   if l > r || l < 0 || r >= self.arr.length() {
     return 2147483647
   }
-
   let left_block = l / self.block_size
   let right_block = r / self.block_size
 
@@ -326,7 +325,9 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
   }
 
   // Minimum from complete middle blocks
-  let middle_min = for b = left_block + 1, m = 2147483647; b < right_block; b = b + 1 {
+  let middle_min = for b = left_block + 1, m = 2147483647
+                       b < right_block
+                       b = b + 1 {
     let block_min = self.blocks[b] + self.pending[b]
     if block_min < m {
       continue b + 1, block_min
@@ -363,7 +364,11 @@ fn SqrtMin::query(self : SqrtMin, l : Int, r : Int) -> Int {
 
   // Return overall minimum
   let min1 = if left_min < middle_min { left_min } else { middle_min }
-  if min1 < right_min { min1 } else { right_min }
+  if min1 < right_min {
+    min1
+  } else {
+    right_min
+  }
 }
 
 ///|
@@ -374,10 +379,8 @@ fn SqrtMin::range_add(self : SqrtMin, l : Int, r : Int, val : Int) -> Unit {
   if l > r || l < 0 || r >= self.arr.length() {
     return
   }
-
   let left_block = l / self.block_size
   let right_block = r / self.block_size
-
   if left_block == right_block {
     // Same block: push lazy and update individually
     self.push_block(left_block)
@@ -475,13 +478,12 @@ fn MoSolver::new(arr : Array[Int]) -> MoSolver {
 /// Answer multiple range distinct count queries using Mo's algorithm
 fn MoSolver::solve_distinct(
   self : MoSolver,
-  queries : Array[(Int, Int)]
+  queries : Array[(Int, Int)],
 ) -> Array[Int] {
   let q = queries.length()
   if q == 0 {
     return []
   }
-
   let n = self.arr.length()
   if n == 0 {
     return Array::make(q, 0)
@@ -505,7 +507,7 @@ fn MoSolver::solve_distinct(
   }
 
   // Create query objects with indices
-  let mo_queries = Array::makei(q, (i) => {
+  let mo_queries = Array::makei(q, i => {
     let (l, r) = queries[i]
     { l, r, idx: i }
   })
@@ -513,19 +515,16 @@ fn MoSolver::solve_distinct(
   // Sort queries by (l / block_size, r)
   // This is the key to Mo's algorithm efficiency
   let block_size = self.block_size
-  mo_queries.sort_by(
-    fn(a : MoQuery, b : MoQuery) -> Int {
-      let block_a = a.l / block_size
-      let block_b = b.l / block_size
-      if block_a != block_b {
-        block_a - block_b
-      } else {
-        // Alternate direction for better cache behavior (optional optimization)
-        a.r - b.r
-      }
-    },
-  )
-
+  mo_queries.sort_by(fn(a : MoQuery, b : MoQuery) -> Int {
+    let block_a = a.l / block_size
+    let block_b = b.l / block_size
+    if block_a != block_b {
+      block_a - block_b
+    } else {
+      // Alternate direction for better cache behavior (optional optimization)
+      a.r - b.r
+    }
+  })
   let results = Array::make(q, 0)
   let count = Array::make(max_val + 1, 0) // count[v] = occurrences of value v
   let mut distinct = 0
@@ -580,7 +579,6 @@ fn MoSolver::solve_distinct(
       }
       count[v] = count[v] + 1
     }
-
     results[query.idx] = distinct
   } where {
     invariant: cur_l >= 0 && cur_l <= n,
@@ -597,7 +595,6 @@ fn MoSolver::solve_distinct(
       #|All updates keep counts non-negative, so distinct cannot go below zero.
     ),
   }
-
   results
 }
 
@@ -692,7 +689,6 @@ fn IntervalTree::split_at(self : IntervalTree, pos : Int) -> Int {
   if pos < 0 {
     return 0
   }
-
   match self.find_interval(pos) {
     None => self.intervals.length()
     Some(idx) => {
@@ -723,7 +719,9 @@ fn IntervalTree::assign(self : IntervalTree, l : Int, r : Int, v : Int) -> Unit 
   let left_idx = self.split_at(l)
 
   // Find rightmost interval in [l, r]
-  let right_idx = for i = left_idx; i < self.intervals.length() && self.intervals[i].l <= r; i = i + 1 {
+  let right_idx = for i = left_idx
+                      i < self.intervals.length() && self.intervals[i].l <= r
+                      i = i + 1 {
     continue i + 1
   } else {
     i - 1
@@ -733,7 +731,6 @@ fn IntervalTree::assign(self : IntervalTree, l : Int, r : Int, v : Int) -> Unit 
       #|Advance i until intervals[i].l exceeds r; the last valid index is i-1.
     ),
   }
-
   if right_idx >= left_idx {
     // Remove intervals from left_idx to right_idx
     // and replace with single interval [l, r] with value v
@@ -741,6 +738,7 @@ fn IntervalTree::assign(self : IntervalTree, l : Int, r : Int, v : Int) -> Unit 
     let num_to_remove = right_idx - left_idx + 1
     for j = 0; j < num_to_remove; j = j + 1 {
       let _ = self.intervals.remove(left_idx)
+
     } where {
       invariant: j >= 0 && j <= num_to_remove,
       reasoning: (
@@ -757,7 +755,6 @@ fn IntervalTree::query_sum(self : IntervalTree, l : Int, r : Int) -> Int {
   if l > r || self.intervals.length() == 0 {
     return 0
   }
-
   let sum = for i = 0, s = 0; i < self.intervals.length(); i = i + 1 {
     let interval = self.intervals[i]
     if interval.r < l || interval.l > r {
@@ -786,16 +783,16 @@ fn IntervalTree::range_add(
   self : IntervalTree,
   l : Int,
   r : Int,
-  val : Int
+  val : Int,
 ) -> Unit {
   if l > r || self.intervals.length() == 0 {
     return
   }
-
   let _ = self.split_at(r + 1)
   let left_idx = self.split_at(l)
-
-  for i = left_idx; i < self.intervals.length() && self.intervals[i].l <= r; i = i + 1 {
+  for i = left_idx
+      i < self.intervals.length() && self.intervals[i].l <= r
+      i = i + 1 {
     self.intervals[i].v = self.intervals[i].v + val
   } where {
     invariant: i >= left_idx && i <= self.intervals.length() + 1,
@@ -846,7 +843,6 @@ test "sqrt sum basic" {
 test "sqrt sum update" {
   let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9]
   let sq = SqrtSum::build(arr)
-
   inspect(sq.query(0, 8), content="45")
 
   // Update element
@@ -886,7 +882,6 @@ test "sqrt min basic" {
 test "sqrt min range add" {
   let arr = [5, 2, 8, 1, 9, 3, 7, 4, 6]
   let sq = SqrtMin::build(arr)
-
   inspect(sq.query(0, 8), content="1")
 
   // Add 10 to range [3, 5]
@@ -905,7 +900,6 @@ test "sqrt min range add" {
 test "mo algorithm distinct" {
   let arr = [1, 2, 1, 3, 2, 1, 4, 1, 2]
   let solver = MoSolver::new(arr)
-
   let queries = [(0, 2), (0, 4), (0, 8), (3, 6), (5, 8)]
   let results = solver.solve_distinct(queries)
 
@@ -923,7 +917,6 @@ test "mo algorithm empty" {
   let solver = MoSolver::new(arr)
   let results = solver.solve_distinct([])
   inspect(results, content="[]")
-
   let arr2 = [1, 2, 3]
   let solver2 = MoSolver::new(arr2)
   let results2 = solver2.solve_distinct([])
@@ -954,7 +947,6 @@ test "interval tree assign" {
 test "interval tree range add" {
   let arr = [1, 2, 3, 4, 5]
   let tree = IntervalTree::new(arr)
-
   inspect(tree.query_sum(0, 4), content="15")
 
   // Add 10 to [1, 3]
@@ -968,11 +960,9 @@ test "interval tree range add" {
 test "interval tree get" {
   let arr = [1, 2, 3, 4, 5]
   let tree = IntervalTree::new(arr)
-
   inspect(tree.get(0), content="Some(1)")
   inspect(tree.get(2), content="Some(3)")
   inspect(tree.get(4), content="Some(5)")
-
   tree.assign(1, 3, 100)
   inspect(tree.get(0), content="Some(1)")
   inspect(tree.get(1), content="Some(100)")
@@ -1000,8 +990,7 @@ test "isqrt ceil" {
 ///|
 test "sqrt decomposition stress" {
   // Test with larger array
-  let arr = Array::makei(100, (i) => i + 1)
-
+  let arr = Array::makei(100, i => i + 1)
   let sq = SqrtSum::build(arr)
 
   // Sum 1 to 100 = 5050

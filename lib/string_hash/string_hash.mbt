@@ -39,13 +39,14 @@ fn StringHash::new(s : String) -> StringHash {
   let n = s.length()
   let prefix = Array::make(n + 1, 0L)
   let powers = Array::make(n + 1, 1L)
-
   for i = 0; i < n; i = i + 1 {
     let c = (s[i].to_int() - 96).to_int64() // 'a' = 97, so 'a' -> 1
     prefix[i + 1] = (prefix[i] * HASH_BASE + c) % HASH_MOD
     powers[i + 1] = powers[i] * HASH_BASE % HASH_MOD
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: prefix/powers are correct for prefix length i. M: Extend hashes and powers with s[i]. T: After i = n, all prefix hashes and powers are computed.",
   }
-
   { prefix, powers, n }
 }
 
@@ -67,7 +68,7 @@ fn StringHash::compare(
   l1 : Int,
   r1 : Int,
   l2 : Int,
-  r2 : Int
+  r2 : Int,
 ) -> Bool {
   if r1 - l1 != r2 - l2 {
     return false
@@ -107,15 +108,16 @@ fn DoubleHash::new(s : String) -> DoubleHash {
   let prefix2 = Array::make(n + 1, 0L)
   let powers1 = Array::make(n + 1, 1L)
   let powers2 = Array::make(n + 1, 1L)
-
   for i = 0; i < n; i = i + 1 {
     let c = (s[i].to_int() - 96).to_int64()
     prefix1[i + 1] = (prefix1[i] * HASH_BASE + c) % HASH_MOD
     prefix2[i + 1] = (prefix2[i] * HASH_BASE2 + c) % HASH_MOD2
     powers1[i + 1] = powers1[i] * HASH_BASE % HASH_MOD
     powers2[i + 1] = powers2[i] * HASH_BASE2 % HASH_MOD2
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: "I: prefix1/2 and powers1/2 are correct for prefix length i. M: Extend both hashes and powers with s[i]. T: After i = n, all prefix hashes and powers are computed.",
   }
-
   { prefix1, prefix2, powers1, powers2, n }
 }
 
@@ -126,11 +128,15 @@ fn DoubleHash::get_hash(self : DoubleHash, l : Int, r : Int) -> (Int64, Int64) {
     return (0L, 0L)
   }
   let len = r - l
-  let h1 = ((self.prefix1[r] - self.prefix1[l] * self.powers1[len]) % HASH_MOD +
-    HASH_MOD) %
+  let h1 = (
+      (self.prefix1[r] - self.prefix1[l] * self.powers1[len]) % HASH_MOD +
+      HASH_MOD
+    ) %
     HASH_MOD
-  let h2 = ((self.prefix2[r] - self.prefix2[l] * self.powers2[len]) % HASH_MOD2 +
-    HASH_MOD2) %
+  let h2 = (
+      (self.prefix2[r] - self.prefix2[l] * self.powers2[len]) % HASH_MOD2 +
+      HASH_MOD2
+    ) %
     HASH_MOD2
   (h1, h2)
 }
@@ -142,7 +148,7 @@ fn DoubleHash::compare(
   l1 : Int,
   r1 : Int,
   l2 : Int,
-  r2 : Int
+  r2 : Int,
 ) -> Bool {
   if r1 - l1 != r2 - l2 {
     return false
@@ -158,10 +164,8 @@ fn DoubleHash::compare(
 /// Find longest common prefix length between substrings starting at i and j
 fn StringHash::lcp(self : StringHash, i : Int, j : Int) -> Int {
   let max_len = if self.n - i < self.n - j { self.n - i } else { self.n - j }
-
   let mut lo = 0
   let mut hi = max_len
-
   while lo < hi {
     let mid = (lo + hi + 1) / 2
     if self.get_hash(i, i + mid) == self.get_hash(j, j + mid) {
@@ -170,7 +174,6 @@ fn StringHash::lcp(self : StringHash, i : Int, j : Int) -> Int {
       hi = mid - 1
     }
   }
-
   lo
 }
 
@@ -184,21 +187,20 @@ fn hash_pattern_match(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let n = text.length()
   let m = pattern.length()
-
   if m == 0 || m > n {
     return result
   }
-
   let text_hash = StringHash::new(text)
   let pattern_hash = StringHash::new(pattern)
   let target = pattern_hash.get_hash(0, m)
-
   for i = 0; i <= n - m; i = i + 1 {
     if text_hash.get_hash(i, i + m) == target {
       result.push(i)
     }
+  } where {
+    invariant: i >= 0 && i <= n - m + 1,
+    reasoning: "I: All positions in [0,i) have been checked. M: Compare hash at position i and record match. T: After i = n-m+1, all candidate positions are processed.",
   }
-
   result
 }
 
@@ -209,16 +211,16 @@ fn count_distinct_substrings(s : String, k : Int) -> Int {
   if k <= 0 || k > n {
     return 0
   }
-
   let hash = StringHash::new(s)
   let seen : Map[Int64, Bool] = {}
-
   for i = 0; i <= n - k; i = i + 1 {
     let h = hash.get_hash(i, i + k)
     seen[h] = true
+  } where {
+    invariant: i >= 0 && i <= n - k + 1,
+    reasoning: "I: seen contains hashes for substrings starting in [0,i). M: Insert hash for substring at i. T: After i = n-k+1, all length-k substrings are recorded.",
   }
-
-  seen.size()
+  seen.length()
 }
 
 // ============================================================================

@@ -45,26 +45,21 @@ pub fn compute_failure(pattern : String) -> Array[Int] {
   if m == 0 {
     return []
   }
-
   let fail = Array::make(m, 0)
-
   for i = 1, k = 0; i < m; {
     let mut curr_k = k
     while curr_k > 0 && pattern[curr_k] != pattern[i] {
       curr_k = fail[curr_k - 1]
     }
-
     if pattern[curr_k] == pattern[i] {
       curr_k = curr_k + 1
     }
-
     fail[i] = curr_k
     continue i + 1, curr_k
   } where {
     invariant: i >= 1 && i <= m,
     reasoning: "I: fail[0] = 0; for single char, no proper prefix exists. M: For position i, we find the longest border of pattern[0..i+1). Starting from k (border length of pattern[0..i)), we try to extend: if pattern[k] == pattern[i], border extends to k+1. Otherwise, we fall back to fail[k-1] (the next longest border candidate). This works because if pattern[0..k) = pattern[i-k..i) and we need pattern[0..j) = pattern[i+1-j..i+1), then j <= fail[k-1]+1 by the border structure. The while loop terminates because k decreases each iteration. T: After i = m-1, fail[j] correctly stores the longest proper prefix of pattern[0..j+1) that is also a suffix, for all j in [0, m).",
   }
-
   fail
 }
 
@@ -74,42 +69,38 @@ pub fn kmp_search(text : String, pattern : String) -> Array[Int] {
   let n = text.length()
   let m = pattern.length()
   let matches : Array[Int] = []
-
   if m == 0 || m > n {
     return matches
   }
-
   let fail = compute_failure(pattern)
-
   for i = 0, j = 0; i < n; {
     let mut curr_j = j
-
     while curr_j > 0 && pattern[curr_j] != text[i] {
       curr_j = fail[curr_j - 1]
     }
-
     if pattern[curr_j] == text[i] {
       curr_j = curr_j + 1
     }
-
     if curr_j == m {
       matches.push(i - m + 1)
       curr_j = fail[curr_j - 1]
     }
-
     continue i + 1, curr_j
   } where {
     invariant: i >= 0 && i <= n && j >= 0 && j <= m,
     reasoning: "I: i = 0, j = 0; no characters matched yet. M: At each position i in text, we maintain j = number of pattern characters matched. If text[i] == pattern[j], we extend the match (j++). If mismatch, we use fail[j-1] to find the next best prefix to try. Key insight: pattern[0..j) == text[i-j..i) is maintained as invariant. When j reaches m, we found a match at position i-m+1 and continue from fail[m-1]. T: After i = n-1, all occurrences are found. Time O(n): each iteration either advances i or decreases j, and j can increase at most n times total.",
   }
-
   matches
 }
 
 ///|
 pub fn kmp_find_first(text : String, pattern : String) -> Int {
   let matches = kmp_search(text, pattern)
-  if matches.length() > 0 { matches[0] } else { -1 }
+  if matches.length() > 0 {
+    matches[0]
+  } else {
+    -1
+  }
 }
 
 ///|
@@ -129,40 +120,28 @@ pub fn compute_z_function(s : String) -> Array[Int] {
   if n == 0 {
     return []
   }
-
   let z = Array::make(n, 0)
   z[0] = n
-
   for i = 1, l = 0, r = 0; i < n; {
     let mut curr_l = l
     let mut curr_r = r
     let mut z_i = 0
-
     if i < curr_r {
-      z_i = if z[i - curr_l] < curr_r - i {
-        z[i - curr_l]
-      } else {
-        curr_r - i
-      }
+      z_i = if z[i - curr_l] < curr_r - i { z[i - curr_l] } else { curr_r - i }
     }
-
     while i + z_i < n && s[z_i] == s[i + z_i] {
       z_i = z_i + 1
     }
-
     z[i] = z_i
-
     if i + z_i > curr_r {
       curr_l = i
       curr_r = i + z_i
     }
-
     continue i + 1, curr_l, curr_r
   } where {
     invariant: i >= 1 && i <= n && l <= r && r <= n,
     reasoning: "I: z[0] = n; [l, r) = [0, 0) is empty Z-box. M: For each i, compute z[i] using the Z-box optimization. If i < r, then s[i..i+z[i-l]) == s[0..z[i-l]) by previous computation, so z[i] >= min(z[i-l], r-i). We then extend z[i] by comparing characters. If i + z[i] > r, update the Z-box to [i, i+z[i]). Key insight: r only increases, and each comparison that increases z[i] also increases r. Total comparisons O(n). T: After i = n-1, z[i] correctly stores the longest prefix match starting at i. The Z-box invariant ensures we never redo comparisons, achieving O(n) time.",
   }
-
   z
 }
 
@@ -171,14 +150,11 @@ pub fn z_search(text : String, pattern : String) -> Array[Int] {
   let n = text.length()
   let m = pattern.length()
   let matches : Array[Int] = []
-
   if m == 0 || m > n {
     return matches
   }
-
   let concat = pattern.to_string() + "$" + text.to_string()
   let z = compute_z_function(concat)
-
   let offset = m + 1
   for i = offset; i < concat.length(); i = i + 1 {
     if z[i] == m {
@@ -190,7 +166,6 @@ pub fn z_search(text : String, pattern : String) -> Array[Int] {
       #|Scan Z-values after the delimiter; each i with z[i] == m marks a match.
     ),
   }
-
   matches
 }
 

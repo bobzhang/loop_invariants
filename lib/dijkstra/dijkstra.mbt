@@ -77,11 +77,9 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
   if n == 0 {
     return None
   }
-
   let result = self.data[0]
   let last = self.data[n - 1]
   let _ = self.data.pop()
-
   if self.data.length() > 0 {
     self.data[0] = last
     // Bubble down
@@ -91,18 +89,15 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
       let left = 2 * i + 1
       let right = 2 * i + 2
       let mut smallest = i
-
       if left < len && self.data[left].dist < self.data[smallest].dist {
         smallest = left
       }
       if right < len && self.data[right].dist < self.data[smallest].dist {
         smallest = right
       }
-
       if smallest == i {
         break
       }
-
       let temp = self.data[i]
       self.data[i] = self.data[smallest]
       self.data[smallest] = temp
@@ -112,7 +107,6 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
       reasoning: "Bubble down within heap bounds while restoring heap order.",
     }
   }
-
   Some(result)
 }
 
@@ -142,13 +136,18 @@ pub(all) struct Graph {
 ///|
 /// Create a new graph with n vertices
 pub fn Graph::new(n : Int) -> Graph {
-  let adj : Array[Array[Edge]] = Array::makei(n, (_) => [])
+  let adj : Array[Array[Edge]] = Array::makei(n, _ => [])
   { n, adj }
 }
 
 ///|
 /// Add a directed edge from u to v with given weight
-pub fn Graph::add_edge(self : Graph, from : Int, to : Int, weight : Int64) -> Unit {
+pub fn Graph::add_edge(
+  self : Graph,
+  from : Int,
+  to : Int,
+  weight : Int64,
+) -> Unit {
   if from >= 0 && from < self.n && to >= 0 && to < self.n {
     self.adj[from].push({ to, weight })
   }
@@ -156,7 +155,12 @@ pub fn Graph::add_edge(self : Graph, from : Int, to : Int, weight : Int64) -> Un
 
 ///|
 /// Add an undirected edge between u and v
-pub fn Graph::add_undirected_edge(self : Graph, u : Int, v : Int, weight : Int64) -> Unit {
+pub fn Graph::add_undirected_edge(
+  self : Graph,
+  u : Int,
+  v : Int,
+  weight : Int64,
+) -> Unit {
   self.add_edge(u, v, weight)
   self.add_edge(v, u, weight)
 }
@@ -187,11 +191,9 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
   let dist = Array::make(n, INF)
   let parent = Array::make(n, -1)
   let visited = Array::make(n, false)
-
   if source < 0 || source >= n {
     return { dist, parent }
   }
-
   dist[source] = 0L
   let pq = MinHeap::new()
   pq.push({ dist: 0L, vertex: source })
@@ -207,7 +209,6 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
         if visited[u] {
           continue
         }
-
         visited[u] = true
 
         // Relax all outgoing edges
@@ -215,7 +216,6 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
           let edge = graph.adj[u][i]
           let v = edge.to
           let new_dist = dist[u] + edge.weight
-
           if new_dist < dist[v] {
             dist[v] = new_dist
             parent[v] = u
@@ -231,7 +231,6 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
     invariant: true,
     reasoning: "I: dist[source]=0 is optimal; all other dist[v]=INF. M: Each iteration selects the unvisited vertex u with minimum dist[u], marks it visited, and relaxes its edges. Claim: dist[u] is the true shortest path. Proof: Suppose a shorter path P exists. P must pass through some unvisited vertex w before reaching u. But dist[w] >= dist[u] (since u was selected as minimum), and the subpath to w has length >= dist[w] >= dist[u], contradiction since edge weights are non-negative. T: When PQ is empty, all reachable vertices are visited with optimal distances.",
   }
-
   { dist, parent }
 }
 
@@ -239,11 +238,9 @@ pub fn dijkstra(graph : Graph, source : Int) -> DijkstraResult {
 /// Reconstruct path from source to target using parent pointers
 pub fn reconstruct_path(result : DijkstraResult, target : Int) -> Array[Int] {
   let path : Array[Int] = []
-
   if target < 0 || target >= result.parent.length() {
     return path
   }
-
   if result.dist[target] == INF {
     return path // No path exists
   }
@@ -257,7 +254,6 @@ pub fn reconstruct_path(result : DijkstraResult, target : Int) -> Array[Int] {
 
   // Reverse to get source to target
   path.rev_in_place()
-
   path
 }
 
@@ -267,7 +263,6 @@ pub fn shortest_distance(graph : Graph, source : Int, target : Int) -> Int64? {
   if target < 0 || target >= graph.n {
     return None
   }
-
   let result = dijkstra(graph, source)
   if result.dist[target] == INF {
     None
@@ -286,29 +281,29 @@ pub fn shortest_distance(graph : Graph, source : Int, target : Int) -> Int64? {
 ///
 /// IDEA: Search from both source and target simultaneously
 /// Stop when searches meet in the middle
-pub fn bidirectional_dijkstra(graph : Graph, reverse_graph : Graph, source : Int, target : Int) -> Int64? {
+pub fn bidirectional_dijkstra(
+  graph : Graph,
+  reverse_graph : Graph,
+  source : Int,
+  target : Int,
+) -> Int64? {
   if source < 0 || source >= graph.n || target < 0 || target >= graph.n {
     return None
   }
-
   if source == target {
     return Some(0L)
   }
-
   let n = graph.n
   let dist_forward = Array::make(n, INF)
   let dist_backward = Array::make(n, INF)
   let visited_forward = Array::make(n, false)
   let visited_backward = Array::make(n, false)
-
   dist_forward[source] = 0L
   dist_backward[target] = 0L
-
   let pq_forward = MinHeap::new()
   let pq_backward = MinHeap::new()
   pq_forward.push({ dist: 0L, vertex: source })
   pq_backward.push({ dist: 0L, vertex: target })
-
   let mut best_dist = INF
 
   // INVARIANT: best_dist is the shortest known path through a vertex
@@ -317,7 +312,6 @@ pub fn bidirectional_dijkstra(graph : Graph, reverse_graph : Graph, source : Int
     // Alternate between forward and backward search
     let forward_done = pq_forward.is_empty()
     let backward_done = pq_backward.is_empty()
-
     if forward_done && backward_done {
       break
     }
@@ -405,8 +399,11 @@ pub fn bidirectional_dijkstra(graph : Graph, reverse_graph : Graph, source : Int
     invariant: best_dist >= 0L,
     reasoning: "Alternate forward/backward relaxations until both queues are empty.",
   }
-
-  if best_dist == INF { None } else { Some(best_dist) }
+  if best_dist == INF {
+    None
+  } else {
+    Some(best_dist)
+  }
 }
 
 // ============================================================================
@@ -421,7 +418,6 @@ test "dijkstra basic" {
   g.add_edge(1, 2, 2L)
   g.add_edge(2, 3, 3L)
   g.add_edge(3, 4, 4L)
-
   let result = dijkstra(g, 0)
   inspect(result.dist[0], content="0")
   inspect(result.dist[1], content="1")
@@ -437,7 +433,6 @@ test "dijkstra with shortcuts" {
   g.add_edge(1, 2, 1L)
   g.add_edge(2, 3, 1L)
   g.add_edge(0, 3, 10L) // Long direct path
-
   let result = dijkstra(g, 0)
   // Should take 0->1->2->3 (cost 3) not 0->3 (cost 10)
   inspect(result.dist[3], content="3")
@@ -462,7 +457,6 @@ test "dijkstra undirected" {
   g.add_undirected_edge(1, 2, 2L)
   g.add_undirected_edge(2, 3, 3L)
   g.add_undirected_edge(0, 3, 10L)
-
   let result = dijkstra(g, 0)
   inspect(result.dist[3], content="6") // 0->1->2->3
 }
@@ -475,7 +469,6 @@ test "path reconstruction" {
   g.add_edge(2, 3, 1L)
   g.add_edge(0, 4, 1L)
   g.add_edge(4, 3, 1L) // Alternative path
-
   let result = dijkstra(g, 0)
   let path = reconstruct_path(result, 3)
 
@@ -490,7 +483,6 @@ test "shortest distance helper" {
   let g = Graph::new(3)
   g.add_edge(0, 1, 5L)
   g.add_edge(1, 2, 3L)
-
   inspect(shortest_distance(g, 0, 2), content="Some(8)")
   inspect(shortest_distance(g, 0, 0), content="Some(0)")
 }
@@ -515,7 +507,6 @@ test "dijkstra complex graph" {
   g.add_edge(2, 5, 2L)
   g.add_edge(3, 4, 6L)
   g.add_edge(4, 5, 9L)
-
   let result = dijkstra(g, 0)
   inspect(result.dist[0], content="0")
   inspect(result.dist[1], content="7")
@@ -558,7 +549,6 @@ test "dijkstra invalid source" {
   let g = Graph::new(3)
   let result = dijkstra(g, -1)
   inspect(result.dist[0] == INF, content="true")
-
   let result2 = dijkstra(g, 10)
   inspect(result2.dist[0] == INF, content="true")
 }
@@ -577,7 +567,6 @@ test "bidirectional dijkstra basic" {
   rev_g.add_edge(1, 0, 1L)
   rev_g.add_edge(2, 1, 2L)
   rev_g.add_edge(3, 2, 3L)
-
   let dist = bidirectional_dijkstra(g, rev_g, 0, 3)
   inspect(dist, content="Some(6)")
 }
@@ -586,7 +575,6 @@ test "bidirectional dijkstra basic" {
 test "bidirectional dijkstra same vertex" {
   let g = Graph::new(3)
   let rev_g = Graph::new(3)
-
   let dist = bidirectional_dijkstra(g, rev_g, 1, 1)
   inspect(dist, content="Some(0)")
 }
@@ -604,7 +592,6 @@ test "dijkstra zero weight edge" {
   let g = Graph::new(3)
   g.add_edge(0, 1, 0L)
   g.add_edge(1, 2, 0L)
-
   let result = dijkstra(g, 0)
   inspect(result.dist[2], content="0")
 }
@@ -616,7 +603,6 @@ test "dijkstra multiple paths same length" {
   g.add_edge(0, 2, 1L)
   g.add_edge(1, 3, 1L)
   g.add_edge(2, 3, 1L)
-
   let result = dijkstra(g, 0)
   inspect(result.dist[3], content="2") // Either path works
 }
@@ -626,7 +612,6 @@ test "graph creation" {
   let g = Graph::new(5)
   inspect(g.n, content="5")
   inspect(g.adj.length(), content="5")
-
   g.add_edge(0, 1, 10L)
   inspect(g.adj[0].length(), content="1")
   inspect(g.adj[0][0].to, content="1")

@@ -404,6 +404,11 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
       i - stack[stack.length() - 1]
     }
     stack.push(i)
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|Maintain a strictly increasing stack to find previous smaller elements.
+    ),
   }
 
   // Compute right distances using monotonic stack (process right to left)
@@ -419,6 +424,11 @@ fn sum_subarray_minimums(arr : ArrayView[Int]) -> Int {
       stack[stack.length() - 1] - i
     }
     stack.push(i)
+  } where {
+    invariant: i >= -1 && i < n,
+    reasoning: (
+      #|Maintain a strictly increasing stack from the right for next smaller elements.
+    ),
   }
 
   // Sum contributions

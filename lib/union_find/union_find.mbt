@@ -56,7 +56,6 @@ fn UnionFind::new(n : Int) -> UnionFind {
     invariant: i >= 0 && i <= n,
     reasoning: "I: parent is uninitialized. M: Set parent[i] = i, making i a root of singleton set. T: After i = n-1, each element 0..n-1 is its own root. parent[x] = x for all x, satisfying the root invariant.",
   }
-
   { parent, rank, num_sets: n }
 }
 
@@ -85,7 +84,6 @@ fn UnionFind::find(self : UnionFind, x : Int) -> Int {
     self.parent[curr] = root
     curr = next
   }
-
   root
 }
 
@@ -98,11 +96,9 @@ fn UnionFind::find(self : UnionFind, x : Int) -> Int {
 fn UnionFind::union(self : UnionFind, x : Int, y : Int) -> Bool {
   let root_x = self.find(x)
   let root_y = self.find(y)
-
   if root_x < 0 || root_y < 0 {
     return false
   }
-
   if root_x == root_y {
     return false // Already in same set
   }
@@ -117,7 +113,6 @@ fn UnionFind::union(self : UnionFind, x : Int, y : Int) -> Bool {
     self.parent[root_y] = root_x
     self.rank[root_x] = self.rank[root_x] + 1
   }
-
   self.num_sets = self.num_sets - 1
   true
 }
@@ -143,7 +138,6 @@ fn UnionFind::set_size(self : UnionFind, x : Int) -> Int {
   if root < 0 {
     return 0
   }
-
   let mut size = 0
   for i = 0; i < self.parent.length(); i = i + 1 {
     if self.find(i) == root {
@@ -176,7 +170,6 @@ fn WeightedUnionFind::new(n : Int) -> WeightedUnionFind {
   let parent = Array::make(n, 0)
   let rank = Array::make(n, 0)
   let weight = Array::make(n, 0L)
-
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
   } where {
@@ -185,18 +178,19 @@ fn WeightedUnionFind::new(n : Int) -> WeightedUnionFind {
       #|parent[0..i) initialized to self; each node is a singleton root.
     ),
   }
-
   { parent, rank, weight }
 }
 
 ///|
 /// Find root and return (root, weight_to_root)
 /// weight_to_root = total weight from x to root
-fn WeightedUnionFind::find_with_weight(self : WeightedUnionFind, x : Int) -> (Int, Int64) {
+fn WeightedUnionFind::find_with_weight(
+  self : WeightedUnionFind,
+  x : Int,
+) -> (Int, Int64) {
   if x < 0 || x >= self.parent.length() {
     return (-1, 0L)
   }
-
   if self.parent[x] == x {
     return (x, 0L)
   }
@@ -208,34 +202,38 @@ fn WeightedUnionFind::find_with_weight(self : WeightedUnionFind, x : Int) -> (In
   // Path compression: update parent and weight
   self.parent[x] = root
   self.weight[x] = total_weight
-
   (root, total_weight)
 }
 
 ///|
 /// Get difference: weight(x) - weight(y) if in same set, None otherwise
-fn WeightedUnionFind::diff(self : WeightedUnionFind, x : Int, y : Int) -> Int64? {
+fn WeightedUnionFind::diff(
+  self : WeightedUnionFind,
+  x : Int,
+  y : Int,
+) -> Int64? {
   let (root_x, wx) = self.find_with_weight(x)
   let (root_y, wy) = self.find_with_weight(y)
-
   if root_x < 0 || root_y < 0 || root_x != root_y {
     return None
   }
-
   Some(wx - wy)
 }
 
 ///|
 /// Union with constraint: weight(x) - weight(y) = w
 /// Returns true if union performed or constraint consistent
-fn WeightedUnionFind::union_with_weight(self : WeightedUnionFind, x : Int, y : Int, w : Int64) -> Bool {
+fn WeightedUnionFind::union_with_weight(
+  self : WeightedUnionFind,
+  x : Int,
+  y : Int,
+  w : Int64,
+) -> Bool {
   let (root_x, wx) = self.find_with_weight(x)
   let (root_y, wy) = self.find_with_weight(y)
-
   if root_x < 0 || root_y < 0 {
     return false
   }
-
   if root_x == root_y {
     // Check consistency: wx - wy should equal w
     return wx - wy == w
@@ -261,7 +259,6 @@ fn WeightedUnionFind::union_with_weight(self : WeightedUnionFind, x : Int, y : I
     self.weight[root_y] = -w + wx - wy
     self.rank[root_x] = self.rank[root_x] + 1
   }
-
   true
 }
 
@@ -273,7 +270,6 @@ fn WeightedUnionFind::union_with_weight(self : WeightedUnionFind, x : Int, y : I
 test "union find basic" {
   let uf = UnionFind::new(5)
   inspect(uf.count_sets(), content="5")
-
   let _ = uf.union(0, 1)
   inspect(uf.count_sets(), content="4")
   inspect(uf.connected(0, 1), content="true")
@@ -283,14 +279,11 @@ test "union find basic" {
 ///|
 test "union find transitivity" {
   let uf = UnionFind::new(5)
-
   let _ = uf.union(0, 1)
   let _ = uf.union(1, 2)
   let _ = uf.union(3, 4)
-
   inspect(uf.connected(0, 2), content="true") // Transitive
   inspect(uf.connected(0, 3), content="false")
-
   let _ = uf.union(2, 3)
   inspect(uf.connected(0, 4), content="true") // All connected
   inspect(uf.count_sets(), content="1")
@@ -299,7 +292,6 @@ test "union find transitivity" {
 ///|
 test "union find same set" {
   let uf = UnionFind::new(3)
-
   let _ = uf.union(0, 1)
   inspect(uf.union(0, 1), content="false") // Already same set
   inspect(uf.count_sets(), content="2")
@@ -308,7 +300,6 @@ test "union find same set" {
 ///|
 test "union find find" {
   let uf = UnionFind::new(4)
-
   let _ = uf.union(0, 1)
   let _ = uf.union(2, 3)
   let _ = uf.union(0, 2)
@@ -323,10 +314,8 @@ test "union find find" {
 ///|
 test "union find set size" {
   let uf = UnionFind::new(5)
-
   let _ = uf.union(0, 1)
   let _ = uf.union(0, 2)
-
   inspect(uf.set_size(0), content="3")
   inspect(uf.set_size(3), content="1")
 }
@@ -334,7 +323,6 @@ test "union find set size" {
 ///|
 test "union find invalid" {
   let uf = UnionFind::new(3)
-
   inspect(uf.find(-1), content="-1")
   inspect(uf.find(10), content="-1")
   inspect(uf.union(-1, 0), content="false")
@@ -356,7 +344,6 @@ test "weighted union find basic" {
 ///|
 test "weighted union find consistency" {
   let wuf = WeightedUnionFind::new(3)
-
   let _ = wuf.union_with_weight(0, 1, 5L)
   let _ = wuf.union_with_weight(1, 2, 3L)
 
@@ -370,9 +357,7 @@ test "weighted union find consistency" {
 ///|
 test "weighted union find diff" {
   let wuf = WeightedUnionFind::new(4)
-
   let _ = wuf.union_with_weight(0, 1, 10L)
-
   inspect(wuf.diff(0, 1), content="Some(10)")
   inspect(wuf.diff(1, 0), content="Some(-10)")
   inspect(wuf.diff(0, 2), content="None") // Different sets
@@ -398,6 +383,7 @@ test "union find path compression" {
   // Create a chain: 0 <- 1 <- 2 <- ... <- 9
   for i = 1; i < 10; i = i + 1 {
     let _ = uf.union(i - 1, i)
+
   } where {
     invariant: i >= 1 && i <= 10,
     reasoning: (

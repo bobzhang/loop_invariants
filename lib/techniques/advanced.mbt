@@ -488,6 +488,7 @@ test "edit_distance" {
   let kitten : Array[Char] = ['k', 'i', 't', 't', 'e', 'n']
   let sitting : Array[Char] = ['s', 'i', 't', 't', 'i', 'n', 'g']
   assert_eq(edit_distance(kitten[:], sitting[:]), 3)
+  assert_eq(edit_dist_spec(['a', 'b'][:], 2, ['a', 'c'][:], 2), 1)
   let abc : Array[Char] = ['a', 'b', 'c']
   let abc2 : Array[Char] = ['a', 'b', 'c']
   assert_eq(edit_distance(abc[:], abc2[:]), 0)
@@ -528,7 +529,7 @@ fn point_cmp(p1 : Point, p2 : Point) -> Int {
 ///|
 /// Simple insertion sort for points (for demonstration).
 fn sort_points(points : Array[Point]) -> Unit {
-  for i = 1; i < points.length(); i = i + 1 {
+  for i in 1..<points.length() {
     let key = points[i]
     let mut j = i - 1
     while j >= 0 && point_cmp(points[j], key) > 0 {

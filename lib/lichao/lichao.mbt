@@ -112,7 +112,7 @@ fn insert_line(
   node_idx : Int,
   lo : Int64,
   hi : Int64,
-  new_line : Line
+  new_line : Line,
 ) -> Unit {
   let node = tree.nodes[node_idx]
 
@@ -121,7 +121,6 @@ fn insert_line(
     tree.nodes[node_idx].line = new_line
     return
   }
-
   let mid = (lo + hi) / 2L
 
   // Compare at midpoint
@@ -135,7 +134,6 @@ fn insert_line(
     winner = new_line
     loser = node.line
   }
-
   tree.nodes[node_idx].line = winner
 
   // The loser might win in one of the halves
@@ -181,23 +179,20 @@ fn query_max(
   node_idx : Int,
   lo : Int64,
   hi : Int64,
-  x : Int64
+  x : Int64,
 ) -> Int64 {
   if node_idx < 0 {
     return -9223372036854775807L // Return minimum for undefined
   }
-
   let node = tree.nodes[node_idx]
   let curr_val = if node.line.is_undefined() {
     -9223372036854775807L
   } else {
     node.line.eval(x)
   }
-
   if lo == hi {
     return curr_val
   }
-
   let mid = (lo + hi) / 2L
 
   // INVARIANT: x is in exactly one child's range
@@ -274,15 +269,13 @@ fn insert_line_min(
   node_idx : Int,
   lo : Int64,
   hi : Int64,
-  new_line : Line
+  new_line : Line,
 ) -> Unit {
   let node = tree.nodes[node_idx]
-
   if node.line.is_undefined_min() {
     tree.nodes[node_idx].line = new_line
     return
   }
-
   let mid = (lo + hi) / 2L
   let curr_at_mid = node.line.eval(mid)
   let new_at_mid = new_line.eval(mid)
@@ -294,13 +287,10 @@ fn insert_line_min(
     winner = new_line
     loser = node.line
   }
-
   tree.nodes[node_idx].line = winner
-
   if lo == hi {
     return
   }
-
   let winner_at_lo = winner.eval(lo)
   let loser_at_lo = loser.eval(lo)
 
@@ -330,25 +320,21 @@ fn query_min_impl(
   node_idx : Int,
   lo : Int64,
   hi : Int64,
-  x : Int64
+  x : Int64,
 ) -> Int64 {
   if node_idx < 0 {
     return 9223372036854775806L
   }
-
   let node = tree.nodes[node_idx]
   let curr_val = if node.line.is_undefined_min() {
     9223372036854775806L
   } else {
     node.line.eval(x)
   }
-
   if lo == hi {
     return curr_val
   }
-
   let mid = (lo + hi) / 2L
-
   if x <= mid {
     let child_val = query_min_impl(tree, node.left, lo, mid, x)
     if child_val < curr_val {
@@ -381,7 +367,6 @@ test "lichao basic max" {
 
   // Insert y = 2x + 1
   tree.insert(2L, 1L)
-
   inspect(tree.query(0L), content="1") // 2*0+1 = 1
   inspect(tree.query(5L), content="11") // 2*5+1 = 11
   inspect(tree.query(-3L), content="-5") // 2*(-3)+1 = -5
@@ -414,9 +399,7 @@ test "lichao multiple lines max" {
 ///|
 test "lichao single line" {
   let tree = LiChaoTree::new(0L, 100L)
-
   tree.insert(3L, 5L) // y = 3x + 5
-
   inspect(tree.query(0L), content="5")
   inspect(tree.query(10L), content="35")
   inspect(tree.query(100L), content="305")
@@ -425,7 +408,6 @@ test "lichao single line" {
 ///|
 test "lichao horizontal lines" {
   let tree = LiChaoTree::new(0L, 100L)
-
   tree.insert(0L, 10L) // y = 10
   tree.insert(0L, 20L) // y = 20
   tree.insert(0L, 5L) // y = 5
@@ -458,7 +440,6 @@ test "lichao crossing lines" {
 ///|
 test "lichao min basic" {
   let tree = LiChaoTreeMin::new(-100L, 100L)
-
   tree.insert(2L, 1L) // y = 2x + 1
   tree.insert(-1L, 5L) // y = -x + 5
 
@@ -475,7 +456,6 @@ test "lichao min basic" {
 ///|
 test "lichao min multiple" {
   let tree = LiChaoTreeMin::new(0L, 100L)
-
   tree.insert(1L, 100L) // y = x + 100
   tree.insert(2L, 0L) // y = 2x
   tree.insert(-1L, 200L) // y = -x + 200
@@ -493,7 +473,6 @@ test "lichao min multiple" {
 ///|
 test "lichao large range" {
   let tree = LiChaoTree::new(-1000000000L, 1000000000L)
-
   tree.insert(1L, 0L)
   tree.insert(-1L, 0L)
 
@@ -552,7 +531,6 @@ test "lichao parallel lines" {
 ///|
 test "lichao steep slopes" {
   let tree = LiChaoTree::new(-10L, 10L)
-
   tree.insert(100L, 0L) // Very steep positive
   tree.insert(-100L, 0L) // Very steep negative
 
@@ -569,7 +547,6 @@ test "lichao steep slopes" {
 ///|
 test "lichao min node count" {
   let tree = LiChaoTreeMin::new(0L, 1000L)
-
   tree.insert(1L, 0L)
   tree.insert(-1L, 100L)
   tree.insert(0L, 50L)

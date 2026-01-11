@@ -87,7 +87,7 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
   }
 
   // Create nodes
-  let nodes = Array::makei(n, (i) => {
+  let nodes = Array::makei(n, i => {
     value: arr[i],
     index: i,
     left: -1,
@@ -99,7 +99,6 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
   // INVARIANT: Stack contains nodes on rightmost path, in increasing depth order
   // Stack values are decreasing (since we're building min-heap)
   let stack : Array[Int] = []
-
   for i = 0; i < n; i = i + 1 {
     let mut last_popped = -1
 
@@ -110,6 +109,7 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
       if nodes[top].value > arr[i] {
         last_popped = top
         let _ = stack.pop()
+
       } else {
         break
       }
@@ -127,7 +127,6 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
       nodes[parent].right = i
       nodes[i].parent = parent
     }
-
     stack.push(i)
   } where {
     invariant: i >= 0 && i <= n,
@@ -144,13 +143,12 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
   }
 
   // Create index to node mapping (node i corresponds to array position i)
-  let index_to_node = Array::makei(n, (i) => nodes[i].index)
+  let index_to_node = Array::makei(n, i => nodes[i].index)
 
   // Compute depths using BFS
   let depth = Array::make(n, 0)
   let queue : Array[Int] = [root]
   depth[root] = 0
-
   for head = 0; head < queue.length(); head = head + 1 {
     let v = queue[head]
     if nodes[v].left != -1 {
@@ -209,7 +207,6 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
     invariant: k >= 1 && k <= log_n,
     reasoning: "Build binary lifting levels from 1 to log_n-1.",
   }
-
   { nodes, root, index_to_node, depth, ancestors, n, log_n }
 }
 
@@ -239,7 +236,6 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
   if u < 0 || v < 0 || u >= self.n || v >= self.n {
     return -1
   }
-
   let mut u = u
   let mut v = v
 
@@ -261,7 +257,6 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
     invariant: k >= 0 && k <= self.log_n,
     reasoning: "Scan each bit position of diff to lift u upward.",
   }
-
   if u == v {
     return u
   }
@@ -299,7 +294,6 @@ fn CartesianTree::query_min(self : CartesianTree, l : Int, r : Int) -> Int64? {
   if lca_node == -1 {
     return None
   }
-
   Some(self.nodes[lca_node].value)
 }
 
@@ -308,19 +302,17 @@ fn CartesianTree::query_min(self : CartesianTree, l : Int, r : Int) -> Int64? {
 fn CartesianTree::query_min_index(
   self : CartesianTree,
   l : Int,
-  r : Int
+  r : Int,
 ) -> Int? {
   if l < 0 || r >= self.n || l > r || self.n == 0 {
     return None
   }
-
   let node_l = self.index_to_node[l]
   let node_r = self.index_to_node[r]
   let lca_node = self.lca(node_l, node_r)
   if lca_node == -1 {
     return None
   }
-
   Some(self.nodes[lca_node].index)
 }
 
@@ -341,17 +333,18 @@ fn CartesianTree::root_value(self : CartesianTree) -> Int64? {
 
 ///|
 /// Verify in-order traversal yields original sequence
-fn CartesianTree::verify_inorder(self : CartesianTree, arr : Array[Int64]) -> Bool {
+fn CartesianTree::verify_inorder(
+  self : CartesianTree,
+  arr : Array[Int64],
+) -> Bool {
   if self.n != arr.length() {
     return false
   }
   if self.n == 0 {
     return true
   }
-
   let result : Array[Int64] = []
   inorder_collect(self.nodes, self.root, result)
-
   for i = 0; i < arr.length(); i = i + 1 {
     if result[i] != arr[i] {
       return false
@@ -367,7 +360,7 @@ fn CartesianTree::verify_inorder(self : CartesianTree, arr : Array[Int64]) -> Bo
 fn inorder_collect(
   nodes : Array[CartesianNode],
   node : Int,
-  result : Array[Int64]
+  result : Array[Int64],
 ) -> Unit {
   if node == -1 {
     return
@@ -391,7 +384,6 @@ fn verify_heap_recursive(nodes : Array[CartesianNode], node : Int) -> Bool {
   if node == -1 {
     return true
   }
-
   let left = nodes[node].left
   let right = nodes[node].right
 
@@ -404,7 +396,6 @@ fn verify_heap_recursive(nodes : Array[CartesianNode], node : Int) -> Bool {
   if right != -1 && nodes[right].value < nodes[node].value {
     return false
   }
-
   verify_heap_recursive(nodes, left) && verify_heap_recursive(nodes, right)
 }
 
@@ -423,28 +414,25 @@ fn nearest_smaller_left(arr : Array[Int64]) -> Array[Int] {
   // Use monotonic stack
   // INVARIANT: Stack contains indices with strictly increasing values
   let stack : Array[Int] = []
-
   for i = 0; i < n; i = i + 1 {
     // Pop elements >= arr[i]
     while stack.length() > 0 {
       let top = stack[stack.length() - 1]
       if arr[top] >= arr[i] {
         let _ = stack.pop()
+
       } else {
         break
       }
     }
-
     if stack.length() > 0 {
       result[i] = stack[stack.length() - 1]
     }
-
     stack.push(i)
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: "Scan left-to-right while maintaining a monotonic stack.",
   }
-
   result
 }
 
@@ -456,27 +444,24 @@ fn nearest_smaller_right(arr : Array[Int64]) -> Array[Int] {
 
   // Process from right to left
   let stack : Array[Int] = []
-
   for i = n - 1; i >= 0; i = i - 1 {
     while stack.length() > 0 {
       let top = stack[stack.length() - 1]
       if arr[top] >= arr[i] {
         let _ = stack.pop()
+
       } else {
         break
       }
     }
-
     if stack.length() > 0 {
       result[i] = stack[stack.length() - 1]
     }
-
     stack.push(i)
   } where {
     invariant: i >= 0 && i < n,
     reasoning: "Scan right-to-left while maintaining a monotonic stack.",
   }
-
   result
 }
 
@@ -488,7 +473,6 @@ fn largest_rectangle_histogram(heights : Array[Int64]) -> Int64 {
   if n == 0 {
     return 0L
   }
-
   let left = nearest_smaller_left(heights)
   let right = nearest_smaller_right(heights)
 
@@ -540,7 +524,11 @@ fn CartesianTree::tree_number(self : CartesianTree) -> Int64 {
 }
 
 ///|
-fn encode_tree(nodes : Array[CartesianNode], node : Int, bits : Array[Int]) -> Unit {
+fn encode_tree(
+  nodes : Array[CartesianNode],
+  node : Int,
+  bits : Array[Int],
+) -> Unit {
   // Encode using null markers to distinguish left vs right children
   // null = 0, has_node = 1
   if node == -1 {
@@ -605,7 +593,6 @@ test "cartesian tree rmq index" {
 test "cartesian tree empty" {
   let arr : Array[Int64] = []
   let tree = CartesianTree::new(arr)
-
   inspect(tree.length(), content="0")
   inspect(tree.root_value(), content="None")
   inspect(tree.query_min(0, 0), content="None")
@@ -615,7 +602,6 @@ test "cartesian tree empty" {
 test "cartesian tree single" {
   let arr : Array[Int64] = [42L]
   let tree = CartesianTree::new(arr)
-
   inspect(tree.root_value(), content="Some(42)")
   inspect(tree.query_min(0, 0), content="Some(42)")
   inspect(tree.verify_inorder(arr), content="true")
@@ -627,7 +613,6 @@ test "cartesian tree sorted ascending" {
   // Ascending array creates right-skewed tree
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let tree = CartesianTree::new(arr)
-
   inspect(tree.root_value(), content="Some(1)")
   inspect(tree.verify_inorder(arr), content="true")
   inspect(tree.verify_heap(), content="true")
@@ -642,11 +627,9 @@ test "cartesian tree sorted descending" {
   // Descending array creates left-skewed tree
   let arr : Array[Int64] = [5L, 4L, 3L, 2L, 1L]
   let tree = CartesianTree::new(arr)
-
   inspect(tree.root_value(), content="Some(1)")
   inspect(tree.verify_inorder(arr), content="true")
   inspect(tree.verify_heap(), content="true")
-
   inspect(tree.query_min(0, 4), content="Some(1)")
   inspect(tree.query_min(0, 2), content="Some(3)")
 }
@@ -655,7 +638,6 @@ test "cartesian tree sorted descending" {
 test "cartesian tree all same" {
   let arr : Array[Int64] = [5L, 5L, 5L, 5L]
   let tree = CartesianTree::new(arr)
-
   inspect(tree.root_value(), content="Some(5)")
   inspect(tree.query_min(0, 3), content="Some(5)")
   inspect(tree.query_min(1, 2), content="Some(5)")
@@ -742,11 +724,9 @@ test "cartesian tree number different shapes" {
   let arr1 : Array[Int64] = [1L, 2L, 3L] // Right-skewed
   let arr2 : Array[Int64] = [3L, 2L, 1L] // Left-skewed
   let arr3 : Array[Int64] = [2L, 1L, 3L] // Balanced
-
   let tree1 = CartesianTree::new(arr1)
   let tree2 = CartesianTree::new(arr2)
   let tree3 = CartesianTree::new(arr3)
-
   let num1 = tree1.tree_number()
   let num2 = tree2.tree_number()
   let num3 = tree3.tree_number()
@@ -762,7 +742,6 @@ test "cartesian tree number same shape" {
   // Arrays with same relative ordering produce same shape
   let arr1 : Array[Int64] = [10L, 20L, 30L]
   let arr2 : Array[Int64] = [1L, 2L, 3L]
-
   let tree1 = CartesianTree::new(arr1)
   let tree2 = CartesianTree::new(arr2)
 
@@ -774,7 +753,6 @@ test "cartesian tree number same shape" {
 test "cartesian tree rmq invalid range" {
   let arr : Array[Int64] = [3L, 2L, 6L, 1L, 9L]
   let tree = CartesianTree::new(arr)
-
   inspect(tree.query_min(-1, 0), content="None")
   inspect(tree.query_min(0, 10), content="None")
   inspect(tree.query_min(3, 1), content="None")
@@ -793,10 +771,8 @@ test "cartesian tree lca" {
 ///|
 test "cartesian tree large" {
   // Test with larger array
-  let arr = Array::makei(100, (i) => (i * 7 % 100).to_int64())
-
+  let arr = Array::makei(100, i => (i * 7 % 100).to_int64())
   let tree = CartesianTree::new(arr)
-
   inspect(tree.verify_inorder(arr), content="true")
   inspect(tree.verify_heap(), content="true")
 

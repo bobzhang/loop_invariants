@@ -57,7 +57,6 @@ priv struct WaveletTree {
 fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
   let nodes : Array[WaveletNode] = []
   let n = arr.length()
-
   if n == 0 {
     return { nodes, root: -1, n: 0, sigma }
   }
@@ -69,21 +68,12 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
     elements : Array[Int],
     indices : Array[Int],
     lo : Int,
-    hi : Int
+    hi : Int,
   ) -> Int {
     // BASE CASE: single value or empty range
     if lo + 1 >= hi || elements.length() == 0 {
       let node_idx = nodes.length()
-      nodes.push(
-        {
-          lo,
-          hi,
-          bits: [],
-          rank: [0],
-          left: -1,
-          right: -1,
-        },
-      )
+      nodes.push({ lo, hi, bits: [], rank: [0], left: -1, right: -1 })
       return node_idx
     }
 
@@ -116,7 +106,9 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
         right_indices.push(indices[i])
       }
       // Maintain prefix sum
-      rank.push(rank[rank.length() - 1] + (if bits[bits.length() - 1] { 1 } else { 0 }))
+      rank.push(
+        rank[rank.length() - 1] + (if bits[bits.length() - 1] { 1 } else { 0 }),
+      )
     } where {
       invariant: bits.length() == i,
       reasoning: "Each iteration processes one element and adds one bit",
@@ -124,16 +116,18 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
 
     // Create this node first (to get index)
     let node_idx = nodes.length()
-    nodes.push(
-      { lo, hi, bits, rank, left: -1, right: -1 },
-    )
+    nodes.push({ lo, hi, bits, rank, left: -1, right: -1 })
 
     // Recursively build children
     let left_child = build_node(nodes, left_elems, left_indices, lo, mid)
     let right_child = build_node(nodes, right_elems, right_indices, mid, hi)
 
     // Update node with child indices
-    nodes[node_idx] = { ..nodes[node_idx], left: left_child, right: right_child }
+    nodes[node_idx] = {
+      ..nodes[node_idx],
+      left: left_child,
+      right: right_child,
+    }
     node_idx
   }
 
@@ -147,7 +141,6 @@ fn WaveletTree::build(arr : Array[Int], sigma : Int) -> WaveletTree {
       #|indices[0..i) equals 0..i-1.
     ),
   }
-
   let root = build_node(nodes, arr.copy(), indices, 0, sigma)
   { nodes, root, n, sigma }
 }
@@ -170,7 +163,7 @@ fn WaveletTree::count(self : WaveletTree, l : Int, r : Int, v : Int) -> Int {
   // - [left, right) is the range in current node corresponding to original [l, r)
   // - node covers values in [node.lo, node.hi)
   // - v is in [node.lo, node.hi) (otherwise we return 0)
-  for node_idx = self.root, left = l, right = r; ; {
+  for node_idx = self.root, left = l, right = r {
     let node = self.nodes[node_idx]
 
     // Base case: leaf node
@@ -179,9 +172,7 @@ fn WaveletTree::count(self : WaveletTree, l : Int, r : Int, v : Int) -> Int {
       // which is node.lo (single value at leaf)
       break right - left
     }
-
     let mid = (node.lo + node.hi) / 2
-
     if v < mid {
       // Go left: count 0s in range [left, right)
       // New range: [left - rank0(left), right - rank0(right)]
@@ -211,15 +202,18 @@ fn WaveletTree::count(self : WaveletTree, l : Int, r : Int, v : Int) -> Int {
 ///|
 /// Count values less than v in range [l, r)
 /// REASONING: Sum up elements going left whenever we go right
-fn WaveletTree::count_less(self : WaveletTree, l : Int, r : Int, v : Int) -> Int {
+fn WaveletTree::count_less(
+  self : WaveletTree,
+  l : Int,
+  r : Int,
+  v : Int,
+) -> Int {
   if self.root < 0 || l >= r {
     return 0
   }
-
   if v <= 0 {
     return 0
   }
-
   if v >= self.sigma {
     return r - l
   }
@@ -229,7 +223,7 @@ fn WaveletTree::count_less(self : WaveletTree, l : Int, r : Int, v : Int) -> Int
   // - count accumulates elements confirmed to be < v
   // - [left, right) is current range
   // - when we go right, we add all elements that went left (they're < mid <= v)
-  for node_idx = self.root, left = l, right = r, count = 0; ; {
+  for node_idx = self.root, left = l, right = r, count = 0 {
     let node = self.nodes[node_idx]
 
     // Base case: leaf
@@ -242,9 +236,7 @@ fn WaveletTree::count_less(self : WaveletTree, l : Int, r : Int, v : Int) -> Int
         break count
       }
     }
-
     let mid = (node.lo + node.hi) / 2
-
     if v <= mid {
       // Go left: don't add anything yet
       let new_left = left - node.rank[left]
@@ -255,7 +247,7 @@ fn WaveletTree::count_less(self : WaveletTree, l : Int, r : Int, v : Int) -> Int
       continue node.left, new_left, new_right, count
     } else {
       // Go right: add count of elements going left (they're < mid <= v)
-      let zeros_in_range = (right - node.rank[right]) - (left - node.rank[left])
+      let zeros_in_range = right - node.rank[right] - (left - node.rank[left])
       let new_count = count + zeros_in_range
       let new_left = node.rank[left]
       let new_right = node.rank[right]
@@ -277,7 +269,7 @@ fn WaveletTree::count_range(
   l : Int,
   r : Int,
   lo_val : Int,
-  hi_val : Int
+  hi_val : Int,
 ) -> Int {
   if lo_val >= hi_val {
     return 0
@@ -289,12 +281,7 @@ fn WaveletTree::count_range(
 ///|
 /// Find k-th smallest value (1-indexed) in range [l, r)
 /// Returns None if k > r - l
-fn WaveletTree::quantile(
-  self : WaveletTree,
-  l : Int,
-  r : Int,
-  k : Int
-) -> Int? {
+fn WaveletTree::quantile(self : WaveletTree, l : Int, r : Int, k : Int) -> Int? {
   if self.root < 0 || l >= r || k <= 0 || k > r - l {
     return None
   }
@@ -304,7 +291,7 @@ fn WaveletTree::quantile(
   // - We're looking for k-th smallest in current range [left, right)
   // - Current node covers values [node.lo, node.hi)
   // - Answer is in this value range
-  for node_idx = self.root, left = l, right = r, remaining_k = k; ; {
+  for node_idx = self.root, left = l, right = r, remaining_k = k {
     let node = self.nodes[node_idx]
 
     // Base case: leaf contains single value
@@ -313,8 +300,7 @@ fn WaveletTree::quantile(
     }
 
     // Count elements going left (smaller values)
-    let zeros_in_range = (right - node.rank[right]) - (left - node.rank[left])
-
+    let zeros_in_range = right - node.rank[right] - (left - node.rank[left])
     if remaining_k <= zeros_in_range {
       // k-th smallest is in left subtree
       let new_left = left - node.rank[left]
@@ -329,7 +315,10 @@ fn WaveletTree::quantile(
       continue node.right, new_left, new_right, new_k
     }
   } where {
-    invariant: node_idx >= 0 && left < right && remaining_k > 0 && remaining_k <= right - left,
+    invariant: node_idx >= 0 &&
+    left < right &&
+    remaining_k > 0 &&
+    remaining_k <= right - left,
     reasoning: "k-th element exists in range; each step follows correct child maintaining this",
   }
 }
@@ -342,12 +331,11 @@ fn WaveletTree::select(
   l : Int,
   r : Int,
   v : Int,
-  k : Int
+  k : Int,
 ) -> Int? {
   if k <= 0 || v < 0 || v >= self.sigma {
     return None
   }
-
   let cnt = self.count(l, r, v)
   if k > cnt {
     return None
@@ -398,14 +386,13 @@ fn WaveletTree::access(self : WaveletTree, i : Int) -> Int? {
   }
 
   // Navigate down tree following position i
-  for node_idx = self.root, pos = i; ; {
+  for node_idx = self.root, pos = i {
     let node = self.nodes[node_idx]
 
     // Base case: leaf
     if node.left < 0 && node.right < 0 {
       break Some(node.lo)
     }
-
     if node.bits[pos] {
       // Element went right
       let new_pos = node.rank[pos]
@@ -457,12 +444,11 @@ fn WaveletTree::mode(self : WaveletTree, l : Int, r : Int) -> (Int, Int)? {
     left : Int,
     right : Int,
     best_val : Ref[Int],
-    best_count : Ref[Int]
+    best_count : Ref[Int],
   ) -> Unit {
     if left >= right {
       return
     }
-
     let node = tree.nodes[node_idx]
 
     // Leaf: single value
@@ -493,7 +479,6 @@ fn WaveletTree::mode(self : WaveletTree, l : Int, r : Int) -> (Int, Int)? {
   let best_val_ref : Ref[Int] = { val: best_val }
   let best_count_ref : Ref[Int] = { val: best_count }
   find_mode(self, self.root, l, r, best_val_ref, best_count_ref)
-
   if best_count_ref.val > 0 {
     Some((best_val_ref.val, best_count_ref.val))
   } else {
@@ -507,25 +492,22 @@ fn WaveletTree::mode(self : WaveletTree, l : Int, r : Int) -> (Int, Int)? {
 fn WaveletTree::distinct_values(
   self : WaveletTree,
   l : Int,
-  r : Int
+  r : Int,
 ) -> Array[(Int, Int)] {
   let result : Array[(Int, Int)] = []
-
   if self.root < 0 || l >= r {
     return result
   }
-
   fn collect(
     tree : WaveletTree,
     node_idx : Int,
     left : Int,
     right : Int,
-    result : Array[(Int, Int)]
+    result : Array[(Int, Int)],
   ) -> Unit {
     if left >= right {
       return
     }
-
     let node = tree.nodes[node_idx]
 
     // Leaf: add value with count
@@ -538,7 +520,6 @@ fn WaveletTree::distinct_values(
     let left_left = left - node.rank[left]
     let left_right = right - node.rank[right]
     collect(tree, node.left, left_left, left_right, result)
-
     let right_left = node.rank[left]
     let right_right = node.rank[right]
     collect(tree, node.right, right_left, right_right, result)
@@ -557,7 +538,6 @@ test "wavelet tree build and access" {
   // Array: [3, 0, 1, 2, 3, 1, 2, 0]
   let arr = [3, 0, 1, 2, 3, 1, 2, 0]
   let wt = WaveletTree::build(arr, 4)
-
   inspect(wt.size(), content="8")
   inspect(wt.alphabet_size(), content="4")
 
