@@ -78,18 +78,30 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         #|Rows [row+1..i) have been inspected for the current column.
         #|The loop only considers candidates below the active pivot row,
         #|which preserves the upper-triangular structure of prior pivots.
+        #|MAINTENANCE:
+        #|Inspect row i and update the best candidate if its absolute value is larger.
+        #|TERMINATION:
+        #|At i == n, all remaining rows have been considered for the pivot.
       ),
       invariant: best_row >= row && best_row < n,
       reasoning: (
         #|INVARIANT (Best row validity):
         #|best_row stays within [row, i), so it always names a row already
         #|examined for this pivot choice.
+        #|MAINTENANCE:
+        #|best_row is updated only to i, which is within the scanned prefix.
+        #|TERMINATION:
+        #|At loop end, best_row is a valid pivot candidate row.
       ),
       invariant: best_val == abs(aug[best_row][col]),
       reasoning: (
         #|INVARIANT (Best value):
         #|best_val is the maximum absolute entry seen so far in column col
         #|among rows [row..i). This implements partial pivoting for stability.
+        #|MAINTENANCE:
+        #|Update best_val when a larger absolute entry is found at row i.
+        #|TERMINATION:
+        #|At i == n, best_val is the column maximum among candidate rows.
       ),
     }
 
@@ -116,12 +128,20 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         #|After processing columns [col..j), aug[row][t] has been divided by
         #|pivot for every t in that range. When the loop ends, the pivot entry
         #|becomes 1 and the entire augmented row is scaled consistently.
+        #|MAINTENANCE:
+        #|Divide aug[row][j] by pivot and advance j.
+        #|TERMINATION:
+        #|At j == m + 1, the entire row is normalized.
       ),
       invariant: abs(pivot) >= GAUSS_EPS,
       reasoning: (
         #|INVARIANT (Non-zero pivot):
         #|We only normalize when the chosen pivot is safely away from zero,
         #|so dividing preserves numerical stability and avoids blow-ups.
+        #|MAINTENANCE:
+        #|Pivot stays fixed during normalization, so the bound remains valid.
+        #|TERMINATION:
+        #|Invariant holds until the normalized row is complete.
       ),
     }
 
@@ -138,6 +158,10 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
             #|After processing columns [col..j), row i has been updated by
             #|subtracting factor * pivot_row, so all entries in that range
             #|match the new row with column col targeted for zeroing.
+            #|MAINTENANCE:
+            #|Update aug[i][j] by subtracting factor * aug[row][j], then advance j.
+            #|TERMINATION:
+            #|At j == m + 1, row i has been fully eliminated in column col.
           ),
         }
       }
@@ -148,12 +172,20 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         #|After processing rows [0..i), every row other than the pivot row
         #|has column col reduced to 0 (within epsilon). This produces the
         #|Gauss-Jordan form for the current pivot column.
+        #|MAINTENANCE:
+        #|Eliminate column col in row i (when needed), preserving previous rows.
+        #|TERMINATION:
+        #|At i == n, all rows are cleared in column col except the pivot row.
       ),
       invariant: abs(aug[row][col] - 1.0) < GAUSS_EPS,
       reasoning: (
         #|INVARIANT (Pivot stability):
         #|The pivot entry remains 1 because we never modify the pivot row
         #|during elimination of other rows.
+        #|MAINTENANCE:
+        #|Elimination updates only non-pivot rows, so the pivot stays 1.
+        #|TERMINATION:
+        #|Invariant holds throughout elimination for this column.
       ),
     }
     rank = rank + 1
@@ -165,12 +197,20 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
       #|row counts completed pivot rows, and col is the current column under
       #|consideration. All rows above row are already in reduced row-echelon
       #|form for columns < col, so each new pivot maintains the invariant.
+      #|MAINTENANCE:
+      #|Advance col each iteration; when a pivot is found, increment row.
+      #|TERMINATION:
+      #|At col == m or row == n, forward elimination is complete.
     ),
     invariant: rank == row,
     reasoning: (
       #|INVARIANT (Rank tracking):
       #|Every time we accept a pivot we increment row and rank together.
       #|Therefore rank equals the number of independent pivot rows built so far.
+      #|MAINTENANCE:
+      #|Increment rank alongside row when a pivot is fixed.
+      #|TERMINATION:
+      #|At loop end, rank is the matrix rank (number of pivots).
     ),
   }
 
@@ -188,6 +228,10 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
       #|Rows i >= rank have all-zero coefficients on the left side. If any
       #|such row has a non-zero right-hand side, the system is inconsistent
       #|because it encodes 0 = c with c != 0.
+      #|MAINTENANCE:
+      #|Check row i for a non-zero RHS and break if inconsistent.
+      #|TERMINATION:
+      #|At i == n, no inconsistent row was found.
     ),
   }
 
@@ -209,6 +253,10 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
           #|After scanning columns [0..j), no pivot (value near 1) has been
           #|found yet. When we find it, the corresponding variable is fixed
           #|to the row's augmented value.
+          #|MAINTENANCE:
+          #|Inspect column j and advance until a pivot is found.
+          #|TERMINATION:
+          #|At j == m, all columns were scanned for this row.
         ),
       }
     } where {
@@ -218,6 +266,10 @@ fn gauss_eliminate(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
         #|Each pivot row determines one basic variable. By scanning only the
         #|first rank rows, we assign values to all pivot variables while leaving
         #|free variables (if any) at their default value.
+        #|MAINTENANCE:
+        #|Find the pivot in row i and set the corresponding solution entry.
+        #|TERMINATION:
+        #|At i == rank, all basic variables have been assigned.
       ),
     }
   }
