@@ -82,7 +82,14 @@ fn max_element(arr : Array[Int]) -> Int {
     }
   } where {
     invariant: i >= 0 && i <= arr.length(),
-    reasoning: "I: mx is max over arr[0..i). M: Compare arr[i] and update mx if larger. T: After i = n, mx is the maximum element.",
+    reasoning: (
+      #|INVARIANT (max scan):
+      #|mx equals the maximum value in arr[0..i).
+      #|MAINTENANCE:
+      #|Compare arr[i] against mx and update if larger.
+      #|TERMINATION:
+      #|At i = arr.length(), mx is the maximum element of the array.
+    ),
   }
   mx
 }
@@ -139,7 +146,15 @@ fn MoDistinct::process_queries(
     mo_queries.push({ l, r, idx: i })
   } where {
     invariant: i >= 0 && i <= q,
-    reasoning: "I: mo_queries holds the first i queries with original indices. M: Convert queries[i] to MoQuery. T: After i = q, all queries are prepared for sorting.",
+    reasoning: (
+      #|INVARIANT (query prep):
+      #|mo_queries contains converted queries for indices [0, i), preserving
+      #|their original positions in idx.
+      #|MAINTENANCE:
+      #|Convert queries[i] to MoQuery and append.
+      #|TERMINATION:
+      #|At i = q, all queries are ready for Mo ordering.
+    ),
   }
 
   // Sort by Mo's order: block of left endpoint, then right endpoint
@@ -186,7 +201,17 @@ fn MoDistinct::process_queries(
     results[query.idx] = self.distinct
   } where {
     invariant: i >= 0 && i <= q,
-    reasoning: "I: i=0, curr range is empty [0, -1]. M: For each query in Mo order, adjust curr_l and curr_r to match query's [l, r] by adding/removing elements. The Mo ordering ensures total pointer movements are O((n+q)√n): within each of √n blocks, right pointer moves monotonically O(n); left pointer moves at most √n per query. T: After i = q, all queries answered with results stored at original indices.",
+    reasoning: (
+      #|INVARIANT (process queries):
+      #|Before processing query i, curr_l..curr_r matches the previous query
+      #|range and distinct reflects counts within that range.
+      #|MAINTENANCE:
+      #|Adjust curr_l/curr_r to the new [l, r] by add/remove operations, which
+      #|updates counts and distinct in O(1) per move. Mo ordering bounds total
+      #|pointer movement to O((n + q) * sqrt(n)).
+      #|TERMINATION:
+      #|At i = q, every query has been answered and stored at its original index.
+    ),
   }
   results
 }
@@ -236,7 +261,15 @@ fn MoSum::process_queries(
     mo_queries.push({ l, r, idx: i })
   } where {
     invariant: i >= 0 && i <= q,
-    reasoning: "I: mo_queries holds the first i queries with original indices. M: Convert queries[i] to MoQuery. T: After i = q, all queries are prepared for sorting.",
+    reasoning: (
+      #|INVARIANT (query prep):
+      #|mo_queries contains converted queries for indices [0, i), preserving
+      #|their original positions in idx.
+      #|MAINTENANCE:
+      #|Convert queries[i] to MoQuery and append.
+      #|TERMINATION:
+      #|At i = q, all queries are ready for Mo ordering.
+    ),
   }
   let block_size = self.block_size
   mo_queries.sort_by(fn(a, b) {
@@ -272,7 +305,16 @@ fn MoSum::process_queries(
     results[query.idx] = self.sum
   } where {
     invariant: i >= 0 && i <= q,
-    reasoning: "I: curr range represents processed queries [0,i). M: Adjust curr_l/curr_r to match query, updating sum by add/remove. T: After i = q, all results are computed in original order.",
+    reasoning: (
+      #|INVARIANT (process sums):
+      #|curr_l..curr_r matches the previous query range, and sum equals the
+      #|sum of arr[curr_l..curr_r].
+      #|MAINTENANCE:
+      #|Move curr_l/curr_r to the new range by add/remove operations, keeping
+      #|sum consistent with the current window.
+      #|TERMINATION:
+      #|At i = q, all query sums are stored at their original indices.
+    ),
   }
   results
 }
