@@ -63,8 +63,12 @@ fn bit_reverse(x : Int, bits : Int) -> Int {
   } where {
     invariant: i >= 0 && i <= bits,
     reasoning: (
-      #|result holds the reverse of the lowest i bits of x; v has been shifted
-      #|right by i bits so the next bit to consume is at position 0.
+      #|INVARIANT (bit reverse):
+      #|result is the reverse of the lowest i bits of x; v equals x >> i.
+      #|MAINTENANCE:
+      #|Shift result left, append v's lowest bit, then shift v right.
+      #|TERMINATION:
+      #|At i = bits, result is the full bit-reversal of x.
     ),
   }
   result
@@ -135,15 +139,23 @@ fn NTT::transform(self : NTT, a : Array[Int64], inverse : Bool) -> Unit {
       } where {
         invariant: j >= 0 && j <= len / 2,
         reasoning: (
-          #|Within the current block, all butterflies for positions [0..j)
-          #|are applied; wn equals w^j.
+          #|INVARIANT (butterflies):
+          #|Within this block, positions [0..j) are transformed; wn equals w^j.
+          #|MAINTENANCE:
+          #|Apply the butterfly at j using wn, then advance wn *= w.
+          #|TERMINATION:
+          #|At j = len/2, the block is fully transformed for this stage.
         ),
       }
     } where {
       invariant: i >= 0 && i <= n,
       reasoning: (
-        #|All blocks starting at indices < i have been combined for this stage
-        #|of length len.
+        #|INVARIANT (stage blocks):
+        #|All blocks starting at indices < i are transformed for length len.
+        #|MAINTENANCE:
+        #|Process the block at i with its butterflies.
+        #|TERMINATION:
+        #|At i = n, all blocks for this stage are complete.
       ),
     }
     len = len * 2
@@ -185,7 +197,10 @@ fn NTT::multiply(
     reasoning: (
       #|INVARIANT (Pad a):
       #|pa[0..i) matches a[0..i) modulo mod_val, and remaining entries are 0.
-      #|This ensures pa represents the polynomial a in size-n form.
+      #|MAINTENANCE:
+      #|Assign pa[i] = a[i] % mod_val to extend the padded prefix.
+      #|TERMINATION:
+      #|At i = min(a.length(), n), padding of a is complete.
     ),
   }
   for i = 0; i < b.length() && i < n; i = i + 1 {
@@ -194,8 +209,11 @@ fn NTT::multiply(
     invariant: i >= 0 && i <= b.length() && i <= n,
     reasoning: (
       #|INVARIANT (Pad b):
-      #|pb[0..i) matches b[0..i) modulo mod_val, with zeros beyond the input
-      #|length, giving a size-n polynomial representation.
+      #|pb[0..i) matches b[0..i) modulo mod_val, and remaining entries are 0.
+      #|MAINTENANCE:
+      #|Assign pb[i] = b[i] % mod_val to extend the padded prefix.
+      #|TERMINATION:
+      #|At i = min(b.length(), n), padding of b is complete.
     ),
   }
 

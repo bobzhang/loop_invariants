@@ -586,14 +586,24 @@ test "eertree get palindromes" {
     } where {
       invariant: j >= 0 && j <= p.length() / 2,
       reasoning: (
-        #|All checked pairs (0..j) are symmetric for this palindrome candidate.
+        #|INVARIANT (palindrome check):
+        #|All checked pairs in [0..j) are symmetric for this candidate.
+        #|MAINTENANCE:
+        #|Compare positions j and len-1-j; extend j when they match.
+        #|TERMINATION:
+        #|At j = len/2, the candidate is confirmed palindromic.
       ),
     }
     guard is_palindrome else { fail("Not a palindrome: " + p) }
   } where {
     invariant: i >= 0 && i <= palindromes.length(),
     reasoning: (
-      #|All palindromes in palindromes[0..i) have been verified.
+      #|INVARIANT (verify list):
+      #|All palindromes in palindromes[0..i) have been verified as palindromes.
+      #|MAINTENANCE:
+      #|Check palindromes[i] before advancing i.
+      #|TERMINATION:
+      #|At i = palindromes.length(), all entries are verified.
     ),
   }
 
