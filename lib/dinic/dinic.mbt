@@ -250,6 +250,21 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
   result
 }
 
+///|
+pub fn max_flow(
+  n : Int,
+  edges : ArrayView[(Int, Int, Int64)],
+  source : Int,
+  sink : Int,
+) -> Int64 {
+  let flow = Dinic::new(n)
+  edges.each(fn(edge) {
+    let (u, v, cap) = edge
+    flow.add_edge(u, v, cap)
+  })
+  flow.max_flow(source, sink)
+}
+
 // ============================================================================
 // TESTS
 // ============================================================================

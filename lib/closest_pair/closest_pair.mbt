@@ -225,7 +225,7 @@ fn closest_pair_rec(
 ///|
 /// Find closest pair of points
 /// Returns (distance, index1, index2)
-fn closest_pair(points : Array[(Double, Double)]) -> (Double, Int, Int) {
+pub fn closest_pair(points : Array[(Double, Double)]) -> (Double, Int, Int) {
   let n = points.length()
   if n < 2 {
     return (CP_INF, -1, -1)

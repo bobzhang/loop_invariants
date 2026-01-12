@@ -52,7 +52,7 @@
 
 ///|
 /// Disjoint Sparse Table for range sum queries
-priv struct DisjointSparseSum {
+pub struct DisjointSparseSum {
   table : Array[Array[Int64]] // table[level][i]
   arr : Array[Int64]
   n : Int
@@ -84,7 +84,7 @@ fn highest_bit(x : Int) -> Int {
 }
 
 ///|
-fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
+pub fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
   let n = arr.length()
   if n == 0 {
     return { table: [], arr: [], n: 0 }
@@ -178,7 +178,7 @@ fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
 /// Query sum in range [l, r] (inclusive)
 /// REASONING: Find level where l and r are in different halves of same block,
 /// then combine suffix[l] and prefix[r]
-fn DisjointSparseSum::query(
+pub fn DisjointSparseSum::query(
   self : DisjointSparseSum,
   l : Int,
   r : Int,

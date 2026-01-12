@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/closest_pair"
 
 // Values
+pub fn closest_pair(Array[(Double, Double)]) -> (Double, Int, Int)
 
 // Errors
 

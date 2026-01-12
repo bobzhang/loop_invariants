@@ -17,6 +17,23 @@ while bfs_levels():
     flow += pushed
 ```
 
+## Example
+
+```mbt check
+///|
+test "dinic max flow example" {
+  let edges : Array[(Int, Int, Int64)] = [
+    (0, 1, 3),
+    (0, 2, 2),
+    (1, 2, 1),
+    (1, 3, 2),
+    (2, 3, 4),
+  ]
+  let flow = @dinic.max_flow(4, edges[:], 0, 3)
+  inspect(flow, content="5")
+}
+```
+
 ## Notes
 
 - Time complexity: O(E * V^2) worst case, faster in practice

@@ -18,6 +18,23 @@ for p in points:
   push p
 ```
 
+## Example
+
+```mbt check
+///|
+test "convex hull example" {
+  let pts : Array[@convex_hull.Point] = [
+    { x: 0, y: 0 },
+    { x: 2, y: 0 },
+    { x: 2, y: 2 },
+    { x: 0, y: 2 },
+    { x: 1, y: 1 },
+  ]
+  let hull = @convex_hull.convex_hull_monotone(pts)
+  inspect(hull.length(), content="4")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n log n)

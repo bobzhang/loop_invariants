@@ -17,6 +17,17 @@ for each value:
   attach as right child
 ```
 
+## Example
+
+```mbt check
+///|
+test "cartesian tree rmq example" {
+  let arr : Array[Int64] = [3L, 2L, 6L, 1L, 9L]
+  inspect(@cartesian_tree.range_min(arr[:], 1, 3), content="Some(1)")
+  inspect(@cartesian_tree.range_min(arr[:], 0, 2), content="Some(2)")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n)

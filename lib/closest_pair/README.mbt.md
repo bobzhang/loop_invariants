@@ -18,6 +18,18 @@ solve(points):
   check strip within d of mid line
 ```
 
+## Example
+
+```mbt check
+///|
+test "closest pair example" {
+  let points : Array[(Double, Double)] = [(0.0, 0.0), (1.0, 0.0), (4.0, 0.0)]
+  let (dist, p1, p2) = @closest_pair.closest_pair(points)
+  inspect(dist, content="1")
+  inspect((p1, p2), content="(0, 1)")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n log n)
