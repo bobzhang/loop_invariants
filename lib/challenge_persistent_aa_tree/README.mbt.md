@@ -16,3 +16,14 @@ test "persistent aa tree" {
   inspect(@challenge_persistent_aa_tree.inorder(t3), content="[2, 5, 8]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent aa tree from array" {
+  let t = @challenge_persistent_aa_tree.from_array([4, 1, 3][:])
+  inspect(@challenge_persistent_aa_tree.inorder(t), content="[1, 3, 4]")
+  inspect(@challenge_persistent_aa_tree.size(t), content="3")
+}
+```

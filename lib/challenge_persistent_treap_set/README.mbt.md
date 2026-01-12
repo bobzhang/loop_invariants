@@ -16,3 +16,14 @@ test "persistent treap set" {
   inspect(@challenge_persistent_treap_set.size(t3), content="3")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent treap set from array" {
+  let t = @challenge_persistent_treap_set.from_array([3, 1, 4][:])
+  inspect(@challenge_persistent_treap_set.contains(t, 1), content="true")
+  inspect(@challenge_persistent_treap_set.size(t), content="3")
+}
+```

@@ -17,3 +17,16 @@ test "persistent hash map" {
   inspect(@challenge_persistent_hash_map.size(map3), content="2")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent hash map sizes" {
+  let map0 = @challenge_persistent_hash_map.make(2)
+  let map1 = @challenge_persistent_hash_map.put(map0, 2, 20)
+  let map2 = @challenge_persistent_hash_map.put(map1, 4, 40)
+  inspect(@challenge_persistent_hash_map.get(map2, 4), content="Some(40)")
+  inspect(@challenge_persistent_hash_map.size(map2), content="2")
+}
+```

@@ -16,3 +16,14 @@ test "persistent avl set" {
   inspect(@challenge_persistent_avl_set.inorder(t3), content="[1, 3, 4]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent avl set from array" {
+  let t = @challenge_persistent_avl_set.from_array([5, 2, 8, 2][:])
+  inspect(@challenge_persistent_avl_set.inorder(t), content="[2, 5, 8]")
+  inspect(@challenge_persistent_avl_set.size(t), content="3")
+}
+```

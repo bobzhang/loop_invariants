@@ -25,3 +25,22 @@ test "persistent trie" {
   )
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent trie versions" {
+  let root0 = @challenge_persistent_trie_string.empty()
+  let root1 = @challenge_persistent_trie_string.add(root0, "hi")
+  let root2 = @challenge_persistent_trie_string.add(root1, "hit")
+  inspect(
+    @challenge_persistent_trie_string.contains(root1, "hit"),
+    content="false",
+  )
+  inspect(
+    @challenge_persistent_trie_string.contains(root2, "hit"),
+    content="true",
+  )
+}
+```

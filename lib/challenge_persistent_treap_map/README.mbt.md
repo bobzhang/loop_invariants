@@ -17,3 +17,14 @@ test "persistent treap map" {
   inspect(@challenge_persistent_treap_map.size(t3), content="2")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent treap map from array" {
+  let t = @challenge_persistent_treap_map.from_array([(2, 20), (5, 50)][:])
+  inspect(@challenge_persistent_treap_map.get(t, 2), content="Some(20)")
+  inspect(@challenge_persistent_treap_map.size(t), content="2")
+}
+```
