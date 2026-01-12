@@ -36,16 +36,19 @@ fn heap_valid(h : Heap) -> Bool {
 }
 
 ///|
+/// Create an empty skew heap.
 pub fn empty() -> Heap {
   Heap::Empty
 }
 
 ///|
+/// Return number of elements in the heap.
 pub fn size(h : Heap) -> Int {
   heap_size(h)
 }
 
 ///|
+/// Merge two heaps and return the result.
 pub fn merge(a : Heap, b : Heap) -> Heap {
   match (a, b) {
     (Heap::Empty, _) => b
@@ -70,11 +73,13 @@ fn singleton(value : Int) -> Heap {
 }
 
 ///|
+/// Insert a value and return the new heap.
 pub fn insert(h : Heap, value : Int) -> Heap {
   merge(h, singleton(value))
 }
 
 ///|
+/// Return the minimum value, or None if empty.
 pub fn find_min(h : Heap) -> Int? {
   match h {
     Heap::Empty => None
@@ -83,6 +88,7 @@ pub fn find_min(h : Heap) -> Int? {
 }
 
 ///|
+/// Delete the minimum element and return the new heap.
 pub fn delete_min(h : Heap) -> Heap? {
   match h {
     Heap::Empty => None
