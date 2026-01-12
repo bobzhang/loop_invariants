@@ -16,6 +16,20 @@ if find(a) == find(b): connected
 else: union(a, b)
 ```
 
+## Example
+
+```mbt check
+///|
+test "union find example" {
+  let uf = @union_find.UnionFind::new(4)
+  let _ = uf.union(0, 1)
+  let _ = uf.union(2, 3)
+  inspect(uf.connected(0, 1), content="true")
+  inspect(uf.connected(0, 2), content="false")
+  inspect(uf.count_sets(), content="2")
+}
+```
+
 ## Notes
 
 - Amortized time: O(alpha(n)) per operation

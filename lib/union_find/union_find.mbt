@@ -36,7 +36,7 @@
 
 ///|
 /// Union-Find (Disjoint Set Union) data structure
-priv struct UnionFind {
+pub struct UnionFind {
   parent : Array[Int]
   rank : Array[Int]
   mut num_sets : Int
@@ -45,7 +45,7 @@ priv struct UnionFind {
 ///|
 /// Create a new Union-Find structure with n elements (0 to n-1)
 /// Initially, each element is in its own set
-fn UnionFind::new(n : Int) -> UnionFind {
+pub fn UnionFind::new(n : Int) -> UnionFind {
   let parent = Array::make(n, 0)
   let rank = Array::make(n, 0)
 
@@ -62,7 +62,7 @@ fn UnionFind::new(n : Int) -> UnionFind {
 ///
 /// INVARIANT: Following parent pointers leads to root
 /// PATH COMPRESSION: Makes all nodes on path point directly to root
-fn UnionFind::find(self : UnionFind, x : Int) -> Int {
+pub fn UnionFind::find(self : UnionFind, x : Int) -> Int {
   if x < 0 || x >= self.parent.length() {
     return -1
   }
@@ -90,7 +90,7 @@ fn UnionFind::find(self : UnionFind, x : Int) -> Int {
 /// Returns true if sets were different (union performed)
 ///
 /// INVARIANT: Smaller rank tree goes under larger rank tree
-fn UnionFind::union(self : UnionFind, x : Int, y : Int) -> Bool {
+pub fn UnionFind::union(self : UnionFind, x : Int, y : Int) -> Bool {
   let root_x = self.find(x)
   let root_y = self.find(y)
   if root_x < 0 || root_y < 0 {
@@ -116,7 +116,7 @@ fn UnionFind::union(self : UnionFind, x : Int, y : Int) -> Bool {
 
 ///|
 /// Check if x and y are in the same set
-fn UnionFind::connected(self : UnionFind, x : Int, y : Int) -> Bool {
+pub fn UnionFind::connected(self : UnionFind, x : Int, y : Int) -> Bool {
   let root_x = self.find(x)
   let root_y = self.find(y)
   root_x >= 0 && root_x == root_y
@@ -124,13 +124,13 @@ fn UnionFind::connected(self : UnionFind, x : Int, y : Int) -> Bool {
 
 ///|
 /// Get the number of disjoint sets
-fn UnionFind::count_sets(self : UnionFind) -> Int {
+pub fn UnionFind::count_sets(self : UnionFind) -> Int {
   self.num_sets
 }
 
 ///|
 /// Get the size of the set containing x
-fn UnionFind::set_size(self : UnionFind, x : Int) -> Int {
+pub fn UnionFind::set_size(self : UnionFind, x : Int) -> Int {
   let root = self.find(x)
   if root < 0 {
     return 0

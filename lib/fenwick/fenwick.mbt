@@ -40,14 +40,14 @@
 
 ///|
 /// Fenwick Tree for sum queries
-priv struct FenwickTree {
+pub struct FenwickTree {
   n : Int
   tree : Array[Int64]
 }
 
 ///|
 /// Create a new Fenwick Tree with n elements (all initialized to 0)
-fn FenwickTree::new(n : Int) -> FenwickTree {
+pub fn FenwickTree::new(n : Int) -> FenwickTree {
   // 1-indexed, so we need n+1 elements
   { n, tree: Array::make(n + 1, 0L) }
 }
@@ -59,7 +59,7 @@ fn FenwickTree::new(n : Int) -> FenwickTree {
 /// INVARIANT: After processing index i, tree[i] contains correct partial sum.
 /// Each index propagates its value to index i + lowbit(i).
 /// REASONING: Parent index > current index ensures no revisits, O(n) total.
-fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
+pub fn FenwickTree::from_array(arr : Array[Int64]) -> FenwickTree {
   let n = arr.length()
   let tree = Array::make(n + 1, 0L)
 
@@ -112,7 +112,7 @@ fn lowbit(x : Int) -> Int {
 ///
 /// INVARIANT: idx covers all tree nodes responsible for index i+1.
 /// REASONING: idx increases by at least 1 each step (lowbit >= 1), terminates when > n.
-fn FenwickTree::add(self : FenwickTree, i : Int, delta : Int64) -> Unit {
+pub fn FenwickTree::add(self : FenwickTree, i : Int, delta : Int64) -> Unit {
   if i < 0 || i >= self.n {
     return
   }
@@ -132,7 +132,7 @@ fn FenwickTree::add(self : FenwickTree, i : Int, delta : Int64) -> Unit {
 ///
 /// INVARIANT: sum accumulates prefix sums from tree nodes.
 /// REASONING: idx decreases by at least 1 each step (lowbit >= 1), terminates at 0.
-fn FenwickTree::prefix_sum(self : FenwickTree, i : Int) -> Int64 {
+pub fn FenwickTree::prefix_sum(self : FenwickTree, i : Int) -> Int64 {
   if i < 0 {
     return 0L
   }
@@ -159,7 +159,7 @@ fn FenwickTree::prefix_sum(self : FenwickTree, i : Int) -> Int64 {
 
 ///|
 /// Query range sum [l, r] (inclusive, 0-indexed)
-fn FenwickTree::range_sum(self : FenwickTree, l : Int, r : Int) -> Int64 {
+pub fn FenwickTree::range_sum(self : FenwickTree, l : Int, r : Int) -> Int64 {
   if l > r || l < 0 || r >= self.n {
     return 0L
   }
@@ -172,19 +172,19 @@ fn FenwickTree::range_sum(self : FenwickTree, l : Int, r : Int) -> Int64 {
 
 ///|
 /// Get single element value at index i
-fn FenwickTree::get(self : FenwickTree, i : Int) -> Int64 {
+pub fn FenwickTree::get(self : FenwickTree, i : Int) -> Int64 {
   self.range_sum(i, i)
 }
 
 ///|
 /// Set element at index i to value
-fn FenwickTree::set(self : FenwickTree, i : Int, value : Int64) -> Unit {
+pub fn FenwickTree::set(self : FenwickTree, i : Int, value : Int64) -> Unit {
   let current = self.get(i)
   self.add(i, value - current)
 }
 
 ///|
-fn FenwickTree::length(self : FenwickTree) -> Int {
+pub fn FenwickTree::length(self : FenwickTree) -> Int {
   self.n
 }
 

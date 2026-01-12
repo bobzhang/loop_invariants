@@ -6,6 +6,17 @@ package "bobzhang/loop_invariants/lib/union_find"
 // Errors
 
 // Types and methods
+pub struct UnionFind {
+  parent : Array[Int]
+  rank : Array[Int]
+  mut num_sets : Int
+}
+pub fn UnionFind::connected(Self, Int, Int) -> Bool
+pub fn UnionFind::count_sets(Self) -> Int
+pub fn UnionFind::find(Self, Int) -> Int
+pub fn UnionFind::new(Int) -> Self
+pub fn UnionFind::set_size(Self, Int) -> Int
+pub fn UnionFind::union(Self, Int, Int) -> Bool
 
 // Type aliases
 

@@ -19,6 +19,18 @@ prefix_sum(i):
   while i > 0: sum += tree[i]; i -= lowbit(i)
 ```
 
+## Example
+
+```mbt check
+///|
+test "fenwick example" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let ft = @fenwick.FenwickTree::from_array(arr)
+  inspect(ft.prefix_sum(4), content="15")
+  inspect(ft.range_sum(1, 3), content="9")
+}
+```
+
 ## Notes
 
 - Time complexity: O(log n) per update/query
