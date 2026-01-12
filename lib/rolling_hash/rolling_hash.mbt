@@ -261,7 +261,7 @@ fn DoubleRollingHash::length(self : DoubleRollingHash) -> Int {
 
 ///|
 /// Find all occurrences of pattern in text using rolling hash
-fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
+pub fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let n = text.length()
   let m = pattern.length()
@@ -327,7 +327,7 @@ fn find_pattern_rabin_karp(text : String, pattern : String) -> Array[Int] {
 
 ///|
 /// Count occurrences of pattern in text
-fn count_pattern_rabin_karp(text : String, pattern : String) -> Int {
+pub fn count_pattern_rabin_karp(text : String, pattern : String) -> Int {
   find_pattern_rabin_karp(text, pattern).length()
 }
 

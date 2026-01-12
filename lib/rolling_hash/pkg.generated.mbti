@@ -2,6 +2,9 @@
 package "bobzhang/loop_invariants/lib/rolling_hash"
 
 // Values
+pub fn count_pattern_rabin_karp(String, String) -> Int
+
+pub fn find_pattern_rabin_karp(String, String) -> Array[Int]
 
 // Errors
 

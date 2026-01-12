@@ -20,14 +20,14 @@
 // SPACE COMPLEXITY: O(n)
 
 ///|
-priv struct SuffixArray {
+pub struct SuffixArray {
   sa : Array[Int]
   lcp : Array[Int]
   text : String
 }
 
 ///|
-fn SuffixArray::new(text : String) -> SuffixArray {
+pub fn SuffixArray::new(text : String) -> SuffixArray {
   let n = text.length()
   if n == 0 {
     return { sa: [], lcp: [], text }
@@ -178,7 +178,7 @@ fn SuffixArray::new(text : String) -> SuffixArray {
 }
 
 ///|
-fn SuffixArray::search(self : SuffixArray, pattern : String) -> (Int, Int)? {
+pub fn SuffixArray::search(self : SuffixArray, pattern : String) -> (Int, Int)? {
   let n = self.sa.length()
   let m = pattern.length()
   if n == 0 || m == 0 {
@@ -276,7 +276,10 @@ fn starts_with(text : String, start : Int, pattern : String) -> Bool {
 }
 
 ///|
-fn SuffixArray::find_all(self : SuffixArray, pattern : String) -> Array[Int] {
+pub fn SuffixArray::find_all(
+  self : SuffixArray,
+  pattern : String,
+) -> Array[Int] {
   match self.search(pattern) {
     None => []
     Some((first, last)) => {
@@ -301,7 +304,7 @@ fn SuffixArray::find_all(self : SuffixArray, pattern : String) -> Array[Int] {
 }
 
 ///|
-fn SuffixArray::count(self : SuffixArray, pattern : String) -> Int {
+pub fn SuffixArray::count(self : SuffixArray, pattern : String) -> Int {
   match self.search(pattern) {
     None => 0
     Some((first, last)) => last - first + 1
@@ -309,7 +312,7 @@ fn SuffixArray::count(self : SuffixArray, pattern : String) -> Int {
 }
 
 ///|
-fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
+pub fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
   let n = self.sa.length()
   if n < 2 {
     return ""
@@ -341,7 +344,7 @@ fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
 }
 
 ///|
-fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
+pub fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
   let n = self.sa.length()
   if n == 0 {
     return 0L
@@ -365,7 +368,7 @@ fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
 }
 
 ///|
-fn SuffixArray::get_suffix(self : SuffixArray, i : Int) -> String {
+pub fn SuffixArray::get_suffix(self : SuffixArray, i : Int) -> String {
   if i < 0 || i >= self.sa.length() {
     return ""
   }

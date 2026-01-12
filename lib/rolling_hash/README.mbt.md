@@ -15,6 +15,20 @@ string matching, palindromes, and substring equality.
 hash(l, r) = pref[r] - pref[l] * base^(r-l)
 ```
 
+## Example
+
+```mbt check
+///|
+test "rolling hash pattern search" {
+  let hits = @rolling_hash.find_pattern_rabin_karp("aabcaabxaab", "aab")
+  inspect(hits, content="[0, 4, 8]")
+  inspect(
+    @rolling_hash.count_pattern_rabin_karp("mississippi", "issi"),
+    content="2",
+  )
+}
+```
+
 ## Notes
 
 - Time complexity: O(1) per query after O(n) setup

@@ -19,6 +19,18 @@ let sa = build_suffix_array(s)
 let lcp = build_lcp(s, sa)
 ```
 
+## Example
+
+```mbt check
+///|
+test "suffix array example" {
+  let sa = @suffix_array.SuffixArray::new("banana")
+  let hits = sa.find_all("ana")
+  inspect(hits, content="[1, 3]")
+  inspect(sa.count("na"), content="2")
+}
+```
+
 ## Notes
 
 - This package is a reference implementation with invariants.

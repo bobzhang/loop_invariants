@@ -40,7 +40,7 @@
 ///|
 /// Compute Z-array for string s
 /// Returns array where z[i] = length of longest prefix match starting at i
-fn compute_z(s : String) -> Array[Int] {
+pub fn compute_z(s : String) -> Array[Int] {
   let n = s.length()
   if n == 0 {
     return []
@@ -119,7 +119,7 @@ fn compute_z(s : String) -> Array[Int] {
 ///|
 /// Find all occurrences of pattern in text using Z-algorithm
 /// Returns array of starting indices where pattern occurs
-fn find_pattern(text : String, pattern : String) -> Array[Int] {
+pub fn find_pattern(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let m = pattern.length()
   let n = text.length()
@@ -160,7 +160,7 @@ fn find_pattern(text : String, pattern : String) -> Array[Int] {
 
 ///|
 /// Count occurrences of pattern in text
-fn count_pattern(text : String, pattern : String) -> Int {
+pub fn count_pattern(text : String, pattern : String) -> Int {
   find_pattern(text, pattern).length()
 }
 

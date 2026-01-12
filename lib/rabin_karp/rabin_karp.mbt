@@ -68,7 +68,7 @@ fn pow_mod(base : Int64, exp : Int, m : Int64) -> Int64 {
 
 ///|
 /// Find all occurrences of pattern in text using Rabin-Karp
-fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
+pub fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
   let result : Array[Int] = []
   let n = text.length()
   let m = pattern.length()
@@ -132,7 +132,7 @@ fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
 
 ///|
 /// Count pattern occurrences
-fn rabin_karp_count(text : String, pattern : String) -> Int {
+pub fn rabin_karp_count(text : String, pattern : String) -> Int {
   rabin_karp_search(text, pattern).length()
 }
 
@@ -142,7 +142,7 @@ fn rabin_karp_count(text : String, pattern : String) -> Int {
 
 ///|
 /// Search for multiple patterns simultaneously
-fn rabin_karp_multi(
+pub fn rabin_karp_multi(
   text : String,
   patterns : Array[String],
 ) -> Array[(Int, Int)] {

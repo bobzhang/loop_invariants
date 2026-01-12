@@ -32,7 +32,7 @@
 const SAM_ALPHABET : Int = 26
 
 ///|
-priv struct SAMState {
+pub struct SAMState {
   mut len : Int // Length of longest string in this class
   mut link : Int // Suffix link (-1 for initial state)
   next : Array[Int] // Transitions (next[c] = state after character c)
@@ -45,14 +45,14 @@ fn SAMState::new() -> SAMState {
 }
 
 ///|
-priv struct SuffixAutomaton {
+pub struct SuffixAutomaton {
   states : Array[SAMState]
   mut last : Int // State corresponding to entire string
   mut size : Int // Number of states
 }
 
 ///|
-fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
+pub fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
   let states : Array[SAMState] = []
   // Create initial state (empty string)
   let init = SAMState::new()
@@ -82,7 +82,7 @@ fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
 
 ///|
 /// Add a character to the automaton
-fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
+pub fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
   let cur = self.size
   self.size = self.size + 1
   self.states[cur].len = self.states[self.last].len + 1
@@ -139,7 +139,7 @@ fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
 
 ///|
 /// Build suffix automaton from string
-fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
+pub fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
   for i = 0; i < s.length(); i = i + 1 {
     let c = s[i].to_int() - 97 // 'a' = 97
     if c >= 0 && c < SAM_ALPHABET {
@@ -163,7 +163,7 @@ fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
 
 ///|
 /// Check if substring exists
-fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
+pub fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
   let mut state = 0
   for i = 0; i < s.length(); i = i + 1 {
     let c = s[i].to_int() - 97
@@ -193,7 +193,9 @@ fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
 
 ///|
 /// Count distinct substrings
-fn SuffixAutomaton::count_distinct_substrings(self : SuffixAutomaton) -> Int64 {
+pub fn SuffixAutomaton::count_distinct_substrings(
+  self : SuffixAutomaton,
+) -> Int64 {
   let mut count = 0L
   for i = 1; i < self.size; i = i + 1 {
     let link = self.states[i].link
@@ -217,7 +219,7 @@ fn SuffixAutomaton::count_distinct_substrings(self : SuffixAutomaton) -> Int64 {
 
 ///|
 /// Find longest common substring of two strings
-fn longest_common_substring(s1 : String, s2 : String) -> Int {
+pub fn longest_common_substring(s1 : String, s2 : String) -> Int {
   if s1.length() == 0 || s2.length() == 0 {
     return 0
   }
@@ -272,13 +274,13 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
 
 ///|
 /// Get number of states in SAM
-fn SuffixAutomaton::state_count(self : SuffixAutomaton) -> Int {
+pub fn SuffixAutomaton::state_count(self : SuffixAutomaton) -> Int {
   self.size
 }
 
 ///|
 /// Count occurrences of pattern (using endpos set sizes)
-fn SuffixAutomaton::count_occurrences(
+pub fn SuffixAutomaton::count_occurrences(
   self : SuffixAutomaton,
   pattern : String,
 ) -> Int {

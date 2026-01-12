@@ -2,6 +2,11 @@
 package "bobzhang/loop_invariants/lib/z_algorithm"
 
 // Values
+pub fn compute_z(String) -> Array[Int]
+
+pub fn count_pattern(String, String) -> Int
+
+pub fn find_pattern(String, String) -> Array[Int]
 
 // Errors
 

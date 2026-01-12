@@ -20,6 +20,18 @@ let z = compute_z(s)
 let hits = z_search(text, pattern)
 ```
 
+## Example
+
+```mbt check
+///|
+test "z algorithm example" {
+  let z = @z_algorithm.compute_z("aabcaab")
+  inspect(z, content="[7, 1, 0, 0, 3, 1, 0]")
+  let hits = @z_algorithm.find_pattern("aabcaabxaab", "aab")
+  inspect(hits, content="[0, 4, 8]")
+}
+```
+
 ## Notes
 
 - This package is a reference implementation with detailed invariants.
