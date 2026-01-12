@@ -40,3 +40,38 @@ test "persistent segment tree min" {
   )
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent segment tree min update" {
+  let arr = [4, 9, 1][:]
+  let root = @challenge_persistent_segment_tree_min.build(arr, 0, arr.length())
+  let updated = @challenge_persistent_segment_tree_min.apply_updates(
+    root,
+    arr.length(),
+    [(1, 0)][:],
+  )
+  inspect(
+    @challenge_persistent_segment_tree_min.range_min(
+      root,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="1",
+  )
+  inspect(
+    @challenge_persistent_segment_tree_min.range_min(
+      updated,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="0",
+  )
+}
+```

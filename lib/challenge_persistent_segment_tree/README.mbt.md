@@ -25,3 +25,26 @@ test "persistent segment tree" {
   inspect(@challenge_persistent_segment_tree.total(updated), content="12")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent segment tree range" {
+  let arr = [2, 1, 3][:]
+  let root = @challenge_persistent_segment_tree.build(arr, 0, arr.length())
+  let updated = @challenge_persistent_segment_tree.apply_updates(
+    root,
+    arr.length(),
+    [(1, 4)][:],
+  )
+  inspect(
+    @challenge_persistent_segment_tree.query(root, 0, arr.length(), 1, 3),
+    content="4",
+  )
+  inspect(
+    @challenge_persistent_segment_tree.query(updated, 0, arr.length(), 1, 3),
+    content="8",
+  )
+}
+```

@@ -17,3 +17,16 @@ test "persistent fenwick" {
   inspect(@challenge_persistent_fenwick.length(fw3), content="5")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent fenwick another" {
+  let fw0 = @challenge_persistent_fenwick.make(4)
+  let fw1 = @challenge_persistent_fenwick.add(fw0, 1, 5)
+  let fw2 = @challenge_persistent_fenwick.add(fw1, 3, 2)
+  inspect(@challenge_persistent_fenwick.prefix_sum(fw2, 1), content="5")
+  inspect(@challenge_persistent_fenwick.range_sum(fw2, 1, 3), content="7")
+}
+```

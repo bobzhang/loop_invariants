@@ -40,3 +40,38 @@ test "persistent segment tree gcd" {
   )
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent segment tree gcd update" {
+  let arr = [8, 12, 16][:]
+  let root = @challenge_persistent_segment_tree_gcd.build(arr, 0, arr.length())
+  let updated = @challenge_persistent_segment_tree_gcd.apply_updates(
+    root,
+    arr.length(),
+    [(1, 6)][:],
+  )
+  inspect(
+    @challenge_persistent_segment_tree_gcd.range_gcd(
+      root,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="4",
+  )
+  inspect(
+    @challenge_persistent_segment_tree_gcd.range_gcd(
+      updated,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="2",
+  )
+}
+```

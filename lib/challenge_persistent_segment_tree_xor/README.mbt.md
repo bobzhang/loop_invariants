@@ -40,3 +40,38 @@ test "persistent segment tree xor" {
   )
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "persistent segment tree xor update" {
+  let arr = [1, 2, 3][:]
+  let root = @challenge_persistent_segment_tree_xor.build(arr, 0, arr.length())
+  let updated = @challenge_persistent_segment_tree_xor.apply_updates(
+    root,
+    arr.length(),
+    [(1, 5)][:],
+  )
+  inspect(
+    @challenge_persistent_segment_tree_xor.range_xor(
+      root,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="0",
+  )
+  inspect(
+    @challenge_persistent_segment_tree_xor.range_xor(
+      updated,
+      0,
+      arr.length(),
+      0,
+      3,
+    ),
+    content="7",
+  )
+}
+```
