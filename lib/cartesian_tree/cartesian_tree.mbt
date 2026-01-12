@@ -354,6 +354,7 @@ fn CartesianTree::query_min(self : CartesianTree, l : Int, r : Int) -> Int64? {
 }
 
 ///|
+/// Return the minimum value in arr[l..=r] using a Cartesian tree.
 pub fn range_min(arr : ArrayView[Int64], l : Int, r : Int) -> Int64? {
   let tree = CartesianTree::new(arr.to_array())
   tree.query_min(l, r)

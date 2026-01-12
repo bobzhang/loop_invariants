@@ -60,6 +60,7 @@ pub struct LazySegTreeSum {
 }
 
 ///|
+/// Build a lazy segment tree for range add / range sum from array.
 pub fn LazySegTreeSum::new(arr : Array[Int64]) -> LazySegTreeSum {
   let n = arr.length()
   if n == 0 {
@@ -232,6 +233,7 @@ pub fn LazySegTreeSum::point_set(
 }
 
 ///|
+/// Return number of elements tracked by the tree.
 pub fn LazySegTreeSum::length(self : LazySegTreeSum) -> Int {
   self.n
 }

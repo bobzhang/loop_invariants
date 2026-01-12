@@ -37,6 +37,7 @@ pub struct Fenwick2D {
 }
 
 ///|
+/// Create a 2D Fenwick tree for rows x cols grid (1-indexed operations).
 pub fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
   // Use 1-indexed arrays (index 0 unused)
   let tree : Array[Array[Int64]] = []
@@ -190,11 +191,13 @@ pub fn Fenwick2D::get(self : Fenwick2D, x : Int, y : Int) -> Int64 {
 }
 
 ///|
+/// Return number of rows in the grid.
 pub fn Fenwick2D::get_rows(self : Fenwick2D) -> Int {
   self.rows
 }
 
 ///|
+/// Return number of columns in the grid.
 pub fn Fenwick2D::get_cols(self : Fenwick2D) -> Int {
   self.cols
 }

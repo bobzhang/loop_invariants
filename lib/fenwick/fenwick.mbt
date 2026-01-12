@@ -184,6 +184,7 @@ pub fn FenwickTree::set(self : FenwickTree, i : Int, value : Int64) -> Unit {
 }
 
 ///|
+/// Return number of elements tracked by the tree.
 pub fn FenwickTree::length(self : FenwickTree) -> Int {
   self.n
 }

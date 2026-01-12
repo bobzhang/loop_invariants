@@ -36,6 +36,7 @@ pub struct SparseTableMin {
 }
 
 ///|
+/// Build a sparse table for range minimum queries.
 pub fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
   let n = arr.length()
   if n == 0 {

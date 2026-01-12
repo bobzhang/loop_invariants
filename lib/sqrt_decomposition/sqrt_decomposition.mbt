@@ -56,6 +56,7 @@ pub struct SqrtSum {
 }
 
 ///|
+/// Build sqrt decomposition blocks for range sum queries.
 pub fn SqrtSum::new(arr : Array[Int64]) -> SqrtSum {
   let n = arr.length()
   if n == 0 {

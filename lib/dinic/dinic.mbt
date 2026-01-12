@@ -251,6 +251,7 @@ fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
 }
 
 ///|
+/// Compute max flow in a directed graph with edges (u, v, cap).
 pub fn max_flow(
   n : Int,
   edges : ArrayView[(Int, Int, Int64)],

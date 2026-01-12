@@ -84,6 +84,7 @@ fn highest_bit(x : Int) -> Int {
 }
 
 ///|
+/// Build a disjoint sparse table for range sum queries.
 pub fn DisjointSparseSum::new(arr : Array[Int64]) -> DisjointSparseSum {
   let n = arr.length()
   if n == 0 {
