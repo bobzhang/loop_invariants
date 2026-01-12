@@ -17,6 +17,7 @@ pub enum TreapMap {
 } derive(Show)
 
 ///|
+/// Return the number of entries in the map.
 pub fn size(t : TreapMap) -> Int {
   match t {
     TreapMap::Empty => 0
@@ -82,11 +83,13 @@ fn make_node(
 }
 
 ///|
+/// Create an empty treap map.
 pub fn empty() -> TreapMap {
   TreapMap::Empty
 }
 
 ///|
+/// Split the map into (< key) and (>= key).
 pub fn split(t : TreapMap, key : Int) -> (TreapMap, TreapMap) {
   match t {
     TreapMap::Empty => (TreapMap::Empty, TreapMap::Empty)
@@ -102,6 +105,7 @@ pub fn split(t : TreapMap, key : Int) -> (TreapMap, TreapMap) {
 }
 
 ///|
+/// Merge two maps assuming all keys in a are < keys in b.
 pub fn merge(a : TreapMap, b : TreapMap) -> TreapMap {
   match (a, b) {
     (TreapMap::Empty, _) => b
@@ -119,6 +123,7 @@ pub fn merge(a : TreapMap, b : TreapMap) -> TreapMap {
 }
 
 ///|
+/// Check whether key exists in the map.
 pub fn contains(t : TreapMap, key : Int) -> Bool {
   match t {
     TreapMap::Empty => false
@@ -149,6 +154,7 @@ fn update_value(t : TreapMap, key : Int, value : Int) -> TreapMap {
 }
 
 ///|
+/// Insert or update a key/value pair and return the new map.
 pub fn insert_or_update(t : TreapMap, key : Int, value : Int) -> TreapMap {
   if contains(t, key) {
     update_value(t, key, value)
@@ -166,6 +172,7 @@ pub fn insert_or_update(t : TreapMap, key : Int, value : Int) -> TreapMap {
 }
 
 ///|
+/// Lookup a key and return its value if present.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn get(t : TreapMap, key : Int) -> Int? {
   let none : Int? = None

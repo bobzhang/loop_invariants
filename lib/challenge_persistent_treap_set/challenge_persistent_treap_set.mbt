@@ -10,6 +10,7 @@ pub enum Treap {
 } derive(Show)
 
 ///|
+/// Return the number of keys in the treap.
 pub fn size(t : Treap) -> Int {
   match t {
     Treap::Empty => 0
@@ -67,11 +68,13 @@ fn make_node(key : Int, priority : Int, left : Treap, right : Treap) -> Treap {
 }
 
 ///|
+/// Create an empty treap.
 pub fn empty() -> Treap {
   Treap::Empty
 }
 
 ///|
+/// Split the treap into (< key) and (>= key).
 pub fn split(t : Treap, key : Int) -> (Treap, Treap) {
   match t {
     Treap::Empty => (Treap::Empty, Treap::Empty)
@@ -87,6 +90,7 @@ pub fn split(t : Treap, key : Int) -> (Treap, Treap) {
 }
 
 ///|
+/// Merge two treaps assuming all keys in a are < keys in b.
 pub fn merge(a : Treap, b : Treap) -> Treap {
   match (a, b) {
     (Treap::Empty, _) => b
@@ -104,6 +108,7 @@ pub fn merge(a : Treap, b : Treap) -> Treap {
 }
 
 ///|
+/// Check whether key exists in the treap.
 pub fn contains(t : Treap, key : Int) -> Bool {
   match t {
     Treap::Empty => false
@@ -119,6 +124,7 @@ pub fn contains(t : Treap, key : Int) -> Bool {
 }
 
 ///|
+/// Insert key and return the new treap (no duplicates).
 pub fn insert(t : Treap, key : Int) -> Treap {
   if contains(t, key) {
     t

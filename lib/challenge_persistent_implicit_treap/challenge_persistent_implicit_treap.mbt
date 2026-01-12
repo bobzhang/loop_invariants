@@ -16,6 +16,7 @@ pub enum Treap {
 } derive(Show)
 
 ///|
+/// Return the number of elements in the treap.
 pub fn size(t : Treap) -> Int {
   match t {
     Treap::Empty => 0
@@ -56,11 +57,13 @@ fn make_node(value : Int, priority : Int, left : Treap, right : Treap) -> Treap 
 }
 
 ///|
+/// Create an empty implicit treap.
 pub fn empty() -> Treap {
   Treap::Empty
 }
 
 ///|
+/// Split by position k into (prefix, suffix).
 pub fn split(t : Treap, k : Int) -> (Treap, Treap) {
   match t {
     Treap::Empty => (Treap::Empty, Treap::Empty)
@@ -78,6 +81,7 @@ pub fn split(t : Treap, k : Int) -> (Treap, Treap) {
 }
 
 ///|
+/// Merge two treaps assuming all elements in a precede b.
 pub fn merge(a : Treap, b : Treap) -> Treap {
   match (a, b) {
     (Treap::Empty, _) => b
@@ -95,6 +99,7 @@ pub fn merge(a : Treap, b : Treap) -> Treap {
 }
 
 ///|
+/// Insert a value at index idx and return the new treap.
 pub fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
   let (l, r) = split(t, idx)
   let node = make_node(
@@ -107,6 +112,7 @@ pub fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
 }
 
 ///|
+/// Get the value at index idx, or None if out of range.
 pub fn get(t : Treap, idx : Int) -> Int? {
   match t {
     Treap::Empty => None
@@ -124,6 +130,7 @@ pub fn get(t : Treap, idx : Int) -> Int? {
 }
 
 ///|
+/// Convert the treap into an array in order.
 pub fn to_array(t : Treap) -> Array[Int] {
   match t {
     Treap::Empty => []
