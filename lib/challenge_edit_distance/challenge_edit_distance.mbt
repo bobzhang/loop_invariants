@@ -16,7 +16,7 @@ fn min3(a : Int, b : Int, c : Int) -> Int {
 ///|
 /// Compute edit distance using full DP table.
 #warnings("+missing_invariant+missing_reasoning")
-fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
+pub fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
   let m = s1.length()
   let n = s2.length()
   let dp : Array[Int] = Array::make((m + 1) * (n + 1), 0)

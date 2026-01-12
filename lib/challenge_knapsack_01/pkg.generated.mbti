@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_knapsack_01"
 
 // Values
+pub fn knapsack_01(ArrayView[Int], ArrayView[Int], Int) -> Int
 
 // Errors
 

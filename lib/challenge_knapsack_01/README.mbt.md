@@ -16,6 +16,30 @@ for item in items:
     dp[cap] = max(dp[cap], dp[cap - w] + value)
 ```
 
+## Example
+
+```mbt check
+///|
+test "knapsack 01 basic" {
+  let weights : Array[Int] = [2, 3, 4]
+  let values : Array[Int] = [4, 5, 6]
+  let best = @challenge_knapsack_01.knapsack_01(weights[:], values[:], 5)
+  inspect(best, content="9")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "knapsack 01 choose combo" {
+  let weights : Array[Int] = [1, 3, 4]
+  let values : Array[Int] = [15, 20, 30]
+  let best = @challenge_knapsack_01.knapsack_01(weights[:], values[:], 4)
+  inspect(best, content="35")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n * W)

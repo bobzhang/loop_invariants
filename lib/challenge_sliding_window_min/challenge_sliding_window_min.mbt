@@ -5,7 +5,7 @@
 ///|
 /// Return minimum for each window of size k.
 #warnings("+missing_invariant+missing_reasoning")
-fn sliding_window_min(arr : ArrayView[Int], k : Int) -> Array[Int] {
+pub fn sliding_window_min(arr : ArrayView[Int], k : Int) -> Array[Int] {
   let n = arr.length()
   guard n >= k && k > 0 else { return [] }
   let result : Array[Int] = []

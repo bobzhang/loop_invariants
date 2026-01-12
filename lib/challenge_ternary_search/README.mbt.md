@@ -19,6 +19,28 @@ while hi - lo > 3:
   else: lo = m1 + 1
 ```
 
+## Example
+
+```mbt check
+///|
+test "ternary search unimodal" {
+  let arr : Array[Int] = [9, 7, 5, 3, 4, 6, 8]
+  let idx = @challenge_ternary_search.find_min_unimodal(arr[:])
+  inspect(idx, content="3")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "ternary search decreasing" {
+  let arr : Array[Int] = [5, 4, 3, 2, 1]
+  let idx = @challenge_ternary_search.find_min_unimodal(arr[:])
+  inspect(idx, content="4")
+}
+```
+
 ## Notes
 
 - Time complexity: O(log n)

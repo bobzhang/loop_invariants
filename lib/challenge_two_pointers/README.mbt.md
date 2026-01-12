@@ -18,6 +18,28 @@ for right in 0..n-1:
     move left
 ```
 
+## Example
+
+```mbt check
+///|
+test "two pointers basic" {
+  let arr : Array[Int] = [1, 2, 1, 1]
+  let count = @challenge_two_pointers.count_subarrays_leq(arr[:], 3)
+  inspect(count, content="7")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "two pointers uniform" {
+  let arr : Array[Int] = [2, 2, 2]
+  let count = @challenge_two_pointers.count_subarrays_leq(arr[:], 3)
+  inspect(count, content="3")
+}
+```
+
 ## Notes
 
 - Typical time complexity: O(n)

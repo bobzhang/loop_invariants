@@ -5,7 +5,7 @@
 ///|
 /// Maximum value with unlimited copies of each item.
 #warnings("+missing_invariant+missing_reasoning")
-fn knapsack_unbounded(
+pub fn knapsack_unbounded(
   weights : ArrayView[Int],
   values : ArrayView[Int],
   capacity : Int,

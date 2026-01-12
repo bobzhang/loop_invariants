@@ -15,6 +15,38 @@ for cap in 0..W:
     dp[cap] = max(dp[cap], dp[cap - w] + value)
 ```
 
+## Example
+
+```mbt check
+///|
+test "knapsack unbounded basic" {
+  let weights : Array[Int] = [2, 3]
+  let values : Array[Int] = [4, 5]
+  let best = @challenge_knapsack_unbounded.knapsack_unbounded(
+    weights[:],
+    values[:],
+    7,
+  )
+  inspect(best, content="13")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "knapsack unbounded single item" {
+  let weights : Array[Int] = [3]
+  let values : Array[Int] = [4]
+  let best = @challenge_knapsack_unbounded.knapsack_unbounded(
+    weights[:],
+    values[:],
+    10,
+  )
+  inspect(best, content="12")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n * W)

@@ -5,7 +5,7 @@
 ///|
 /// Find index of minimum value in a unimodal array (decreasing then increasing).
 #warnings("+missing_invariant+missing_reasoning")
-fn find_min_unimodal(arr : ArrayView[Int]) -> Int {
+pub fn find_min_unimodal(arr : ArrayView[Int]) -> Int {
   let n = arr.length()
   guard n > 0 else { return -1 }
   let (l, h) = for lo = 0, hi = n - 1 {

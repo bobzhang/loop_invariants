@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_sliding_window_min"
 
 // Values
+pub fn sliding_window_min(ArrayView[Int], Int) -> Array[Int]
 
 // Errors
 

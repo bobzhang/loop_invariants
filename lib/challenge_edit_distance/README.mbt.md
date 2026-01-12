@@ -21,6 +21,30 @@ dp[i][j] = min(
 )
 ```
 
+## Example
+
+```mbt check
+///|
+test "edit distance basic" {
+  let a : Array[Char] = ['k', 'i', 't', 't', 'e', 'n']
+  let b : Array[Char] = ['s', 'i', 't', 't', 'i', 'n', 'g']
+  let dist = @challenge_edit_distance.edit_distance(a[:], b[:])
+  inspect(dist, content="3")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "edit distance short" {
+  let a : Array[Char] = ['f', 'l', 'a', 'w']
+  let b : Array[Char] = ['l', 'a', 'w', 'n']
+  let dist = @challenge_edit_distance.edit_distance(a[:], b[:])
+  inspect(dist, content="2")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n * m)

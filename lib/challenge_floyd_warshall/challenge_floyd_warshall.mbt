@@ -6,7 +6,10 @@
 /// Compute all-pairs shortest paths for a weighted graph.
 /// matrix[i][j] is edge weight or inf if no edge.
 #warnings("+missing_invariant+missing_reasoning")
-fn floyd_warshall(matrix : Array[Array[Int]], inf : Int) -> Array[Array[Int]] {
+pub fn floyd_warshall(
+  matrix : Array[Array[Int]],
+  inf : Int,
+) -> Array[Array[Int]] {
   let n = matrix.length()
   let dist = matrix.map(fn(row) { row.copy() })
   for k = 0; k < n; k = k + 1 {

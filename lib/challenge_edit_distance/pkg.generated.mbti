@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_edit_distance"
 
 // Values
+pub fn edit_distance(ArrayView[Char], ArrayView[Char]) -> Int
 
 // Errors
 

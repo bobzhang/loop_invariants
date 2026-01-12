@@ -17,6 +17,30 @@ else:
   dp[i][j] = max(dp[i-1][j], dp[i][j-1])
 ```
 
+## Example
+
+```mbt check
+///|
+test "lcs length basic" {
+  let a : Array[Char] = ['A', 'B', 'C', 'B', 'D', 'A', 'B']
+  let b : Array[Char] = ['B', 'D', 'C', 'A', 'B', 'A']
+  let len = @challenge_lcs.lcs_length(a[:], b[:])
+  inspect(len, content="4")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "lcs length short" {
+  let a : Array[Char] = ['a', 'b', 'c']
+  let b : Array[Char] = ['a', 'c']
+  let len = @challenge_lcs.lcs_length(a[:], b[:])
+  inspect(len, content="2")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n * m)

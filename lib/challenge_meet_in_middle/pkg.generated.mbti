@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_meet_in_middle"
 
 // Values
+pub fn best_subset_sum_leq(ArrayView[Int], Int) -> Int
 
 // Errors
 

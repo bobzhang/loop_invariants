@@ -6,7 +6,7 @@
 ///|
 /// Count subarrays with sum <= k (requires non-negative values).
 #warnings("+missing_invariant+missing_reasoning")
-fn count_subarrays_leq(arr : ArrayView[Int], k : Int) -> Int {
+pub fn count_subarrays_leq(arr : ArrayView[Int], k : Int) -> Int {
   let n = arr.length()
   guard n > 0 else { return 0 }
   for right = 0, left = 0, sum = 0, count = 0 {

@@ -14,7 +14,7 @@ fn max(a : Int, b : Int) -> Int {
 ///|
 /// Compute LCS length using two-row DP.
 #warnings("+missing_invariant+missing_reasoning")
-fn lcs_length(a : ArrayView[Char], b : ArrayView[Char]) -> Int {
+pub fn lcs_length(a : ArrayView[Char], b : ArrayView[Char]) -> Int {
   let m = a.length()
   let n = b.length()
   if m == 0 || n == 0 {

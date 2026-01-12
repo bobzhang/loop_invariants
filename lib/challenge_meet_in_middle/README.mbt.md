@@ -19,6 +19,28 @@ for s in left_sums:
   best = max(best, s + best_leq(right_sums, limit - s))
 ```
 
+## Example
+
+```mbt check
+///|
+test "meet in middle basic" {
+  let nums : Array[Int] = [3, 34, 4, 12, 5, 2]
+  let best = @challenge_meet_in_middle.best_subset_sum_leq(nums[:], 9)
+  inspect(best, content="9")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "meet in middle small limit" {
+  let nums : Array[Int] = [8, 1, 2, 7]
+  let best = @challenge_meet_in_middle.best_subset_sum_leq(nums[:], 10)
+  inspect(best, content="10")
+}
+```
+
 ## Notes
 
 - Time complexity: O(2^(n/2) log 2^(n/2))

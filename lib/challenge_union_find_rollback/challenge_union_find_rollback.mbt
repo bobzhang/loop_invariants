@@ -3,14 +3,14 @@
 // ============================================================================
 
 ///|
-priv struct RollbackDSU {
+pub struct RollbackDSU {
   parent : Array[Int]
   size : Array[Int]
   history : Array[(Int, Int)] // (child, parent_size_before)
 }
 
 ///|
-fn RollbackDSU::new(n : Int) -> RollbackDSU {
+pub fn RollbackDSU::new(n : Int) -> RollbackDSU {
   let parent : Array[Int] = Array::make(n, 0)
   let size : Array[Int] = Array::make(n, 1)
   for i = 0; i < n; i = i + 1 {
@@ -30,7 +30,7 @@ fn RollbackDSU::new(n : Int) -> RollbackDSU {
 }
 
 ///|
-fn RollbackDSU::find(self : RollbackDSU, x : Int) -> Int {
+pub fn RollbackDSU::find(self : RollbackDSU, x : Int) -> Int {
   for cur = x; self.parent[cur] != cur; {
     continue self.parent[cur]
   } else {
@@ -49,7 +49,7 @@ fn RollbackDSU::find(self : RollbackDSU, x : Int) -> Int {
 }
 
 ///|
-fn RollbackDSU::union(self : RollbackDSU, a : Int, b : Int) -> Bool {
+pub fn RollbackDSU::union(self : RollbackDSU, a : Int, b : Int) -> Bool {
   let mut ra = self.find(a)
   let mut rb = self.find(b)
   if ra == rb {
@@ -68,13 +68,13 @@ fn RollbackDSU::union(self : RollbackDSU, a : Int, b : Int) -> Bool {
 }
 
 ///|
-fn RollbackDSU::snapshot(self : RollbackDSU) -> Int {
+pub fn RollbackDSU::snapshot(self : RollbackDSU) -> Int {
   self.history.length()
 }
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn RollbackDSU::rollback(self : RollbackDSU, snap : Int) -> Unit {
+pub fn RollbackDSU::rollback(self : RollbackDSU, snap : Int) -> Unit {
   for len = self.history.length(); len > snap; {
     let (child, parent_size) = self.history.pop().unwrap()
     if child >= 0 {
@@ -97,7 +97,7 @@ fn RollbackDSU::rollback(self : RollbackDSU, snap : Int) -> Unit {
 }
 
 ///|
-fn RollbackDSU::same(self : RollbackDSU, a : Int, b : Int) -> Bool {
+pub fn RollbackDSU::same(self : RollbackDSU, a : Int, b : Int) -> Bool {
   self.find(a) == self.find(b)
 }
 
