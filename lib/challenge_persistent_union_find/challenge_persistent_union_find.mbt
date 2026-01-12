@@ -83,6 +83,7 @@ fn array_set(arr : PArray, idx : Int, value : Int) -> PArray {
 }
 
 ///|
+/// Create a persistent DSU with n singleton elements.
 pub fn make(n : Int) -> DSU {
   let parents = Array::makei(n, i => i)
   let sizes = Array::make(n, 1)
@@ -90,6 +91,7 @@ pub fn make(n : Int) -> DSU {
 }
 
 ///|
+/// Find the representative of x without path compression.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn find(dsu : DSU, x : Int) -> Int {
   for cur = x {
@@ -113,6 +115,7 @@ pub fn find(dsu : DSU, x : Int) -> Int {
 }
 
 ///|
+/// Return a new DSU after unioning the sets containing a and b.
 pub fn union(dsu : DSU, a : Int, b : Int) -> DSU {
   let ra = find(dsu, a)
   let rb = find(dsu, b)
@@ -134,6 +137,7 @@ pub fn union(dsu : DSU, a : Int, b : Int) -> DSU {
 }
 
 ///|
+/// Check whether a and b belong to the same set.
 pub fn same(dsu : DSU, a : Int, b : Int) -> Bool {
   find(dsu, a) == find(dsu, b)
 }

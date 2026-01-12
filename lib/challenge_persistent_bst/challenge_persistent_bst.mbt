@@ -47,16 +47,19 @@ fn bst_valid(t : Tree) -> Bool {
 }
 
 ///|
+/// Create an empty persistent BST.
 pub fn empty() -> Tree {
   Tree::Empty
 }
 
 ///|
+/// Return number of nodes in the tree.
 pub fn size(t : Tree) -> Int {
   tree_size(t)
 }
 
 ///|
+/// Insert a value and return the new tree.
 pub fn insert(t : Tree, value : Int) -> Tree {
   match t {
     Tree::Empty => Tree::Node(value~, left=Tree::Empty, right=Tree::Empty)
@@ -72,6 +75,7 @@ pub fn insert(t : Tree, value : Int) -> Tree {
 }
 
 ///|
+/// Check whether value exists in the tree.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn contains(t : Tree, value : Int) -> Bool {
   let none : Int? = None
@@ -130,6 +134,7 @@ pub fn from_array(arr : ArrayView[Int]) -> Tree {
 }
 
 ///|
+/// Return an in-order traversal (sorted values).
 pub fn inorder(t : Tree) -> Array[Int] {
   match t {
     Tree::Empty => []

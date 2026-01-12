@@ -112,11 +112,13 @@ fn merge_heaps(a : Heap, b : Heap) -> Heap {
 }
 
 ///|
+/// Create an empty binomial heap.
 pub fn empty() -> Heap {
   { trees: [] }
 }
 
 ///|
+/// Merge two heaps and return the result.
 pub fn merge(a : Heap, b : Heap) -> Heap {
   merge_heaps(a, b)
 }
@@ -137,11 +139,13 @@ fn singleton(value : Int) -> Heap {
 }
 
 ///|
+/// Insert a value and return the new heap.
 pub fn insert(h : Heap, value : Int) -> Heap {
   merge_heaps(h, singleton(value))
 }
 
 ///|
+/// Return the minimum value in the heap, or None if empty.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn find_min(h : Heap) -> Int? {
   let len = h.trees.length()
@@ -180,6 +184,7 @@ fn heap_from_children(children : Array[Tree], rank : Int) -> Heap {
 }
 
 ///|
+/// Delete the minimum element and return the new heap.
 pub fn delete_min(h : Heap) -> Heap? {
   let len = h.trees.length()
   let mut min_idx = -1

@@ -10,6 +10,7 @@ pub struct RollbackDSU {
 }
 
 ///|
+/// Create a rollback-capable DSU with n singleton sets.
 pub fn RollbackDSU::new(n : Int) -> RollbackDSU {
   let parent : Array[Int] = Array::make(n, 0)
   let size : Array[Int] = Array::make(n, 1)
@@ -30,6 +31,7 @@ pub fn RollbackDSU::new(n : Int) -> RollbackDSU {
 }
 
 ///|
+/// Find the representative of x (no path compression).
 pub fn RollbackDSU::find(self : RollbackDSU, x : Int) -> Int {
   for cur = x; self.parent[cur] != cur; {
     continue self.parent[cur]
@@ -49,6 +51,7 @@ pub fn RollbackDSU::find(self : RollbackDSU, x : Int) -> Int {
 }
 
 ///|
+/// Union the sets of a and b; returns true if merged.
 pub fn RollbackDSU::union(self : RollbackDSU, a : Int, b : Int) -> Bool {
   let mut ra = self.find(a)
   let mut rb = self.find(b)
@@ -68,11 +71,13 @@ pub fn RollbackDSU::union(self : RollbackDSU, a : Int, b : Int) -> Bool {
 }
 
 ///|
+/// Capture the current history size for later rollback.
 pub fn RollbackDSU::snapshot(self : RollbackDSU) -> Int {
   self.history.length()
 }
 
 ///|
+/// Roll back all unions after the given snapshot.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn RollbackDSU::rollback(self : RollbackDSU, snap : Int) -> Unit {
   for len = self.history.length(); len > snap; {
@@ -97,6 +102,7 @@ pub fn RollbackDSU::rollback(self : RollbackDSU, snap : Int) -> Unit {
 }
 
 ///|
+/// Check whether a and b are currently in the same set.
 pub fn RollbackDSU::same(self : RollbackDSU, a : Int, b : Int) -> Bool {
   self.find(a) == self.find(b)
 }

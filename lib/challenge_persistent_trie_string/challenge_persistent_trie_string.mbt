@@ -10,6 +10,7 @@ pub struct Node {
 } derive(Show)
 
 ///|
+/// Create an empty persistent trie.
 pub fn empty() -> Node {
   { end: false, children: Array::make(26, None) }
 }
@@ -42,11 +43,13 @@ fn insert(node : Node, s : StringView, idx : Int) -> Node {
 }
 
 ///|
+/// Insert a word into the trie and return the new root.
 pub fn add(root : Node, s : String) -> Node {
   insert(root, s[:], 0)
 }
 
 ///|
+/// Check whether a word exists in the trie.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn contains(root : Node, s : String) -> Bool {
   let view = s[:]

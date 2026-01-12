@@ -76,16 +76,19 @@ fn insert(node : Node, l : Int, r : Int, value : Int) -> Node {
 }
 
 ///|
+/// Create an empty multiset for values in [lo, hi).
 pub fn make(lo : Int, hi : Int) -> OrderStat {
   { root: Node::Empty, lo, hi }
 }
 
 ///|
+/// Return the total number of elements in the multiset.
 pub fn size(os : OrderStat) -> Int {
   count(os.root)
 }
 
 ///|
+/// Insert value and return a new order-statistic structure.
 pub fn add(os : OrderStat, value : Int) -> OrderStat {
   { root: insert(os.root, os.lo, os.hi, value), lo: os.lo, hi: os.hi }
 }
