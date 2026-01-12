@@ -34,11 +34,13 @@ fn tree_valid(node : Node, len : Int) -> Bool {
 }
 
 ///|
+/// Return the sum stored at the root.
 pub fn total(node : Node) -> Int {
   node_sum(node)
 }
 
 ///|
+/// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(sum=arr[l])
@@ -51,6 +53,7 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 }
 
 ///|
+/// Add delta at index idx and return the new tree.
 pub fn add(node : Node, l : Int, r : Int, idx : Int, delta : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(sum=node_sum(node) + delta)
@@ -79,6 +82,7 @@ pub fn add(node : Node, l : Int, r : Int, idx : Int, delta : Int) -> Node {
 }
 
 ///|
+/// Query the sum over [ql, qr).
 pub fn query(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0

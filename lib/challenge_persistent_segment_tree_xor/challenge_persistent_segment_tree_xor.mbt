@@ -34,11 +34,13 @@ fn tree_valid(node : Node, len : Int) -> Bool {
 }
 
 ///|
+/// Return the xor value stored at the root.
 pub fn xor_value(node : Node) -> Int {
   node_xor(node)
 }
 
 ///|
+/// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(xor=arr[l])
@@ -51,6 +53,7 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 }
 
 ///|
+/// Set index idx to value and return the new tree.
 pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
     Node::Leaf(xor=value)
@@ -79,6 +82,7 @@ pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node 
 }
 
 ///|
+/// Query the xor over [ql, qr).
 pub fn range_xor(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   if qr <= l || r <= ql {
     0
