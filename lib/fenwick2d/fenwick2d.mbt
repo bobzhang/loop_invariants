@@ -30,14 +30,14 @@
 
 ///|
 /// 2D Fenwick Tree for prefix sums
-priv struct Fenwick2D {
+pub struct Fenwick2D {
   tree : Array[Array[Int64]]
   rows : Int
   cols : Int
 }
 
 ///|
-fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
+pub fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
   // Use 1-indexed arrays (index 0 unused)
   let tree : Array[Array[Int64]] = []
   for _ in 0..=rows {
@@ -57,7 +57,12 @@ fn lowbit(x : Int) -> Int {
 /// REASONING: We update all positions that "cover" (x, y) in both dimensions.
 /// In row dimension: positions x, x + lowbit(x), x + lowbit(x + lowbit(x)), ...
 /// In col dimension: same pattern for y
-fn Fenwick2D::update(self : Fenwick2D, x : Int, y : Int, delta : Int64) -> Unit {
+pub fn Fenwick2D::update(
+  self : Fenwick2D,
+  x : Int,
+  y : Int,
+  delta : Int64,
+) -> Unit {
   if x <= 0 || x > self.rows || y <= 0 || y > self.cols {
     return
   }
@@ -99,7 +104,7 @@ fn Fenwick2D::update(self : Fenwick2D, x : Int, y : Int, delta : Int64) -> Unit 
 /// Query prefix sum: sum of [(1,1), (x,y)]
 /// REASONING: We collect contributions from all positions that
 /// contribute to the prefix sum in both dimensions.
-fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
+pub fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
   if x <= 0 || y <= 0 {
     return 0L
   }
@@ -148,7 +153,7 @@ fn Fenwick2D::prefix_sum(self : Fenwick2D, x : Int, y : Int) -> Int64 {
 /// Query range sum: sum of [(x1,y1), (x2,y2)] (inclusive)
 /// Using inclusion-exclusion principle:
 /// sum(x1,y1,x2,y2) = prefix(x2,y2) - prefix(x1-1,y2) - prefix(x2,y1-1) + prefix(x1-1,y1-1)
-fn Fenwick2D::range_sum(
+pub fn Fenwick2D::range_sum(
   self : Fenwick2D,
   x1 : Int,
   y1 : Int,
@@ -167,7 +172,7 @@ fn Fenwick2D::range_sum(
 ///|
 /// Set value at position (x, y) (1-indexed)
 /// Requires knowing the current value
-fn Fenwick2D::set(
+pub fn Fenwick2D::set(
   self : Fenwick2D,
   x : Int,
   y : Int,
@@ -180,17 +185,17 @@ fn Fenwick2D::set(
 ///|
 /// Get value at single position (x, y)
 /// This is less efficient than point query in regular array
-fn Fenwick2D::get(self : Fenwick2D, x : Int, y : Int) -> Int64 {
+pub fn Fenwick2D::get(self : Fenwick2D, x : Int, y : Int) -> Int64 {
   self.range_sum(x, y, x, y)
 }
 
 ///|
-fn Fenwick2D::get_rows(self : Fenwick2D) -> Int {
+pub fn Fenwick2D::get_rows(self : Fenwick2D) -> Int {
   self.rows
 }
 
 ///|
-fn Fenwick2D::get_cols(self : Fenwick2D) -> Int {
+pub fn Fenwick2D::get_cols(self : Fenwick2D) -> Int {
   self.cols
 }
 

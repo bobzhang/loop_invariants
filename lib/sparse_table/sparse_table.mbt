@@ -29,14 +29,14 @@
 // SPACE COMPLEXITY: O(n log n)
 
 ///|
-priv struct SparseTableMin {
+pub struct SparseTableMin {
   table : Array[Array[Int64]]
   log_table : Array[Int]
   n : Int
 }
 
 ///|
-fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
+pub fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
   let n = arr.length()
   if n == 0 {
     return { table: [], log_table: [], n: 0 }
@@ -68,7 +68,7 @@ fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
 
 ///|
 /// Query minimum in range [l, r] inclusive
-fn SparseTableMin::query(self : SparseTableMin, l : Int, r : Int) -> Int64 {
+pub fn SparseTableMin::query(self : SparseTableMin, l : Int, r : Int) -> Int64 {
   if l < 0 || r >= self.n || l > r {
     return 9223372036854775807L // INT64_MAX
   }

@@ -48,7 +48,7 @@ fn isqrt(n : Int) -> Int {
 // ============================================================================
 
 ///|
-priv struct SqrtSum {
+pub struct SqrtSum {
   arr : Array[Int64]
   blocks : Array[Int64]
   block_size : Int
@@ -56,7 +56,7 @@ priv struct SqrtSum {
 }
 
 ///|
-fn SqrtSum::new(arr : Array[Int64]) -> SqrtSum {
+pub fn SqrtSum::new(arr : Array[Int64]) -> SqrtSum {
   let n = arr.length()
   if n == 0 {
     return { arr: [], blocks: [], block_size: 1, n: 0 }
@@ -74,7 +74,7 @@ fn SqrtSum::new(arr : Array[Int64]) -> SqrtSum {
 
 ///|
 /// Point update: arr[idx] = val
-fn SqrtSum::update(self : SqrtSum, idx : Int, val : Int64) -> Unit {
+pub fn SqrtSum::update(self : SqrtSum, idx : Int, val : Int64) -> Unit {
   if idx < 0 || idx >= self.n {
     return
   }
@@ -85,7 +85,7 @@ fn SqrtSum::update(self : SqrtSum, idx : Int, val : Int64) -> Unit {
 
 ///|
 /// Range sum query [l, r] inclusive
-fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
+pub fn SqrtSum::query(self : SqrtSum, l : Int, r : Int) -> Int64 {
   if l > r || l < 0 || r >= self.n {
     return 0L
   }

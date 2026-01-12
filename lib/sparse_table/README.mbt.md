@@ -17,6 +17,18 @@ query(l, r):
   ans = min(st[k][l], st[k][r-2^k])
 ```
 
+## Example
+
+```mbt check
+///|
+test "sparse table example" {
+  let arr : Array[Int64] = [5L, 2L, 4L, 7L, 1L, 3L]
+  let st = @sparse_table.SparseTableMin::new(arr)
+  inspect(st.query(1, 4), content="1")
+  inspect(st.query(0, 2), content="2")
+}
+```
+
 ## Notes
 
 - Time complexity: preprocess O(n log n), query O(1)

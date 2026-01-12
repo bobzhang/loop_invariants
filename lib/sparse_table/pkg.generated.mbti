@@ -6,6 +6,13 @@ package "bobzhang/loop_invariants/lib/sparse_table"
 // Errors
 
 // Types and methods
+pub struct SparseTableMin {
+  table : Array[Array[Int64]]
+  log_table : Array[Int]
+  n : Int
+}
+pub fn SparseTableMin::new(Array[Int64]) -> Self
+pub fn SparseTableMin::query(Self, Int, Int) -> Int64
 
 // Type aliases
 

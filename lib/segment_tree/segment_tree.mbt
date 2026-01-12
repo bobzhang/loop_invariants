@@ -35,14 +35,14 @@
 
 ///|
 /// Segment Tree for range sum queries
-priv struct SegmentTree {
+pub struct SegmentTree {
   n : Int
   tree : Array[Int64]
 }
 
 ///|
 /// Build segment tree from array
-fn SegmentTree::new(arr : Array[Int64]) -> SegmentTree {
+pub fn SegmentTree::new(arr : Array[Int64]) -> SegmentTree {
   let n = arr.length()
   if n == 0 {
     return { n: 0, tree: [] }
@@ -72,7 +72,7 @@ fn build_tree(
 
 ///|
 /// Update element at index i to value val
-fn SegmentTree::update(self : SegmentTree, i : Int, val : Int64) -> Unit {
+pub fn SegmentTree::update(self : SegmentTree, i : Int, val : Int64) -> Unit {
   if i < 0 || i >= self.n {
     return
   }
@@ -103,7 +103,7 @@ fn update_helper(
 
 ///|
 /// Query sum of range [l, r]
-fn SegmentTree::query(self : SegmentTree, l : Int, r : Int) -> Int64 {
+pub fn SegmentTree::query(self : SegmentTree, l : Int, r : Int) -> Int64 {
   if l < 0 || r >= self.n || l > r {
     return 0L
   }

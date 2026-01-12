@@ -16,6 +16,19 @@ query(node, l, r, ql, qr)
 update(node, l, r, idx, value)
 ```
 
+## Example
+
+```mbt check
+///|
+test "segment tree example" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L]
+  let st = @segment_tree.SegmentTree::new(arr)
+  inspect(st.query(1, 3), content="9")
+  st.update(2, 10)
+  inspect(st.query(1, 3), content="16")
+}
+```
+
 ## Notes
 
 - Time complexity: O(log n) per query/update

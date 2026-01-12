@@ -16,6 +16,19 @@ for i in l..r:
   else: use element
 ```
 
+## Example
+
+```mbt check
+///|
+test "sqrt decomposition example" {
+  let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
+  let sd = @sqrt_decomposition.SqrtSum::new(arr)
+  inspect(sd.query(1, 3), content="9")
+  sd.update(2, 10)
+  inspect(sd.query(1, 3), content="16")
+}
+```
+
 ## Notes
 
 - Time complexity: O(sqrt(n)) per query/update

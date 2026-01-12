@@ -17,6 +17,18 @@ prefix(x, y):
   for i = x..: for j = y..: sum += tree[i][j]
 ```
 
+## Example
+
+```mbt check
+///|
+test "fenwick2d example" {
+  let fw = @fenwick2d.Fenwick2D::new(3, 3)
+  fw.update(1, 1, 5)
+  fw.update(2, 3, 2)
+  inspect(fw.range_sum(1, 1, 3, 3), content="7")
+}
+```
+
 ## Notes
 
 - Time complexity: O(log^2 n)

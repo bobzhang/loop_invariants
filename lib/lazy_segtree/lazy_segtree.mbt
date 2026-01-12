@@ -53,14 +53,14 @@
 
 ///|
 /// Lazy Segment Tree with range add and range sum queries
-priv struct LazySegTreeSum {
+pub struct LazySegTreeSum {
   n : Int
   tree : Array[Int64] // Sum of range
   pending : Array[Int64] // Pending add value
 }
 
 ///|
-fn LazySegTreeSum::new(arr : Array[Int64]) -> LazySegTreeSum {
+pub fn LazySegTreeSum::new(arr : Array[Int64]) -> LazySegTreeSum {
   let n = arr.length()
   if n == 0 {
     return { n: 0, tree: [], pending: [] }
@@ -119,7 +119,7 @@ fn push_down(
 
 ///|
 /// Range add: add val to all elements in [l, r]
-fn LazySegTreeSum::range_add(
+pub fn LazySegTreeSum::range_add(
   self : LazySegTreeSum,
   l : Int,
   r : Int,
@@ -166,7 +166,11 @@ fn range_add_helper(
 
 ///|
 /// Range sum query for [l, r]
-fn LazySegTreeSum::range_sum(self : LazySegTreeSum, l : Int, r : Int) -> Int64? {
+pub fn LazySegTreeSum::range_sum(
+  self : LazySegTreeSum,
+  l : Int,
+  r : Int,
+) -> Int64? {
   if l < 0 || r >= self.n || l > r || self.n == 0 {
     return None
   }
@@ -206,13 +210,13 @@ fn range_sum_helper(
 
 ///|
 /// Point query
-fn LazySegTreeSum::point_query(self : LazySegTreeSum, i : Int) -> Int64? {
+pub fn LazySegTreeSum::point_query(self : LazySegTreeSum, i : Int) -> Int64? {
   self.range_sum(i, i)
 }
 
 ///|
 /// Point update (set value)
-fn LazySegTreeSum::point_set(
+pub fn LazySegTreeSum::point_set(
   self : LazySegTreeSum,
   i : Int,
   val : Int64,
@@ -228,7 +232,7 @@ fn LazySegTreeSum::point_set(
 }
 
 ///|
-fn LazySegTreeSum::length(self : LazySegTreeSum) -> Int {
+pub fn LazySegTreeSum::length(self : LazySegTreeSum) -> Int {
   self.n
 }
 
