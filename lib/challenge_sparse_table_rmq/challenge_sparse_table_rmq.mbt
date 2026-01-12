@@ -18,6 +18,7 @@ pub struct SparseTable {
 }
 
 ///|
+/// Build a sparse table for range minimum queries.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn build_sparse_table(arr : ArrayView[Int]) -> SparseTable {
   let n = arr.length()

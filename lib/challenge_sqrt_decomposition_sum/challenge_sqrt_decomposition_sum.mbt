@@ -36,6 +36,7 @@ pub struct SqrtDecomp {
 }
 
 ///|
+/// Build a sqrt decomposition structure for range sums.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn build_sqrt_decomp(arr : ArrayView[Int]) -> SqrtDecomp {
   let n = arr.length()
@@ -60,6 +61,7 @@ pub fn build_sqrt_decomp(arr : ArrayView[Int]) -> SqrtDecomp {
 }
 
 ///|
+/// Query the sum over [l, r).
 #warnings("+missing_invariant+missing_reasoning")
 pub fn range_sum(sd : SqrtDecomp, l : Int, r : Int) -> Int {
   for pos = l, acc = 0 {

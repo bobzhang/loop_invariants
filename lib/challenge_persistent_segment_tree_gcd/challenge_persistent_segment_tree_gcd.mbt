@@ -13,6 +13,7 @@ fn abs_int(x : Int) -> Int {
 }
 
 ///|
+/// Compute the greatest common divisor of a and b.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn gcd(a : Int, b : Int) -> Int {
   let x0 = abs_int(a)
