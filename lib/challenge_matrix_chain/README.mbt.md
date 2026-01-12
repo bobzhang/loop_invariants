@@ -12,3 +12,14 @@ test "matrix chain example" {
   inspect(cost, content="4500")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "matrix chain classic" {
+  let dims : Array[Int] = [40, 20, 30, 10, 30]
+  let cost = @challenge_matrix_chain.matrix_chain_min_cost(dims[:])
+  inspect(cost, content="26000")
+}
+```

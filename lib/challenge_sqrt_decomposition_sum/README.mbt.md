@@ -12,3 +12,15 @@ test "sqrt decomposition example" {
   inspect(@challenge_sqrt_decomposition_sum.range_sum(sd, 2, 6), content="18")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "sqrt decomposition update" {
+  let arr : Array[Int] = [1, 2, 3, 4]
+  let sd = @challenge_sqrt_decomposition_sum.build_sqrt_decomp(arr[:])
+  @challenge_sqrt_decomposition_sum.update(sd, 1, 10)
+  inspect(@challenge_sqrt_decomposition_sum.range_sum(sd, 0, 2), content="11")
+}
+```

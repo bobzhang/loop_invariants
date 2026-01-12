@@ -12,3 +12,14 @@ test "coin change example" {
   inspect(ans, content="Some(2)")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "coin change unreachable" {
+  let coins : Array[Int] = [2, 5]
+  let ans = @challenge_coin_change_min.min_coins(coins[:], 3)
+  inspect(ans, content="None")
+}
+```

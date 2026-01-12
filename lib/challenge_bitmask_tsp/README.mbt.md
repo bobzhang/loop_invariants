@@ -17,3 +17,14 @@ test "tsp example" {
   inspect(ans, content="80")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "tsp triangle" {
+  let dist : Array[Array[Int]] = [[0, 2, 4], [2, 0, 1], [4, 1, 0]]
+  let ans = @challenge_bitmask_tsp.tsp_min_cycle(dist)
+  inspect(ans, content="7")
+}
+```
