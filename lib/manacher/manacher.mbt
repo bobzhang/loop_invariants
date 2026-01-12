@@ -246,11 +246,13 @@ fn ManacherResult::get_all_palindromes(
 }
 
 ///|
+/// Return the longest palindromic substring in s.
 pub fn longest_palindrome(s : String) -> String {
   manacher(s).longest_palindrome()
 }
 
 ///|
+/// Count all palindromic substrings in s.
 pub fn count_palindromes(s : String) -> Int {
   manacher(s).count_palindromes()
 }

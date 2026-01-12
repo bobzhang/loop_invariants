@@ -173,11 +173,13 @@ fn SuffixAutomaton::build(s : String) -> SuffixAutomaton {
 }
 
 ///|
+/// Check if pattern is a substring of text using a suffix automaton.
 pub fn contains_substring(text : String, pattern : String) -> Bool {
   SuffixAutomaton::build(text).contains(pattern)
 }
 
 ///|
+/// Count distinct substrings of text using a suffix automaton.
 pub fn distinct_substrings_count(text : String) -> Int {
   SuffixAutomaton::build(text).count_distinct_substrings()
 }

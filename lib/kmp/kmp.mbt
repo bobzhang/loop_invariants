@@ -112,6 +112,7 @@ pub fn kmp_search(text : String, pattern : String) -> Array[Int] {
 }
 
 ///|
+/// Return the first index of pattern in text, or -1 if not found.
 pub fn kmp_find_first(text : String, pattern : String) -> Int {
   let matches = kmp_search(text, pattern)
   if matches.length() > 0 {
@@ -122,6 +123,7 @@ pub fn kmp_find_first(text : String, pattern : String) -> Int {
 }
 
 ///|
+/// Count how many times pattern occurs in text.
 pub fn kmp_count(text : String, pattern : String) -> Int {
   kmp_search(text, pattern).length()
 }
@@ -172,6 +174,7 @@ pub fn compute_z_function(s : String) -> Array[Int] {
 }
 
 ///|
+/// Find all matches of pattern in text using the Z-function.
 pub fn z_search(text : String, pattern : String) -> Array[Int] {
   let n = text.length()
   let m = pattern.length()

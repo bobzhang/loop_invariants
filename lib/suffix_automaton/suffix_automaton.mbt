@@ -52,6 +52,7 @@ pub struct SuffixAutomaton {
 }
 
 ///|
+/// Create a suffix automaton sized for strings up to max_len.
 pub fn SuffixAutomaton::new(max_len : Int) -> SuffixAutomaton {
   let states : Array[SAMState] = []
   // Create initial state (empty string)

@@ -27,6 +27,7 @@ pub struct SuffixArray {
 }
 
 ///|
+/// Build a suffix array and LCP array for text.
 pub fn SuffixArray::new(text : String) -> SuffixArray {
   let n = text.length()
   if n == 0 {
@@ -178,6 +179,7 @@ pub fn SuffixArray::new(text : String) -> SuffixArray {
 }
 
 ///|
+/// Return the suffix array index range matching pattern, or None if absent.
 pub fn SuffixArray::search(self : SuffixArray, pattern : String) -> (Int, Int)? {
   let n = self.sa.length()
   let m = pattern.length()
@@ -276,6 +278,7 @@ fn starts_with(text : String, start : Int, pattern : String) -> Bool {
 }
 
 ///|
+/// Return all match start positions of pattern in text (sorted ascending).
 pub fn SuffixArray::find_all(
   self : SuffixArray,
   pattern : String,
@@ -304,6 +307,7 @@ pub fn SuffixArray::find_all(
 }
 
 ///|
+/// Count how many times pattern appears in text.
 pub fn SuffixArray::count(self : SuffixArray, pattern : String) -> Int {
   match self.search(pattern) {
     None => 0
@@ -312,6 +316,7 @@ pub fn SuffixArray::count(self : SuffixArray, pattern : String) -> Int {
 }
 
 ///|
+/// Return the longest repeated substring, or "" if none exists.
 pub fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
   let n = self.sa.length()
   if n < 2 {
@@ -344,6 +349,7 @@ pub fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
 }
 
 ///|
+/// Count the number of distinct substrings in text.
 pub fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
   let n = self.sa.length()
   if n == 0 {
@@ -368,6 +374,7 @@ pub fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
 }
 
 ///|
+/// Return the i-th suffix in lexicographic order, or "" if out of range.
 pub fn SuffixArray::get_suffix(self : SuffixArray, i : Int) -> String {
   if i < 0 || i >= self.sa.length() {
     return ""
