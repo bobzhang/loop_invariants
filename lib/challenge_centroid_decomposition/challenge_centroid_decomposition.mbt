@@ -126,6 +126,7 @@ pub struct CentroidDecomp {
 }
 
 ///|
+/// Build centroid decomposition and return parent/level arrays.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn build_centroid(n : Int, edges : ArrayView[(Int, Int)]) -> CentroidDecomp {
   let adj = build_adj(n, edges)

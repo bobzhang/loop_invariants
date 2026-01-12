@@ -24,6 +24,7 @@ fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
 }
 
 ///|
+/// Compute Euler tour entry/exit times and visitation order.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn euler_tour(
   n : Int,

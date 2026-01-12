@@ -73,6 +73,7 @@ fn bfs(adj : Array[Array[Int]], start : Int) -> (Int, Array[Int]) {
 }
 
 ///|
+/// Return the length of the tree diameter.
 #warnings("+missing_invariant+missing_reasoning")
 pub fn tree_diameter(n : Int, edges : ArrayView[(Int, Int)]) -> Int {
   if n == 0 {
