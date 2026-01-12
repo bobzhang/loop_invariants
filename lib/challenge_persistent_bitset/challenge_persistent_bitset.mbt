@@ -112,11 +112,13 @@ fn count_range_node(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 }
 
 ///|
+/// Create a bitset of length n initialized to zeros.
 pub fn make(n : Int) -> Bitset {
   { root: build_zero(0, n), n }
 }
 
 ///|
+/// Set index idx to value (0 or 1) and return the new bitset.
 pub fn set(bs : Bitset, idx : Int, value : Int) -> Bitset {
   if idx < 0 || idx >= bs.n {
     bs
@@ -126,6 +128,7 @@ pub fn set(bs : Bitset, idx : Int, value : Int) -> Bitset {
 }
 
 ///|
+/// Get the bit at idx (0 if out of range).
 pub fn get(bs : Bitset, idx : Int) -> Int {
   if idx < 0 || idx >= bs.n {
     0
@@ -135,11 +138,13 @@ pub fn get(bs : Bitset, idx : Int) -> Int {
 }
 
 ///|
+/// Return the length of the bitset.
 pub fn length(bs : Bitset) -> Int {
   bs.n
 }
 
 ///|
+/// Count number of set bits in [ql, qr).
 pub fn count_range(bs : Bitset, ql : Int, qr : Int) -> Int {
   count_range_node(bs.root, 0, bs.n, ql, qr)
 }

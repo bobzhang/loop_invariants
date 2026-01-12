@@ -10,11 +10,13 @@ pub enum Node {
 } derive(Show)
 
 ///|
+/// Create an empty binary trie.
 pub fn empty() -> Node {
   Node::Empty
 }
 
 ///|
+/// Return the number of values stored in the trie.
 pub fn count(node : Node) -> Int {
   match node {
     Node::Empty => 0
@@ -23,6 +25,7 @@ pub fn count(node : Node) -> Int {
 }
 
 ///|
+/// Insert a value and return the new trie.
 pub fn insert(node : Node, value : Int, bit : Int) -> Node {
   if bit < 0 {
     match node {

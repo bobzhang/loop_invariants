@@ -41,6 +41,7 @@ fn reverse_append(rev : Bucket, tail : Bucket) -> Bucket {
 }
 
 ///|
+/// Create an empty hash map with the given capacity (min 1).
 pub fn make(capacity : Int) -> HashMap {
   let cap = if capacity <= 0 { 1 } else { capacity }
   { buckets: Array::make(cap, Bucket::Nil), size: 0 }
@@ -114,22 +115,26 @@ fn bucket_insert(bucket : Bucket, key : Int, value : Int) -> (Bucket, Bool) {
 }
 
 ///|
+/// Return the number of entries in the map.
 pub fn size(map : HashMap) -> Int {
   map.size
 }
 
 ///|
+/// Return the number of buckets in the map.
 pub fn capacity(map : HashMap) -> Int {
   map.buckets.length()
 }
 
 ///|
+/// Lookup key and return its value if present.
 pub fn get(map : HashMap, key : Int) -> Int? {
   let idx = index_for(key, map.buckets.length())
   bucket_get(map.buckets[idx], key)
 }
 
 ///|
+/// Insert or update a key/value pair and return the new map.
 pub fn put(map : HashMap, key : Int, value : Int) -> HashMap {
   let idx = index_for(key, map.buckets.length())
   let bucket = map.buckets[idx]
