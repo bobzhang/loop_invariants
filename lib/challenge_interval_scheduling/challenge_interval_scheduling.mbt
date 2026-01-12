@@ -46,6 +46,17 @@ fn max_non_overlapping(intervals : Array[Interval]) -> Int {
 }
 
 ///|
+#warnings("-missing_invariant-missing_reasoning")
+pub fn max_non_overlapping_pairs(intervals : ArrayView[(Int, Int)]) -> Int {
+  let arr : Array[Interval] = []
+  for pair in intervals {
+    let (start, end) = pair
+    arr.push({ start, end })
+  }
+  max_non_overlapping(arr)
+}
+
+///|
 test "interval_scheduling" {
   let intervals : Array[Interval] = [
     { start: 1, end: 3 },

@@ -17,6 +17,39 @@ for interval in intervals:
     take interval
 ```
 
+## Example
+
+```mbt check
+///|
+test "interval scheduling basic" {
+  let intervals : Array[(Int, Int)] = [
+    (1, 3),
+    (2, 4),
+    (3, 5),
+    (0, 7),
+    (5, 9),
+    (8, 9),
+  ]
+  let count = @challenge_interval_scheduling.max_non_overlapping_pairs(
+    intervals[:],
+  )
+  inspect(count, content="3")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "interval scheduling disjoint" {
+  let intervals : Array[(Int, Int)] = [(0, 1), (2, 3), (4, 5)]
+  let count = @challenge_interval_scheduling.max_non_overlapping_pairs(
+    intervals[:],
+  )
+  inspect(count, content="3")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n log n)

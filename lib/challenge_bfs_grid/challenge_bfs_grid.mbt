@@ -6,7 +6,7 @@
 /// Compute shortest path length in a grid with 4-direction moves.
 /// grid cells: 0 = open, 1 = blocked.
 #warnings("+missing_invariant+missing_reasoning")
-fn shortest_path_grid(
+pub fn shortest_path_grid(
   grid : Array[Array[Int]],
   sx : Int,
   sy : Int,

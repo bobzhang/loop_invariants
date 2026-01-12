@@ -18,6 +18,28 @@ for event in events:
   best = max(best, active)
 ```
 
+## Example
+
+```mbt check
+///|
+test "line sweep basic" {
+  let intervals : Array[(Int, Int)] = [(1, 3), (2, 5), (4, 6)]
+  let best = @challenge_line_sweep.max_overlap(intervals[:])
+  inspect(best, content="2")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "line sweep heavy overlap" {
+  let intervals : Array[(Int, Int)] = [(1, 4), (2, 3), (2, 5)]
+  let best = @challenge_line_sweep.max_overlap(intervals[:])
+  inspect(best, content="3")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n log n)

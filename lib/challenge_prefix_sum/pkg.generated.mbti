@@ -2,6 +2,9 @@
 package "bobzhang/loop_invariants/lib/challenge_prefix_sum"
 
 // Values
+pub fn build_prefix_sum(ArrayView[Int]) -> Array[Int]
+
+pub fn range_sum(ArrayView[Int], Int, Int) -> Int
 
 // Errors
 

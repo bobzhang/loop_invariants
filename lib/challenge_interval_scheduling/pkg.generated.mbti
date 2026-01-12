@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_interval_scheduling"
 
 // Values
+pub fn max_non_overlapping_pairs(ArrayView[(Int, Int)]) -> Int
 
 // Errors
 

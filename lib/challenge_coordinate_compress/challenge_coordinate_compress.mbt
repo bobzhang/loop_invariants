@@ -31,7 +31,7 @@ fn lower_bound(arr : ArrayView[Int], target : Int) -> Int {
 ///|
 /// Compress values to 0..(unique-1) preserving order.
 #warnings("+missing_invariant+missing_reasoning")
-fn coordinate_compress(values : ArrayView[Int]) -> (Array[Int], Array[Int]) {
+pub fn coordinate_compress(values : ArrayView[Int]) -> (Array[Int], Array[Int]) {
   let n = values.length()
   let sorted : Array[Int] = []
   for i = 0; i < n; i = i + 1 {

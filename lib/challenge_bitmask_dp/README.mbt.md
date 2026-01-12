@@ -18,6 +18,35 @@ for mask in 1..(1<<n)-1:
         dp[mask|1<<v][v] = min(dp[mask|1<<v][v], dp[mask][u] + dist[u][v])
 ```
 
+## Example
+
+```mbt check
+///|
+test "bitmask dp tsp basic" {
+  let inf = 1_000_000
+  let dist : Array[Array[Int]] = [
+    [0, 1, 3, 4],
+    [1, 0, 2, 5],
+    [3, 2, 0, 6],
+    [4, 5, 6, 0],
+  ]
+  let best = @challenge_bitmask_dp.tsp_min_cycle(dist, inf)
+  inspect(best, content="13")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "bitmask dp tsp triangle" {
+  let inf = 1_000_000
+  let dist : Array[Array[Int]] = [[0, 2, 4], [2, 0, 1], [4, 1, 0]]
+  let best = @challenge_bitmask_dp.tsp_min_cycle(dist, inf)
+  inspect(best, content="7")
+}
+```
+
 ## Notes
 
 - Time complexity: O(n^2 * 2^n)

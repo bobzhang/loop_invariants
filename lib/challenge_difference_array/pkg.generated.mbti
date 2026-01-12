@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_difference_array"
 
 // Values
+pub fn apply_range_add(ArrayView[Int], ArrayView[(Int, Int, Int)]) -> Array[Int]
 
 // Errors
 

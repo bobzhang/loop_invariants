@@ -19,6 +19,30 @@ lift(v, dist):
     if dist has bit k: v = up[k][v]
 ```
 
+## Example
+
+```mbt check
+///|
+test "binary lifting basic" {
+  let parent : Array[Int] = [-1, 0, 0, 1, 1, 2]
+  let up = @challenge_binary_lifting.build_lift(parent[:])
+  inspect(@challenge_binary_lifting.lift(up, 4, 1), content="1")
+  inspect(@challenge_binary_lifting.lift(up, 4, 2), content="0")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "binary lifting chain" {
+  let parent : Array[Int] = [-1, 0, 1, 2]
+  let up = @challenge_binary_lifting.build_lift(parent[:])
+  inspect(@challenge_binary_lifting.lift(up, 3, 1), content="2")
+  inspect(@challenge_binary_lifting.lift(up, 3, 2), content="1")
+}
+```
+
 ## Notes
 
 - Preprocessing: O(n log n)

@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/challenge_bfs_grid"
 
 // Values
+pub fn shortest_path_grid(Array[Array[Int]], Int, Int, Int, Int) -> Int?
 
 // Errors
 

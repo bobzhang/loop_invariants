@@ -11,7 +11,7 @@ priv struct Event {
 ///|
 /// Compute the maximum number of overlapping intervals.
 #warnings("+missing_invariant+missing_reasoning")
-fn max_overlap(intervals : ArrayView[(Int, Int)]) -> Int {
+pub fn max_overlap(intervals : ArrayView[(Int, Int)]) -> Int {
   let events : Array[Event] = []
   for i = 0; i < intervals.length(); i = i + 1 {
     let (l, r) = intervals[i]

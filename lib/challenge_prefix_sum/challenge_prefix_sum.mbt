@@ -6,7 +6,7 @@
 ///|
 /// Build prefix sums where prefix[i] = sum(arr[0..i)).
 #warnings("+missing_invariant+missing_reasoning")
-fn build_prefix_sum(arr : ArrayView[Int]) -> Array[Int] {
+pub fn build_prefix_sum(arr : ArrayView[Int]) -> Array[Int] {
   let n = arr.length()
   let prefix : Array[Int] = Array::make(n + 1, 0)
   for i = 0, sum = 0 {
@@ -35,7 +35,7 @@ fn build_prefix_sum(arr : ArrayView[Int]) -> Array[Int] {
 
 ///|
 /// Range sum for inclusive bounds [l, r] using prefix sums.
-fn range_sum(prefix : ArrayView[Int], l : Int, r : Int) -> Int {
+pub fn range_sum(prefix : ArrayView[Int], l : Int, r : Int) -> Int {
   if l < 0 || r < l || r + 1 >= prefix.length() {
     return 0
   }

@@ -5,7 +5,7 @@
 ///|
 /// Minimum Hamiltonian cycle cost starting at node 0.
 #warnings("+missing_invariant+missing_reasoning")
-fn tsp_min_cycle(dist : Array[Array[Int]], inf : Int) -> Int {
+pub fn tsp_min_cycle(dist : Array[Array[Int]], inf : Int) -> Int {
   let n = dist.length()
   if n == 0 {
     return 0
