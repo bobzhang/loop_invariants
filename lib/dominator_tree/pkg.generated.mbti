@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/dominator_tree"
+
+// Values
+pub fn build_dominator_tree(Int, ArrayView[(Int, Int)], Int) -> DominatorTree?
+
+// Errors
+
+// Types and methods
+pub(all) struct DominatorTree {
+  root : Int
+  idom : Array[Int]
+  tree : Array[Array[Int]]
+}
+pub fn DominatorTree::dominates(Self, Int, Int) -> Bool
+
+// Type aliases
+
+// Traits
+
