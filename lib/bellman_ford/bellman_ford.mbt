@@ -34,6 +34,7 @@ pub struct BellmanFord {
 }
 
 ///|
+/// Create a Bellman-Ford solver for a graph with vertices 0..n-1.
 pub fn BellmanFord::new(n : Int) -> BellmanFord {
   {
     n,
@@ -45,6 +46,7 @@ pub fn BellmanFord::new(n : Int) -> BellmanFord {
 }
 
 ///|
+/// Add a directed edge (from -> to) with an Int64 weight.
 pub fn BellmanFord::add_edge(
   self : BellmanFord,
   from : Int,
@@ -55,7 +57,8 @@ pub fn BellmanFord::add_edge(
 }
 
 ///|
-/// Run Bellman-Ford from source vertex
+/// Run Bellman-Ford from a source vertex and compute shortest paths.
+/// The returned value includes distances, parents, and negative-cycle flag.
 pub fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
   // Initialize distances
   self.dist.fill(BF_INF)
@@ -106,6 +109,7 @@ pub fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
 }
 
 ///|
+/// Return the shortest distance to v, or None if unreachable/out of range.
 pub fn BellmanFord::get_distance(self : BellmanFord, v : Int) -> Int64? {
   if v < 0 || v >= self.n || self.dist[v] == BF_INF {
     None
@@ -115,12 +119,13 @@ pub fn BellmanFord::get_distance(self : BellmanFord, v : Int) -> Int64? {
 }
 
 ///|
+/// True if a negative cycle is reachable after running compute.
 pub fn BellmanFord::has_negative_cycle(self : BellmanFord) -> Bool {
   self.has_negative_cycle
 }
 
 ///|
-/// Reconstruct path from source to target
+/// Reconstruct path from source to target, or None if unreachable.
 pub fn BellmanFord::get_path(self : BellmanFord, target : Int) -> Array[Int]? {
   if target < 0 || target >= self.n || self.dist[target] == BF_INF {
     return None

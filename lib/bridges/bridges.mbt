@@ -182,6 +182,8 @@ fn BridgeFinder::is_articulation_point(self : BridgeFinder, u : Int) -> Bool {
 }
 
 ///|
+/// Find all bridge edges in an undirected graph with n vertices.
+/// Returns edges (u, v) whose removal disconnects the graph.
 pub fn find_bridges(
   n : Int,
   edges : ArrayView[(Int, Int)],
@@ -196,6 +198,7 @@ pub fn find_bridges(
 }
 
 ///|
+/// Find all articulation points in an undirected graph with n vertices.
 pub fn articulation_points(
   n : Int,
   edges : ArrayView[(Int, Int)],

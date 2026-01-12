@@ -336,6 +336,8 @@ fn AhoCorasick::find_all(
 }
 
 ///|
+/// Build an automaton from patterns and return all matches in text.
+/// Each match is (start, end, pattern) with end exclusive.
 pub fn find_all_matches(
   patterns : ArrayView[String],
   text : String,
@@ -345,6 +347,7 @@ pub fn find_all_matches(
 }
 
 ///|
+/// Build an automaton from patterns and count total matches in text.
 pub fn count_all_matches(patterns : ArrayView[String], text : String) -> Int {
   let ac = AhoCorasick::from_patterns(patterns.to_array())
   ac.count_matches(text)

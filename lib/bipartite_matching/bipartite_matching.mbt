@@ -148,6 +148,8 @@ fn Hungarian::get_matching(self : Hungarian) -> Array[(Int, Int)] {
 }
 
 ///|
+/// Compute a maximum matching for a bipartite graph.
+/// Returns matched (left, right) pairs.
 pub fn max_matching(
   n_left : Int,
   n_right : Int,

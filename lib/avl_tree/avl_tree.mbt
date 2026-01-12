@@ -183,6 +183,8 @@ fn AVLTree::to_sorted_array(self : AVLTree) -> Array[Int64] {
 }
 
 ///|
+/// Insert all keys into an AVL tree and return the in-order traversal.
+/// The result is sorted in nondecreasing order (duplicates preserved).
 pub fn avl_sorted(keys : ArrayView[Int64]) -> Array[Int64] {
   let tree = AVLTree::new()
   for i = 0; i < keys.length(); i = i + 1 {
