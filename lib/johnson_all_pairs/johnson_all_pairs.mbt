@@ -162,11 +162,13 @@ fn dijkstra(
       }
     }
   } where {
-    invariant: true,
+    invariant: dist.length() == n,
     reasoning: (
       #|INVARIANT (Dijkstra):
-      #|When a node u is popped with d == dist[u], d is the shortest distance
-      #|from src to u in the reweighted graph.
+      #|For every node already finalized (popped with d == dist[u]), dist[u] is
+      #|its true shortest distance in the reweighted graph. For all others,
+      #|dist is the best known upper bound. The heap may contain stale entries,
+      #|but the minimum valid entry matches the smallest current dist.
       #|MAINTENANCE:
       #|Relaxing outgoing edges preserves shortest-path upper bounds.
       #|TERMINATION:
