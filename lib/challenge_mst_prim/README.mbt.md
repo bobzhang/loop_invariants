@@ -2,6 +2,12 @@
 
 Prim's algorithm (O(n^2)) over an adjacency list.
 
+## Core Idea
+
+Maintain a set of visited nodes and repeatedly add the cheapest edge that
+connects a visited node to an unvisited node. This variant uses O(n^2)
+selection instead of a heap.
+
 ## Example
 
 ```mbt check
@@ -30,3 +36,8 @@ test "mst prim disconnected" {
   inspect(total, content="None")
 }
 ```
+
+## Notes
+
+- Time complexity is O(n^2) with dense graphs.
+- Returns None when the graph is disconnected.

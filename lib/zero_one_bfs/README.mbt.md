@@ -29,3 +29,17 @@ test "0-1 bfs example" {
   inspect(dist, content="[0, 0, 1, 1, 2]")
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "0-1 bfs undirected" {
+  let g = @zero_one_bfs.Graph::new(4)
+  g.add_undirected_edge(0, 1, 0)
+  g.add_undirected_edge(1, 2, 1)
+  g.add_undirected_edge(2, 3, 0)
+  let dist = @zero_one_bfs.zero_one_bfs(g, 0)
+  inspect(dist, content="[0, 0, 1, 1]")
+}
+```

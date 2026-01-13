@@ -141,15 +141,3 @@ pub fn union(dsu : DSU, a : Int, b : Int) -> DSU {
 pub fn same(dsu : DSU, a : Int, b : Int) -> Bool {
   find(dsu, a) == find(dsu, b)
 }
-
-///|
-test "persistent_union_find" {
-  let d0 = make(5)
-  let d1 = union(d0, 0, 1)
-  let d2 = union(d1, 1, 2)
-  let d3 = union(d2, 3, 4)
-  assert_eq(find(d2, 2), find(d2, 0))
-  assert_eq(find(d2, 3) == find(d2, 0), false)
-  assert_eq(find(d3, 4), find(d3, 3))
-  assert_eq(find(d1, 2) == find(d1, 0), false)
-}

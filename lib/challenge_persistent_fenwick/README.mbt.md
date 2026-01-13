@@ -2,6 +2,11 @@
 
 Persistent BIT with point updates and prefix/range sums.
 
+## Core Idea
+
+Each update returns a new Fenwick tree by copying only the nodes affected by
+the index update, while sharing all other nodes.
+
 ## Example
 
 ```mbt check
@@ -30,3 +35,8 @@ test "persistent fenwick another" {
   inspect(@challenge_persistent_fenwick.range_sum(fw2, 1, 3), content="7")
 }
 ```
+
+## Notes
+
+- Update and query are O(log n).
+- Old versions remain unchanged.

@@ -2,6 +2,11 @@
 
 Immutable hash map with bucketed lists and path-copying updates.
 
+## Core Idea
+
+Each `put` copies the affected bucket and updates only that list. Other buckets
+are shared, which makes updates O(1) expected time with structural sharing.
+
 ## Example
 
 ```mbt check
@@ -30,3 +35,8 @@ test "persistent hash map sizes" {
   inspect(@challenge_persistent_hash_map.size(map2), content="2")
 }
 ```
+
+## Notes
+
+- Collisions are handled with buckets.
+- `make(size)` controls bucket count.

@@ -107,22 +107,3 @@ pub fn mst_weight(adj : Array[Array[(Int, Int)]]) -> Int? {
     None
   }
 }
-
-///|
-test "mst_prim_basic" {
-  let edges : Array[(Int, Int, Int)] = [
-    (0, 1, 1),
-    (1, 2, 2),
-    (2, 3, 3),
-    (0, 3, 10),
-  ]
-  let adj = build_adj(4, edges[:])
-  assert_eq(mst_weight(adj), Some(6))
-}
-
-///|
-test "mst_prim_disconnected" {
-  let edges : Array[(Int, Int, Int)] = [(0, 1, 1)]
-  let adj = build_adj(3, edges[:])
-  assert_eq(mst_weight(adj), None)
-}

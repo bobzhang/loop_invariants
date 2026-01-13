@@ -144,15 +144,3 @@ pub fn put(map : HashMap, key : Int, value : Int) -> HashMap {
   let new_size = if added { map.size + 1 } else { map.size }
   { buckets: new_buckets, size: new_size }
 }
-
-///|
-test "persistent_hash_map" {
-  let map0 = make(4)
-  let map1 = put(map0, 1, 10)
-  let map2 = put(map1, 5, 50)
-  let map3 = put(map2, 1, 11)
-  assert_eq(get(map3, 1), Some(11))
-  assert_eq(get(map3, 5), Some(50))
-  assert_eq(get(map1, 1), Some(10))
-  assert_eq(get(map1, 5), None)
-}

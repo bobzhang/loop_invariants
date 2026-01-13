@@ -157,14 +157,3 @@ pub fn range_sum(fw : Fenwick, l : Int, r : Int) -> Int {
     prefix_sum(fw, r) - left
   }
 }
-
-///|
-test "persistent_fenwick" {
-  let fw0 = make(5)
-  let fw1 = add(fw0, 0, 3)
-  let fw2 = add(fw1, 2, 4)
-  let fw3 = add(fw2, 4, 1)
-  assert_eq(prefix_sum(fw3, 2), 7)
-  assert_eq(range_sum(fw3, 1, 4), 5)
-  assert_eq(prefix_sum(fw0, 4), 0)
-}

@@ -2,6 +2,11 @@
 
 Persistent DSU with path-copying arrays for parents and sizes.
 
+## Core Idea
+
+Each union returns a new DSU version by copying only the parent/size entries
+that change. Older versions remain valid for time-travel queries.
+
 ## Example
 
 ```mbt check
@@ -29,3 +34,8 @@ test "persistent union find versions" {
   inspect(@challenge_persistent_union_find.same(d2, 2, 3), content="true")
 }
 ```
+
+## Notes
+
+- Path compression is avoided to keep persistence simple.
+- Union by size keeps trees shallow.
