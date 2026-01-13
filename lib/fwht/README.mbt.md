@@ -13,6 +13,17 @@ by `n` and recovers the original array (when values are integral).
 - The array length must be a power of two.
 - XOR convolution uses the XOR transform and its inverse.
 
+## Core Idea
+
+FWHT applies a butterfly operation at each scale:
+
+```
+(a, b) -> (a + b, a - b)
+```
+
+Repeated over log n levels, this diagonalizes XOR convolution. The inverse
+transform applies the same butterflies and divides by n.
+
 ## Roundtrip Example
 
 ```mbt check

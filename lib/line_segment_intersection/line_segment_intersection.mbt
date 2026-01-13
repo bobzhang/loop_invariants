@@ -50,34 +50,3 @@ pub fn segments_intersect(a : Point, b : Point, c : Point, d : Point) -> Bool {
   ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0)) &&
   ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0))
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "segment intersection crossing" {
-  let a = { x: 0L, y: 0L }
-  let b = { x: 4L, y: 4L }
-  let c = { x: 0L, y: 4L }
-  let d = { x: 4L, y: 0L }
-  inspect(segments_intersect(a, b, c, d), content="true")
-}
-
-///|
-test "segment intersection touch" {
-  let a = { x: 0L, y: 0L }
-  let b = { x: 2L, y: 0L }
-  let c = { x: 2L, y: 0L }
-  let d = { x: 4L, y: 0L }
-  inspect(segments_intersect(a, b, c, d), content="true")
-}
-
-///|
-test "segment intersection disjoint" {
-  let a = { x: 0L, y: 0L }
-  let b = { x: 1L, y: 1L }
-  let c = { x: 2L, y: 2L }
-  let d = { x: 3L, y: 3L }
-  inspect(segments_intersect(a, b, c, d), content="false")
-}

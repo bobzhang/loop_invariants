@@ -129,16 +129,3 @@ pub fn from_array(arr : ArrayView[Point]) -> Kd {
     ),
   }
 }
-
-///|
-test "persistent_kd_tree" {
-  let pts = [
-    Point::{ x: 2, y: 3 },
-    Point::{ x: 5, y: 4 },
-    Point::{ x: 1, y: 7 },
-  ]
-  let tree = from_array(pts[:])
-  assert_eq(contains(tree, Point::{ x: 5, y: 4 }), true)
-  assert_eq(contains_iter(tree, Point::{ x: 1, y: 7 }), true)
-  assert_eq(contains_iter(tree, Point::{ x: 4, y: 4 }), false)
-}

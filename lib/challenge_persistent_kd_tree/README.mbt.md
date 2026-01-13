@@ -2,6 +2,12 @@
 
 Immutable KD-tree with alternating split axis.
 
+## Core Idea
+
+At each level, split by x or y alternately. Insertions copy the path from root
+to leaf, preserving old versions. This gives persistence with expected
+O(log n) behavior on balanced data.
+
 ## Example
 
 ```mbt check
@@ -38,3 +44,8 @@ test "persistent kd tree from array" {
   inspect(@challenge_persistent_kd_tree.size(t), content="2")
 }
 ```
+
+## Notes
+
+- Worst-case can degrade if insert order is adversarial.
+- `contains_iter` provides an iterative search variant.

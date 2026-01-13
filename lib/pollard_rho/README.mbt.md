@@ -18,6 +18,18 @@ test "pollard rho quick start" {
 }
 ```
 
+## Core Idea
+
+Pollard's Rho uses a pseudorandom sequence:
+
+```
+x_{i+1} = x_i^2 + c (mod n)
+```
+
+If a nontrivial factor exists, the sequence eventually forms a cycle in
+the factor’s modular arithmetic. Using Floyd’s cycle detection, compute
+`gcd(|x - y|, n)` to extract a factor.
+
 ## Primality Test
 
 `is_prime` is deterministic for 64-bit integers using a fixed base set.

@@ -8,6 +8,11 @@ Point updates and rectangle sums in O(log^2 n).
 rectangles in the implicit binary indexed grid. Rectangle sums are computed
 by inclusion-exclusion on prefix sums.
 
+```
+sum(r1..r2, c1..c2) =
+  pref(r2, c2) - pref(r1, c2) - pref(r2, c1) + pref(r1, c1)
+```
+
 ## Example
 
 ```mbt check

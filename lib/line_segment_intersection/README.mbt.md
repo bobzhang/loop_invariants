@@ -37,3 +37,31 @@ test "segment intersection crossing" {
   )
 }
 ```
+
+```mbt check
+///|
+test "segment intersection touch" {
+  let a = @line_segment_intersection.Point::{ x: 0L, y: 0L }
+  let b = @line_segment_intersection.Point::{ x: 2L, y: 2L }
+  let c = @line_segment_intersection.Point::{ x: 2L, y: 2L }
+  let d = @line_segment_intersection.Point::{ x: 3L, y: 0L }
+  inspect(
+    @line_segment_intersection.segments_intersect(a, b, c, d),
+    content="true",
+  )
+}
+```
+
+```mbt check
+///|
+test "segment intersection disjoint" {
+  let a = @line_segment_intersection.Point::{ x: 0L, y: 0L }
+  let b = @line_segment_intersection.Point::{ x: 1L, y: 1L }
+  let c = @line_segment_intersection.Point::{ x: 2L, y: 2L }
+  let d = @line_segment_intersection.Point::{ x: 3L, y: 3L }
+  inspect(
+    @line_segment_intersection.segments_intersect(a, b, c, d),
+    content="false",
+  )
+}
+```
