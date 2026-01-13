@@ -9,6 +9,11 @@ where no two edges share a vertex. This solves assignment problems optimally.
 - **Hopcroft-Karp**: O(E × √V)
 - **Space**: O(V + E)
 
+## Core Idea
+
+Repeatedly find **augmenting paths** that alternate unmatched/matched edges.
+Flipping an augmenting path increases the matching size by 1.
+
 ## The Problem
 
 ```
@@ -203,4 +208,3 @@ Perfect matching exists (all left vertices matched) iff:
 - In Hopcroft-Karp, BFS gives level assignment
 - Track match_left and match_right arrays for O(1) lookup
 - For weighted matching, use Hungarian algorithm for weighted assignment
-

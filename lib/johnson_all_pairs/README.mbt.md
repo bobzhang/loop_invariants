@@ -12,6 +12,12 @@ then run Dijkstra from every source.
 - **Time**: O(V * E + V * E log V)
 - **Space**: O(V + E)
 
+## Core Idea
+
+Use Bellman-Ford once to compute potentials that reweight edges to
+non-negative values. Then run Dijkstra from each source and un-reweight
+the results.
+
 ## How It Works
 
 1. Add a super-source `s` with zero-weight edges to all vertices.

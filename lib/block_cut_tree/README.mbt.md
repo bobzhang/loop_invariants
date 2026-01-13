@@ -14,6 +14,12 @@ Node indexing in the tree:
 - **Time**: O(V + E)
 - **Space**: O(V + E)
 
+## Core Idea
+
+Run a DFS to find biconnected components. Each component becomes a node in the
+block-cut tree, and each original vertex connects to the component nodes that
+contain it. Articulation points naturally appear in multiple components.
+
 ## Example
 
 ```mbt check

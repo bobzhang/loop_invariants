@@ -9,6 +9,11 @@ multiple augmenting paths efficiently.
 - **Time**: O(V² × E) general, O(E × √V) for unit graphs
 - **Space**: O(V + E)
 
+## Core Idea
+
+Build a BFS level graph from the source, then send a **blocking flow** with DFS
+that respects levels. Repeat until the sink is unreachable.
+
 ## The Max Flow Problem
 
 ```
@@ -254,4 +259,3 @@ Min-cut capacity = 2 + 2 = 4 = Max flow
 - Use "current arc" optimization: skip saturated edges in DFS
 - Reset current arc array at start of each BFS phase
 - Handle multiple edges between same nodes by summing capacities
-

@@ -8,6 +8,11 @@ left and right subtrees differ by at most 1. This guarantees O(log n) operations
 - **Operations**: O(log n)
 - **Space**: O(n)
 
+## Core Idea
+
+After each insertion, update heights and rebalance using rotations whenever a
+node's balance factor leaves the range [-1, 1].
+
 ## The Balance Property
 
 ```
@@ -195,4 +200,3 @@ The strict balance keeps the tree very compact!
 - After rotation, update heights bottom-up
 - Only one or two rotations needed per insert
 - Delete may need O(log n) rotations (but still O(log n) total)
-

@@ -10,6 +10,11 @@ minimum queries after preprocessing.
 - **RMQ**: O(1) with LCA preprocessing
 - **Space**: O(n)
 
+## Core Idea
+
+Build a tree where the in-order traversal matches the array, and each node is
+the minimum of its subtree. Then RMQ becomes an LCA query on the tree.
+
 ## The Two Properties
 
 ```
@@ -203,4 +208,3 @@ After processing index i:
 - Map array indices to tree nodes for queries
 - For RMQ, preprocess LCA using binary lifting or Euler tour
 - Cartesian Tree is unique for any array (assuming distinct elements)
-
