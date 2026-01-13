@@ -2,6 +2,11 @@
 
 Stack that tracks the minimum value of each suffix.
 
+## Core Idea
+
+Each node stores both its value and the minimum of the stack below it. This
+makes `min_value` O(1) while keeping persistence through shared nodes.
+
 ## Example
 
 ```mbt check
@@ -39,3 +44,8 @@ test "persistent min stack drop min" {
   inspect(@challenge_persistent_stack_min.min_value(s1b), content="Some(4)")
 }
 ```
+
+## Notes
+
+- All operations are O(1).
+- Old versions remain accessible.

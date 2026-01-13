@@ -39,3 +39,8 @@ test "virtual tree example" {
   inspect(vt.nodes, content="[0, 1, 3, 4, 5]")
 }
 ```
+
+## Notes
+
+- The output includes added LCAs in `vt.nodes`.
+- The virtual tree preserves ancestor relations among selected nodes.

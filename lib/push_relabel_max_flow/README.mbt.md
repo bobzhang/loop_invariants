@@ -19,6 +19,11 @@ active vertices remain, the preflow is a maximum flow.
 
 This local policy converges to a max flow when no active vertices remain.
 
+## Notes
+
+- Works well on dense graphs in practice.
+- Can be optimized with highest-label or gap heuristics.
+
 ## Example
 
 ```mbt check

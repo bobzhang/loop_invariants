@@ -39,3 +39,4 @@ test "disjoint sparse short range" {
 
 - Requires an associative operation; here we use minimum.
 - Preprocessing is O(n log n), queries are O(1).
+- Works best for idempotent ops like min/max/gcd.

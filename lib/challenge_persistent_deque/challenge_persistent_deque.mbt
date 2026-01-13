@@ -123,17 +123,3 @@ pub fn[T] pop_back(d : Deque[T]) -> (T, Deque[T])? {
     Stack::Cons(head~, tail~) => Some((head, { front: norm.front, back: tail }))
   }
 }
-
-///|
-test "persistent_deque" {
-  let d0 : Deque[Int] = empty()
-  let d1 = push_front(d0, 1)
-  let d2 = push_back(d1, 2)
-  let d3 = push_front(d2, 0)
-  assert_eq(peek_front(d3), Some(0))
-  assert_eq(peek_back(d3), Some(2))
-  guard pop_front(d3) is Some((0, d4)) else { fail("expected pop_front") }
-  guard pop_back(d4) is Some((2, d5)) else { fail("expected pop_back") }
-  assert_eq(peek_front(d5), Some(1))
-  assert_eq(size(d5), 1)
-}

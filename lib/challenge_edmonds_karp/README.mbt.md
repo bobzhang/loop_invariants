@@ -39,3 +39,4 @@ test "edmonds-karp simple" {
 
 - Works with non-negative capacities.
 - Uses BFS to ensure polynomial time.
+- Complexity is O(V * E^2).

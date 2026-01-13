@@ -96,19 +96,3 @@ pub fn from_array(arr : ArrayView[Int]) -> MinStack {
     ),
   }
 }
-
-///|
-test "persistent_stack_min" {
-  let s0 = empty()
-  let s1 = push(s0, 5)
-  let s2 = push(s1, 3)
-  let s3 = push(s2, 7)
-  assert_eq(min_value(s0), None)
-  assert_eq(min_value(s1), Some(5))
-  assert_eq(min_value(s2), Some(3))
-  assert_eq(min_value(s3), Some(3))
-  let built = from_array([5, 3, 7][:])
-  assert_eq(min_value(built), Some(3))
-  guard pop(s3) is Some((7, s2b)) else { fail("expected pop") }
-  assert_eq(min_value(s2b), Some(3))
-}

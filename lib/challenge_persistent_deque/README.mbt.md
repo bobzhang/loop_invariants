@@ -2,6 +2,12 @@
 
 Functional deque implemented with two stacks and normalization.
 
+## Core Idea
+
+Maintain two stacks (front/back). When one side becomes empty, rebalance by
+splitting and reversing the other side. Persistence is achieved by sharing
+stack nodes between versions.
+
 ## Example
 
 ```mbt check
@@ -39,3 +45,8 @@ test "persistent deque back heavy" {
   inspect(@challenge_persistent_deque.peek_back(d4), content="Some(20)")
 }
 ```
+
+## Notes
+
+- Amortized O(1) per operation.
+- Old versions remain accessible.

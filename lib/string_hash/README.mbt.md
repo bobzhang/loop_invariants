@@ -39,3 +39,4 @@ test "string hash example" {
 - `hash_pattern_match` scans all positions and compares hashes.
 - Hash collisions are possible; use double hashing or verify by substring compare.
 - This package is a reference implementation with invariants.
+- Pattern matching is O(n + m) time after preprocessing.
