@@ -127,11 +127,12 @@ fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
           self.states[pp].trans[c] = clone
           continue self.states[pp].link
         } where {
-          invariant: true,
+          invariant: pp >= -1 && pp < self.states.length(),
           reasoning: (
-            #|REDIRECT INVARIANT: We redirect transitions from q to clone
-            #|for all states on suffix chain where trans[c] == q.
-            #|This maintains endpos equivalence classes correctly.
+            #|INVARIANT (redirect chain):
+            #|All processed states on the suffix-link chain have their c-edge
+            #|rewired from q to clone. Unprocessed states still point to q.
+            #|This preserves endpos classes while splitting the clone.
             #|MAINTENANCE:
             #|Each step rewires one transition along the suffix chain, so all
             #|processed states now point to clone instead of q.
