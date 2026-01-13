@@ -12,6 +12,12 @@ edges when partial matches occur. It is easy to understand but **O(n^2)**.
 - **Time**: O(n^2)
 - **Space**: O(n^2)
 
+## Core Idea
+
+- Insert every suffix into a **compressed trie** (edge labels are substrings).
+- Split edges on partial matches to keep paths unique.
+- Substring queries walk edges without re-comparing all suffixes.
+
 ## Design Choices
 
 - We append a **sentinel character** `\u0000` so every suffix ends at a leaf.
