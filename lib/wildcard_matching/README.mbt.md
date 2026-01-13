@@ -12,6 +12,11 @@ This package uses dynamic programming with a rolling 1D table.
 - **Time**: O(n * m)
 - **Space**: O(m)
 
+## Core Idea
+
+Use DP on prefixes. A `*` can match empty (dp[j-1]) or extend a previous match
+(dp[j]). A `?` or exact char matches the diagonal value.
+
 ## DP Recurrence
 
 Let `dp[j]` be whether `text[0..i)` matches `pattern[0..j)`:

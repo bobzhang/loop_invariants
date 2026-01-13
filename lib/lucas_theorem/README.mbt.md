@@ -22,6 +22,17 @@ test "lucas theorem quick start" {
 }
 ```
 
+## Core Idea
+
+Write n and k in base p. The binomial coefficient factors as the product of
+digit-level coefficients:
+
+```
+C(n, k) mod p = Π C(ni, ki) mod p
+```
+
+If any digit ki > ni, the result is 0.
+
 ## Why It Works (Intuition)
 
 Write `n` and `k` in base `p`:

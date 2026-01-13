@@ -10,6 +10,12 @@ substring queries and occurrence counting.
 - **Space**: O(n) states, O(n × σ) transitions
 - **Queries**: O(m) for substring of length m
 
+## Core Idea
+
+Maintain states representing endpos equivalence classes and suffix links that
+connect each state to the longest proper suffix. Each new character extends
+the automaton by updating transitions and possibly cloning states.
+
 ## The Key Insight
 
 ```
@@ -216,4 +222,3 @@ This is why SAM has O(n) states!
 - Clone operation is the tricky part—handle suffix links carefully
 - For occurrence counting: compute endpos sizes via topological sort
 - Suffix link tree root is init state
-

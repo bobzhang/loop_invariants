@@ -16,6 +16,12 @@ remain reachable from `s`.
 - **Time**: O(V^2 E)
 - **Space**: O(V + E)
 
+## Core Idea
+
+Run max flow, then traverse the residual graph from source. The reachable set
+is the source side of a minimum cut, and all edges crossing to the rest are
+saturated.
+
 ## What You Get
 
 `min_cut_st` returns:

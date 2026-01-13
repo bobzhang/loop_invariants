@@ -9,6 +9,11 @@ defined as the **sum of squared edge lengths** (to stay in integers).
 - **Time**: O(n^3)
 - **Space**: O(n^2)
 
+## Core Idea
+
+Use interval DP: pick a vertex k between i and j as the triangle tip, combine
+optimal triangulations of (i, k) and (k, j), plus the triangle cost.
+
 ## DP Recurrence
 
 Let `dp[i][j]` be the minimum triangulation cost for the chain from `i` to `j`:
