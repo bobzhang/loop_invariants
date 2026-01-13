@@ -63,7 +63,7 @@ fn FlowGraph::bfs(self : FlowGraph, source : Int, sink : Int) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.level[i] = -1
   } where {
-    invariant: i >= 0 && i <= self.n,
+    invariant: i >= 0 && i <= self.n && self.level.length() == self.n,
     reasoning: (
       #|INVARIANT (level reset):
       #|level[0..i) have been cleared to -1 for the next BFS layer build.
@@ -86,7 +86,7 @@ fn FlowGraph::bfs(self : FlowGraph, source : Int, sink : Int) -> Bool {
         queue.push(e.to)
       }
     } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
+      invariant: i >= 0 && i <= self.adj[u].length() && self.level[u] >= 0,
       reasoning: (
         #|INVARIANT (BFS edge scan):
         #|Edges adj[u][0..i) have been scanned. Any vertex reachable from u via
@@ -139,7 +139,7 @@ fn FlowGraph::max_flow(self : FlowGraph, source : Int, sink : Int) -> Int64 {
     for i = 0; i < self.n; i = i + 1 {
       self.iter[i] = 0
     } where {
-      invariant: i >= 0 && i <= self.n,
+      invariant: i >= 0 && i <= self.n && self.iter.length() == self.n,
       reasoning: (
         #|INVARIANT (iter reset):
         #|iter[0..i) are reset so DFS starts at edge 0 for those vertices.
@@ -187,7 +187,9 @@ fn FlowGraph::min_cut_source_side(self : FlowGraph, source : Int) -> Array[Int] 
         queue.push(e.to)
       }
     } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
+      invariant: i >= 0 &&
+      i <= self.adj[u].length() &&
+      visited.length() == self.n,
       reasoning: (
         #|INVARIANT (residual BFS edges):
         #|Edges adj[u][0..i) are scanned; any vertex reachable by a residual edge
