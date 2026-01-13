@@ -10,6 +10,12 @@ using "lazy" propagation.
 - **Range Query**: O(log n)
 - **Space**: O(n)
 
+## Core Idea
+
+- Store **aggregate values** in segment nodes (sum/min/max, etc.).
+- Keep a **lazy tag** for deferred updates and push it only when needed.
+- Range update touches O(log n) nodes, not every element.
+
 ## The Problem
 
 ```
@@ -234,4 +240,3 @@ Order matters! Usually: multiply first, then add.
 - For range assign, use sentinel (e.g., -∞) for "no update"
 - Careful with lazy tag composition order
 - 4n space is typically enough (2n nodes, each with value + lazy)
-
