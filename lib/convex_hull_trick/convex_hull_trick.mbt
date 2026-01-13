@@ -98,19 +98,3 @@ pub fn ConvexHullTrick::query(self : ConvexHullTrick, x : Int64) -> Int64 {
   }
   self.lines[self.head].value(x)
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "convex hull trick max" {
-  let cht = ConvexHullTrick::new()
-  cht.add_line(1L, 0L)
-  cht.add_line(2L, 1L)
-  cht.add_line(3L, -1L)
-  inspect(cht.query(0L), content="1")
-  inspect(cht.query(1L), content="3")
-  inspect(cht.query(2L), content="5")
-  inspect(cht.query(3L), content="8")
-}

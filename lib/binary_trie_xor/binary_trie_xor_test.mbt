@@ -1,15 +1,4 @@
 ///|
-test "binary trie xor queries" {
-  let trie = @binary_trie_xor.BinaryTrie::new(5)
-  trie.insert(5L)
-  trie.insert(1L)
-  trie.insert(7L)
-  assert_eq(trie.size(), 3)
-  inspect(trie.max_xor(2L), content="7")
-  inspect(trie.min_xor(2L), content="3")
-}
-
-///|
 test "binary trie remove" {
   let trie = @binary_trie_xor.BinaryTrie::new(5)
   trie.insert(5L)

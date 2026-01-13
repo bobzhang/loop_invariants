@@ -103,6 +103,7 @@ fn miller_test(n : Int64, a : Int64, d : Int64, s : Int) -> Bool {
 
 ///|
 /// Deterministic Miller-Rabin for 64-bit integers.
+/// Returns true when n is prime.
 pub fn is_prime(n : Int64) -> Bool {
   if n < 2L {
     return false
