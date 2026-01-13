@@ -2,6 +2,12 @@
 
 Random-priority BST supporting immutable inserts.
 
+## Core Idea
+
+Treaps maintain the BST property by key and the heap property by random
+priority. Persistence is achieved by copying nodes along the insert path,
+sharing the rest.
+
 ## Example
 
 ```mbt check
@@ -27,3 +33,8 @@ test "persistent treap set from array" {
   inspect(@challenge_persistent_treap_set.size(t), content="3")
 }
 ```
+
+## Notes
+
+- Each insert returns a new version.
+- Expected time per operation is O(log n).

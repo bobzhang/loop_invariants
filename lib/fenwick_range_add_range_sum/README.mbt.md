@@ -14,7 +14,7 @@ Then `range_sum(l, r) = prefix(r) - prefix(l - 1)`.
 - **Time**: O(log n) per update/query
 - **Space**: O(n)
 
-## Example
+## Quick Start
 
 ```mbt check
 ///|
@@ -25,5 +25,16 @@ test "fenwick range add range sum example" {
   st.range_add(1, 3, 2L)
   inspect(st.range_sum(0, 4), content="21")
   inspect(st.range_sum(1, 3), content="15")
+}
+```
+
+## Another Example
+
+```mbt check
+///|
+test "fenwick range add point query" {
+  let st = @fenwick_range_add_range_sum.FenwickRangeAddRangeSum::new(4)
+  st.range_add(0, 3, 5L)
+  inspect(st.range_sum(2, 2), content="5")
 }
 ```

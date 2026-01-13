@@ -133,25 +133,3 @@ pub fn FenwickRangeAddRangeSum::range_sum(
   }
   self.prefix_sum(r) - self.prefix_sum(l - 1)
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "fenwick range add range sum basic" {
-  let st = FenwickRangeAddRangeSum::new(5)
-  st.range_add(0, 4, 1L)
-  st.range_add(1, 3, 2L)
-  inspect(st.range_sum(0, 4), content="11")
-  inspect(st.range_sum(1, 3), content="9")
-}
-
-///|
-test "fenwick range add range sum from array" {
-  let st = FenwickRangeAddRangeSum::from_array([1L, 2L, 3L, 4L, 5L])
-  inspect(st.range_sum(0, 4), content="15")
-  st.range_add(1, 3, 2L)
-  inspect(st.range_sum(0, 4), content="21")
-  inspect(st.range_sum(1, 3), content="15")
-}

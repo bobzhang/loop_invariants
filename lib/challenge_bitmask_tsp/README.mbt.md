@@ -2,6 +2,15 @@
 
 Bitmask DP for minimum Hamiltonian cycle starting at node 0.
 
+## Core Idea
+
+Let `dp[mask][v]` be the minimum cost to start at 0, visit exactly the nodes in
+`mask`, and end at `v`. Transitions add one new node at a time:
+
+```
+dp[mask | (1<<u)][u] = min(dp[mask][v] + dist[v][u])
+```
+
 ## Example
 
 ```mbt check
@@ -28,3 +37,8 @@ test "tsp triangle" {
   inspect(ans, content="7")
 }
 ```
+
+## Notes
+
+- Time complexity is O(n^2 * 2^n).
+- This assumes a complete distance matrix.

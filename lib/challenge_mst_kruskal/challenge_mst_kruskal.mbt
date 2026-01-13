@@ -98,20 +98,3 @@ pub fn mst_weight(n : Int, edges : ArrayView[(Int, Int, Int)]) -> Int? {
     None
   }
 }
-
-///|
-test "mst_kruskal_basic" {
-  let edges : Array[(Int, Int, Int)] = [
-    (0, 1, 1),
-    (1, 2, 2),
-    (2, 3, 3),
-    (0, 3, 10),
-  ]
-  assert_eq(mst_weight(4, edges[:]), Some(6))
-}
-
-///|
-test "mst_kruskal_disconnected" {
-  let edges : Array[(Int, Int, Int)] = [(0, 1, 1)]
-  assert_eq(mst_weight(3, edges[:]), None)
-}

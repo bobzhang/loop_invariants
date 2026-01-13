@@ -82,14 +82,3 @@ pub fn tsp_min_cycle(dist : Array[Array[Int]]) -> Int {
   }
   best
 }
-
-///|
-test "tsp_bitmask_basic" {
-  let dist : Array[Array[Int]] = [
-    [0, 10, 15, 20],
-    [10, 0, 35, 25],
-    [15, 35, 0, 30],
-    [20, 25, 30, 0],
-  ]
-  assert_eq(tsp_min_cycle(dist), 80)
-}

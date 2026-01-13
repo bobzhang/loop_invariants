@@ -2,6 +2,11 @@
 
 Minimum spanning tree via edge sorting and DSU.
 
+## Core Idea
+
+Sort edges by weight, then iterate and add an edge if it connects two different
+components (using DSU/Union-Find). The sum of accepted edges is the MST weight.
+
 ## Example
 
 ```mbt check
@@ -28,3 +33,8 @@ test "mst kruskal disconnected" {
   inspect(total, content="None")
 }
 ```
+
+## Notes
+
+- If the graph is disconnected, no MST exists.
+- Time complexity is O(E log E).

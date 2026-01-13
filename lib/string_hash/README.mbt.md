@@ -26,4 +26,5 @@ test "string hash example" {
 
 ## Notes
 
-- This package is a reference implementation with invariants
+- Hash collisions are possible; use double hashing when needed.
+- This package is a reference implementation with invariants.

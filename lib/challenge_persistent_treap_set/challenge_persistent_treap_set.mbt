@@ -160,16 +160,3 @@ pub fn from_array(arr : ArrayView[Int]) -> Treap {
     ),
   }
 }
-
-///|
-test "persistent_treap_set" {
-  let t0 = Treap::Empty
-  let t1 = insert(t0, 5)
-  let t2 = insert(t1, 2)
-  let t3 = insert(t2, 8)
-  assert_eq(contains(t3, 2), true)
-  assert_eq(contains(t3, 6), false)
-  let built = from_array([5, 2, 8, 2][:])
-  assert_eq(contains(built, 2), true)
-  assert_eq(size(built), 3)
-}
