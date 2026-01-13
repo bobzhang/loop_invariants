@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/point_in_polygon"
+
+// Values
+pub fn point_in_polygon(Array[Point], Point) -> Location
+
+// Errors
+
+// Types and methods
+pub enum Location {
+  Inside
+  Outside
+  Boundary
+}
+pub impl Eq for Location
+pub impl Show for Location
+
+pub(all) struct Point {
+  x : Int64
+  y : Int64
+}
+pub impl Eq for Point
+pub impl Show for Point
+
+// Type aliases
+
+// Traits
+
