@@ -8,7 +8,24 @@ by `n` and recovers the original array (when values are integral).
 - **Time**: O(n log n)
 - **Space**: O(n)
 
-## Example
+## Requirements
+
+- The array length must be a power of two.
+- XOR convolution uses the XOR transform and its inverse.
+
+## Roundtrip Example
+
+```mbt check
+///|
+test "fwht xor roundtrip" {
+  let a : Array[Int64] = [1L, 2L, 3L, 4L]
+  let t = @fwht.fwht_xor(a[:], false)
+  let inv = @fwht.fwht_xor(t[:], true)
+  inspect(inv, content="[1, 2, 3, 4]")
+}
+```
+
+## XOR Convolution Example
 
 ```mbt check
 ///|

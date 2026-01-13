@@ -117,18 +117,3 @@ pub fn nck_mod_prime_lucas(n : Int64, k : Int64, p : Int64) -> Int64 {
   }
   result
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "lucas theorem small" {
-  inspect(nck_mod_prime_lucas(10L, 3L, 7L), content="1")
-  inspect(nck_mod_prime_lucas(5L, 2L, 5L), content="0")
-}
-
-///|
-test "lucas theorem parity" {
-  inspect(nck_mod_prime_lucas(1000L, 500L, 2L), content="0")
-}

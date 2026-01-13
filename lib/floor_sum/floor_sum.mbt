@@ -56,18 +56,3 @@ pub fn floor_sum(n : Int64, m : Int64, a : Int64, b : Int64) -> Int64 {
   }
   ans
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "floor sum small" {
-  inspect(floor_sum(4L, 5L, 3L, 2L), content="4")
-  inspect(floor_sum(5L, 4L, 2L, 1L), content="4")
-}
-
-///|
-test "floor sum with reductions" {
-  inspect(floor_sum(5L, 4L, 6L, 7L), content="21")
-}

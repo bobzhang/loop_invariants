@@ -9,7 +9,7 @@ edge weight on their path in the tree.
 - **Time**: O(n · maxflow)
 - **Space**: O(n + m)
 
-## Example
+## Quick Start
 
 ```mbt check
 ///|
@@ -20,3 +20,16 @@ test "gomory-hu tree example" {
   inspect(tree.min_cut(2, 3), content="1")
 }
 ```
+
+## Why It Works (Sketch)
+
+The algorithm runs `n-1` max-flow computations. After each flow between
+`s` and its current parent `t`, the resulting min-cut partitions the vertices.
+We attach `s` to `t` with the cut value, and redirect other vertices to keep
+the parent structure consistent. Repeating this builds a tree where the
+minimum edge on the path between any two vertices equals their min-cut.
+
+## When to Use
+
+- You need **all-pairs** min-cut values (not just a single source).
+- The graph is undirected and capacities are non-negative.
