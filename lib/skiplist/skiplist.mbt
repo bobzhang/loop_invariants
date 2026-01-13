@@ -259,13 +259,13 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
       }
     }
   } where {
-    invariant: true,
+    invariant: lvl >= -1 && lvl <= self.level && update.length() == max_level,
     reasoning: (
       #|INSERT INVARIANT: update[lvl] tracks the predecessor at each level
       #|
-      #|1. Search phase maintains: update[lvl].key < key for all recorded levels
-      #|   - We only record update[lvl] when we can't move right
-      #|   - At that point, current.key < key (from search invariant)
+      #|1. Search phase maintains: at each level, current is the rightmost
+      #|   node with key < target; update[lvl] records that predecessor.
+      #|   Therefore update[lvl].forward[lvl] is None or points to key >= target.
       #|
       #|2. After search: update[0..=self.level] all point to predecessors
       #|   - update[i].forward[i] is either None or points to a node >= key
@@ -355,7 +355,7 @@ fn SkipList::delete(self : SkipList, key : Int) -> Bool {
       _ => false // Key not found
     }
   } where {
-    invariant: true,
+    invariant: lvl >= -1 && lvl <= self.level && update.length() == max_level,
     reasoning: (
       #|DELETE INVARIANT: Same search invariant as insert
       #|
@@ -410,7 +410,7 @@ fn SkipList::range_query(
         _ => break
       }
     } where {
-      invariant: true,
+      invariant: result.length() <= self.size,
       reasoning: (
         #|RANGE COLLECTION INVARIANT:
         #|
@@ -431,7 +431,7 @@ fn SkipList::range_query(
     }
     result
   } where {
-    invariant: true,
+    invariant: lvl >= -1 && lvl <= self.level,
     reasoning: (
       #|RANGE SEARCH INVARIANT: Same as regular search
       #|
@@ -902,7 +902,7 @@ fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
       }
     }
   } where {
-    invariant: true,
+    invariant: lvl >= -1 && lvl <= self.level && update.length() == max_level,
     reasoning: (
       #|MULTI-INSERT INVARIANT:
       #|
