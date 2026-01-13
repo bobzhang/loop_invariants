@@ -11,6 +11,12 @@ h[S] = sum_{A ⊆ S} f[A] * g[S \ A]
 This implementation runs in **O(n^2 · 2^n)** using popcount layers and
 zeta transforms.
 
+## Core Idea
+
+- Group subsets by **popcount**, apply **zeta transform** per layer.
+- Convolve layers by size (`k = i + j`) and inverse transform.
+- Turns the subset split sum into per-layer polynomial-like convolution.
+
 ## Input Encoding
 
 For `n` bits, arrays `f` and `g` have length `2^n`. Index `mask` corresponds
