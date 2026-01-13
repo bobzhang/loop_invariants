@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/line_segment_intersection"
+
+// Values
+pub fn segments_intersect(Point, Point, Point, Point) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct Point {
+  x : Int64
+  y : Int64
+}
+pub impl Eq for Point
+pub impl Show for Point
+
+// Type aliases
+
+// Traits
+
