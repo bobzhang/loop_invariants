@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/zero_one_bfs"
+
+// Values
+pub fn zero_one_bfs(Graph, Int) -> Array[Int]
+
+// Errors
+
+// Types and methods
+pub struct Edge {
+  to : Int
+  weight : Int
+}
+pub impl Show for Edge
+
+pub struct Graph {
+  n : Int
+  adj : Array[Array[Edge]]
+}
+pub fn Graph::add_edge(Self, Int, Int, Int) -> Unit
+pub fn Graph::add_undirected_edge(Self, Int, Int, Int) -> Unit
+pub fn Graph::new(Int) -> Self
+
+// Type aliases
+
+// Traits
+
