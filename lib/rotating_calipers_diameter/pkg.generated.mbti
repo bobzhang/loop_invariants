@@ -1,0 +1,27 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/rotating_calipers_diameter"
+
+// Values
+pub fn convex_diameter(Array[Point]) -> DiameterResult?
+
+// Errors
+
+// Types and methods
+pub(all) struct DiameterResult {
+  i : Int
+  j : Int
+  dist2 : Int64
+}
+pub impl Show for DiameterResult
+
+pub(all) struct Point {
+  x : Int64
+  y : Int64
+}
+pub impl Eq for Point
+pub impl Show for Point
+
+// Type aliases
+
+// Traits
+
