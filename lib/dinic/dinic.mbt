@@ -64,7 +64,7 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
   for i = 0; i < self.n; i = i + 1 {
     self.level[i] = -1
   } where {
-    invariant: i >= 0 && i <= self.n,
+    invariant: i >= 0 && i <= self.n && self.level.length() == self.n,
     reasoning: (
       #|INVARIANT (level reset):
       #|level[0..i) have been reset to -1 before BFS.
@@ -87,7 +87,7 @@ fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
         queue.push(e.to)
       }
     } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
+      invariant: i >= 0 && i <= self.adj[u].length() && self.level[u] >= 0,
       reasoning: (
         #|INVARIANT (BFS edges):
         #|Edges adj[u][0..i) have been scanned; any newly reachable nodes have
@@ -138,7 +138,7 @@ fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
     for i = 0; i < self.n; i = i + 1 {
       self.iter[i] = 0
     } where {
-      invariant: i >= 0 && i <= self.n,
+      invariant: i >= 0 && i <= self.n && self.iter.length() == self.n,
       reasoning: (
         #|INVARIANT (iter reset):
         #|iter[0..i) cleared for the next blocking-flow DFS phase.
@@ -150,10 +150,20 @@ fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
     }
 
     // Find blocking flow
-    let mut f = self.dfs(source, sink, DINIC_INF)
-    while f > 0L {
+    for f = self.dfs(source, sink, DINIC_INF); f > 0L; {
       flow = flow + f
-      f = self.dfs(source, sink, DINIC_INF)
+      continue self.dfs(source, sink, DINIC_INF)
+    } where {
+      invariant: flow >= 0L,
+      reasoning: (
+        #|INVARIANT (blocking flow accumulation):
+        #|flow equals the total amount sent so far in the current network. Each
+        #|positive DFS augments along a level-respecting path and preserves
+        #|capacity constraints.
+        #|TERMINATION:
+        #|When DFS returns 0, the level graph is blocked and no more flow can
+        #|be sent without rebuilding levels.
+      ),
     }
   }
   flow
@@ -198,7 +208,7 @@ fn Dinic::reset(self : Dinic) -> Unit {
       ),
     }
   } where {
-    invariant: u >= 0 && u <= self.n,
+    invariant: u >= 0 && u <= self.n && self.adj.length() == self.n,
     reasoning: (
       #|INVARIANT (reset flows outer):
       #|All vertices in [0..u) have their incident flows reset.
