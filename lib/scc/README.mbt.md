@@ -9,6 +9,12 @@ and **Kosaraju's** algorithms.
 - **Time**: O(V + E)
 - **Space**: O(V)
 
+## Core Idea
+
+- Use DFS to discover **cycles of mutual reachability**.
+- Tarjan tracks **low-link** values to find SCC roots in one pass.
+- Kosaraju uses **reverse finish order** on the transposed graph.
+
 ## Visual Example
 
 ```
@@ -224,4 +230,3 @@ scc_adj:     Condensation graph (DAG of SCCs)
 - Stack overflow: Consider explicit stack for large graphs
 - 2-SAT: Component indices give topological order (reversed)
 - Condensation: Remember to handle multi-edges
-
