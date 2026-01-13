@@ -35,3 +35,7 @@ test "tree diameter star" {
 
 - The tree is assumed to be connected.
 - Edge count must be `n-1`.
+
+## Complexity
+
+- Two BFS/DFS runs: O(n).

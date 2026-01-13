@@ -38,3 +38,7 @@ test "centroid root" {
 
 - The centroid is stored with `parent = -1`.
 - `level[v]` is the depth in the centroid tree.
+
+## Complexity
+
+- Each decomposition step removes a centroid, so height is O(log n).

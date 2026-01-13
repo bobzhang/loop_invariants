@@ -35,3 +35,8 @@ test "toposort cycle" {
 
 - Runs in O(n + m).
 - Returns `None` when a cycle exists.
+
+## Tips
+
+- Works for any DAG, even with isolated nodes.
+- Use `is_topo` to validate an ordering.

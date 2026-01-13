@@ -37,3 +37,7 @@ test "lca across subtrees" {
 
 - Preprocessing is O(n log n).
 - Each query is O(log n).
+
+## Tips
+
+- Root choice only affects depths, not correctness.

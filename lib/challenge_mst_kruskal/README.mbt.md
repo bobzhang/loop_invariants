@@ -38,3 +38,7 @@ test "mst kruskal disconnected" {
 
 - If the graph is disconnected, no MST exists.
 - Time complexity is O(E log E).
+
+## Tips
+
+- Sort edges once; DSU handles connectivity checks.

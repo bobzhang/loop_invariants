@@ -38,3 +38,7 @@ test "lis classic" {
 
 - This computes the length only (not the actual subsequence).
 - Time complexity is O(n log n).
+
+## Variant
+
+- For non-decreasing subsequence, change the binary search to `>` instead of `>=`.

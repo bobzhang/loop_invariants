@@ -38,3 +38,7 @@ test "bipartite matching empty" {
 
 - Left size must be provided to `max_matching`.
 - The adjacency list is from left nodes to right nodes.
+
+## Complexity
+
+- Worst-case O(VE), usually faster on sparse graphs.

@@ -36,3 +36,8 @@ test "scc kosaraju isolated" {
 
 - Runs in O(n + m).
 - Component ids are arbitrary but consistent.
+
+## Applications
+
+- Condensation DAG construction.
+- Cycle detection in directed graphs.
