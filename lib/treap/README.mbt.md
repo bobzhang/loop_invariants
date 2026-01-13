@@ -9,6 +9,12 @@ This randomization ensures **expected O(log n)** height without complex rebalanc
 - **Order statistics**: O(log n)
 - **Space**: O(n)
 
+## Core Idea
+
+- Maintain **BST order** by key and **heap order** by random priority.
+- Implement insert/delete via **split + merge**, which preserves both invariants.
+- Track **subtree sizes** to answer k-th and rank queries in O(log n).
+
 ## The Key Insight
 
 Each node has two properties:
@@ -24,6 +30,19 @@ Each node has two properties:
 The random priorities keep the tree balanced **with high probability**.
 
 ## Quick Start Tutorial
+
+### 0) Empty Treap
+
+```mbt check
+///|
+test "treap empty" {
+  let t = @treap.Treap::new()
+  inspect(t.size(), content="0")
+  inspect(t.min(), content="None")
+  inspect(t.max(), content="None")
+  inspect(t.kth_element(0), content="None")
+}
+```
 
 ### 1) Insert and Search
 
@@ -53,6 +72,21 @@ test "treap delete example" {
   t.insert(7L)
   inspect(t.delete(3L), content="true")
   inspect(t.contains(3L), content="false")
+  inspect(t.size(), content="2")
+}
+```
+
+### 2b) Duplicates (delete removes one copy)
+
+```mbt check
+///|
+test "treap duplicates" {
+  let t = @treap.Treap::new()
+  t.insert(5L)
+  t.insert(5L)
+  t.insert(5L)
+  inspect(t.size(), content="3")
+  inspect(t.delete(5L), content="true")
   inspect(t.size(), content="2")
 }
 ```
