@@ -2,6 +2,12 @@
 
 Point updates with range xor queries.
 
+## Core Idea
+
+- Persist with **path copying** for each point update.
+- Each node stores **xor of its segment**; internal node is `left xor right`.
+- Queries follow the same segment tree traversal in O(log n).
+
 ## Example
 
 ```mbt check
