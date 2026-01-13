@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "bobzhang/loop_invariants/lib/linear_sieve"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct LinearSieve {
+  n : Int
+  primes : Array[Int]
+  spf : Array[Int]
+  phi : Array[Int]
+  mu : Array[Int]
+}
+pub fn LinearSieve::factorize(Self, Int) -> Array[(Int, Int)]
+pub fn LinearSieve::is_prime(Self, Int) -> Bool
+pub fn LinearSieve::new(Int) -> Self
+
+// Type aliases
+
+// Traits
+
