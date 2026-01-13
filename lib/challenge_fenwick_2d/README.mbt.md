@@ -2,6 +2,12 @@
 
 Point updates and rectangle sums in O(log^2 n).
 
+## Core Idea
+
+2D Fenwick trees generalize the 1D structure: each update affects all relevant
+rectangles in the implicit binary indexed grid. Rectangle sums are computed
+by inclusion-exclusion on prefix sums.
+
 ## Example
 
 ```mbt check
@@ -26,3 +32,8 @@ test "fenwick2d partial sum" {
   inspect(fw.range_sum(0, 0, 4, 4), content="6")
 }
 ```
+
+## Notes
+
+- `range_sum(x1, y1, x2, y2)` uses half-open ranges.
+- Time per update/query is O(log^2 n).

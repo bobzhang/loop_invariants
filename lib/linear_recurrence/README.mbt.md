@@ -13,7 +13,7 @@ f(n) = c0*f(n-1) + c1*f(n-2) + ... + c_{k-1}*f(n-k)  (mod M)
 - **Time**: O(k² log n)
 - **Space**: O(k)
 
-## Example
+## Quick Start
 
 ```mbt check
 ///|
@@ -27,3 +27,22 @@ test "linear recurrence example" {
   )
 }
 ```
+
+## Another Example
+
+```mbt check
+///|
+test "linear recurrence geometric" {
+  let m = 1000000007L
+  let coeffs : Array[Int64] = [2L]
+  let initial : Array[Int64] = [1L]
+  inspect(
+    @linear_recurrence.linear_recurrence_nth(coeffs, initial, 5L, m),
+    content="32",
+  )
+}
+```
+
+## Notes
+
+- `coeffs` and `initial` must have the same length `k`.

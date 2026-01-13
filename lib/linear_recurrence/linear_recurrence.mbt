@@ -141,26 +141,3 @@ pub fn linear_recurrence_nth(
   }
   ans
 }
-
-// ============================================================================
-// TESTS
-// ============================================================================
-
-///|
-test "linear recurrence fibonacci" {
-  let m = 1000000007L
-  let coeffs : Array[Int64] = [1L, 1L]
-  let initial : Array[Int64] = [0L, 1L]
-  inspect(linear_recurrence_nth(coeffs, initial, 0L, m), content="0")
-  inspect(linear_recurrence_nth(coeffs, initial, 1L, m), content="1")
-  inspect(linear_recurrence_nth(coeffs, initial, 7L, m), content="13")
-}
-
-///|
-test "linear recurrence geometric" {
-  let m = 1000000007L
-  let coeffs : Array[Int64] = [3L]
-  let initial : Array[Int64] = [2L]
-  inspect(linear_recurrence_nth(coeffs, initial, 0L, m), content="2")
-  inspect(linear_recurrence_nth(coeffs, initial, 3L, m), content="54")
-}

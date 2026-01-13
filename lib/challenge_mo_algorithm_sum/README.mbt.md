@@ -2,6 +2,13 @@
 
 Offline range sums by sorting queries into blocks.
 
+## Core Idea
+
+Sort queries by block of `l` (and by `r` with alternating order). Maintain a
+current window [cur_l, cur_r) and update a running sum as the window moves.
+
+This turns many queries into a sequence of small add/remove operations.
+
 ## Example
 
 ```mbt check
@@ -25,3 +32,8 @@ test "mo example small" {
   inspect(ans, content="[6, 10, 20]")
 }
 ```
+
+## Notes
+
+- This variant answers sum queries with O(1) add/remove.
+- Overall time is about O((n + q) * sqrt(n)).

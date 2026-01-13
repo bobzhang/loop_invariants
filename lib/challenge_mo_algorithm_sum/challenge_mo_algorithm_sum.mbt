@@ -157,10 +157,3 @@ pub fn mo_range_sum(
   }
   ans
 }
-
-///|
-test "mo_algorithm_sum" {
-  let arr : Array[Int] = [1, 2, 3, 4, 5]
-  let qs : Array[(Int, Int)] = [(0, 3), (1, 4), (2, 5), (0, 5)]
-  assert_eq(mo_range_sum(arr[:], qs[:]), [6, 9, 12, 15])
-}

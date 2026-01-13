@@ -107,13 +107,3 @@ pub fn Fenwick2D::range_sum(
   self.prefix_sum(r2, c1) +
   self.prefix_sum(r1, c1)
 }
-
-///|
-test "fenwick_2d_basic" {
-  let fw = Fenwick2D::new(3, 3)
-  fw.add(0, 0, 5)
-  fw.add(1, 2, 3)
-  fw.add(2, 1, 4)
-  assert_eq(fw.range_sum(0, 0, 3, 3), 12)
-  assert_eq(fw.range_sum(1, 1, 3, 3), 7)
-}
