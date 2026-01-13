@@ -11,6 +11,13 @@ enabling O(log σ) queries where σ is the alphabet size.
 - **Quantile query**: O(log σ) - find k-th smallest in range
 - **Space**: O(n log σ)
 
+## Core Idea
+
+- Split values by a midpoint at each level, storing a **bitvector** of left/right.
+- Use **prefix sums** over the bitvector to map ranges down the tree in O(1).
+- Queries follow the same path: **value navigation** for rank/select, and
+  **count navigation** for quantiles.
+
 ## The Key Insight
 
 ```
@@ -243,4 +250,3 @@ Implementation:
 - Build recursively or iteratively (level by level)
 - For dynamic updates, consider wavelet matrix or balanced BST at leaves
 - Compress alphabet first if values are sparse (coordinate compression)
-
