@@ -2,6 +2,12 @@
 
 Range add updates with lazy propagation and range sum queries.
 
+## Core Idea
+
+- Use **path copying** so each range update returns a new root without mutation.
+- Store a **lazy add tag** in each node; push only when descending.
+- Range sum is maintained as `sum + tag * segment_length`.
+
 ## Example
 
 ```mbt check
