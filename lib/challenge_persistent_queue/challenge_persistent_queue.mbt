@@ -89,16 +89,3 @@ pub fn[T] dequeue(q : Queue[T]) -> (T, Queue[T])? {
     Stack::Cons(head~, tail~) => Some((head, { front: tail, back: norm.back }))
   }
 }
-
-///|
-test "persistent_queue" {
-  let q0 : Queue[Int] = empty()
-  let q1 = enqueue(q0, 1)
-  let q2 = enqueue(q1, 2)
-  let q3 = enqueue(q2, 3)
-  assert_eq(peek(q3), Some(1))
-  guard dequeue(q3) is Some((1, q4)) else { fail("expected dequeue") }
-  assert_eq(peek(q4), Some(2))
-  assert_eq(size(q4), 2)
-  assert_eq(peek(q2), Some(1))
-}

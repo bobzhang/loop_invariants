@@ -2,6 +2,16 @@
 
 Compute prefix hashes and compare substrings in O(1) time after preprocessing.
 
+## Core Idea
+
+Use a polynomial rolling hash:
+
+```
+hash(l, r) = pref[r] - pref[l] * pow_base[r-l]
+```
+
+With precomputed prefix hashes and powers, each substring hash is O(1).
+
 ## What it demonstrates
 
 - Polynomial rolling hash
@@ -26,5 +36,6 @@ test "string hash example" {
 
 ## Notes
 
-- Hash collisions are possible; use double hashing when needed.
+- `hash_pattern_match` scans all positions and compares hashes.
+- Hash collisions are possible; use double hashing or verify by substring compare.
 - This package is a reference implementation with invariants.

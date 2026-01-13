@@ -10,6 +10,15 @@ active vertices remain, the preflow is a maximum flow.
 - **Time**: O(V^2 E) worst-case
 - **Space**: O(V + E)
 
+## Core Idea
+
+1. Initialize a preflow by saturating all edges out of the source.
+2. While a vertex has excess flow:
+   - **Push** along admissible edges (height decreases by 1).
+   - If none exist, **relabel** the vertex to create an admissible edge.
+
+This local policy converges to a max flow when no active vertices remain.
+
 ## Example
 
 ```mbt check

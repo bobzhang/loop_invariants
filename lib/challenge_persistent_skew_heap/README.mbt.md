@@ -2,6 +2,12 @@
 
 Meldable heap with self-adjusting subtree swaps.
 
+## Core Idea
+
+Meld (merge) two heaps by recursively merging the right spine and swapping
+children at each step. This keeps the tree roughly balanced in practice.
+Persistence is achieved by copying nodes along the merge path.
+
 ## Example
 
 ```mbt check
@@ -30,3 +36,8 @@ test "persistent skew heap from array" {
   inspect(@challenge_persistent_skew_heap.size(h), content="3")
 }
 ```
+
+## Notes
+
+- Expected time is O(log n) amortized.
+- `delete_min` returns None on empty heaps.

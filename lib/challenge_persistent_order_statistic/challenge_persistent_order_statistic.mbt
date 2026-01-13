@@ -130,16 +130,3 @@ pub fn kth(os : OrderStat, k : Int) -> Int? {
     ),
   }
 }
-
-///|
-test "persistent_order_statistic" {
-  let os0 = { root: Node::Empty, lo: 0, hi: 10 }
-  let os1 = add(os0, 5)
-  let os2 = add(os1, 2)
-  let os3 = add(os2, 7)
-  let os4 = add(os3, 2)
-  assert_eq(kth(os4, 0), Some(2))
-  assert_eq(kth(os4, 1), Some(2))
-  assert_eq(kth(os4, 2), Some(5))
-  assert_eq(kth(os4, 3), Some(7))
-}

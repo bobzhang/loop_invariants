@@ -2,6 +2,12 @@
 
 Immutable stack with push/pop/peek operations.
 
+## Core Idea
+
+A persistent stack is a linked list. `push` creates a new head node that points
+to the previous stack. `pop` returns the head and the tail, leaving the old
+version intact.
+
 ## Example
 
 ```mbt check
@@ -31,3 +37,8 @@ test "persistent stack versions" {
   inspect(@challenge_persistent_stack.to_array(s2), content="[20, 10]")
 }
 ```
+
+## Notes
+
+- All operations are O(1).
+- Old versions remain accessible.

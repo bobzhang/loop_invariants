@@ -2,6 +2,12 @@
 
 Immutable queue implemented with two stacks and lazy reversal.
 
+## Core Idea
+
+Maintain two stacks: `front` for dequeues and `back` for enqueues. When `front`
+is empty, reverse `back` to rebuild `front`. Persistence is achieved by sharing
+stack nodes between versions.
+
 ## Example
 
 ```mbt check
@@ -35,3 +41,8 @@ test "persistent queue versions" {
   inspect(@challenge_persistent_queue.peek(q3), content="Some(20)")
 }
 ```
+
+## Notes
+
+- Amortized O(1) per operation.
+- Old versions remain accessible.

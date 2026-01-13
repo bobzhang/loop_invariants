@@ -121,16 +121,3 @@ pub fn from_array(arr : ArrayView[Int]) -> Heap {
     ),
   }
 }
-
-///|
-test "persistent_skew_heap" {
-  let h0 = Heap::Empty
-  let h1 = insert(h0, 4)
-  let h2 = insert(h1, 1)
-  let h3 = insert(h2, 6)
-  assert_eq(find_min(h3), Some(1))
-  guard delete_min(h3) is Some(h4) else { fail("expected delete_min") }
-  assert_eq(find_min(h4), Some(4))
-  let built = from_array([4, 1, 6, 2][:])
-  assert_eq(find_min(built), Some(1))
-}

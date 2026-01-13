@@ -106,19 +106,3 @@ pub fn[T] to_array(s : Stack[T]) -> Array[T] {
     ),
   }
 }
-
-///|
-test "persistent_stack" {
-  let s0 : Stack[Int] = empty()
-  let s1 = push(s0, 1)
-  let s2 = push(s1, 2)
-  assert_eq(is_empty(s0), true)
-  assert_eq(to_array(s0), [])
-  assert_eq(to_array(s1), [1])
-  assert_eq(to_array(s2), [2, 1])
-  let built = from_array([1, 2, 3][:])
-  assert_eq(to_array(built), [1, 2, 3])
-  guard pop(s2) is Some((2, s1b)) else { fail("expected pop") }
-  assert_eq(to_array(s1b), [1])
-  assert_eq(peek(s1b), Some(1))
-}

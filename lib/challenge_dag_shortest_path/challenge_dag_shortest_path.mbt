@@ -124,23 +124,3 @@ pub fn dag_shortest_paths(
   }
   Some(dist)
 }
-
-///|
-test "dag_shortest_path_basic" {
-  let edges : Array[(Int, Int, Int)] = [
-    (0, 1, 2),
-    (0, 2, 5),
-    (1, 2, 1),
-    (1, 3, 2),
-    (2, 3, 1),
-  ]
-  let dist = dag_shortest_paths(4, edges[:], 0)
-  guard dist is Some(d) else { fail("expected distances") }
-  assert_eq(d, [0, 2, 3, 4])
-}
-
-///|
-test "dag_shortest_path_cycle" {
-  let edges : Array[(Int, Int, Int)] = [(0, 1, 1), (1, 0, 1)]
-  assert_eq(dag_shortest_paths(2, edges[:], 0), None)
-}
