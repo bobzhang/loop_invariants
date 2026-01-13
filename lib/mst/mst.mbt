@@ -64,7 +64,7 @@ fn UF::new(n : Int) -> UF {
   for i = 0; i < n; i = i + 1 {
     parent[i] = i
   } where {
-    invariant: i >= 0 && i <= n,
+    invariant: i >= 0 && i <= n && parent.length() == n && rank.length() == n,
     reasoning: (
       #|INVARIANT (UF init):
       #|parent[j] = j for all j in [0, i); each vertex is its own set.
@@ -134,7 +134,9 @@ fn MST::kruskal(self : MST) -> (Array[Edge], Int64) {
       total_weight = total_weight + edge.weight
     }
   } where {
-    invariant: i >= 0 && i <= sorted_edges.length(),
+    invariant: i >= 0 &&
+    i <= sorted_edges.length() &&
+    mst_edges.length() <= self.n - 1,
     reasoning: (
       #|INVARIANT (Kruskal):
       #|mst_edges is a forest spanning the processed edges with minimum total
@@ -189,7 +191,7 @@ fn PrimMST::new(n : Int) -> PrimMST {
   for i = 0; i < n; i = i + 1 {
     adj[i] = []
   } where {
-    invariant: i >= 0 && i <= n,
+    invariant: i >= 0 && i <= n && adj.length() == n,
     reasoning: (
       #|INVARIANT (adj init):
       #|Adjacency lists for vertices in [0, i) are initialized and independent.
@@ -231,7 +233,10 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
         u = i
       }
     } where {
-      invariant: i >= 0 && i <= self.n,
+      invariant: i >= 0 &&
+      i <= self.n &&
+      min_edge.length() == self.n &&
+      in_mst.length() == self.n,
       reasoning: (
         #|INVARIANT (select min):
         #|min_w/u track the smallest min_edge among vertices in [0, i) not in MST.
@@ -257,7 +262,11 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
         min_edge[v] = w
       }
     } where {
-      invariant: i >= 0 && i <= self.adj[u].length() && in_mst[u],
+      invariant: i >= 0 &&
+      i <= self.adj[u].length() &&
+      in_mst[u] &&
+      min_edge.length() == self.n &&
+      in_mst.length() == self.n,
       reasoning: (
         #|INVARIANT (relax neighbors):
         #|min_edge for neighbors in adj[u][0..i) reflects the cheapest edge
@@ -269,7 +278,7 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
       ),
     }
   } where {
-    invariant: iter >= 0 && iter <= self.n,
+    invariant: iter >= 0 && iter <= self.n && in_mst.length() == self.n,
     reasoning: (
       #|INVARIANT (Prim):
       #|The set in_mst forms a tree, and min_edge holds the cheapest crossing
