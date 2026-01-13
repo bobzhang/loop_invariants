@@ -153,6 +153,38 @@ Left:        Right:           If left.priority > right.priority:
                                  (4)      (9)
 ```
 
+#### How Merge Preserves Both Invariants
+
+Merge assumes **all keys in `left` are smaller than all keys in `right`**. Under
+this precondition, the BST property is already satisfied across the boundary,
+so we only need to pick a root that preserves the heap property.
+
+**Step-by-step logic**:
+
+1. **Base cases**:  
+   - If `left` is empty, the result is `right` (and vice versa).
+
+2. **Choose the root by priority**:
+   - If `left.priority > right.priority`, `left` becomes the root.  
+     We then merge `left.right` with `right` and attach the result as the new
+     `left.right`.
+   - Otherwise `right` becomes the root, and we merge `left` with
+     `right.left`.
+
+3. **Why BST still holds**:
+   - `left.right` contains keys `< right` and `right` contains keys `>= left`,
+     so merging them preserves ordering.
+   - No keys cross the left/right boundary because the precondition already
+     separates them.
+
+4. **Why heap still holds**:
+   - The chosen root has higher priority than the other tree’s root.
+   - Recursive merge ensures each subtree also respects the heap rule.
+
+In short, **merge is just “pick the higher-priority root and recursively merge
+the opposite subtree”**, and the ordering guarantee from split makes the BST
+property automatic.
+
 ## Insert Using Split/Merge
 
 ```
