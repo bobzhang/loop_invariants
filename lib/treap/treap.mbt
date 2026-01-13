@@ -82,6 +82,7 @@ fn next_random(state : Int) -> (Int, Int) {
 }
 
 ///|
+/// Create an empty treap with a deterministic RNG seed.
 fn Treap::new() -> Treap {
   { root: None, rng_state: 42 }
 }
@@ -152,130 +153,6 @@ fn Treap::delete(self : Treap, key : Int64) -> Bool {
       let remaining = merge(mid_node.left, mid_node.right)
       self.root = merge(merge(l, remaining), r2)
       true
-    }
-  }
-}
-
-///|
-/// Check if a key exists in the treap
-fn Treap::contains(self : Treap, key : Int64) -> Bool {
-  find_node(self.root, key) is Some(_)
-}
-
-///|
-fn find_node(node : TreapNode?, key : Int64) -> TreapNode? {
-  match node {
-    None => None
-    Some(n) =>
-      if key < n.key {
-        find_node(n.left, key)
-      } else if key > n.key {
-        find_node(n.right, key)
-      } else {
-        Some(n)
-      }
-  }
-}
-
-///|
-/// Get the k-th smallest element (0-indexed)
-fn Treap::kth_element(self : Treap, k : Int) -> Int64? {
-  kth_helper(self.root, k)
-}
-
-///|
-fn kth_helper(node : TreapNode?, k : Int) -> Int64? {
-  match node {
-    None => None
-    Some(n) => {
-      let left_size = get_size(n.left)
-      if k < left_size {
-        kth_helper(n.left, k)
-      } else if k == left_size {
-        Some(n.key)
-      } else {
-        kth_helper(n.right, k - left_size - 1)
-      }
-    }
-  }
-}
-
-///|
-/// Count elements less than key
-fn Treap::count_less_than(self : Treap, key : Int64) -> Int {
-  count_less_helper(self.root, key)
-}
-
-///|
-fn count_less_helper(node : TreapNode?, key : Int64) -> Int {
-  match node {
-    None => 0
-    Some(n) =>
-      if n.key < key {
-        1 + get_size(n.left) + count_less_helper(n.right, key)
-      } else {
-        count_less_helper(n.left, key)
-      }
-  }
-}
-
-///|
-fn Treap::size(self : Treap) -> Int {
-  get_size(self.root)
-}
-
-///|
-/// Get minimum element
-fn Treap::min(self : Treap) -> Int64? {
-  min_helper(self.root)
-}
-
-///|
-fn min_helper(node : TreapNode?) -> Int64? {
-  match node {
-    None => None
-    Some(n) =>
-      match n.left {
-        None => Some(n.key)
-        Some(_) => min_helper(n.left)
-      }
-  }
-}
-
-///|
-/// Get maximum element
-fn Treap::max(self : Treap) -> Int64? {
-  max_helper(self.root)
-}
-
-///|
-fn max_helper(node : TreapNode?) -> Int64? {
-  match node {
-    None => None
-    Some(n) =>
-      match n.right {
-        None => Some(n.key)
-        Some(_) => max_helper(n.right)
-      }
-  }
-}
-
-///|
-/// Get elements in sorted order
-fn Treap::to_array(self : Treap) -> Array[Int64] {
-  let result : Array[Int64] = []
-  inorder(self.root, result)
-  result
-}
-
-///|
-fn inorder(node : TreapNode?, result : Array[Int64]) -> Unit {
-  match node {
-    None => ()
-    Some(n) => {
-      inorder(n.left, result)
-      result.push(n.key)
-      inorder(n.right, result)
     }
   }
 }
