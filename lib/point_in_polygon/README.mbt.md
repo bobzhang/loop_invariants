@@ -8,6 +8,12 @@ polygon using the classic **ray casting** method with collinearity checks.
 - **Time**: O(n)
 - **Space**: O(1)
 
+## Core Idea
+
+- Cast a ray and **count edge crossings**; odd means inside, even means outside.
+- Treat **collinear edges** as boundary hits before toggling.
+- Use consistent half-open rules to avoid double-counting vertices.
+
 ## Algorithm
 
 Cast a horizontal ray to the right from the query point:
