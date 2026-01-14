@@ -4,20 +4,20 @@
 // ============================================================================
 
 ///|
-pub enum MinStack {
+pub enum MinStack[T] {
   Nil
-  Cons(value~ : Int, min~ : Int, tail~ : MinStack)
+  Cons(value~ : T, min~ : T, tail~ : MinStack[T])
 } derive(Show)
 
 ///|
 /// Create an empty min-stack.
-pub fn empty() -> MinStack {
+pub fn[T] empty() -> MinStack[T] {
   MinStack::Nil
 }
 
 ///|
 /// Return the number of elements in the stack.
-pub fn size(s : MinStack) -> Int {
+pub fn[T] size(s : MinStack[T]) -> Int {
   match s {
     MinStack::Nil => 0
     MinStack::Cons(value=_, min=_, tail~) => 1 + size(tail)
@@ -26,7 +26,7 @@ pub fn size(s : MinStack) -> Int {
 
 ///|
 /// Return the minimum value, or None if empty.
-pub fn min_value(s : MinStack) -> Int? {
+pub fn[T] min_value(s : MinStack[T]) -> T? {
   match s {
     MinStack::Nil => None
     MinStack::Cons(value=_, min~, tail=_) => Some(min)
@@ -35,7 +35,7 @@ pub fn min_value(s : MinStack) -> Int? {
 
 ///|
 /// Push a value and return the new stack with updated minimum.
-pub fn push(s : MinStack, value : Int) -> MinStack {
+pub fn[T : Compare] push(s : MinStack[T], value : T) -> MinStack[T] {
   let new_min = match s {
     MinStack::Nil => value
     MinStack::Cons(value=_, min~, tail=_) =>
@@ -50,7 +50,7 @@ pub fn push(s : MinStack, value : Int) -> MinStack {
 
 ///|
 /// Pop the top value and return (value, rest), or None if empty.
-pub fn pop(s : MinStack) -> (Int, MinStack)? {
+pub fn[T] pop(s : MinStack[T]) -> (T, MinStack[T])? {
   match s {
     MinStack::Nil => None
     MinStack::Cons(value~, min=_, tail~) => Some((value, tail))
@@ -58,7 +58,7 @@ pub fn pop(s : MinStack) -> (Int, MinStack)? {
 }
 
 ///|
-fn min_suffix(arr : ArrayView[Int], i : Int) -> Int? {
+fn[T : Compare] min_suffix(arr : ArrayView[T], i : Int) -> T? {
   if i >= arr.length() {
     None
   } else {
@@ -73,7 +73,7 @@ fn min_suffix(arr : ArrayView[Int], i : Int) -> Int? {
 ///|
 /// Build a min-stack that preserves array order (top is arr[0]).
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> MinStack {
+pub fn[T : Compare] from_array(arr : ArrayView[T]) -> MinStack[T] {
   let n = arr.length()
   for i = n, st = MinStack::Nil {
     if i <= 0 {

@@ -2,6 +2,8 @@
 
 Stack that tracks the minimum value of each suffix.
 
+This min-stack is generic over the value type: `T : Compare`.
+
 ## Core Idea
 
 Each node stores both its value and the minimum of the stack below it. This
@@ -12,7 +14,7 @@ makes `min_value` O(1) while keeping persistence through shared nodes.
 ```mbt check
 ///|
 test "persistent min stack" {
-  let s0 = @challenge_persistent_stack_min.empty()
+  let s0 : @challenge_persistent_stack_min.MinStack[Int] = @challenge_persistent_stack_min.empty()
   let s1 = @challenge_persistent_stack_min.push(s0, 5)
   let s2 = @challenge_persistent_stack_min.push(s1, 3)
   let s3 = @challenge_persistent_stack_min.push(s2, 7)
