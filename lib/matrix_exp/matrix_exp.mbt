@@ -181,17 +181,13 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
     return self // Cannot exponentiate non-square matrix
   }
   let n = self.rows
-  let mut result = Matrix::identity(n)
-  let mut base = self.copy()
 
-  // Binary exponentiation: result * base^exp = original M^k (invariant)
-  // I: result=I, base=M. M: If e odd, result *= base. base = base². e /= 2.
-  // T: e eventually becomes 0.
-  for e = exp; e > 0L; e = e / 2L {
-    if e % 2L == 1L {
-      result = result.multiply(base)
-    }
-    base = base.multiply(base)
+  // Binary exponentiation: result * base^e = M^exp (loop invariant)
+  for e = exp, result = Matrix::identity(n), base = self.copy(); e > 0L; {
+    let new_result = if e % 2L == 1L { result.multiply(base) } else { result }
+    continue e / 2L, new_result, base.multiply(base)
+  } else {
+    result
   } where {
     invariant: e >= 0L,
     reasoning: (
@@ -202,10 +198,9 @@ fn Matrix::power(self : Matrix, exp : Int64) -> Matrix {
       #|MAINTENANCE:
       #|If e is odd, multiply result by base; square base; halve e.
       #|TERMINATION:
-      #|At e = 0, result equals M^exp.
+      #|At e = 0, result equals M^exp (returned via else branch).
     ),
   }
-  result
 }
 
 ///|

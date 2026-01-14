@@ -59,11 +59,15 @@ pub fn XorBasis::insert(self : XorBasis, value : Int64) -> Bool {
 ///|
 /// Check if a value can be represented by the current basis.
 pub fn XorBasis::can_represent(self : XorBasis, value : Int64) -> Bool {
-  let mut reduced = value
-  for bit = MAX_BITS; bit >= 0; bit = bit - 1 {
-    if self.basis[bit] != 0L && ((reduced >> bit) & 1L) != 0L {
-      reduced = reduced ^ self.basis[bit]
+  for bit = MAX_BITS, reduced = value; bit >= 0; {
+    let new_reduced = if self.basis[bit] != 0L && ((reduced >> bit) & 1L) != 0L {
+      reduced ^ self.basis[bit]
+    } else {
+      reduced
     }
+    continue bit - 1, new_reduced
+  } else {
+    reduced == 0L
   } where {
     invariant: bit >= -1 && bit <= MAX_BITS,
     reasoning: (
@@ -76,18 +80,16 @@ pub fn XorBasis::can_represent(self : XorBasis, value : Int64) -> Bool {
       #|At bit = -1, reduced is fully eliminated; reduced == 0 iff representable.
     ),
   }
-  reduced == 0L
 }
 
 ///|
 /// Maximize (value xor y) over all y representable by the basis.
 pub fn XorBasis::max_xor(self : XorBasis, value : Int64) -> Int64 {
-  let mut x = value
-  for bit = MAX_BITS; bit >= 0; bit = bit - 1 {
+  for bit = MAX_BITS, x = value; bit >= 0; {
     let candidate = x ^ self.basis[bit]
-    if candidate > x {
-      x = candidate
-    }
+    continue bit - 1, if candidate > x { candidate } else { x }
+  } else {
+    x
   } where {
     invariant: bit >= -1 && bit <= MAX_BITS,
     reasoning: (
@@ -97,10 +99,9 @@ pub fn XorBasis::max_xor(self : XorBasis, value : Int64) -> Int64 {
       #|MAINTENANCE:
       #|If toggling basis[bit] increases x, take it to improve higher bits.
       #|TERMINATION:
-      #|At bit = -1, x is the maximum achievable xor value.
+      #|At bit = -1, x is the maximum achievable xor value (returned via else).
     ),
   }
-  x
 }
 
 ///|
