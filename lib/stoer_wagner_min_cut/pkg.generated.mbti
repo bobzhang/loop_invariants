@@ -11,6 +11,7 @@ pub(all) struct MinCutResult {
   weight : Int64
   cut : Array[Int]
 }
+pub impl Show for MinCutResult
 
 // Type aliases
 

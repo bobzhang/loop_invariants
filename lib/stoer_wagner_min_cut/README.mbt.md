@@ -142,11 +142,7 @@ test "stoer wagner disconnected" {
 ```mbt check
 ///|
 test "stoer wagner weighted" {
-  let edges : Array[(Int, Int, Int64)] = [
-    (0, 1, 5L),
-    (1, 2, 3L),
-    (0, 2, 2L),
-  ]
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 5L), (1, 2, 3L), (0, 2, 2L)]
   let result = @stoer_wagner_min_cut.stoer_wagner_min_cut(3, edges[:]).unwrap()
   inspect(result.weight, content="5")
 }
