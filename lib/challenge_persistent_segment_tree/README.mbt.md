@@ -2,6 +2,12 @@
 
 Path-copying segment tree with point updates and range sum queries.
 
+## Core Idea
+
+- Each update **copies the path** from root to leaf and shares the rest.
+- Internal nodes store **segment sums**; updates recompute along the path.
+- Old versions remain valid for time-travel queries.
+
 ## Example
 
 ```mbt check
