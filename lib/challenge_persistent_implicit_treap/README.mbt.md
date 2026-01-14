@@ -47,3 +47,4 @@ test "persistent implicit treap insert" {
 
 - Expected time is O(log n) per operation.
 - Old versions remain available.
+- Values are generic and use `Hash` to derive priorities.

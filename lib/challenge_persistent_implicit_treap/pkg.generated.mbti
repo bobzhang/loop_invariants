@@ -2,30 +2,30 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_implicit_treap"
 
 // Values
-pub fn empty() -> Treap
+pub fn[T] empty() -> Treap[T]
 
-pub fn from_array(ArrayView[Int]) -> Treap
+pub fn[T : Hash] from_array(ArrayView[T]) -> Treap[T]
 
-pub fn get(Treap, Int) -> Int?
+pub fn[T] get(Treap[T], Int) -> T?
 
-pub fn insert_at(Treap, Int, Int) -> Treap
+pub fn[T : Hash] insert_at(Treap[T], Int, T) -> Treap[T]
 
-pub fn merge(Treap, Treap) -> Treap
+pub fn[T] merge(Treap[T], Treap[T]) -> Treap[T]
 
-pub fn size(Treap) -> Int
+pub fn[T] size(Treap[T]) -> Int
 
-pub fn split(Treap, Int) -> (Treap, Treap)
+pub fn[T] split(Treap[T], Int) -> (Treap[T], Treap[T])
 
-pub fn to_array(Treap) -> Array[Int]
+pub fn[T] to_array(Treap[T]) -> Array[T]
 
 // Errors
 
 // Types and methods
-pub enum Treap {
+pub enum Treap[T] {
   Empty
-  Node(value~ : Int, priority~ : Int, size~ : Int, left~ : Treap, right~ : Treap)
+  Node(value~ : T, priority~ : Int, size~ : Int, left~ : Treap[T], right~ : Treap[T])
 }
-pub impl Show for Treap
+pub impl[T : Show] Show for Treap[T]
 
 // Type aliases
 

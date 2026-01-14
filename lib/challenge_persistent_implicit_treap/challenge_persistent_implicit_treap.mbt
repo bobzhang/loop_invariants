@@ -4,20 +4,20 @@
 // ============================================================================
 
 ///|
-pub enum Treap {
+pub enum Treap[T] {
   Empty
   Node(
-    value~ : Int,
+    value~ : T,
     priority~ : Int,
     size~ : Int,
-    left~ : Treap,
-    right~ : Treap
+    left~ : Treap[T],
+    right~ : Treap[T]
   )
 } derive(Show)
 
 ///|
 /// Return the number of elements in the treap.
-pub fn size(t : Treap) -> Int {
+pub fn[T] size(t : Treap[T]) -> Int {
   match t {
     Treap::Empty => 0
     Treap::Node(value=_, priority=_, size~, left=_, right=_) => size
@@ -25,7 +25,7 @@ pub fn size(t : Treap) -> Int {
 }
 
 ///|
-fn treap_valid(t : Treap) -> Bool {
+fn[T] treap_valid(t : Treap[T]) -> Bool {
   match t {
     Treap::Empty => true
     Treap::Node(value=_, priority~, size=sz, left~, right~) => {
@@ -46,25 +46,30 @@ fn treap_valid(t : Treap) -> Bool {
 }
 
 ///|
-fn priority_for(value : Int, salt : Int) -> Int {
-  value * 1103515245 + salt * 12345
+fn[T : Hash] priority_for(value : T, salt : Int) -> Int {
+  value.hash() + salt * 12345
 }
 
 ///|
-fn make_node(value : Int, priority : Int, left : Treap, right : Treap) -> Treap {
+fn[T] make_node(
+  value : T,
+  priority : Int,
+  left : Treap[T],
+  right : Treap[T],
+) -> Treap[T] {
   let sz = 1 + size(left) + size(right)
   Treap::Node(value~, priority~, size=sz, left~, right~)
 }
 
 ///|
 /// Create an empty implicit treap.
-pub fn empty() -> Treap {
+pub fn[T] empty() -> Treap[T] {
   Treap::Empty
 }
 
 ///|
 /// Split by position k into (prefix, suffix).
-pub fn split(t : Treap, k : Int) -> (Treap, Treap) {
+pub fn[T] split(t : Treap[T], k : Int) -> (Treap[T], Treap[T]) {
   match t {
     Treap::Empty => (Treap::Empty, Treap::Empty)
     Treap::Node(value=v, priority=p, size=_, left=l, right=r) => {
@@ -82,7 +87,7 @@ pub fn split(t : Treap, k : Int) -> (Treap, Treap) {
 
 ///|
 /// Merge two treaps assuming all elements in a precede b.
-pub fn merge(a : Treap, b : Treap) -> Treap {
+pub fn[T] merge(a : Treap[T], b : Treap[T]) -> Treap[T] {
   match (a, b) {
     (Treap::Empty, _) => b
     (_, Treap::Empty) => a
@@ -100,7 +105,7 @@ pub fn merge(a : Treap, b : Treap) -> Treap {
 
 ///|
 /// Insert a value at index idx and return the new treap.
-pub fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
+pub fn[T : Hash] insert_at(t : Treap[T], idx : Int, value : T) -> Treap[T] {
   let (l, r) = split(t, idx)
   let node = make_node(
     value,
@@ -113,7 +118,7 @@ pub fn insert_at(t : Treap, idx : Int, value : Int) -> Treap {
 
 ///|
 /// Get the value at index idx, or None if out of range.
-pub fn get(t : Treap, idx : Int) -> Int? {
+pub fn[T] get(t : Treap[T], idx : Int) -> T? {
   match t {
     Treap::Empty => None
     Treap::Node(value=v, priority=_, size=_, left=l, right=r) => {
@@ -131,7 +136,7 @@ pub fn get(t : Treap, idx : Int) -> Int? {
 
 ///|
 /// Convert the treap into an array in order.
-pub fn to_array(t : Treap) -> Array[Int] {
+pub fn[T] to_array(t : Treap[T]) -> Array[T] {
   match t {
     Treap::Empty => []
     Treap::Node(value=v, priority=_, size=_, left=l, right=r) =>
@@ -142,7 +147,7 @@ pub fn to_array(t : Treap) -> Array[Int] {
 ///|
 /// Build a treap by appending elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Treap {
+pub fn[T : Hash] from_array(arr : ArrayView[T]) -> Treap[T] {
   let n = arr.length()
   for i = 0, tree = Treap::Empty {
     if i >= n {
@@ -167,7 +172,7 @@ pub fn from_array(arr : ArrayView[Int]) -> Treap {
 
 ///|
 test "persistent_implicit_treap" {
-  let t0 = Treap::Empty
+  let t0 : Treap[Int] = Treap::Empty
   let t1 = insert_at(t0, 0, 10)
   let t2 = insert_at(t1, 1, 20)
   let t3 = insert_at(t2, 1, 15)
