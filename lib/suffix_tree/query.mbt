@@ -64,9 +64,8 @@ pub fn SuffixTree::contains(self : SuffixTree, pattern : String) -> Bool {
   // Walk down tree matching pattern
   while i < p.length() {
     // Find edge starting with p[i]
-    let edge_idx = find_edge(self.nodes, self.text, node, p[i])
-    if edge_idx < 0 {
-      return false // No matching edge - pattern not found
+    guard find_edge(self.nodes, self.text, node, p[i]) is Some(edge_idx) else { // No matching edge - pattern not found
+      return false
     }
 
     // Match pattern against edge label
@@ -145,9 +144,8 @@ pub fn SuffixTree::count_occurrences(
   let mut node = 0
   let mut i = 0
   while i < p.length() {
-    let edge_idx = find_edge(self.nodes, self.text, node, p[i])
-    if edge_idx < 0 {
-      return 0 // Pattern not found
+    guard find_edge(self.nodes, self.text, node, p[i]) is Some(edge_idx) else { // Pattern not found
+      return 0
     }
     let edge = self.nodes[node].edges[edge_idx]
     let mut k = edge.start
