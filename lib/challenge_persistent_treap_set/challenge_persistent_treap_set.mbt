@@ -4,14 +4,20 @@
 // ============================================================================
 
 ///|
-pub enum Treap {
+pub enum Treap[T] {
   Empty
-  Node(key~ : Int, priority~ : Int, size~ : Int, left~ : Treap, right~ : Treap)
+  Node(
+    key~ : T,
+    priority~ : Int,
+    size~ : Int,
+    left~ : Treap[T],
+    right~ : Treap[T]
+  )
 } derive(Show)
 
 ///|
 /// Return the number of keys in the treap.
-pub fn size(t : Treap) -> Int {
+pub fn[T] size(t : Treap[T]) -> Int {
   match t {
     Treap::Empty => 0
     Treap::Node(key=_, priority=_, size~, left=_, right=_) => size
@@ -19,7 +25,7 @@ pub fn size(t : Treap) -> Int {
 }
 
 ///|
-fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
   let lo_ok = match lo {
     None => true
     Some(l) => value > l
@@ -32,7 +38,7 @@ fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn treap_valid(t : Treap, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] treap_valid(t : Treap[T], lo : T?, hi : T?) -> Bool {
   match t {
     Treap::Empty => true
     Treap::Node(key~, priority~, size=sz, left~, right~) => {
@@ -57,25 +63,30 @@ fn treap_valid(t : Treap, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn priority_for(key : Int) -> Int {
-  key * 1103515245 + 12345
+fn[T : Hash] priority_for(key : T) -> Int {
+  key.hash()
 }
 
 ///|
-fn make_node(key : Int, priority : Int, left : Treap, right : Treap) -> Treap {
+fn[T] make_node(
+  key : T,
+  priority : Int,
+  left : Treap[T],
+  right : Treap[T],
+) -> Treap[T] {
   let sz = 1 + size(left) + size(right)
   Treap::Node(key~, priority~, size=sz, left~, right~)
 }
 
 ///|
 /// Create an empty treap.
-pub fn empty() -> Treap {
+pub fn[T] empty() -> Treap[T] {
   Treap::Empty
 }
 
 ///|
 /// Split the treap into (< key) and (>= key).
-pub fn split(t : Treap, key : Int) -> (Treap, Treap) {
+pub fn[T : Compare] split(t : Treap[T], key : T) -> (Treap[T], Treap[T]) {
   match t {
     Treap::Empty => (Treap::Empty, Treap::Empty)
     Treap::Node(key=k, priority=p, size=_, left=l, right=r) =>
@@ -91,7 +102,7 @@ pub fn split(t : Treap, key : Int) -> (Treap, Treap) {
 
 ///|
 /// Merge two treaps assuming all keys in a are < keys in b.
-pub fn merge(a : Treap, b : Treap) -> Treap {
+pub fn[T] merge(a : Treap[T], b : Treap[T]) -> Treap[T] {
   match (a, b) {
     (Treap::Empty, _) => b
     (_, Treap::Empty) => a
@@ -109,7 +120,7 @@ pub fn merge(a : Treap, b : Treap) -> Treap {
 
 ///|
 /// Check whether key exists in the treap.
-pub fn contains(t : Treap, key : Int) -> Bool {
+pub fn[T : Compare] contains(t : Treap[T], key : T) -> Bool {
   match t {
     Treap::Empty => false
     Treap::Node(key=k, priority=_, size=_, left=l, right=r) =>
@@ -125,7 +136,7 @@ pub fn contains(t : Treap, key : Int) -> Bool {
 
 ///|
 /// Insert key and return the new treap (no duplicates).
-pub fn insert(t : Treap, key : Int) -> Treap {
+pub fn[T : Compare + Hash] insert(t : Treap[T], key : T) -> Treap[T] {
   if contains(t, key) {
     t
   } else {
@@ -138,7 +149,7 @@ pub fn insert(t : Treap, key : Int) -> Treap {
 ///|
 /// Build a treap by inserting elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Treap {
+pub fn[T : Compare + Hash] from_array(arr : ArrayView[T]) -> Treap[T] {
   let n = arr.length()
   for i = 0, tree = Treap::Empty {
     if i >= n {

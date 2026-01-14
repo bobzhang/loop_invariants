@@ -38,3 +38,4 @@ test "persistent treap set from array" {
 
 - Each insert returns a new version.
 - Expected time per operation is O(log n).
+- Keys are generic: operations require `T : Compare`, and priorities use `T : Hash`.
