@@ -15,6 +15,15 @@ pub(all) struct SCCResult {
   scc_sizes : Array[Int]
   scc_adj : Array[Array[Int]]
 }
+pub impl Show for SCCResult
+
+pub(all) struct TwoSAT {
+  n : Int
+  adj : Array[Array[Int]]
+}
+pub fn TwoSAT::add_clause(Self, Int, Bool, Int, Bool) -> Unit
+pub fn TwoSAT::new(Int) -> Self
+pub fn TwoSAT::solve(Self) -> Array[Bool]?
 
 // Type aliases
 
