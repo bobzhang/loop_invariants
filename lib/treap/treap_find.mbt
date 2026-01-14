@@ -1,12 +1,12 @@
 ///|
 /// Check if a key exists in the treap.
-pub fn Treap::contains(self : Treap, key : Int64) -> Bool {
+pub fn[T : Compare] Treap::contains(self : Treap[T], key : T) -> Bool {
   find_node(self.root, key) is Some(_)
 }
 
 ///|
 /// Find a node by key using the BST property.
-fn find_node(node : TreapNode?, key : Int64) -> TreapNode? {
+fn[T : Compare] find_node(node : TreapNode[T]?, key : T) -> TreapNode[T]? {
   loop node {
     None => None
     Some(n) =>

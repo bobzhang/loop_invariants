@@ -9,6 +9,8 @@ This randomization ensures **expected O(log n)** height without complex rebalanc
 - **Order statistics**: O(log n)
 - **Space**: O(n)
 
+Treap is generic over the key type: `Treap[T]` where `T : Compare`.
+
 ## Core Idea
 
 - Maintain **BST order** by key and **heap order** by random priority.
@@ -36,7 +38,7 @@ The random priorities keep the tree balanced **with high probability**.
 ```mbt check
 ///|
 test "treap empty" {
-  let t = @treap.Treap::new()
+  let t : @treap.Treap[Int64] = @treap.Treap::new()
   inspect(t.size(), content="0")
   inspect(t.min(), content="None")
   inspect(t.max(), content="None")

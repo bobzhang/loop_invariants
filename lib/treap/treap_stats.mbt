@@ -1,12 +1,12 @@
 ///|
 /// Count elements strictly less than key.
-pub fn Treap::count_less_than(self : Treap, key : Int64) -> Int {
+pub fn[T : Compare] Treap::count_less_than(self : Treap[T], key : T) -> Int {
   count_less_helper(self.root, key)
 }
 
 ///|
 /// Accumulate counts by skipping whole subtrees when possible.
-fn count_less_helper(node : TreapNode?, key : Int64) -> Int {
+fn[T : Compare] count_less_helper(node : TreapNode[T]?, key : T) -> Int {
   loop (node, 0) {
     (None, acc) => acc
     (Some(n), acc) =>
@@ -20,19 +20,19 @@ fn count_less_helper(node : TreapNode?, key : Int64) -> Int {
 
 ///|
 /// Total number of keys in the treap.
-pub fn Treap::size(self : Treap) -> Int {
+pub fn[T] Treap::size(self : Treap[T]) -> Int {
   get_size(self.root)
 }
 
 ///|
 /// Get the minimum key in the treap.
-pub fn Treap::min(self : Treap) -> Int64? {
+pub fn[T] Treap::min(self : Treap[T]) -> T? {
   min_helper(self.root)
 }
 
 ///|
 /// Descend left until the smallest key is found.
-fn min_helper(node : TreapNode?) -> Int64? {
+fn[T] min_helper(node : TreapNode[T]?) -> T? {
   loop node {
     None => None
     Some(n) =>
@@ -45,13 +45,13 @@ fn min_helper(node : TreapNode?) -> Int64? {
 
 ///|
 /// Get the maximum key in the treap.
-pub fn Treap::max(self : Treap) -> Int64? {
+pub fn[T] Treap::max(self : Treap[T]) -> T? {
   max_helper(self.root)
 }
 
 ///|
 /// Descend right until the largest key is found.
-fn max_helper(node : TreapNode?) -> Int64? {
+fn[T] max_helper(node : TreapNode[T]?) -> T? {
   loop node {
     None => None
     Some(n) =>
@@ -64,15 +64,15 @@ fn max_helper(node : TreapNode?) -> Int64? {
 
 ///|
 /// Get elements in sorted order.
-pub fn Treap::to_array(self : Treap) -> Array[Int64] {
-  let result : Array[Int64] = []
+pub fn[T] Treap::to_array(self : Treap[T]) -> Array[T] {
+  let result : Array[T] = []
   inorder(self.root, result)
   result
 }
 
 ///|
 /// Inorder traversal to collect sorted keys.
-fn inorder(node : TreapNode?, result : Array[Int64]) -> Unit {
+fn[T] inorder(node : TreapNode[T]?, result : Array[T]) -> Unit {
   match node {
     None => ()
     Some(n) => {

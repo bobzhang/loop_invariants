@@ -38,21 +38,21 @@
 
 ///|
 /// Node in the treap (BST key + heap priority).
-pub struct TreapNode {
-  key : Int64
+pub struct TreapNode[T] {
+  key : T
   priority : Int // Random priority
-  mut left : TreapNode?
-  mut right : TreapNode?
+  mut left : TreapNode[T]?
+  mut right : TreapNode[T]?
   mut size : Int // Subtree size for order statistics
 }
 
 ///|
-fn TreapNode::new(key : Int64, priority : Int) -> TreapNode {
+fn[T] TreapNode::new(key : T, priority : Int) -> TreapNode[T] {
   { key, priority, left: None, right: None, size: 1 }
 }
 
 ///|
-fn get_size(node : TreapNode?) -> Int {
+fn[T] get_size(node : TreapNode[T]?) -> Int {
   match node {
     None => 0
     Some(n) => n.size
@@ -60,14 +60,14 @@ fn get_size(node : TreapNode?) -> Int {
 }
 
 ///|
-fn update_size(node : TreapNode) -> Unit {
+fn[T] update_size(node : TreapNode[T]) -> Unit {
   node.size = 1 + get_size(node.left) + get_size(node.right)
 }
 
 ///|
-/// Randomized BST that supports order statistics.
-pub struct Treap {
-  mut root : TreapNode?
+/// Randomized BST that supports order statistics (keys must be comparable).
+pub struct Treap[T] {
+  mut root : TreapNode[T]?
   mut rng_state : Int // Simple LCG random number generator
 }
 
@@ -84,13 +84,16 @@ fn next_random(state : Int) -> (Int, Int) {
 
 ///|
 /// Create an empty treap with a deterministic RNG seed.
-pub fn Treap::new() -> Treap {
+pub fn[T] Treap::new() -> Treap[T] {
   { root: None, rng_state: 42 }
 }
 
 ///|
 /// Split tree into (keys < key, keys >= key)
-fn split(node : TreapNode?, key : Int64) -> (TreapNode?, TreapNode?) {
+fn[T : Compare] split(
+  node : TreapNode[T]?,
+  key : T,
+) -> (TreapNode[T]?, TreapNode[T]?) {
   match node {
     None => (None, None)
     Some(n) =>
@@ -110,7 +113,7 @@ fn split(node : TreapNode?, key : Int64) -> (TreapNode?, TreapNode?) {
 
 ///|
 /// Merge two treaps where all keys in l < all keys in r
-fn merge(l : TreapNode?, r : TreapNode?) -> TreapNode? {
+fn[T] merge(l : TreapNode[T]?, r : TreapNode[T]?) -> TreapNode[T]? {
   match (l, r) {
     (None, r) => r
     (l, None) => l
@@ -129,7 +132,7 @@ fn merge(l : TreapNode?, r : TreapNode?) -> TreapNode? {
 
 ///|
 /// Insert a key into the treap.
-pub fn Treap::insert(self : Treap, key : Int64) -> Unit {
+pub fn[T : Compare] Treap::insert(self : Treap[T], key : T) -> Unit {
   let (next_state, priority) = next_random(self.rng_state)
   self.rng_state = next_state
   let new_node = TreapNode::new(key, priority)
@@ -139,21 +142,37 @@ pub fn Treap::insert(self : Treap, key : Int64) -> Unit {
 
 ///|
 /// Delete a key from the treap (only one occurrence if duplicates exist).
-pub fn Treap::delete(self : Treap, key : Int64) -> Bool {
-  let (l, r) = split(self.root, key)
-  let (mid, r2) = split(r, key + 1L)
-  match mid {
-    None => {
-      self.root = merge(l, r2)
-      false
-    }
-    Some(mid_node) => {
-      // Delete only one occurrence: keep either left or right subtree of mid
-      // mid_node contains all elements with this key
-      // We keep all children (which are also key-duplicates) but remove the root
-      let remaining = merge(mid_node.left, mid_node.right)
-      self.root = merge(merge(l, remaining), r2)
-      true
-    }
+pub fn[T : Compare] Treap::delete(self : Treap[T], key : T) -> Bool {
+  let (next_root, deleted) = delete_node(self.root, key)
+  self.root = next_root
+  deleted
+}
+
+///|
+/// Remove a single node with matching key and return (new_root, deleted).
+fn[T : Compare] delete_node(
+  node : TreapNode[T]?,
+  key : T,
+) -> (TreapNode[T]?, Bool) {
+  match node {
+    None => (None, false)
+    Some(n) =>
+      if key < n.key {
+        let (new_left, deleted) = delete_node(n.left, key)
+        n.left = new_left
+        if deleted {
+          update_size(n)
+        }
+        (Some(n), deleted)
+      } else if key > n.key {
+        let (new_right, deleted) = delete_node(n.right, key)
+        n.right = new_right
+        if deleted {
+          update_size(n)
+        }
+        (Some(n), deleted)
+      } else {
+        (merge(n.left, n.right), true)
+      }
   }
 }

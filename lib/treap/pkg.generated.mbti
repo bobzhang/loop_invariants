@@ -6,26 +6,26 @@ package "bobzhang/loop_invariants/lib/treap"
 // Errors
 
 // Types and methods
-pub struct Treap {
-  mut root : TreapNode?
+pub struct Treap[T] {
+  mut root : TreapNode[T]?
   mut rng_state : Int
 }
-pub fn Treap::contains(Self, Int64) -> Bool
-pub fn Treap::count_less_than(Self, Int64) -> Int
-pub fn Treap::delete(Self, Int64) -> Bool
-pub fn Treap::insert(Self, Int64) -> Unit
-pub fn Treap::kth_element(Self, Int) -> Int64?
-pub fn Treap::max(Self) -> Int64?
-pub fn Treap::min(Self) -> Int64?
-pub fn Treap::new() -> Self
-pub fn Treap::size(Self) -> Int
-pub fn Treap::to_array(Self) -> Array[Int64]
+pub fn[T : Compare] Treap::contains(Self[T], T) -> Bool
+pub fn[T : Compare] Treap::count_less_than(Self[T], T) -> Int
+pub fn[T : Compare] Treap::delete(Self[T], T) -> Bool
+pub fn[T : Compare] Treap::insert(Self[T], T) -> Unit
+pub fn[T] Treap::kth_element(Self[T], Int) -> T?
+pub fn[T] Treap::max(Self[T]) -> T?
+pub fn[T] Treap::min(Self[T]) -> T?
+pub fn[T] Treap::new() -> Self[T]
+pub fn[T] Treap::size(Self[T]) -> Int
+pub fn[T] Treap::to_array(Self[T]) -> Array[T]
 
-pub struct TreapNode {
-  key : Int64
+pub struct TreapNode[T] {
+  key : T
   priority : Int
-  mut left : TreapNode?
-  mut right : TreapNode?
+  mut left : TreapNode[T]?
+  mut right : TreapNode[T]?
   mut size : Int
 }
 
