@@ -4,13 +4,13 @@
 // ============================================================================
 
 ///|
-pub enum Heap {
+pub enum Heap[T] {
   Empty
-  Node(value~ : Int, left~ : Heap, right~ : Heap)
+  Node(value~ : T, left~ : Heap[T], right~ : Heap[T])
 } derive(Show)
 
 ///|
-fn heap_size(h : Heap) -> Int {
+fn[T] heap_size(h : Heap[T]) -> Int {
   match h {
     Heap::Empty => 0
     Heap::Node(value=_, left~, right~) => 1 + heap_size(left) + heap_size(right)
@@ -18,7 +18,7 @@ fn heap_size(h : Heap) -> Int {
 }
 
 ///|
-fn heap_valid(h : Heap) -> Bool {
+fn[T : Compare] heap_valid(h : Heap[T]) -> Bool {
   match h {
     Heap::Empty => true
     Heap::Node(value~, left~, right~) => {
@@ -37,19 +37,19 @@ fn heap_valid(h : Heap) -> Bool {
 
 ///|
 /// Create an empty skew heap.
-pub fn empty() -> Heap {
+pub fn[T] empty() -> Heap[T] {
   Heap::Empty
 }
 
 ///|
 /// Return number of elements in the heap.
-pub fn size(h : Heap) -> Int {
+pub fn[T] size(h : Heap[T]) -> Int {
   heap_size(h)
 }
 
 ///|
 /// Merge two heaps and return the result.
-pub fn merge(a : Heap, b : Heap) -> Heap {
+pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
   match (a, b) {
     (Heap::Empty, _) => b
     (_, Heap::Empty) => a
@@ -68,19 +68,19 @@ pub fn merge(a : Heap, b : Heap) -> Heap {
 }
 
 ///|
-fn singleton(value : Int) -> Heap {
+fn[T] singleton(value : T) -> Heap[T] {
   Heap::Node(value~, left=Heap::Empty, right=Heap::Empty)
 }
 
 ///|
 /// Insert a value and return the new heap.
-pub fn insert(h : Heap, value : Int) -> Heap {
+pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
   merge(h, singleton(value))
 }
 
 ///|
 /// Return the minimum value, or None if empty.
-pub fn find_min(h : Heap) -> Int? {
+pub fn[T] find_min(h : Heap[T]) -> T? {
   match h {
     Heap::Empty => None
     Heap::Node(value~, left=_, right=_) => Some(value)
@@ -89,7 +89,7 @@ pub fn find_min(h : Heap) -> Int? {
 
 ///|
 /// Delete the minimum element and return the new heap.
-pub fn delete_min(h : Heap) -> Heap? {
+pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
   match h {
     Heap::Empty => None
     Heap::Node(value=_, left~, right~) => Some(merge(left, right))
@@ -99,7 +99,7 @@ pub fn delete_min(h : Heap) -> Heap? {
 ///|
 /// Build a skew heap by inserting elements in sequence.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Heap {
+pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Heap[T] {
   let n = arr.length()
   for i = 0, heap = Heap::Empty {
     if i >= n {

@@ -41,3 +41,4 @@ test "persistent skew heap from array" {
 
 - Expected time is O(log n) amortized.
 - `delete_min` returns None on empty heaps.
+- The heap is generic: operations that compare keys require `T : Compare`.
