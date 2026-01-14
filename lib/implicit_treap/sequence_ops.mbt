@@ -164,21 +164,8 @@ pub fn ImplicitTreap::set(self : ImplicitTreap, pos : Int, val : Int64) -> Unit 
 /// Each element is inserted at the end in sequence.
 pub fn ImplicitTreap::from_array(arr : Array[Int64]) -> ImplicitTreap {
   let treap = ImplicitTreap::new()
-  for i = 0; i < arr.length(); i = i + 1 {
-    treap.insert(i, arr[i])
-  } where {
-    invariant: i >= 0 && i <= arr.length(),
-    reasoning: (
-      #|INVARIANT (treap build):
-      #|  Elements arr[0..i) have been inserted at positions [0..i).
-      #|  The treap correctly represents the sequence arr[0..i).
-      #|
-      #|MAINTENANCE:
-      #|  Insert arr[i] at position i, extending the sequence.
-      #|
-      #|TERMINATION:
-      #|  At i = arr.length(), treap represents the full array.
-    ),
+  for i, value in arr {
+    treap.insert(i, value)
   }
   treap
 }

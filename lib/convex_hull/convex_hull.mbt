@@ -250,30 +250,18 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
   let hull : Array[Point] = [pivot]
 
   // INVARIANT: hull forms a convex polygon with counterclockwise orientation
-  for i = 0; i < rest.length(); i = i + 1 {
+  for point in rest {
     // Remove points that would make a right turn
     while hull.length() >= 2 {
       let top = hull[hull.length() - 1]
       let second = hull[hull.length() - 2]
-      if cross(second, top, rest[i]) <= 0L {
+      if cross(second, top, point) <= 0L {
         let _ = hull.pop()
-
       } else {
         break
       }
     }
-    hull.push(rest[i])
-  } where {
-    invariant: i >= 0 && i <= rest.length(),
-    reasoning: (
-      #|INVARIANT (Graham scan):
-      #|hull is the convex hull of the processed points in rest[0..i), in CCW
-      #|order, starting at pivot.
-      #|MAINTENANCE:
-      #|Pop while the last three points make a non-left turn, then push rest[i].
-      #|TERMINATION:
-      #|At i = rest.length(), hull is the convex hull in CCW order.
-    ),
+    hull.push(point)
   }
   hull
 }

@@ -137,21 +137,11 @@ pub fn topological_sort(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
     return Some([])
   }
   let sorter = TopoSorter::new(n)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for edge in edges {
+    let (u, v) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       sorter.add_edge(u, v)
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (edge add):
-      #|All edges in edges[0..i) have been inserted into adjacency lists.
-      #|MAINTENANCE:
-      #|Insert edge i if endpoints are in range.
-      #|TERMINATION:
-      #|At i = edges.length(), the graph is fully built.
-    ),
   }
   sorter.sort()
 }

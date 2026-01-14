@@ -142,8 +142,8 @@ fn build_tree(
   let deg = Array::make(n, 0)
   let seen : Map[Int64, Bool] = {}
   let n64 = n.to_int64()
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for edge in edges {
+    let (u, v) = edge
     if u < 0 || v < 0 || u >= n || v >= n || u == v {
       return None
     }
@@ -157,16 +157,6 @@ fn build_tree(
     adj[v].push(u)
     deg[u] = deg[u] + 1
     deg[v] = deg[v] + 1
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (build tree):
-      #|Edges[0..i) are inserted; degrees and duplicate detection are correct.
-      #|MAINTENANCE:
-      #|Insert the next edge, update degrees, and reject duplicates.
-      #|TERMINATION:
-      #|At i = edges.length(), the tree structure is built.
-    ),
   }
 
   // Check connectivity with BFS
