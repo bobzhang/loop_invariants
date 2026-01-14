@@ -10,6 +10,12 @@ amortized O(log n) time for all operations.
 - **Key Advantage**: Frequently accessed elements become faster to find
 - **No Balance Info**: Unlike AVL/Red-Black, no height/color storage needed
 
+## Core Idea
+
+- After access, **rotate the node to the root** (splaying).
+- Zig/zig-zig/zig-zag rotations keep BST order while reshaping the tree.
+- Frequently accessed keys move near the root, giving good amortized bounds.
+
 ## The Key Insight
 
 ```
@@ -183,4 +189,3 @@ This is optimal for working set sequences!
 - For join: splay max of left tree, attach right as right child
 - Consider top-down splaying for better cache performance
 - Null pointers for empty subtrees (or use sentinel)
-
