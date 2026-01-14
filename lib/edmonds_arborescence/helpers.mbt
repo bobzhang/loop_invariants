@@ -1,0 +1,221 @@
+// ============================================================================
+// EDMONDS' ARBORESCENCE - Helper Functions
+// ============================================================================
+//
+// Utility functions for cycle detection, reachability, and cost computation.
+
+///|
+/// Find a cycle in the parent graph, if one exists.
+///
+/// ALGORITHM:
+/// ```
+///   For each vertex v:
+///     Follow parent pointers until:
+///       1. Reach root → no cycle through v
+///       2. Reach -1 → no cycle through v
+///       3. Reach a vertex seen in THIS traversal → found cycle!
+///
+///   The "seen in this traversal" check is key:
+///     - Mark vertices with the current v's ID
+///     - If we revisit a vertex marked with same ID → cycle
+/// ```
+///
+/// WHY THIS WORKS:
+/// ```
+///   When selecting minimum incoming edges, cycles can form.
+///   Example:
+///     Edges: 0→1 (cost 1), 1→2 (cost 1), 2→1 (cost 1)
+///     Root: 0
+///
+///     Min incoming for 1: could be 0→1 or 2→1
+///     Min incoming for 2: 1→2
+///
+///     If we pick 2→1, we get cycle: 1 → 2 → 1
+/// ```
+///
+/// PARAMETERS:
+///   - n: number of vertices
+///   - root: the root vertex (cycles cannot include root)
+///   - parent: parent[v] = chosen predecessor of v
+///
+/// RETURNS:
+///   Array of vertices forming the cycle, or empty if no cycle.
+///   The cycle is returned in traversal order.
+fn find_cycle(n : Int, root : Int, parent : Array[Int]) -> Array[Int] {
+  // seen[v] = ID of the vertex that started this traversal (-1 = unvisited)
+  let seen = Array::make(n, -1)
+  for v = 0; v < n; v = v + 1 {
+    // Skip root and unreachable vertices
+    guard v != root && parent[v] != -1 else { continue }
+
+    // Follow parent pointers, marking with v's ID
+    let mut cur = v
+    while cur != -1 && cur != root && seen[cur] == -1 {
+      seen[cur] = v
+      cur = parent[cur]
+    }
+
+    // Check if we found a cycle (revisited vertex marked with same ID)
+    if cur != -1 && cur != root && seen[cur] == v {
+      // Extract the cycle starting from cur
+      let cycle : Array[Int] = []
+      let start = cur
+      cycle.push(start)
+      let mut x = parent[start]
+      while x != start {
+        cycle.push(x)
+        x = parent[x]
+      }
+      return cycle
+    }
+  } where {
+    invariant: v >= 0 && v <= n,
+    reasoning: (
+      #|INVARIANT (cycle detection):
+      #|  Vertices [0..v) have been checked for cycles.
+      #|  If a cycle exists involving any vertex < v, it has been found.
+      #|
+      #|THE KEY INSIGHT:
+      #|  We mark vertices with the current starting vertex's ID.
+      #|  If during traversal we hit a vertex with OUR ID, we've found
+      #|  a cycle. If we hit a vertex with a different ID, that path
+      #|  was already explored and found no cycle.
+      #|
+      #|MAINTENANCE:
+      #|  Follow parent pointers from v, marking vertices.
+      #|  If we return to a v-marked vertex, extract and return cycle.
+      #|
+      #|TERMINATION:
+      #|  At v = n, all vertices checked. Return empty if no cycle.
+    ),
+  }
+  [] // No cycle found
+}
+
+///|
+/// Build reachability from root using BFS.
+///
+/// ALGORITHM:
+/// ```
+///   Standard BFS from root:
+///     1. Start with root in queue, marked as seen
+///     2. For each vertex u in queue:
+///        - For each edge u→v:
+///          - If v not seen, mark and enqueue
+///     3. Return seen array
+/// ```
+///
+/// PARAMETERS:
+///   - n: number of vertices
+///   - edges: all directed edges
+///   - root: starting vertex
+///
+/// RETURNS:
+///   Array[Bool] where result[v] = true iff v is reachable from root
+fn build_reachable(n : Int, edges : Array[Edge], root : Int) -> Array[Bool] {
+  // Build adjacency list for forward edges
+  let adj : Array[Array[Int]] = Array::make(n, [])
+  for i = 0; i < n; i = i + 1 {
+    adj[i] = []
+  } where {
+    invariant: i >= 0 && i <= n,
+    reasoning: (
+      #|INVARIANT (adjacency init):
+      #|  adj[0..i) contains distinct empty arrays.
+      #|
+      #|MAINTENANCE:
+      #|  Assign fresh empty array at adj[i].
+      #|
+      #|TERMINATION:
+      #|  At i = n, all adjacency lists initialized.
+    ),
+  }
+  for i = 0; i < edges.length(); i = i + 1 {
+    let e = edges[i]
+    adj[e.from].push(e.to)
+  } where {
+    invariant: i >= 0 && i <= edges.length(),
+    reasoning: (
+      #|INVARIANT (adjacency build):
+      #|  Edges [0..i) have been added to adjacency lists.
+      #|
+      #|MAINTENANCE:
+      #|  Add edge[i] to adj[edge[i].from].
+      #|
+      #|TERMINATION:
+      #|  At i = edges.length(), adjacency list is complete.
+    ),
+  }
+
+  // BFS from root
+  let seen = Array::make(n, false)
+  let stack : Array[Int] = [root]
+  seen[root] = true
+  for idx = 0; idx < stack.length(); idx = idx + 1 {
+    let u = stack[idx]
+    for v in adj[u] {
+      if not(seen[v]) {
+        seen[v] = true
+        stack.push(v)
+      }
+    }
+  } where {
+    invariant: idx >= 0 && idx <= stack.length(),
+    reasoning: (
+      #|INVARIANT (BFS reachability):
+      #|  Vertices in stack[0..idx) are fully processed.
+      #|  seen[v] = true iff v is reachable via some path using
+      #|  only vertices in stack[0..idx).
+      #|
+      #|NOTE: We use stack as a queue (FIFO via index iteration).
+      #|This is valid because we only care about reachability,
+      #|not shortest paths.
+      #|
+      #|MAINTENANCE:
+      #|  Process stack[idx], adding unseen neighbors.
+      #|
+      #|TERMINATION:
+      #|  At idx = stack.length(), all reachable vertices found.
+    ),
+  }
+  seen
+}
+
+///|
+/// Compute total cost of cycle edges.
+///
+/// PARAMETERS:
+///   - in_cost: minimum incoming edge cost for each vertex
+///   - cycle: vertices forming the cycle
+///
+/// RETURNS:
+///   Sum of in_cost[v] for all v in cycle.
+///
+/// WHY THIS MATTERS:
+/// ```
+///   When we contract a cycle, we're committing to using all
+///   the cycle's edges EXCEPT one (the one we replace with
+///   an external edge entering the cycle).
+///
+///   The cycle cost is added to the contracted solution's cost
+///   to get the true total cost.
+/// ```
+fn cycle_cost(in_cost : Array[Int64], cycle : Array[Int]) -> Int64 {
+  let mut total = 0L
+  for i = 0; i < cycle.length(); i = i + 1 {
+    total = total + in_cost[cycle[i]]
+  } where {
+    invariant: i >= 0 && i <= cycle.length(),
+    reasoning: (
+      #|INVARIANT (cost summation):
+      #|  total = Σ in_cost[cycle[j]] for j in [0..i)
+      #|
+      #|MAINTENANCE:
+      #|  Add in_cost[cycle[i]] to total.
+      #|
+      #|TERMINATION:
+      #|  At i = cycle.length(), total is complete cycle cost.
+    ),
+  }
+  total
+}

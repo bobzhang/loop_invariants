@@ -11,12 +11,14 @@ pub(all) struct Arborescence {
   cost : Int64
   parent : Array[Int]
 }
+pub impl Show for Arborescence
 
 pub(all) struct Edge {
   from : Int
   to : Int
   weight : Int64
 }
+pub impl Show for Edge
 
 // Type aliases
 
