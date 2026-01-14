@@ -67,31 +67,12 @@ pub fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
     let u = queue[front]
 
     // Explore all edges from u
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let e = self.adj[u][i]
+    for e in self.adj[u] {
       // Only consider edges with residual capacity to unvisited vertices
       if e.cap > e.flow && self.level[e.to] < 0 {
         self.level[e.to] = self.level[u] + 1
         queue.push(e.to)
       }
-    } where {
-      invariant: i >= 0 && i <= self.adj[u].length() && self.level[u] >= 0,
-      reasoning: (
-        #|INVARIANT (BFS edge scan):
-        #|  Edges adj[u][0..i) have been examined.
-        #|  Any unvisited vertex reachable via residual edge is assigned
-        #|  level = level[u] + 1 and enqueued.
-        #|
-        #|LEVEL GRAPH CONSTRUCTION:
-        #|  We only enqueue vertices through edges with residual capacity,
-        #|  ensuring the level graph respects capacity constraints.
-        #|
-        #|MAINTENANCE:
-        #|  Process edge i, update level and queue if applicable.
-        #|
-        #|TERMINATION:
-        #|  At i = deg(u), all edges from u are processed.
-      ),
     }
     continue front + 1
   } where {

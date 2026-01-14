@@ -38,20 +38,7 @@ priv struct CentroidTree {
 
 ///|
 fn CentroidTree::new(n : Int) -> CentroidTree {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|Adjacency lists for vertices in [0, i) are initialized and independent.
-      #|MAINTENANCE:
-      #|Assign a fresh empty list to adj[i].
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  let adj = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,
@@ -76,22 +63,10 @@ fn CentroidTree::compute_size(
   parent : Int,
 ) -> Int {
   self.subtree_size[u] = 1
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    let v = self.adj[u][i]
+  for v in self.adj[u] {
     if v != parent && not(self.removed[v]) {
       self.subtree_size[u] = self.subtree_size[u] + self.compute_size(v, u)
     }
-  } where {
-    invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: (
-      #|INVARIANT (compute size):
-      #|subtree_size[u] equals 1 plus sizes of processed child subtrees among
-      #|neighbors in adj[u][0..i).
-      #|MAINTENANCE:
-      #|Recurse into an unremoved child v and add its subtree size.
-      #|TERMINATION:
-      #|At i = deg(u), subtree_size[u] is the full size of the component at u.
-    ),
   }
   self.subtree_size[u]
 }
@@ -104,25 +79,15 @@ fn CentroidTree::find_centroid(
   parent : Int,
   tree_size : Int,
 ) -> Int {
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    let v = self.adj[u][i]
+  // Check if any child subtree has more than half the nodes
+  for v in self.adj[u] {
     if v != parent &&
       not(self.removed[v]) &&
       self.subtree_size[v] > tree_size / 2 {
       return self.find_centroid(v, u, tree_size)
     }
-  } where {
-    invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: (
-      #|INVARIANT (find centroid):
-      #|All neighbors in adj[u][0..i) have been checked; if any had subtree
-      #|size > tree_size/2, we would have recursed into it.
-      #|MAINTENANCE:
-      #|Check neighbor v and recurse if its subtree is too large.
-      #|TERMINATION:
-      #|If no neighbor exceeds half, u is the centroid.
-    ),
   }
+  // No child exceeds half, so u is the centroid
   u
 }
 
@@ -139,23 +104,10 @@ fn CentroidTree::decompose(
   self.removed[centroid] = true
   self.centroid_parent[centroid] = parent
   self.centroid_depth[centroid] = depth
-  for i = 0; i < self.adj[centroid].length(); i = i + 1 {
-    let v = self.adj[centroid][i]
+  for v in self.adj[centroid] {
     if not(self.removed[v]) {
       let _ = self.decompose(v, centroid, depth + 1)
-
     }
-  } where {
-    invariant: i >= 0 && i <= self.adj[centroid].length(),
-    reasoning: (
-      #|INVARIANT (decompose step):
-      #|centroid is removed and assigned its centroid parent/depth. Neighbors
-      #|in adj[centroid][0..i) have been recursively decomposed.
-      #|MAINTENANCE:
-      #|Recurse on each non-removed neighbor subtree; each has size <= tree_size/2.
-      #|TERMINATION:
-      #|At i = deg(centroid), all subtrees are decomposed and depth increases.
-    ),
   }
   centroid
 }
@@ -275,21 +227,11 @@ test "centroid depth bound" {
   ct.build()
 
   // Check all depths are reasonable (≤ log2(7) ≈ 3)
-  let max_depth = for i = 0, max_depth = 0; i < 7; {
+  let max_depth = for i = 0, max_d = 0; i < 7; {
     let depth = ct.get_depth(i)
-    continue i + 1, if depth > max_depth { depth } else { max_depth }
+    continue i + 1, if depth > max_d { depth } else { max_d }
   } else {
-    max_depth
-  } where {
-    invariant: i >= 0 && i <= 7 && max_depth >= 0,
-    reasoning: (
-      #|INVARIANT (max depth check):
-      #|max_depth is the maximum depth among vertices [0, i).
-      #|MAINTENANCE:
-      #|Update max_depth if current depth is larger.
-      #|TERMINATION:
-      #|At i = 7, max_depth is the maximum over all vertices.
-    ),
+    max_d
   }
   inspect(max_depth <= 3, content="true")
 }

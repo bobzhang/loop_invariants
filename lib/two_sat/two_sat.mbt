@@ -204,23 +204,10 @@ fn dfs1(
   u : Int,
 ) -> Unit {
   visited[u] = true
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  for v in adj[u] {
     if not(visited[v]) {
       dfs1(adj, visited, order, v)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (dfs1):
-      #|All neighbors adj[u][0..i) have been explored; any unvisited neighbor
-      #|has been fully DFS-visited and added to order before returning.
-      #|MAINTENANCE:
-      #|If adj[u][i] is unvisited, recurse; its subtree is added to order, then
-      #|advance i.
-      #|TERMINATION:
-      #|After i reaches adj[u].length(), all outgoing edges from u are processed.
-    ),
   }
   order.push(u) // Post-order
 }
@@ -233,22 +220,10 @@ fn dfs2(
   u : Int,
 ) -> Unit {
   comp[u] = scc_id
-  for i = 0; i < radj[u].length(); i = i + 1 {
-    let v = radj[u][i]
+  for v in radj[u] {
     if comp[v] < 0 {
       dfs2(radj, comp, scc_id, v)
     }
-  } where {
-    invariant: i >= 0 && i <= radj[u].length(),
-    reasoning: (
-      #|INVARIANT (dfs2):
-      #|All neighbors radj[u][0..i) reachable in the reverse graph are assigned
-      #|to scc_id; comp is set for their subtrees.
-      #|MAINTENANCE:
-      #|If radj[u][i] is unassigned, recurse to label its component.
-      #|TERMINATION:
-      #|After i reaches radj[u].length(), all reverse edges from u are handled.
-    ),
   }
 }
 
@@ -261,8 +236,7 @@ fn TwoSat::verify(self : TwoSat, assignment : Array[Bool]) -> Bool {
     let val_u = if neg_u { not(assignment[var_u]) } else { assignment[var_u] }
     if val_u {
       // If u is true, all nodes reachable from u must be true
-      for i = 0; i < self.adj[u].length(); i = i + 1 {
-        let v = self.adj[u][i]
+      for v in self.adj[u] {
         let var_v = v / 2
         let neg_v = v % 2 == 1
         let val_v = if neg_v {
@@ -273,17 +247,6 @@ fn TwoSat::verify(self : TwoSat, assignment : Array[Bool]) -> Bool {
         if not(val_v) {
           return false
         }
-      } where {
-        invariant: i >= 0 && i <= self.adj[u].length(),
-        reasoning: (
-          #|INVARIANT (verify implications):
-          #|All implications u -> adj[u][0..i) are satisfied by assignment.
-          #|MAINTENANCE:
-          #|Compute val_v for adj[u][i]; if false, return false, otherwise
-          #|advance i.
-          #|TERMINATION:
-          #|If all edges are checked, every implication from u is satisfied.
-        ),
       }
     }
   } where {

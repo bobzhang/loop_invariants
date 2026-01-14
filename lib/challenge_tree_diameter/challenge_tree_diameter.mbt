@@ -5,20 +5,10 @@
 ///|
 fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
   let adj = Array::makei(n, fn(_) { [] })
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for edge in edges {
+    let (u, v) = edge
     adj[u].push(v)
     adj[v].push(u)
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (adjacency build):
-      #|All edges in edges[0..i) are added to adj.
-      #|MAINTENANCE:
-      #|Insert both directions for the next edge.
-      #|TERMINATION:
-      #|At i = edges.length(), the adjacency list is complete.
-    ),
   }
   adj
 }

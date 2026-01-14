@@ -256,26 +256,11 @@ fn PrimMST::compute(self : PrimMST) -> Int64? {
     }
 
     // Update min_edge for neighbors
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let (v, w) = self.adj[u][i]
+    for neighbor in self.adj[u] {
+      let (v, w) = neighbor
       if not(in_mst[v]) && w < min_edge[v] {
         min_edge[v] = w
       }
-    } where {
-      invariant: i >= 0 &&
-      i <= self.adj[u].length() &&
-      in_mst[u] &&
-      min_edge.length() == self.n &&
-      in_mst.length() == self.n,
-      reasoning: (
-        #|INVARIANT (relax neighbors):
-        #|min_edge for neighbors in adj[u][0..i) reflects the cheapest edge
-        #|from the current MST to that neighbor.
-        #|MAINTENANCE:
-        #|Relax edge (u, v) if it improves min_edge[v].
-        #|TERMINATION:
-        #|At i = deg(u), all neighbor keys are updated.
-      ),
     }
   } where {
     invariant: iter >= 0 && iter <= self.n && in_mst.length() == self.n,

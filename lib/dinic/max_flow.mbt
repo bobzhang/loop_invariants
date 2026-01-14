@@ -102,22 +102,10 @@ pub fn Dinic::max_flow(self : Dinic, source : Int, sink : Int) -> Int64 {
 ///|
 /// Get flow on edge from u to v (first matching edge if multiple).
 pub fn Dinic::get_flow(self : Dinic, u : Int, v : Int) -> Int64 {
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    if self.adj[u][i].to == v {
-      return self.adj[u][i].flow
+  for e in self.adj[u] {
+    if e.to == v {
+      return e.flow
     }
-  } where {
-    invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: (
-      #|INVARIANT (get_flow scan):
-      #|  Edges adj[u][0..i) have been checked for destination v.
-      #|
-      #|MAINTENANCE:
-      #|  Check if edge i goes to v.
-      #|
-      #|TERMINATION:
-      #|  At i = deg(u), no edge to v exists.
-    ),
   }
   0L
 }
@@ -125,34 +113,10 @@ pub fn Dinic::get_flow(self : Dinic, u : Int, v : Int) -> Int64 {
 ///|
 /// Reset all flows to 0 (for recomputing with different source/sink).
 pub fn Dinic::reset(self : Dinic) -> Unit {
-  for u = 0; u < self.n; u = u + 1 {
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      self.adj[u][i].flow = 0L
-    } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
-      reasoning: (
-        #|INVARIANT (reset flows inner):
-        #|  Flows in adj[u][0..i) reset to 0.
-        #|
-        #|MAINTENANCE:
-        #|  Set flow of edge i to 0.
-        #|
-        #|TERMINATION:
-        #|  At i = deg(u), all flows from u are reset.
-      ),
+  for u in 0..<self.n {
+    for e in self.adj[u] {
+      e.flow = 0L
     }
-  } where {
-    invariant: u >= 0 && u <= self.n && self.adj.length() == self.n,
-    reasoning: (
-      #|INVARIANT (reset flows outer):
-      #|  Vertices [0..u) have all flows reset.
-      #|
-      #|MAINTENANCE:
-      #|  Reset all flows for vertex u.
-      #|
-      #|TERMINATION:
-      #|  At u = n, all flows in network are reset.
-    ),
   }
 }
 
@@ -177,34 +141,14 @@ pub fn Dinic::min_cut_source_side(self : Dinic, source : Int) -> Array[Int] {
   let result : Array[Int] = []
   let queue : Array[Int] = [source]
   visited[source] = true
-  let mut front = 0
-  while front < queue.length() {
+  for front = 0; front < queue.length(); front = front + 1 {
     let u = queue[front]
-    front = front + 1
     result.push(u)
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let e = self.adj[u][i]
+    for e in self.adj[u] {
       if e.cap > e.flow && not(visited[e.to]) {
         visited[e.to] = true
         queue.push(e.to)
       }
-    } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
-      reasoning: (
-        #|INVARIANT (min-cut BFS):
-        #|  Edges adj[u][0..i) processed.
-        #|  Vertices reachable via residual edges are marked visited.
-        #|
-        #|CORRECTNESS:
-        #|  A vertex is on source side iff reachable from source
-        #|  via edges with residual capacity (cap > flow).
-        #|
-        #|MAINTENANCE:
-        #|  Process edge i, enqueue unvisited reachable vertices.
-        #|
-        #|TERMINATION:
-        #|  At i = deg(u), all residual edges from u examined.
-      ),
     }
   }
   result

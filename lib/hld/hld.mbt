@@ -119,22 +119,10 @@ fn HLD::dfs_hld(self : HLD, u : Int, head : Int) -> Unit {
   }
 
   // Process light children (start new chains)
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    let v = self.adj[u][i]
+  for v in self.adj[u] {
     if v != self.parent[u] && v != self.heavy_child[u] {
       self.dfs_hld(v, v) // v becomes head of new chain
     }
-  } where {
-    invariant: i >= 0 && i <= self.adj[u].length(),
-    reasoning: (
-      #|INVARIANT (dfs_hld):
-      #|u has been assigned a position, and the heavy child (if any) has been
-      #|processed to keep the heavy path contiguous.
-      #|MAINTENANCE:
-      #|Each light child starts a new chain with itself as head.
-      #|TERMINATION:
-      #|At i = deg(u), all descendants are assigned to chains.
-    ),
   }
 }
 

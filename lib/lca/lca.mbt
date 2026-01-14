@@ -148,23 +148,10 @@ fn dfs_build(
   visited[v] = true
   depth[v] = d
   up[v][0] = parent
-  for i = 0; i < adj[v].length(); i = i + 1 {
-    let u = adj[v][i]
+  for u in adj[v] {
     if not(visited[u]) {
       dfs_build(u, v, d + 1, adj, depth, up, visited)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[v].length(),
-    reasoning: (
-      #|INVARIANT (DFS expansion):
-      #|After processing neighbors [0..i), every vertex reachable from v
-      #|through those neighbors has been visited, with depth and parent set.
-      #|This ensures the DFS tree is built consistently and without revisits.
-      #|MAINTENANCE:
-      #|Each recursive call fully explores a child subtree before i advances.
-      #|TERMINATION:
-      #|At i == adj[v].length(), all descendants of v are processed.
-    ),
   }
 }
 
@@ -457,21 +444,11 @@ fn dfs_dist(
 ) -> Unit {
   visited[v] = true
   dist[v] = d
-  for i = 0; i < wadj[v].length(); i = i + 1 {
-    let (u, w) = wadj[v][i]
+  for neighbor in wadj[v] {
+    let (u, w) = neighbor
     if not(visited[u]) {
       dfs_dist(u, d + w, wadj, dist, visited)
     }
-  } where {
-    invariant: i >= 0 && i <= wadj[v].length(),
-    reasoning: (
-      #|INVARIANT (dfs neighbors):
-      #|Neighbors wadj[v][0..i) have been explored; dist values are set for them.
-      #|MAINTENANCE:
-      #|Recurse into unvisited neighbor u, adding edge weight w to the distance.
-      #|TERMINATION:
-      #|At i = deg(v), all neighbors of v are processed.
-    ),
   }
 }
 

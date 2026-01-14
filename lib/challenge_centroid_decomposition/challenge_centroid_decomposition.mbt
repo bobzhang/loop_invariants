@@ -32,23 +32,13 @@ fn dfs_size(
   removed : Array[Bool],
   sub : Array[Int],
 ) -> Int {
-  let mut size = 1
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  let size = adj[u].fold(init=1, fn(size, v) {
     if v != p && !removed[v] {
-      size = size + dfs_size(v, u, adj, removed, sub)
+      size + dfs_size(v, u, adj, removed, sub)
+    } else {
+      size
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (subtree size):
-      #|size equals 1 plus the sizes of processed child subtrees of u.
-      #|MAINTENANCE:
-      #|For each eligible neighbor, add its subtree size.
-      #|TERMINATION:
-      #|At i = adj[u].length(), size is the full subtree size of u.
-    ),
-  }
+  })
   sub[u] = size
   size
 }
@@ -63,22 +53,10 @@ fn find_centroid(
   removed : Array[Bool],
   sub : Array[Int],
 ) -> Int {
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  for v in adj[u] {
     if v != p && !removed[v] && sub[v] > total / 2 {
       return find_centroid(v, u, total, adj, removed, sub)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (centroid search):
-      #|Among processed neighbors, none has subtree size > total/2, so the
-      #|centroid cannot lie there.
-      #|MAINTENANCE:
-      #|If a heavy child is found, recurse into it immediately.
-      #|TERMINATION:
-      #|If no heavy child exists, u is the centroid.
-    ),
   }
   u
 }
@@ -100,22 +78,10 @@ fn decompose(
   parent[c] = p
   level[c] = depth
   removed[c] = true
-  for i = 0; i < adj[c].length(); i = i + 1 {
-    let v = adj[c][i]
+  for v in adj[c] {
     if !removed[v] {
       decompose(v, c, depth + 1, adj, removed, sub, parent, level)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[c].length(),
-    reasoning: (
-      #|INVARIANT (centroid children):
-      #|Neighbors processed so far have been decomposed with c as their centroid
-      #|parent.
-      #|MAINTENANCE:
-      #|Recurse into each remaining component after removing c.
-      #|TERMINATION:
-      #|At i = adj[c].length(), all components are decomposed.
-    ),
   }
 }
 
