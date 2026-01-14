@@ -8,6 +8,12 @@ where every edge `u -> v` appears with `u` before `v`.
 - **Build**: O(V + E)
 - **Space**: O(V + E)
 
+## Core Idea
+
+- In DFS, a node finishes **after** all its outgoing neighbors.
+- Reversing finish order yields a valid topological ordering.
+- A back edge to a visiting node indicates a **cycle**.
+
 ## DFS Method
 
 1. Run DFS from every unvisited vertex.
