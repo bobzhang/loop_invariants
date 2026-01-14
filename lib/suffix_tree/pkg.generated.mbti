@@ -2,6 +2,7 @@
 package "bobzhang/loop_invariants/lib/suffix_tree"
 
 // Values
+pub const SENTINEL : Char = '\x00'
 
 // Errors
 
@@ -16,6 +17,7 @@ pub(all) struct Node {
   edges : Array[Edge]
   mut leaf_count : Int
 }
+pub fn Node::new() -> Self
 
 pub struct SuffixTree {
   text : Array[Char]
