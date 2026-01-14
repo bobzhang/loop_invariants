@@ -149,7 +149,12 @@ test "biconnected components example" {
 test "biconnected no articulation" {
   // Complete graph K4 - no articulation points
   let edges : Array[(Int, Int)] = [
-    (0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3),
+    (0, 1),
+    (0, 2),
+    (0, 3),
+    (1, 2),
+    (1, 3),
+    (2, 3),
   ]
   let res = @biconnected_components.biconnected_components(4, edges[:])
   inspect(res.components.length(), content="1")

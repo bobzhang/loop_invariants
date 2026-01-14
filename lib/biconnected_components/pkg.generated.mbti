@@ -11,6 +11,7 @@ pub(all) struct BiconnectedResult {
   components : Array[Array[(Int, Int)]]
   articulation_points : Array[Int]
 }
+pub impl Show for BiconnectedResult
 
 // Type aliases
 
