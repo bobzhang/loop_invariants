@@ -9,6 +9,12 @@ of the string. This enables O(n) pattern matching.
 - **Time**: O(n)
 - **Space**: O(n)
 
+## Core Idea
+
+- Maintain a **Z-box** `[l, r]` that matches the prefix.
+- Reuse mirrored values inside the box; only expand when needed.
+- The right boundary `r` advances at most n steps.
+
 ## The Z-Array
 
 ```
