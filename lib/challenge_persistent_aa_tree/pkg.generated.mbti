@@ -2,26 +2,26 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_aa_tree"
 
 // Values
-pub fn contains(Aa, Int) -> Bool
+pub fn[T : Compare] contains(Aa[T], T) -> Bool
 
-pub fn empty() -> Aa
+pub fn[T] empty() -> Aa[T]
 
-pub fn from_array(ArrayView[Int]) -> Aa
+pub fn[T : Compare] from_array(ArrayView[T]) -> Aa[T]
 
-pub fn inorder(Aa) -> Array[Int]
+pub fn[T] inorder(Aa[T]) -> Array[T]
 
-pub fn insert(Aa, Int) -> Aa
+pub fn[T : Compare] insert(Aa[T], T) -> Aa[T]
 
-pub fn size(Aa) -> Int
+pub fn[T] size(Aa[T]) -> Int
 
 // Errors
 
 // Types and methods
-pub enum Aa {
+pub enum Aa[T] {
   Empty
-  Node(key~ : Int, level~ : Int, left~ : Aa, right~ : Aa)
+  Node(key~ : T, level~ : Int, left~ : Aa[T], right~ : Aa[T])
 }
-pub impl Show for Aa
+pub impl[T : Show] Show for Aa[T]
 
 // Type aliases
 

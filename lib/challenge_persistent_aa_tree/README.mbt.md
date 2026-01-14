@@ -2,6 +2,8 @@
 
 Balanced binary search tree with skew/split rebalancing and path copying.
 
+This AA tree is generic over the key type: `T : Compare`.
+
 ## Core Idea
 
 AA trees simulate red-black trees using only two operations:

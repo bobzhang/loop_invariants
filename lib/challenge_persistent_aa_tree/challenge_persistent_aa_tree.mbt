@@ -4,13 +4,13 @@
 // ============================================================================
 
 ///|
-pub enum Aa {
+pub enum Aa[T] {
   Empty
-  Node(key~ : Int, level~ : Int, left~ : Aa, right~ : Aa)
+  Node(key~ : T, level~ : Int, left~ : Aa[T], right~ : Aa[T])
 } derive(Show)
 
 ///|
-fn level(t : Aa) -> Int {
+fn[T] level(t : Aa[T]) -> Int {
   match t {
     Aa::Empty => 0
     Aa::Node(key=_, level~, left=_, right=_) => level
@@ -19,7 +19,7 @@ fn level(t : Aa) -> Int {
 
 ///|
 /// Return the number of keys in the AA tree.
-pub fn size(t : Aa) -> Int {
+pub fn[T] size(t : Aa[T]) -> Int {
   match t {
     Aa::Empty => 0
     Aa::Node(key=_, level=_, left~, right~) => 1 + size(left) + size(right)
@@ -27,7 +27,7 @@ pub fn size(t : Aa) -> Int {
 }
 
 ///|
-fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
   let lo_ok = match lo {
     None => true
     Some(l) => value > l
@@ -40,7 +40,7 @@ fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn aa_valid(t : Aa, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] aa_valid(t : Aa[T], lo : T?, hi : T?) -> Bool {
   match t {
     Aa::Empty => true
     Aa::Node(key=k, level=lv, left=l, right=r) => {
@@ -62,12 +62,12 @@ fn aa_valid(t : Aa, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn make_node(key : Int, lv : Int, left : Aa, right : Aa) -> Aa {
+fn[T] make_node(key : T, lv : Int, left : Aa[T], right : Aa[T]) -> Aa[T] {
   Aa::Node(key~, level=lv, left~, right~)
 }
 
 ///|
-fn skew(t : Aa) -> Aa {
+fn[T] skew(t : Aa[T]) -> Aa[T] {
   match t {
     Aa::Node(
       key=k,
@@ -85,7 +85,7 @@ fn skew(t : Aa) -> Aa {
 }
 
 ///|
-fn split(t : Aa) -> Aa {
+fn[T] split(t : Aa[T]) -> Aa[T] {
   match t {
     Aa::Node(
       key=k,
@@ -113,13 +113,13 @@ fn split(t : Aa) -> Aa {
 
 ///|
 /// Create an empty AA tree.
-pub fn empty() -> Aa {
+pub fn[T] empty() -> Aa[T] {
   Aa::Empty
 }
 
 ///|
 /// Insert key and return the new AA tree.
-pub fn insert(t : Aa, key : Int) -> Aa {
+pub fn[T : Compare] insert(t : Aa[T], key : T) -> Aa[T] {
   match t {
     Aa::Empty => Aa::Node(key~, level=1, left=Aa::Empty, right=Aa::Empty)
     Aa::Node(key=k, level=lv, left=l, right=r) =>
@@ -138,8 +138,8 @@ pub fn insert(t : Aa, key : Int) -> Aa {
 ///|
 /// Check whether key exists in the tree.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn contains(t : Aa, key : Int) -> Bool {
-  let none : Int? = None
+pub fn[T : Compare] contains(t : Aa[T], key : T) -> Bool {
+  let none : T? = None
   for cur = t, lo = none, hi = none {
     match cur {
       Aa::Empty => break false
@@ -168,7 +168,7 @@ pub fn contains(t : Aa, key : Int) -> Bool {
 
 ///|
 /// Return an in-order traversal (sorted keys).
-pub fn inorder(t : Aa) -> Array[Int] {
+pub fn[T] inorder(t : Aa[T]) -> Array[T] {
   match t {
     Aa::Empty => []
     Aa::Node(key=k, level=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
@@ -178,7 +178,7 @@ pub fn inorder(t : Aa) -> Array[Int] {
 ///|
 /// Build an AA tree by inserting elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Aa {
+pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Aa[T] {
   let n = arr.length()
   for i = 0, tree = Aa::Empty {
     if i >= n {
