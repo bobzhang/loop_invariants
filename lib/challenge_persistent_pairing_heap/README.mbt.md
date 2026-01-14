@@ -47,3 +47,7 @@ test "persistent pairing heap merge" {
   inspect(@challenge_persistent_pairing_heap.size(merged), content="2")
 }
 ```
+
+## Notes
+
+- The heap is generic: operations that compare keys require `T : Compare`.

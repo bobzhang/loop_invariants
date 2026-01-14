@@ -2,29 +2,29 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_pairing_heap"
 
 // Values
-pub fn delete_min(Heap) -> Heap?
+pub fn[T : Compare] delete_min(Heap[T]) -> Heap[T]?
 
-pub fn empty() -> Heap
+pub fn[T] empty() -> Heap[T]
 
-pub fn find_min(Heap) -> Int?
+pub fn[T] find_min(Heap[T]) -> T?
 
-pub fn insert(Heap, Int) -> Heap
+pub fn[T : Compare] insert(Heap[T], T) -> Heap[T]
 
-pub fn merge(Heap, Heap) -> Heap
+pub fn[T : Compare] merge(Heap[T], Heap[T]) -> Heap[T]
 
-pub fn size(Heap) -> Int
+pub fn[T] size(Heap[T]) -> Int
 
 // Errors
 
 // Types and methods
-type ChildList
-pub impl Show for ChildList
+type ChildList[T]
+pub impl[T : Show] Show for ChildList[T]
 
-pub enum Heap {
+pub enum Heap[T] {
   Empty
-  Node(value~ : Int, children~ : ChildList)
+  Node(value~ : T, children~ : ChildList[T])
 }
-pub impl Show for Heap
+pub impl[T : Show] Show for Heap[T]
 
 // Type aliases
 

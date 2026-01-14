@@ -4,19 +4,19 @@
 // ============================================================================
 
 ///|
-enum ChildList {
+enum ChildList[T] {
   Nil
-  Cons(head~ : Heap, tail~ : ChildList)
+  Cons(head~ : Heap[T], tail~ : ChildList[T])
 } derive(Show)
 
 ///|
-pub enum Heap {
+pub enum Heap[T] {
   Empty
-  Node(value~ : Int, children~ : ChildList)
+  Node(value~ : T, children~ : ChildList[T])
 } derive(Show)
 
 ///|
-fn heap_size(h : Heap) -> Int {
+fn[T] heap_size(h : Heap[T]) -> Int {
   match h {
     Heap::Empty => 0
     Heap::Node(value=_, children~) => 1 + children_size(children)
@@ -24,7 +24,7 @@ fn heap_size(h : Heap) -> Int {
 }
 
 ///|
-fn children_size(children : ChildList) -> Int {
+fn[T] children_size(children : ChildList[T]) -> Int {
   match children {
     ChildList::Nil => 0
     ChildList::Cons(head~, tail~) => heap_size(head) + children_size(tail)
@@ -32,7 +32,7 @@ fn children_size(children : ChildList) -> Int {
 }
 
 ///|
-fn heap_valid(h : Heap) -> Bool {
+fn[T : Compare] heap_valid(h : Heap[T]) -> Bool {
   match h {
     Heap::Empty => true
     Heap::Node(value~, children~) => children_valid(value, children)
@@ -40,7 +40,7 @@ fn heap_valid(h : Heap) -> Bool {
 }
 
 ///|
-fn children_valid(parent : Int, children : ChildList) -> Bool {
+fn[T : Compare] children_valid(parent : T, children : ChildList[T]) -> Bool {
   match children {
     ChildList::Nil => true
     ChildList::Cons(head~, tail~) => {
@@ -55,19 +55,19 @@ fn children_valid(parent : Int, children : ChildList) -> Bool {
 
 ///|
 /// Create an empty pairing heap.
-pub fn empty() -> Heap {
+pub fn[T] empty() -> Heap[T] {
   Heap::Empty
 }
 
 ///|
 /// Return number of elements in the heap.
-pub fn size(h : Heap) -> Int {
+pub fn[T] size(h : Heap[T]) -> Int {
   heap_size(h)
 }
 
 ///|
 /// Merge two heaps and return the result.
-pub fn merge(a : Heap, b : Heap) -> Heap {
+pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
   match (a, b) {
     (Heap::Empty, _) => b
     (_, Heap::Empty) => a
@@ -81,19 +81,19 @@ pub fn merge(a : Heap, b : Heap) -> Heap {
 }
 
 ///|
-fn singleton(value : Int) -> Heap {
+fn[T] singleton(value : T) -> Heap[T] {
   Heap::Node(value~, children=ChildList::Nil)
 }
 
 ///|
 /// Insert a value and return the new heap.
-pub fn insert(h : Heap, value : Int) -> Heap {
+pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
   merge(h, singleton(value))
 }
 
 ///|
 /// Return the minimum value, or None if empty.
-pub fn find_min(h : Heap) -> Int? {
+pub fn[T] find_min(h : Heap[T]) -> T? {
   match h {
     Heap::Empty => None
     Heap::Node(value~, children=_) => Some(value)
@@ -102,7 +102,7 @@ pub fn find_min(h : Heap) -> Int? {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn merge_pairs(children : ChildList) -> Heap {
+fn[T : Compare] merge_pairs(children : ChildList[T]) -> Heap[T] {
   for cur = children, acc = Heap::Empty {
     match cur {
       ChildList::Nil => break acc
@@ -132,7 +132,7 @@ fn merge_pairs(children : ChildList) -> Heap {
 
 ///|
 /// Delete the minimum element and return the new heap.
-pub fn delete_min(h : Heap) -> Heap? {
+pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
   match h {
     Heap::Empty => None
     Heap::Node(value=_, children~) => Some(merge_pairs(children))
@@ -141,7 +141,7 @@ pub fn delete_min(h : Heap) -> Heap? {
 
 ///|
 test "persistent_pairing_heap" {
-  let h0 = Heap::Empty
+  let h0 : Heap[Int] = Heap::Empty
   let h1 = insert(h0, 8)
   let h2 = insert(h1, 3)
   let h3 = insert(h2, 6)
