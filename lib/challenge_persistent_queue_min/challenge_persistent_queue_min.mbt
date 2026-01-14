@@ -4,25 +4,25 @@
 // ============================================================================
 
 ///|
-enum MinStack {
+enum MinStack[T] {
   Nil
-  Cons(value~ : Int, min~ : Int, tail~ : MinStack)
+  Cons(value~ : T, min~ : T, tail~ : MinStack[T])
 } derive(Show)
 
 ///|
-pub struct MinQueue {
-  front : MinStack
-  back : MinStack
+pub struct MinQueue[T] {
+  front : MinStack[T]
+  back : MinStack[T]
 } derive(Show)
 
 ///|
 /// Create an empty min-queue.
-pub fn empty() -> MinQueue {
+pub fn[T] empty() -> MinQueue[T] {
   { front: MinStack::Nil, back: MinStack::Nil }
 }
 
 ///|
-fn size_stack(s : MinStack) -> Int {
+fn[T] size_stack(s : MinStack[T]) -> Int {
   match s {
     MinStack::Nil => 0
     MinStack::Cons(value=_, min=_, tail~) => 1 + size_stack(tail)
@@ -31,12 +31,12 @@ fn size_stack(s : MinStack) -> Int {
 
 ///|
 /// Return the number of elements in the queue.
-pub fn size(q : MinQueue) -> Int {
+pub fn[T] size(q : MinQueue[T]) -> Int {
   size_stack(q.front) + size_stack(q.back)
 }
 
 ///|
-fn min_value(s : MinStack) -> Int? {
+fn[T] min_value(s : MinStack[T]) -> T? {
   match s {
     MinStack::Nil => None
     MinStack::Cons(value=_, min~, tail=_) => Some(min)
@@ -44,7 +44,7 @@ fn min_value(s : MinStack) -> Int? {
 }
 
 ///|
-fn push(s : MinStack, value : Int) -> MinStack {
+fn[T : Compare] push(s : MinStack[T], value : T) -> MinStack[T] {
   let new_min = match s {
     MinStack::Nil => value
     MinStack::Cons(value=_, min~, tail=_) =>
@@ -61,7 +61,7 @@ fn push(s : MinStack, value : Int) -> MinStack {
 
 ///|
 #warnings("+missing_invariant+missing_reasoning")
-fn reverse_stack(s : MinStack) -> MinStack {
+fn[T : Compare] reverse_stack(s : MinStack[T]) -> MinStack[T] {
   for cur = s, rev = MinStack::Nil {
     match cur {
       MinStack::Nil => break rev
@@ -82,7 +82,7 @@ fn reverse_stack(s : MinStack) -> MinStack {
 }
 
 ///|
-fn normalize(q : MinQueue) -> MinQueue {
+fn[T : Compare] normalize(q : MinQueue[T]) -> MinQueue[T] {
   match q.front {
     MinStack::Nil => { front: reverse_stack(q.back), back: MinStack::Nil }
     _ => q
@@ -91,13 +91,13 @@ fn normalize(q : MinQueue) -> MinQueue {
 
 ///|
 /// Enqueue a value and return the new queue.
-pub fn enqueue(q : MinQueue, value : Int) -> MinQueue {
+pub fn[T : Compare] enqueue(q : MinQueue[T], value : T) -> MinQueue[T] {
   { front: q.front, back: push(q.back, value) }
 }
 
 ///|
 /// Peek the front value without removing it.
-pub fn peek(q : MinQueue) -> Int? {
+pub fn[T : Compare] peek(q : MinQueue[T]) -> T? {
   let norm = normalize(q)
   match norm.front {
     MinStack::Nil => None
@@ -107,7 +107,7 @@ pub fn peek(q : MinQueue) -> Int? {
 
 ///|
 /// Dequeue the front value and return (value, rest), or None if empty.
-pub fn dequeue(q : MinQueue) -> (Int, MinQueue)? {
+pub fn[T : Compare] dequeue(q : MinQueue[T]) -> (T, MinQueue[T])? {
   let norm = normalize(q)
   match norm.front {
     MinStack::Nil => None
@@ -118,7 +118,7 @@ pub fn dequeue(q : MinQueue) -> (Int, MinQueue)? {
 
 ///|
 /// Return the minimum value in the queue, or None if empty.
-pub fn min_queue(q : MinQueue) -> Int? {
+pub fn[T : Compare] min_queue(q : MinQueue[T]) -> T? {
   match (min_value(q.front), min_value(q.back)) {
     (None, None) => None
     (Some(x), None) => Some(x)
@@ -129,7 +129,7 @@ pub fn min_queue(q : MinQueue) -> Int? {
 
 ///|
 test "persistent_queue_min" {
-  let q0 = empty()
+  let q0 : MinQueue[Int] = empty()
   let q1 = enqueue(q0, 5)
   let q2 = enqueue(q1, 2)
   let q3 = enqueue(q2, 7)

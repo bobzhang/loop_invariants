@@ -2,12 +2,14 @@
 
 Queue with O(1) min queries using two min-stacks.
 
+This min-queue is generic over the value type: `T : Compare`.
+
 ## Example
 
 ```mbt check
 ///|
 test "persistent min queue" {
-  let q0 = @challenge_persistent_queue_min.empty()
+  let q0 : @challenge_persistent_queue_min.MinQueue[Int] = @challenge_persistent_queue_min.empty()
   let q1 = @challenge_persistent_queue_min.enqueue(q0, 5)
   let q2 = @challenge_persistent_queue_min.enqueue(q1, 2)
   let q3 = @challenge_persistent_queue_min.enqueue(q2, 7)
