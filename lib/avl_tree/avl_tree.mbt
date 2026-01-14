@@ -23,32 +23,32 @@
 // SPACE COMPLEXITY: O(n)
 
 ///|
-priv struct AVLNode {
-  mut key : Int64
+priv struct AVLNode[T] {
+  mut key : T
   mut height : Int
   mut left : Int
   mut right : Int
 }
 
 ///|
-fn AVLNode::new(key : Int64) -> AVLNode {
+fn[T] AVLNode::new(key : T) -> AVLNode[T] {
   { key, height: 1, left: -1, right: -1 }
 }
 
 ///|
-priv struct AVLTree {
-  nodes : Array[AVLNode]
+priv struct AVLTree[T] {
+  nodes : Array[AVLNode[T]]
   mut root : Int
   mut free_list : Int
 }
 
 ///|
-fn AVLTree::new() -> AVLTree {
+fn[T] AVLTree::new() -> AVLTree[T] {
   { nodes: [], root: -1, free_list: -1 }
 }
 
 ///|
-fn AVLTree::height(self : AVLTree, node : Int) -> Int {
+fn[T] AVLTree::height(self : AVLTree[T], node : Int) -> Int {
   if node < 0 {
     0
   } else {
@@ -57,7 +57,7 @@ fn AVLTree::height(self : AVLTree, node : Int) -> Int {
 }
 
 ///|
-fn AVLTree::update_height(self : AVLTree, node : Int) -> Unit {
+fn[T] AVLTree::update_height(self : AVLTree[T], node : Int) -> Unit {
   if node < 0 {
     return
   }
@@ -67,7 +67,7 @@ fn AVLTree::update_height(self : AVLTree, node : Int) -> Unit {
 }
 
 ///|
-fn AVLTree::balance_factor(self : AVLTree, node : Int) -> Int {
+fn[T] AVLTree::balance_factor(self : AVLTree[T], node : Int) -> Int {
   if node < 0 {
     return 0
   }
@@ -76,7 +76,7 @@ fn AVLTree::balance_factor(self : AVLTree, node : Int) -> Int {
 
 ///|
 /// Right rotation
-fn AVLTree::rotate_right(self : AVLTree, y : Int) -> Int {
+fn[T] AVLTree::rotate_right(self : AVLTree[T], y : Int) -> Int {
   let x = self.nodes[y].left
   let t2 = self.nodes[x].right
   self.nodes[x].right = y
@@ -88,7 +88,7 @@ fn AVLTree::rotate_right(self : AVLTree, y : Int) -> Int {
 
 ///|
 /// Left rotation
-fn AVLTree::rotate_left(self : AVLTree, x : Int) -> Int {
+fn[T] AVLTree::rotate_left(self : AVLTree[T], x : Int) -> Int {
   let y = self.nodes[x].right
   let t2 = self.nodes[y].left
   self.nodes[y].left = x
@@ -100,7 +100,7 @@ fn AVLTree::rotate_left(self : AVLTree, x : Int) -> Int {
 
 ///|
 /// Balance node after insertion/deletion
-fn AVLTree::balance(self : AVLTree, node : Int) -> Int {
+fn[T] AVLTree::balance(self : AVLTree[T], node : Int) -> Int {
   if node < 0 {
     return node
   }
@@ -128,7 +128,7 @@ fn AVLTree::balance(self : AVLTree, node : Int) -> Int {
 }
 
 ///|
-fn AVLTree::alloc_node(self : AVLTree, key : Int64) -> Int {
+fn[T] AVLTree::alloc_node(self : AVLTree[T], key : T) -> Int {
   if self.free_list >= 0 {
     let idx = self.free_list
     self.free_list = self.nodes[idx].left
@@ -144,7 +144,11 @@ fn AVLTree::alloc_node(self : AVLTree, key : Int64) -> Int {
 }
 
 ///|
-fn AVLTree::insert_rec(self : AVLTree, node : Int, key : Int64) -> Int {
+fn[T : Compare] AVLTree::insert_rec(
+  self : AVLTree[T],
+  node : Int,
+  key : T,
+) -> Int {
   if node < 0 {
     return self.alloc_node(key)
   }
@@ -157,15 +161,15 @@ fn AVLTree::insert_rec(self : AVLTree, node : Int, key : Int64) -> Int {
 }
 
 ///|
-fn AVLTree::insert(self : AVLTree, key : Int64) -> Unit {
+fn[T : Compare] AVLTree::insert(self : AVLTree[T], key : T) -> Unit {
   self.root = self.insert_rec(self.root, key)
 }
 
 ///|
-fn AVLTree::inorder_collect(
-  self : AVLTree,
+fn[T] AVLTree::inorder_collect(
+  self : AVLTree[T],
   node : Int,
-  out : Array[Int64],
+  out : Array[T],
 ) -> Unit {
   if node < 0 {
     return
@@ -176,8 +180,8 @@ fn AVLTree::inorder_collect(
 }
 
 ///|
-fn AVLTree::to_sorted_array(self : AVLTree) -> Array[Int64] {
-  let out : Array[Int64] = []
+fn[T] AVLTree::to_sorted_array(self : AVLTree[T]) -> Array[T] {
+  let out : Array[T] = []
   self.inorder_collect(self.root, out)
   out
 }
@@ -185,7 +189,7 @@ fn AVLTree::to_sorted_array(self : AVLTree) -> Array[Int64] {
 ///|
 /// Insert all keys into an AVL tree and return the in-order traversal.
 /// The result is sorted in nondecreasing order (duplicates preserved).
-pub fn avl_sorted(keys : ArrayView[Int64]) -> Array[Int64] {
+pub fn[T : Compare] avl_sorted(keys : ArrayView[T]) -> Array[T] {
   let tree = AVLTree::new()
   for i = 0; i < keys.length(); i = i + 1 {
     tree.insert(keys[i])
@@ -204,7 +208,7 @@ pub fn avl_sorted(keys : ArrayView[Int64]) -> Array[Int64] {
 }
 
 ///|
-fn AVLTree::find_min(self : AVLTree, node : Int) -> Int {
+fn[T] AVLTree::find_min(self : AVLTree[T], node : Int) -> Int {
   if node < 0 {
     return -1
   }
@@ -216,7 +220,11 @@ fn AVLTree::find_min(self : AVLTree, node : Int) -> Int {
 }
 
 ///|
-fn AVLTree::delete_rec(self : AVLTree, node : Int, key : Int64) -> Int {
+fn[T : Compare] AVLTree::delete_rec(
+  self : AVLTree[T],
+  node : Int,
+  key : T,
+) -> Int {
   if node < 0 {
     return -1
   }
@@ -250,14 +258,14 @@ fn AVLTree::delete_rec(self : AVLTree, node : Int, key : Int64) -> Int {
 }
 
 ///|
-fn AVLTree::delete(self : AVLTree, key : Int64) -> Bool {
+fn[T : Compare] AVLTree::delete(self : AVLTree[T], key : T) -> Bool {
   let old_root = self.root
   self.root = self.delete_rec(self.root, key)
   old_root != self.root || self.root >= 0
 }
 
 ///|
-fn AVLTree::search(self : AVLTree, key : Int64) -> Bool {
+fn[T : Compare] AVLTree::search(self : AVLTree[T], key : T) -> Bool {
   let mut node = self.root
   while node >= 0 {
     if key == self.nodes[node].key {
@@ -272,7 +280,7 @@ fn AVLTree::search(self : AVLTree, key : Int64) -> Bool {
 }
 
 ///|
-fn AVLTree::min(self : AVLTree) -> Int64? {
+fn[T] AVLTree::min(self : AVLTree[T]) -> T? {
   let m = self.find_min(self.root)
   if m < 0 {
     None
@@ -282,7 +290,7 @@ fn AVLTree::min(self : AVLTree) -> Int64? {
 }
 
 ///|
-fn AVLTree::max(self : AVLTree) -> Int64? {
+fn[T] AVLTree::max(self : AVLTree[T]) -> T? {
   if self.root < 0 {
     return None
   }
@@ -295,8 +303,8 @@ fn AVLTree::max(self : AVLTree) -> Int64? {
 
 ///|
 /// Check if tree is balanced (for testing)
-fn AVLTree::is_balanced(self : AVLTree) -> Bool {
-  fn check(tree : AVLTree, node : Int) -> Bool {
+fn[T] AVLTree::is_balanced(self : AVLTree[T]) -> Bool {
+  fn check(node : Int, tree : AVLTree[T]) -> Bool {
     if node < 0 {
       return true
     }
@@ -304,22 +312,22 @@ fn AVLTree::is_balanced(self : AVLTree) -> Bool {
     if bf < -1 || bf > 1 {
       return false
     }
-    check(tree, tree.nodes[node].left) && check(tree, tree.nodes[node].right)
+    check(tree.nodes[node].left, tree) && check(tree.nodes[node].right, tree)
   }
 
-  check(self, self.root)
+  check(self.root, self)
 }
 
 ///|
-fn AVLTree::size(self : AVLTree) -> Int {
-  fn count(tree : AVLTree, node : Int) -> Int {
+fn[T] AVLTree::size(self : AVLTree[T]) -> Int {
+  fn count(node : Int, tree : AVLTree[T]) -> Int {
     if node < 0 {
       return 0
     }
-    1 + count(tree, tree.nodes[node].left) + count(tree, tree.nodes[node].right)
+    1 + count(tree.nodes[node].left, tree) + count(tree.nodes[node].right, tree)
   }
 
-  count(self, self.root)
+  count(self.root, self)
 }
 
 // ============================================================================
@@ -410,7 +418,7 @@ test "avl min max" {
 
 ///|
 test "avl size" {
-  let tree = AVLTree::new()
+  let tree : AVLTree[Int64] = AVLTree::new()
   inspect(tree.size(), content="0")
   tree.insert(1L)
   tree.insert(2L)

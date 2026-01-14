@@ -8,6 +8,8 @@ left and right subtrees differ by at most 1. This guarantees O(log n) operations
 - **Operations**: O(log n)
 - **Space**: O(n)
 
+AVL trees here are generic over the key type: `T : Compare`.
+
 ## Core Idea
 
 After each insertion, update heights and rebalance using rotations whenever a
