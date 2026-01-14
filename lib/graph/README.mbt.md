@@ -6,6 +6,12 @@ This package provides reference implementations of fundamental graph algorithms
 with detailed loop invariants and reasoning. It serves as an educational
 resource for understanding algorithm correctness.
 
+## Core Idea
+
+- Model problems as **graph traversal or relaxation**.
+- Maintain invariants (e.g., finalized distances, acyclic order).
+- Use the right structure: queues, heaps, disjoint sets, or DP over vertices.
+
 ## Algorithms Covered
 
 ### 1. Topological Sort (Kahn's Algorithm)
