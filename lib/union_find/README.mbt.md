@@ -9,6 +9,12 @@ disjoint sets and supports:
 
 Where α(n) is the inverse Ackermann function, effectively constant (< 5 for all practical n).
 
+## Core Idea
+
+- Represent each set as a **tree** with a root identifier.
+- **Path compression** flattens trees during find.
+- **Union by size/rank** keeps trees shallow.
+
 ## The Data Structure
 
 Union-Find uses a forest of trees where each tree is one set:
