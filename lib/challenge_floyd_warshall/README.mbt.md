@@ -2,6 +2,12 @@
 
 All-pairs shortest paths by dynamic programming over intermediate vertices.
 
+## Core Idea
+
+- Allow intermediate vertices in increasing order `k = 0..n-1`.
+- When `k` is fixed, paths may only use vertices `< k` internally.
+- Each step improves `dist[i][j]` via `i -> k -> j`.
+
 ## What you learn
 
 - Triple-nested DP with intermediate vertex k
