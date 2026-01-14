@@ -104,13 +104,13 @@ fn Hungarian::dfs(self : Hungarian, u : Int) -> Bool {
 ///|
 /// Find maximum matching
 fn Hungarian::max_matching(self : Hungarian) -> Int {
-  let mut matching = 0
-  for u = 0; u < self.graph.n_left; u = u + 1 {
+  for u = 0, matching = 0; u < self.graph.n_left; {
     // Reset visited for each left vertex
     self.visited.fill(false)
-    if self.dfs(u) {
-      matching = matching + 1
-    }
+    let new_matching = if self.dfs(u) { matching + 1 } else { matching }
+    continue u + 1, new_matching
+  } else {
+    matching
   } where {
     invariant: u >= 0 && u <= self.graph.n_left,
     reasoning: (
@@ -123,7 +123,6 @@ fn Hungarian::max_matching(self : Hungarian) -> Int {
       #|At u = n_left, no more augmenting paths remain, so matching is maximum.
     ),
   }
-  matching
 }
 
 ///|
@@ -213,10 +212,8 @@ fn HopcroftKarp::bfs(self : HopcroftKarp) -> Bool {
     ),
   }
   self.dist[self.graph.n_left] = HK_INF // Sentinel for unmatched
-  let mut front = 0
-  while front < queue.length() {
+  for front = 0; front < queue.length(); {
     let u = queue[front]
-    front = front + 1
     if self.dist[u] < self.dist[self.graph.n_left] {
       self.graph.adj[u].each(fn(v) {
         let next = if self.match_right[v] < 0 {
@@ -232,6 +229,17 @@ fn HopcroftKarp::bfs(self : HopcroftKarp) -> Bool {
         }
       })
     }
+    continue front + 1
+  } where {
+    invariant: front >= 0 && front <= queue.length(),
+    reasoning: (
+      #|INVARIANT (HK BFS):
+      #|All vertices in queue[0..front) have been processed at their BFS layer.
+      #|MAINTENANCE:
+      #|Process queue[front], updating distances for adjacent vertices.
+      #|TERMINATION:
+      #|front advances until queue is exhausted.
+    ),
   }
   self.dist[self.graph.n_left] != HK_INF
 }
@@ -274,14 +282,17 @@ fn HopcroftKarp::dfs(self : HopcroftKarp, u : Int) -> Bool {
 ///|
 /// Find maximum matching using Hopcroft-Karp
 fn HopcroftKarp::max_matching(self : HopcroftKarp) -> Int {
-  let mut matching = 0
-
   // Keep finding augmenting paths until none exist
-  while self.bfs() {
-    for u = 0; u < self.graph.n_left; u = u + 1 {
-      if self.match_left[u] < 0 && self.dfs(u) {
-        matching = matching + 1
+  for matching = 0; self.bfs(); {
+    let phase_matches = for u = 0, count = 0; u < self.graph.n_left; {
+      let new_count = if self.match_left[u] < 0 && self.dfs(u) {
+        count + 1
+      } else {
+        count
       }
+      continue u + 1, new_count
+    } else {
+      count
     } where {
       invariant: u >= 0 && u <= self.graph.n_left,
       reasoning: (
@@ -289,13 +300,25 @@ fn HopcroftKarp::max_matching(self : HopcroftKarp) -> Int {
         #|All unmatched left vertices in [0, u) have been attempted for DFS
         #|augmentations in the current BFS layer graph.
         #|MAINTENANCE:
-        #|Run DFS from each unmatched u and increment matching on success.
+        #|Run DFS from each unmatched u and increment count on success.
         #|TERMINATION:
         #|At u = n_left, the phase has tried all unmatched left vertices.
       ),
     }
+    continue matching + phase_matches
+  } else {
+    matching
+  } where {
+    invariant: matching >= 0,
+    reasoning: (
+      #|INVARIANT (HK phases):
+      #|matching accumulates successful augmentations from previous phases.
+      #|MAINTENANCE:
+      #|Each phase runs BFS, then attempts DFS from unmatched vertices.
+      #|TERMINATION:
+      #|BFS returns false when no augmenting path exists.
+    ),
   }
-  matching
 }
 
 ///|

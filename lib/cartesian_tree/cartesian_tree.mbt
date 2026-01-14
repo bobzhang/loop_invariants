@@ -100,19 +100,28 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
   // Stack values are decreasing (since we're building min-heap)
   let stack : Array[Int] = []
   for i = 0; i < n; i = i + 1 {
-    let mut last_popped = -1
-
     // Pop nodes with larger values
     // INVARIANT: Popped nodes will become left subtree of current node
-    while stack.length() > 0 {
+    let last_popped = for last_popped = -1; stack.length() > 0; {
       let top = stack[stack.length() - 1]
       if nodes[top].value > arr[i] {
-        last_popped = top
         let _ = stack.pop()
-
+        continue top
       } else {
-        break
+        break last_popped
       }
+    } else {
+      last_popped
+    } where {
+      invariant: last_popped >= -1,
+      reasoning: (
+        #|INVARIANT (pop larger values):
+        #|last_popped is the most recently popped node with larger value.
+        #|MAINTENANCE:
+        #|Pop nodes with value > arr[i], updating last_popped each time.
+        #|TERMINATION:
+        #|Stack is finite; eventually empty or top <= arr[i].
+      ),
     }
 
     // Last popped becomes left child
@@ -277,23 +286,18 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
   if u < 0 || v < 0 || u >= self.n || v >= self.n {
     return -1
   }
-  let mut u = u
-  let mut v = v
 
   // Make u the deeper node
-  if self.depth[u] < self.depth[v] {
-    let tmp = u
-    u = v
-    v = tmp
-  }
+  let (u, v) = if self.depth[u] < self.depth[v] { (v, u) } else { (u, v) }
 
   // Lift u to same depth as v
   // INVARIANT: After each iteration, depth difference decreases
   let diff = self.depth[u] - self.depth[v]
-  for k = 0; k < self.log_n; k = k + 1 {
-    if ((diff >> k) & 1) == 1 {
-      u = self.ancestors[k][u]
-    }
+  let u = for k = 0, u = u; k < self.log_n; {
+    let new_u = if ((diff >> k) & 1) == 1 { self.ancestors[k][u] } else { u }
+    continue k + 1, new_u
+  } else {
+    u
   } where {
     invariant: k >= 0 && k <= self.log_n,
     reasoning: (
@@ -311,13 +315,17 @@ fn CartesianTree::lca(self : CartesianTree, u : Int, v : Int) -> Int {
 
   // Binary lift both until they meet
   // INVARIANT: u and v are at same depth, and LCA is an ancestor of both
-  for k = self.log_n - 1; k >= 0; k = k - 1 {
-    if self.ancestors[k][u] != self.ancestors[k][v] {
-      u = self.ancestors[k][u]
-      v = self.ancestors[k][v]
+  let (u, _) = for k = self.log_n - 1, u = u, v = v; k >= 0; {
+    let (new_u, new_v) = if self.ancestors[k][u] != self.ancestors[k][v] {
+      (self.ancestors[k][u], self.ancestors[k][v])
+    } else {
+      (u, v)
     }
+    continue k - 1, new_u, new_v
+  } else {
+    (u, v)
   } where {
-    invariant: k >= 0 && k < self.log_n,
+    invariant: k >= -1 && k < self.log_n,
     reasoning: (
       #|INVARIANT (lift together):
       #|u and v remain at the same depth, and the LCA is above both.
@@ -566,15 +574,15 @@ fn largest_rectangle_histogram(heights : Array[Int64]) -> Int64 {
 
   // For each position, width extends from left+1 to right-1
   // INVARIANT: max_area is the largest rectangle found so far
-  let mut max_area = 0L
-  for i = 0; i < n; i = i + 1 {
+  for i = 0, max_area = 0L; i < n; {
     let l = if left[i] == -1 { 0 } else { left[i] + 1 }
     let r = if right[i] == -1 { n - 1 } else { right[i] - 1 }
     let width = (r - l + 1).to_int64()
     let area = heights[i] * width
-    if area > max_area {
-      max_area = area
-    }
+    let new_max = if area > max_area { area } else { max_area }
+    continue i + 1, new_max
+  } else {
+    max_area
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
@@ -586,7 +594,6 @@ fn largest_rectangle_histogram(heights : Array[Int64]) -> Int64 {
       #|At i = n, max_area is the largest rectangle in the histogram.
     ),
   }
-  max_area
 }
 
 // ============================================================================
@@ -608,9 +615,10 @@ fn CartesianTree::tree_number(self : CartesianTree) -> Int64 {
   encode_tree(self.nodes, self.root, bits)
 
   // Convert to number
-  let mut result = 0L
-  for i = 0; i < bits.length(); i = i + 1 {
-    result = result * 2L + bits[i].to_int64()
+  for i = 0, result = 0L; i < bits.length(); {
+    continue i + 1, result * 2L + bits[i].to_int64()
+  } else {
+    result
   } where {
     invariant: i >= 0 && i <= bits.length(),
     reasoning: (
@@ -622,7 +630,6 @@ fn CartesianTree::tree_number(self : CartesianTree) -> Int64 {
       #|At i = bits.length(), result encodes the full tree shape.
     ),
   }
-  result
 }
 
 ///|
