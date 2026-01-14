@@ -39,26 +39,26 @@ let promotion_probability : Int = 4 // 1 in 4 chance
 ///|
 /// A node in the skip list
 /// Each node contains forward pointers to the next node at each level
-priv struct SkipNode {
-  key : Int
-  value : Int
+priv struct SkipNode[K, V] {
+  key : K?
+  value : V?
   // forward[i] points to the next node at level i
   // forward.length() == level of this node
-  forward : Array[SkipNode?]
+  forward : Array[SkipNode[K, V]?]
 }
 
 ///|
 /// Create a new skip list node
-fn SkipNode::new(key : Int, value : Int, level : Int) -> SkipNode {
+fn[K, V] SkipNode::new(key : K?, value : V?, level : Int) -> SkipNode[K, V] {
   { key, value, forward: Array::make(level, None) }
 }
 
 ///|
 /// Skip List data structure
-priv struct SkipList {
+priv struct SkipList[K, V] {
   // Header node (sentinel) - exists at all levels
   // header.key should be treated as -infinity
-  header : SkipNode
+  header : SkipNode[K, V]
   // Current maximum level in use (0-indexed)
   mut level : Int
   // Random state for probabilistic level generation
@@ -69,9 +69,9 @@ priv struct SkipList {
 
 ///|
 /// Create a new empty skip list
-fn SkipList::new() -> SkipList {
+fn[K, V] SkipList::new() -> SkipList[K, V] {
   {
-    header: SkipNode::new(0, 0, max_level), // sentinel node
+    header: SkipNode::new(None, None, max_level), // sentinel node
     level: 0,
     rand_state: 42,
     size: 0,
@@ -85,7 +85,7 @@ fn SkipList::new() -> SkipList {
 /// REASONING: Each level has 1/p probability of being reached
 /// Expected level = 1/(1-1/p) ≈ 1.33 for p=4
 /// This ensures logarithmic height with high probability
-fn SkipList::random_level(self : SkipList) -> Int {
+fn[K, V] SkipList::random_level(self : SkipList[K, V]) -> Int {
   // Loop invariant: lvl represents the current level being considered
   // We flip coins until we get "heads" (random not divisible by p)
   for lvl = 0; lvl < max_level - 1; {
@@ -138,13 +138,13 @@ fn SkipList::random_level(self : SkipList) -> Int {
 /// 3. Drop down one level
 /// 4. Repeat until level 0
 /// 5. Check if we found the key
-fn SkipList::search(self : SkipList, key : Int) -> Int? {
+fn[K : Compare, V] SkipList::search(self : SkipList[K, V], key : K) -> V? {
   // Start at the header node
   // We will traverse from highest level down to level 0
   for current = self.header, lvl = self.level; lvl >= 0; {
     // At each level, move right as far as possible while staying < key
     match current.forward[lvl] {
-      Some(next) if next.key < key =>
+      Some(next) if next.key is Some(next_key) && next_key < key =>
         // Move right - next node's key is still less than target
         continue next, lvl
       _ =>
@@ -156,13 +156,14 @@ fn SkipList::search(self : SkipList, key : Int) -> Int? {
     // We've descended through all levels
     // Now check if the next node at level 0 has our key
     match current.forward[0] {
-      Some(node) if node.key == key => Some(node.value)
+      Some(node) if node.key is Some(node_key) && node_key == key => node.value
       _ => None
     }
   } where {
-    invariant: current.key < key,
+    invariant: current.key is None ||
+    (current.key is Some(current_key) && current_key < key),
     reasoning: (
-      #|SEARCH INVARIANT: current.key < key at all times
+      #|SEARCH INVARIANT: current is header or current.key < key
       #|
       #|1. Initialization: header acts as -infinity sentinel, so header.key < key
       #|   (we treat header.key as a sentinel, not a real key)
@@ -172,7 +173,7 @@ fn SkipList::search(self : SkipList, key : Int) -> Int? {
       #|   - Postcondition: new current.key = next.key < key ✓
       #|
       #|3. Dropping down (continue current, lvl - 1):
-      #|   - current unchanged, so current.key < key still holds ✓
+      #|   - current unchanged, so the invariant still holds ✓
       #|
       #|4. Termination: lvl decreases when we can't move right
       #|   - Eventually lvl = -1 and we exit
@@ -181,7 +182,7 @@ fn SkipList::search(self : SkipList, key : Int) -> Int? {
       #|5. Correctness: Due to sorted order at each level, if key exists,
       #|   it must be at current.forward[0] when we finish descending.
       #|MAINTENANCE:
-      #|Moving right preserves current.key < key; dropping a level keeps current.
+      #|Moving right preserves the invariant; dropping a level keeps current.
       #|TERMINATION:
       #|lvl strictly decreases when movement right is blocked, so we exit.
     ),
@@ -200,16 +201,21 @@ fn SkipList::search(self : SkipList, key : Int) -> Int? {
 /// 1. Search while recording update points at each level
 /// 2. Generate random level for new node
 /// 3. Link new node at all levels up to its random level
-fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
+fn[K : Compare, V] SkipList::insert(
+  self : SkipList[K, V],
+  key : K,
+  value : V,
+) -> Unit {
   // update[i] will hold the rightmost node at level i that is < key
   // These are the nodes whose forward pointers need updating
-  let update : Array[SkipNode?] = Array::make(max_level, None)
+  let update : Array[SkipNode[K, V]?] = Array::make(max_level, None)
 
   // Phase 1: Find insert position and record update points
   // This is similar to search but we remember the last node at each level
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < key =>
+        continue next, lvl
       _ => {
         // Record this as the update point for level lvl
         update[lvl] = Some(current)
@@ -219,7 +225,8 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
   } else {
     // Check if key already exists
     match current.forward[0] {
-      Some(existing) if existing.key == key =>
+      Some(existing) if existing.key is Some(existing_key) &&
+        existing_key == key =>
         // Key exists - update value
         // Note: In a more sophisticated implementation, we'd use mutable value
         // For now, we don't support in-place update (skip lists typically do)
@@ -240,7 +247,7 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
         }
 
         // Create new node
-        let new_node = SkipNode::new(key, value, new_level + 1)
+        let new_node = SkipNode::new(Some(key), Some(value), new_level + 1)
 
         // Link new node at each level
         // This loop links the new node into the skip list at all levels
@@ -294,13 +301,14 @@ fn SkipList::insert(self : SkipList, key : Int, value : Int) -> Unit {
 ///|
 /// Delete a key from the skip list
 /// Returns true if key was found and deleted, false otherwise
-fn SkipList::delete(self : SkipList, key : Int) -> Bool {
-  let update : Array[SkipNode?] = Array::make(max_level, None)
+fn[K : Compare, V] SkipList::delete(self : SkipList[K, V], key : K) -> Bool {
+  let update : Array[SkipNode[K, V]?] = Array::make(max_level, None)
 
   // Phase 1: Find the node and record update points
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < key =>
+        continue next, lvl
       _ => {
         update[lvl] = Some(current)
         continue current, lvl - 1
@@ -309,13 +317,13 @@ fn SkipList::delete(self : SkipList, key : Int) -> Bool {
   } else {
     // Check if key exists
     match current.forward[0] {
-      Some(target) if target.key == key => {
+      Some(target) if target.key is Some(target_key) && target_key == key => {
         // Found the node - unlink it at all levels
         for i in 0..=self.level {
           match update[i] {
             Some(prev) =>
               match prev.forward[i] {
-                Some(node) if node.key == key =>
+                Some(node) if node.key is Some(node_key) && node_key == key =>
                   prev.forward[i] = node.forward[i]
                 _ => ()
               }
@@ -386,27 +394,32 @@ fn SkipList::delete(self : SkipList, key : Int) -> Bool {
 /// Returns array of (key, value) pairs in sorted order
 ///
 /// Time complexity: O(log n + k) where k is number of keys in range
-fn SkipList::range_query(
-  self : SkipList,
-  low : Int,
-  high : Int,
-) -> Array[(Int, Int)] {
-  let result : Array[(Int, Int)] = []
+fn[K : Compare, V] SkipList::range_query(
+  self : SkipList[K, V],
+  low : K,
+  high : K,
+) -> Array[(K, V)] {
+  let result : Array[(K, V)] = []
 
   // First, find the first node >= low using skip list search
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < low => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < low =>
+        continue next, lvl
       _ => continue current, lvl - 1
     }
   } else {
     // Now traverse at level 0 collecting all keys in range
     for node = current.forward[0] {
       match node {
-        Some(n) if n.key <= high => {
-          result.push((n.key, n.value))
-          continue n.forward[0]
-        }
+        Some(n) if n.key is Some(node_key) && node_key <= high =>
+          match n.value {
+            Some(node_value) => {
+              result.push((node_key, node_value))
+              continue n.forward[0]
+            }
+            None => break
+          }
         _ => break
       }
     } where {
@@ -438,7 +451,7 @@ fn SkipList::range_query(
       #|We find the predecessor of 'low', then traverse level 0
       #|to collect all elements in the range [low, high].
       #|MAINTENANCE:
-      #|Search preserves current.key < low at each level.
+      #|Search preserves current as header or current.key < low at each level.
       #|TERMINATION:
       #|After descending levels, current.forward[0] is the first node >= low.
     ),
@@ -451,21 +464,25 @@ fn SkipList::range_query(
 
 ///|
 /// Get the number of elements in the skip list
-fn SkipList::length(self : SkipList) -> Int {
+fn[K, V] SkipList::length(self : SkipList[K, V]) -> Int {
   self.size
 }
 
 ///|
 /// Check if the skip list is empty
-fn SkipList::is_empty(self : SkipList) -> Bool {
+fn[K, V] SkipList::is_empty(self : SkipList[K, V]) -> Bool {
   self.size == 0
 }
 
 ///|
 /// Get minimum key in the skip list (first element at level 0)
-fn SkipList::min(self : SkipList) -> (Int, Int)? {
+fn[K, V] SkipList::min(self : SkipList[K, V]) -> (K, V)? {
   match self.header.forward[0] {
-    Some(node) => Some((node.key, node.value))
+    Some(node) =>
+      match (node.key, node.value) {
+        (Some(node_key), Some(node_value)) => Some((node_key, node_value))
+        _ => None
+      }
     None => None
   }
 }
@@ -473,7 +490,7 @@ fn SkipList::min(self : SkipList) -> (Int, Int)? {
 ///|
 /// Get maximum key in the skip list
 /// Uses skip list structure for O(log n) expected traversal
-fn SkipList::max(self : SkipList) -> (Int, Int)? {
+fn[K, V] SkipList::max(self : SkipList[K, V]) -> (K, V)? {
   // Traverse from top level, always going as far right as possible
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
@@ -482,10 +499,13 @@ fn SkipList::max(self : SkipList) -> (Int, Int)? {
     }
   } else {
     // current is now the rightmost node
-    if current.key == self.header.key {
+    if current.key is None {
       None // Empty list, current is header
     } else {
-      Some((current.key, current.value))
+      match (current.key, current.value) {
+        (Some(node_key), Some(node_value)) => Some((node_key, node_value))
+        _ => None
+      }
     }
   } where {
     invariant: lvl >= 0 || lvl == -1,
@@ -516,26 +536,32 @@ fn SkipList::max(self : SkipList) -> (Int, Int)? {
 
 ///|
 /// Find the smallest key >= given key (ceiling)
-fn SkipList::ceil(self : SkipList, key : Int) -> (Int, Int)? {
+fn[K : Compare, V] SkipList::ceil(self : SkipList[K, V], key : K) -> (K, V)? {
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < key =>
+        continue next, lvl
       _ => continue current, lvl - 1
     }
   } else {
     match current.forward[0] {
-      Some(node) => Some((node.key, node.value))
+      Some(node) =>
+        match (node.key, node.value) {
+          (Some(node_key), Some(node_value)) => Some((node_key, node_value))
+          _ => None
+        }
       None => None
     }
   } where {
-    invariant: current.key < key,
+    invariant: current.key is None ||
+    (current.key is Some(current_key) && current_key < key),
     reasoning: (
       #|CEIL INVARIANT: Find first node >= key
       #|
       #|After descending all levels, current.forward[0] points to
       #|the first node with key >= given key (if any exists).
       #|MAINTENANCE:
-      #|We move right only while next.key < key, preserving current.key < key.
+      #|We move right only while next.key < key, preserving the invariant.
       #|TERMINATION:
       #|lvl decreases to -1, then we inspect the level 0 successor.
     ),
@@ -544,21 +570,26 @@ fn SkipList::ceil(self : SkipList, key : Int) -> (Int, Int)? {
 
 ///|
 /// Find the largest key <= given key (floor)
-fn SkipList::floor(self : SkipList, key : Int) -> (Int, Int)? {
+fn[K : Compare, V] SkipList::floor(self : SkipList[K, V], key : K) -> (K, V)? {
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key <= key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key <= key =>
+        continue next, lvl
       _ => continue current, lvl - 1
     }
   } else {
     // current is the largest node <= key (or header if none exists)
-    if current.key == self.header.key {
+    if current.key is None {
       None
     } else {
-      Some((current.key, current.value))
+      match (current.key, current.value) {
+        (Some(node_key), Some(node_value)) => Some((node_key, node_value))
+        _ => None
+      }
     }
   } where {
-    invariant: current.key <= key,
+    invariant: current.key is None ||
+    (current.key is Some(current_key) && current_key <= key),
     reasoning: (
       #|FLOOR INVARIANT: Find last node <= key
       #|
@@ -570,7 +601,7 @@ fn SkipList::floor(self : SkipList, key : Int) -> (Int, Int)? {
       #|
       #|3. After all levels: current is the largest node <= key overall
       #|MAINTENANCE:
-      #|Moving right keeps current.key <= key; dropping a level preserves it.
+      #|Moving right keeps the invariant; dropping a level preserves it.
       #|TERMINATION:
       #|lvl decreases to -1, yielding the final predecessor.
     ),
@@ -585,10 +616,14 @@ fn SkipList::floor(self : SkipList, key : Int) -> (Int, Int)? {
 /// Count elements less than key
 /// This version traverses level 0 - O(result) time
 /// A more efficient version would maintain size in each node
-fn SkipList::count_less_than(self : SkipList, key : Int) -> Int {
+fn[K : Compare, V] SkipList::count_less_than(
+  self : SkipList[K, V],
+  key : K,
+) -> Int {
   for current = self.header.forward[0], count = 0 {
     match current {
-      Some(node) if node.key < key => continue node.forward[0], count + 1
+      Some(node) if node.key is Some(node_key) && node_key < key =>
+        continue node.forward[0], count + 1
       _ => break count
     }
   } where {
@@ -610,17 +645,21 @@ fn SkipList::count_less_than(self : SkipList, key : Int) -> Int {
 ///|
 /// Find k-th smallest element (0-indexed)
 /// Returns None if k >= size
-fn SkipList::kth_element(self : SkipList, k : Int) -> (Int, Int)? {
+fn[K, V] SkipList::kth_element(self : SkipList[K, V], k : Int) -> (K, V)? {
   if k < 0 || k >= self.size {
     return None
   }
   for current = self.header.forward[0], i = 0 {
     match current {
       Some(node) =>
-        if i == k {
-          break Some((node.key, node.value))
-        } else {
-          continue node.forward[0], i + 1
+        match (node.key, node.value) {
+          (Some(node_key), Some(node_value)) =>
+            if i == k {
+              break Some((node_key, node_value))
+            } else {
+              continue node.forward[0], i + 1
+            }
+          _ => break None
         }
       None => break None
     }
@@ -646,7 +685,7 @@ fn SkipList::kth_element(self : SkipList, k : Int) -> (Int, Int)? {
 
 ///|
 test "skip list basic operations" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
 
   // Empty list check
   inspect(sl.is_empty(), content="true")
@@ -668,7 +707,7 @@ test "skip list basic operations" {
 
 ///|
 test "skip list delete" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
   sl.insert(1, 10)
   sl.insert(2, 20)
   sl.insert(3, 30)
@@ -694,7 +733,7 @@ test "skip list delete" {
 
 ///|
 test "skip list range query" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
   for i in 0..<10 {
     sl.insert(i * 2, i * 20) // Insert 0, 2, 4, ..., 18
   }
@@ -710,7 +749,7 @@ test "skip list range query" {
 
 ///|
 test "skip list min max" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
   inspect(sl.min(), content="None")
   inspect(sl.max(), content="None")
   sl.insert(50, 500)
@@ -724,7 +763,7 @@ test "skip list min max" {
 
 ///|
 test "skip list ceil floor" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
 
   // Insert 10, 20, 30, 40, 50
   for i in 1..=5 {
@@ -746,7 +785,7 @@ test "skip list ceil floor" {
 
 ///|
 test "skip list ordered statistics" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
 
   // Insert 1, 3, 5, 7, 9
   for i in 0..<5 {
@@ -767,7 +806,7 @@ test "skip list ordered statistics" {
 
 ///|
 test "skip list stress test" {
-  let sl = SkipList::new()
+  let sl : SkipList[Int, Int] = SkipList::new()
 
   // Insert 100 elements
   for i in 0..<100 {
@@ -806,29 +845,33 @@ test "skip list stress test" {
 ///|
 /// Skip List that allows duplicate keys
 /// Each key can have multiple values (stored as a list)
-priv struct MultiSkipNode {
-  key : Int
-  values : Array[Int] // Multiple values for same key
-  forward : Array[MultiSkipNode?]
+priv struct MultiSkipNode[K, V] {
+  key : K?
+  values : Array[V] // Multiple values for same key
+  forward : Array[MultiSkipNode[K, V]?]
 }
 
 ///|
-fn MultiSkipNode::new(key : Int, value : Int, level : Int) -> MultiSkipNode {
-  { key, values: [value], forward: Array::make(level, None) }
+fn[K, V] MultiSkipNode::new(
+  key : K?,
+  values : Array[V],
+  level : Int,
+) -> MultiSkipNode[K, V] {
+  { key, values, forward: Array::make(level, None) }
 }
 
 ///|
-priv struct MultiSkipList {
-  header : MultiSkipNode
+priv struct MultiSkipList[K, V] {
+  header : MultiSkipNode[K, V]
   mut level : Int
   mut rand_state : Int
   mut size : Int // Total count including duplicates
 }
 
 ///|
-fn MultiSkipList::new() -> MultiSkipList {
+fn[K, V] MultiSkipList::new() -> MultiSkipList[K, V] {
   {
-    header: { key: 0, values: [], forward: Array::make(max_level, None) },
+    header: MultiSkipNode::new(None, [], max_level),
     level: 0,
     rand_state: 12345,
     size: 0,
@@ -836,7 +879,7 @@ fn MultiSkipList::new() -> MultiSkipList {
 }
 
 ///|
-fn MultiSkipList::random_level(self : MultiSkipList) -> Int {
+fn[K, V] MultiSkipList::random_level(self : MultiSkipList[K, V]) -> Int {
   for lvl = 0; lvl < max_level - 1; {
     self.rand_state = (self.rand_state * 1103 + 12345) % 65536
     let r = if self.rand_state < 0 { -self.rand_state } else { self.rand_state }
@@ -862,11 +905,16 @@ fn MultiSkipList::random_level(self : MultiSkipList) -> Int {
 
 ///|
 /// Insert allows duplicate keys - appends to values array if key exists
-fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
-  let update : Array[MultiSkipNode?] = Array::make(max_level, None)
+fn[K : Compare, V] MultiSkipList::insert(
+  self : MultiSkipList[K, V],
+  key : K,
+  value : V,
+) -> Unit {
+  let update : Array[MultiSkipNode[K, V]?] = Array::make(max_level, None)
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < key =>
+        continue next, lvl
       _ => {
         update[lvl] = Some(current)
         continue current, lvl - 1
@@ -875,7 +923,8 @@ fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
   } else {
     // Check if key exists - if so, append to values
     match current.forward[0] {
-      Some(existing) if existing.key == key => {
+      Some(existing) if existing.key is Some(existing_key) &&
+        existing_key == key => {
         existing.values.push(value)
         self.size = self.size + 1
       }
@@ -888,7 +937,7 @@ fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
         if new_level > self.level {
           self.level = new_level
         }
-        let new_node = MultiSkipNode::new(key, value, new_level + 1)
+        let new_node = MultiSkipNode::new(Some(key), [value], new_level + 1)
         for i in 0..=new_level {
           match update[i] {
             Some(prev) => {
@@ -921,15 +970,20 @@ fn MultiSkipList::insert(self : MultiSkipList, key : Int, value : Int) -> Unit {
 
 ///|
 /// Search returns all values associated with a key
-fn MultiSkipList::search(self : MultiSkipList, key : Int) -> Array[Int]? {
+fn[K : Compare, V] MultiSkipList::search(
+  self : MultiSkipList[K, V],
+  key : K,
+) -> Array[V]? {
   for current = self.header, lvl = self.level; lvl >= 0; {
     match current.forward[lvl] {
-      Some(next) if next.key < key => continue next, lvl
+      Some(next) if next.key is Some(next_key) && next_key < key =>
+        continue next, lvl
       _ => continue current, lvl - 1
     }
   } else {
     match current.forward[0] {
-      Some(node) if node.key == key => Some(node.values)
+      Some(node) if node.key is Some(node_key) && node_key == key =>
+        Some(node.values)
       _ => None
     }
   } where {
@@ -948,7 +1002,7 @@ fn MultiSkipList::search(self : MultiSkipList, key : Int) -> Array[Int]? {
 
 ///|
 test "multi skip list duplicates" {
-  let msl = MultiSkipList::new()
+  let msl : MultiSkipList[Int, Int] = MultiSkipList::new()
 
   // Insert duplicate keys
   msl.insert(5, 50)

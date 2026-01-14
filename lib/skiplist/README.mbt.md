@@ -10,6 +10,8 @@ express lanes for faster traversal.
 - **Space**: O(n) expected
 - **Simplicity**: Much simpler than balanced trees!
 
+This skip list is generic over key and value types (`K : Compare`, `V`).
+
 ## The Key Insight
 
 ```
@@ -210,4 +212,3 @@ Skip List Map:
 - Use probability p = 1/2 or 1/4 (1/4 uses less space)
 - For concurrent versions, use lock-free CAS operations
 - Consider memory pool for node allocation
-
