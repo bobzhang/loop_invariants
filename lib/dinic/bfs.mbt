@@ -61,12 +61,10 @@ pub fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
   // Initialize BFS from source
   self.level[source] = 0
   let queue : Array[Int] = [source]
-  let mut front = 0
 
   // BFS loop
-  while front < queue.length() {
+  for front = 0; front < queue.length(); {
     let u = queue[front]
-    front = front + 1
 
     // Explore all edges from u
     for i = 0; i < self.adj[u].length(); i = i + 1 {
@@ -95,6 +93,17 @@ pub fn Dinic::bfs(self : Dinic, source : Int, sink : Int) -> Bool {
         #|  At i = deg(u), all edges from u are processed.
       ),
     }
+    continue front + 1
+  } where {
+    invariant: front >= 0 && front <= queue.length(),
+    reasoning: (
+      #|INVARIANT (BFS queue):
+      #|Vertices in queue[0..front) have been dequeued and explored.
+      #|MAINTENANCE:
+      #|Process queue[front], enqueue unvisited neighbors.
+      #|TERMINATION:
+      #|front advances until queue is exhausted.
+    ),
   }
 
   // Return true if sink is reachable

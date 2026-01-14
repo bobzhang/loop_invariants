@@ -130,14 +130,9 @@ fn LinkCutTree::push_down(self : LinkCutTree, x : Int) -> Unit {
 fn LinkCutTree::push_up(self : LinkCutTree, x : Int) -> Unit {
   let l = self.nodes[x].left
   let r = self.nodes[x].right
-  let mut sum = self.nodes[x].value
-  if l >= 0 {
-    sum = sum + self.nodes[l].subtree_sum
-  }
-  if r >= 0 {
-    sum = sum + self.nodes[r].subtree_sum
-  }
-  self.nodes[x].subtree_sum = sum
+  let l_sum = if l >= 0 { self.nodes[l].subtree_sum } else { 0 }
+  let r_sum = if r >= 0 { self.nodes[r].subtree_sum } else { 0 }
+  self.nodes[x].subtree_sum = self.nodes[x].value + l_sum + r_sum
 }
 
 ///|

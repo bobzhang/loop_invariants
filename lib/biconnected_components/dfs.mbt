@@ -69,15 +69,13 @@ fn BiconnectedFinder::dfs(
   self.low[u] = self.timer
   self.timer = self.timer + 1
   self.parent_edge[u] = p_edge
-  let mut children = 0 // Count of DFS tree children (for root check)
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
+  let children = for i = 0, children = 0; i < self.adj[u].length(); {
     let (v, eid) = self.adj[u][i]
 
     // Skip the parent edge (don't go back immediately)
-    guard eid != p_edge else { continue }
+    guard eid != p_edge else { continue i + 1, children }
     if self.disc[v] == -1 {
       // Case 1: Tree edge - v is unvisited
-      children = children + 1
       self.edge_stack.push((u, v))
       self.dfs(v, eid)
 
@@ -124,12 +122,18 @@ fn BiconnectedFinder::dfs(
           self.components.push(comp)
         }
       }
+      continue i + 1, children + 1
     } else if self.disc[v] < self.disc[u] {
       // Case 2: Back edge - v is ancestor of u
       // Only process if disc[v] < disc[u] to avoid duplicate processing
       self.edge_stack.push((u, v))
       self.low[u] = min(self.low[u], self.disc[v])
+      continue i + 1, children
+    } else {
+      continue i + 1, children
     }
+  } else {
+    children
   } where {
     invariant: i >= 0 && i <= self.adj[u].length(),
     reasoning: (

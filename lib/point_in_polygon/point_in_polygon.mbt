@@ -43,8 +43,7 @@ pub fn point_in_polygon(poly : Array[Point], p : Point) -> Location {
   if n < 3 {
     return Outside
   }
-  let mut inside = false
-  for i = 0; i < n; i = i + 1 {
+  let inside = for i = 0, inside = false; i < n; {
     let a = poly[i]
     let b = poly[(i + 1) % n]
     let c = cross(a, b, p)
@@ -53,14 +52,17 @@ pub fn point_in_polygon(poly : Array[Point], p : Point) -> Location {
     }
     let above_a = a.y > p.y
     let above_b = b.y > p.y
-    if above_a != above_b {
+    let new_inside = if above_a != above_b {
       let lhs = (b.x - a.x) * (p.y - a.y)
       let rhs = (p.x - a.x) * (b.y - a.y)
       let intersects = if b.y > a.y { lhs > rhs } else { lhs < rhs }
-      if intersects {
-        inside = not(inside)
-      }
+      if intersects { not(inside) } else { inside }
+    } else {
+      inside
     }
+    continue i + 1, new_inside
+  } else {
+    inside
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
