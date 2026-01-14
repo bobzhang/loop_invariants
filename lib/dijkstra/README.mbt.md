@@ -8,6 +8,12 @@ other vertices in a weighted graph with **non-negative edge weights**.
 - **Time**: O((V + E) log V) with binary heap
 - **Space**: O(V + E)
 
+## Core Idea
+
+- Maintain a min-priority queue of **tentative distances**.
+- When a node is extracted, its distance is **final** (non-negative weights).
+- Relax outgoing edges to improve neighbors' tentative distances.
+
 ## The Algorithm Visualized
 
 Find shortest paths from vertex 0:
