@@ -4,24 +4,24 @@
 // ============================================================================
 
 ///|
-struct Tree {
-  value : Int
+struct Tree[T] {
+  value : T
   rank : Int
-  children : Array[Tree]
+  children : Array[Tree[T]]
 } derive(Show)
 
 ///|
-pub struct Heap {
-  trees : Array[Tree?]
+pub struct Heap[T] {
+  trees : Array[Tree[T]?]
 } derive(Show)
 
 ///|
-fn tree_rank(t : Tree) -> Int {
+fn[T] tree_rank(t : Tree[T]) -> Int {
   t.rank
 }
 
 ///|
-fn link(a : Tree, b : Tree) -> Tree {
+fn[T : Compare] link(a : Tree[T], b : Tree[T]) -> Tree[T] {
   if a.value <= b.value {
     Tree::{ value: a.value, rank: a.rank + 1, children: a.children + [b] }
   } else {
@@ -30,7 +30,7 @@ fn link(a : Tree, b : Tree) -> Tree {
 }
 
 ///|
-fn valid_prefix(arr : Array[Tree?], i : Int) -> Bool {
+fn[T] valid_prefix(arr : Array[Tree[T]?], i : Int) -> Bool {
   if i <= 0 {
     true
   } else {
@@ -42,10 +42,10 @@ fn valid_prefix(arr : Array[Tree?], i : Int) -> Bool {
 }
 
 ///|
-fn merge_heaps(a : Heap, b : Heap) -> Heap {
+fn[T : Compare] merge_heaps(a : Heap[T], b : Heap[T]) -> Heap[T] {
   let len = max2(a.trees.length(), b.trees.length()) + 1
-  let out : Array[Tree?] = Array::make(len, None)
-  let mut carry : Tree? = None
+  let out : Array[Tree[T]?] = Array::make(len, None)
+  let mut carry : Tree[T]? = None
   for i = 0; i < len; i = i + 1 {
     let t1 = if i < a.trees.length() { a.trees[i] } else { None }
     let t2 = if i < b.trees.length() { b.trees[i] } else { None }
@@ -113,13 +113,13 @@ fn merge_heaps(a : Heap, b : Heap) -> Heap {
 
 ///|
 /// Create an empty binomial heap.
-pub fn empty() -> Heap {
+pub fn[T] empty() -> Heap[T] {
   { trees: [] }
 }
 
 ///|
 /// Merge two heaps and return the result.
-pub fn merge(a : Heap, b : Heap) -> Heap {
+pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
   merge_heaps(a, b)
 }
 
@@ -133,23 +133,23 @@ fn max2(a : Int, b : Int) -> Int {
 }
 
 ///|
-fn singleton(value : Int) -> Heap {
+fn[T] singleton(value : T) -> Heap[T] {
   let tree = Tree::{ value, rank: 0, children: [] }
   { trees: [Some(tree)] }
 }
 
 ///|
 /// Insert a value and return the new heap.
-pub fn insert(h : Heap, value : Int) -> Heap {
+pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
   merge_heaps(h, singleton(value))
 }
 
 ///|
 /// Return the minimum value in the heap, or None if empty.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn find_min(h : Heap) -> Int? {
+pub fn[T : Compare] find_min(h : Heap[T]) -> T? {
   let len = h.trees.length()
-  let none : Int? = None
+  let none : T? = None
   for i = 0, best = none {
     if i >= len {
       break best
@@ -175,8 +175,8 @@ pub fn find_min(h : Heap) -> Int? {
 }
 
 ///|
-fn heap_from_children(children : Array[Tree], rank : Int) -> Heap {
-  let out : Array[Tree?] = Array::make(rank, None)
+fn[T] heap_from_children(children : Array[Tree[T]], rank : Int) -> Heap[T] {
+  let out : Array[Tree[T]?] = Array::make(rank, None)
   for child in children {
     out[child.rank] = Some(child)
   }
@@ -185,21 +185,32 @@ fn heap_from_children(children : Array[Tree], rank : Int) -> Heap {
 
 ///|
 /// Delete the minimum element and return the new heap.
-pub fn delete_min(h : Heap) -> Heap? {
+pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
   let len = h.trees.length()
-  let mut min_idx = -1
-  let mut min_val = 0
+  let mut min_idx : Int? = None
+  let mut min_val : T? = None
   for i = 0; i < len; i = i + 1 {
     match h.trees[i] {
       None => ()
       Some(t) =>
-        if min_idx < 0 || t.value < min_val {
-          min_idx = i
-          min_val = t.value
+        match min_val {
+          None => {
+            min_idx = Some(i)
+            min_val = Some(t.value)
+          }
+          Some(best) =>
+            if t.value < best {
+              min_idx = Some(i)
+              min_val = Some(t.value)
+            }
         }
     }
   } where {
     invariant: i >= 0 && i <= len,
+    invariant: min_idx is None || (min_idx is Some(idx) && idx >= 0 && idx < i),
+    invariant: min_idx is None || min_val is Some(_),
+    invariant: min_idx is None ||
+    (min_idx is Some(idx) && h.trees[idx] is Some(_)),
     reasoning: (
       #|INVARIANT (Min index scan):
       #|min_idx/min_val track the smallest root seen in trees[0..i).
@@ -209,18 +220,18 @@ pub fn delete_min(h : Heap) -> Heap? {
       #|At i = len, min_idx is the index of the minimum tree.
     ),
   }
-  if min_idx < 0 {
-    None
-  } else {
-    match h.trees[min_idx] {
-      None => None
-      Some(tree) => {
-        let base : Array[Tree?] = h.trees.copy()
-        base[min_idx] = None
-        let heap1 = { trees: base }
-        let heap2 = heap_from_children(tree.children, tree.rank)
-        Some(merge_heaps(heap1, heap2))
+  match min_idx {
+    None => None
+    Some(idx) =>
+      match h.trees[idx] {
+        None => None
+        Some(tree) => {
+          let base : Array[Tree[T]?] = h.trees.copy()
+          base[idx] = None
+          let heap1 = { trees: base }
+          let heap2 = heap_from_children(tree.children, tree.rank)
+          Some(merge_heaps(heap1, heap2))
+        }
       }
-    }
   }
 }

@@ -51,3 +51,4 @@ test "persistent binomial heap merge" {
 
 - Merge and insert are O(log n).
 - `delete_min` also costs O(log n).
+- The heap is generic: operations that compare keys require `T : Compare`.
