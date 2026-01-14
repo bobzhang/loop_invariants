@@ -45,11 +45,13 @@
 /// SPACE: O(m) for pattern array conversion
 ///
 /// EXAMPLE:
-/// ```
-///   tree = SuffixTree::new("banana")
-///   tree.contains("ana")   // true - occurs at positions 1 and 3
-///   tree.contains("ban")   // true - prefix of text
-///   tree.contains("xyz")   // false - not in text
+/// ```mbt check
+/// test {
+///   let tree = @suffix_tree.SuffixTree::new("banana")
+///   assert_true(tree.contains("ana")) // true - occurs at positions 1 and 3
+///   assert_true(tree.contains("ban")) // true - prefix of text
+///   assert_false(tree.contains("xyz")) // false - not in text
+/// }
 /// ```
 pub fn SuffixTree::contains(self : SuffixTree, pattern : String) -> Bool {
   let p = pattern.to_array()
@@ -64,13 +66,17 @@ pub fn SuffixTree::contains(self : SuffixTree, pattern : String) -> Bool {
     guard i < p.length() else { break true }
 
     // Find edge starting with p[i]
-    guard find_edge(self.nodes, self.text, node, p[i]) is Some(edge_idx) else {
-      // No matching edge - pattern not found
+    let edges = self.nodes[node].edges
+    let edge_idx : Int = for idx, edge in edges {
+      if self.text[edge.start] == p[i] {
+        break idx
+      }
+    } else {
       break false
     }
 
     // Match pattern against edge label
-    let edge = self.nodes[node].edges[edge_idx]
+    let edge = edges[edge_idx]
     let (k, new_i) = for k = edge.start, pi = i {
       guard k < edge.end && pi < p.length() && self.text[k] == p[pi] else {
         break (k, pi)
@@ -172,11 +178,17 @@ pub fn SuffixTree::count_occurrences(
   }
   for node = 0, i = 0 {
     guard i < p.length() else { break 0 }
-    guard find_edge(self.nodes, self.text, node, p[i]) is Some(edge_idx) else {
-      // Pattern not found
+
+    // Find edge starting with p[i]
+    let edges = self.nodes[node].edges
+    let edge_idx : Int = for idx, edge in edges {
+      if self.text[edge.start] == p[i] {
+        break idx
+      }
+    } else {
       break 0
     }
-    let edge = self.nodes[node].edges[edge_idx]
+    let edge = edges[edge_idx]
     let (k, new_i) = for k = edge.start, pi = i {
       guard k < edge.end && pi < p.length() && self.text[k] == p[pi] else {
         break (k, pi)
