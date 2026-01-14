@@ -4,21 +4,27 @@
 // ============================================================================
 
 ///|
-pub enum Tree {
+pub enum Tree[T] {
   Empty
-  Two(key~ : Int, left~ : Tree, right~ : Tree)
-  Three(key1~ : Int, key2~ : Int, left~ : Tree, middle~ : Tree, right~ : Tree)
+  Two(key~ : T, left~ : Tree[T], right~ : Tree[T])
+  Three(
+    key1~ : T,
+    key2~ : T,
+    left~ : Tree[T],
+    middle~ : Tree[T],
+    right~ : Tree[T]
+  )
 } derive(Show)
 
 ///|
-enum InsertResult {
-  Done(tree~ : Tree)
-  Split(key~ : Int, left~ : Tree, right~ : Tree)
+enum InsertResult[T] {
+  Done(tree~ : Tree[T])
+  Split(key~ : T, left~ : Tree[T], right~ : Tree[T])
 } derive(Show)
 
 ///|
 /// Return the number of keys in the tree.
-pub fn size(t : Tree) -> Int {
+pub fn[T] size(t : Tree[T]) -> Int {
   match t {
     Tree::Empty => 0
     Tree::Two(key=_, left~, right~) => 1 + size(left) + size(right)
@@ -28,7 +34,7 @@ pub fn size(t : Tree) -> Int {
 }
 
 ///|
-fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
   let lo_ok = match lo {
     None => true
     Some(l) => value > l
@@ -41,7 +47,7 @@ fn within_bounds(value : Int, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn tree_valid(t : Tree, lo : Int?, hi : Int?) -> Bool {
+fn[T : Compare] tree_valid(t : Tree[T], lo : T?, hi : T?) -> Bool {
   match t {
     Tree::Empty => true
     Tree::Two(key=k, left=l, right=r) =>
@@ -59,7 +65,7 @@ fn tree_valid(t : Tree, lo : Int?, hi : Int?) -> Bool {
 }
 
 ///|
-fn insert_inner(t : Tree, key : Int) -> InsertResult {
+fn[T : Compare] insert_inner(t : Tree[T], key : T) -> InsertResult[T] {
   match t {
     Tree::Empty =>
       InsertResult::Done(
@@ -150,13 +156,13 @@ fn insert_inner(t : Tree, key : Int) -> InsertResult {
 
 ///|
 /// Create an empty 2-3 tree.
-pub fn empty() -> Tree {
+pub fn[T] empty() -> Tree[T] {
   Tree::Empty
 }
 
 ///|
 /// Insert key and return the new tree.
-pub fn insert(t : Tree, key : Int) -> Tree {
+pub fn[T : Compare] insert(t : Tree[T], key : T) -> Tree[T] {
   match insert_inner(t, key) {
     InsertResult::Done(tree~) => tree
     InsertResult::Split(key=k, left=l, right=r) =>
@@ -167,8 +173,8 @@ pub fn insert(t : Tree, key : Int) -> Tree {
 ///|
 /// Check whether key exists in the tree.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn contains(t : Tree, key : Int) -> Bool {
-  let none : Int? = None
+pub fn[T : Compare] contains(t : Tree[T], key : T) -> Bool {
+  let none : T? = None
   for cur = t, lo = none, hi = none {
     match cur {
       Tree::Empty => break false
@@ -208,7 +214,7 @@ pub fn contains(t : Tree, key : Int) -> Bool {
 ///|
 /// Build a 2-3 tree by inserting elements in order.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Tree {
+pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Tree[T] {
   let n = arr.length()
   for i = 0, tree = Tree::Empty {
     if i >= n {

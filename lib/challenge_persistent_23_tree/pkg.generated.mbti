@@ -2,28 +2,28 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_23_tree"
 
 // Values
-pub fn contains(Tree, Int) -> Bool
+pub fn[T : Compare] contains(Tree[T], T) -> Bool
 
-pub fn empty() -> Tree
+pub fn[T] empty() -> Tree[T]
 
-pub fn from_array(ArrayView[Int]) -> Tree
+pub fn[T : Compare] from_array(ArrayView[T]) -> Tree[T]
 
-pub fn insert(Tree, Int) -> Tree
+pub fn[T : Compare] insert(Tree[T], T) -> Tree[T]
 
-pub fn size(Tree) -> Int
+pub fn[T] size(Tree[T]) -> Int
 
 // Errors
 
 // Types and methods
-type InsertResult
-pub impl Show for InsertResult
+type InsertResult[T]
+pub impl[T : Show] Show for InsertResult[T]
 
-pub enum Tree {
+pub enum Tree[T] {
   Empty
-  Two(key~ : Int, left~ : Tree, right~ : Tree)
-  Three(key1~ : Int, key2~ : Int, left~ : Tree, middle~ : Tree, right~ : Tree)
+  Two(key~ : T, left~ : Tree[T], right~ : Tree[T])
+  Three(key1~ : T, key2~ : T, left~ : Tree[T], middle~ : Tree[T], right~ : Tree[T])
 }
-pub impl Show for Tree
+pub impl[T : Show] Show for Tree[T]
 
 // Type aliases
 

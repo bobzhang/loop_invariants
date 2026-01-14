@@ -2,6 +2,8 @@
 
 Balanced search tree that keeps versions by path copying.
 
+This 2-3 tree is generic over the key type: `T : Compare`.
+
 ## Core Idea
 
 Each insertion returns a new root. Only the nodes along the update path are
