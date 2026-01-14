@@ -191,18 +191,8 @@ fn[T] AVLTree::to_sorted_array(self : AVLTree[T]) -> Array[T] {
 /// The result is sorted in nondecreasing order (duplicates preserved).
 pub fn[T : Compare] avl_sorted(keys : ArrayView[T]) -> Array[T] {
   let tree = AVLTree::new()
-  for i = 0; i < keys.length(); i = i + 1 {
-    tree.insert(keys[i])
-  } where {
-    invariant: i >= 0 && i <= keys.length(),
-    reasoning: (
-      #|INVARIANT (Insert prefix):
-      #|The first i keys have been inserted into the AVL tree.
-      #|MAINTENANCE:
-      #|Insert keys[i] and advance i.
-      #|TERMINATION:
-      #|At i = keys.length(), all keys are inserted.
-    ),
+  for key in keys {
+    tree.insert(key)
   }
   tree.to_sorted_array()
 }

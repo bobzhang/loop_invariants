@@ -146,20 +146,8 @@ pub fn LinkCutTree::new(n : Int) -> LinkCutTree {
 /// Create Link-Cut Tree with initial values.
 pub fn LinkCutTree::with_values(values : Array[Int]) -> LinkCutTree {
   let nodes : Array[LCTNode] = []
-  for i = 0; i < values.length(); i = i + 1 {
-    nodes.push(LCTNode::new(values[i]))
-  } where {
-    invariant: i >= 0 && i <= values.length(),
-    reasoning: (
-      #|INVARIANT (init values):
-      #|  nodes[0..i) have value = values[i] and subtree_sum = values[i].
-      #|
-      #|MAINTENANCE:
-      #|  Create node with values[i] as both value and subtree_sum.
-      #|
-      #|TERMINATION:
-      #|  At i = values.length(), all values are loaded.
-    ),
+  for value in values {
+    nodes.push(LCTNode::new(value))
   }
   { nodes, }
 }

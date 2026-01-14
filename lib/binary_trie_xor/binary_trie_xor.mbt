@@ -115,19 +115,8 @@ pub fn BinaryTrie::remove(self : BinaryTrie, x : Int64) -> Bool {
   if self.nodes[node].count == 0 {
     return false
   }
-  for i = 0; i < path.length(); i = i + 1 {
-    let idx = path[i]
+  for idx in path {
     self.nodes[idx].count = self.nodes[idx].count - 1
-  } where {
-    invariant: i >= 0 && i <= path.length(),
-    reasoning: (
-      #|INVARIANT (decrement counts):
-      #|Counts for path[0..i) have been decremented to remove one occurrence.
-      #|MAINTENANCE:
-      #|Decrement the count at path[i].
-      #|TERMINATION:
-      #|At i = len, all nodes on the key path are updated.
-    ),
   }
   true
 }

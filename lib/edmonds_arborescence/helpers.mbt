@@ -130,21 +130,8 @@ fn build_reachable(n : Int, edges : Array[Edge], root : Int) -> Array[Bool] {
       #|  At i = n, all adjacency lists initialized.
     ),
   }
-  for i = 0; i < edges.length(); i = i + 1 {
-    let e = edges[i]
+  for e in edges {
     adj[e.from].push(e.to)
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (adjacency build):
-      #|  Edges [0..i) have been added to adjacency lists.
-      #|
-      #|MAINTENANCE:
-      #|  Add edge[i] to adj[edge[i].from].
-      #|
-      #|TERMINATION:
-      #|  At i = edges.length(), adjacency list is complete.
-    ),
   }
 
   // BFS from root
@@ -201,21 +188,5 @@ fn build_reachable(n : Int, edges : Array[Edge], root : Int) -> Array[Bool] {
 ///   to get the true total cost.
 /// ```
 fn cycle_cost(in_cost : Array[Int64], cycle : Array[Int]) -> Int64 {
-  let mut total = 0L
-  for i = 0; i < cycle.length(); i = i + 1 {
-    total = total + in_cost[cycle[i]]
-  } where {
-    invariant: i >= 0 && i <= cycle.length(),
-    reasoning: (
-      #|INVARIANT (cost summation):
-      #|  total = Σ in_cost[cycle[j]] for j in [0..i)
-      #|
-      #|MAINTENANCE:
-      #|  Add in_cost[cycle[i]] to total.
-      #|
-      #|TERMINATION:
-      #|  At i = cycle.length(), total is complete cycle cost.
-    ),
-  }
-  total
+  cycle.fold(init=0L, fn(total, v) { total + in_cost[v] })
 }

@@ -331,18 +331,8 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
 
   // Combine paths (path_u + reversed path_v without LCA)
   let result : Array[Int] = []
-  for i = 0; i < path_u.length(); i = i + 1 {
-    result.push(path_u[i])
-  } where {
-    invariant: i >= 0 && i <= path_u.length(),
-    reasoning: (
-      #|INVARIANT (path_u append):
-      #|result contains path_u[0..i) in order.
-      #|MAINTENANCE:
-      #|Push path_u[i] to extend the prefix.
-      #|TERMINATION:
-      #|At i = path_u.length(), the u->LCA path is fully appended.
-    ),
+  for v in path_u {
+    result.push(v)
   }
   for i = path_v.length() - 1; i >= 0; i = i - 1 {
     result.push(path_v[i])
@@ -378,53 +368,20 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
 
   // Convert weighted edges to unweighted for LCA structure
   let unweighted_edges : Array[(Int, Int)] = []
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v, _) = edges[i]
+  for edge in edges {
+    let (u, v, _) = edge
     unweighted_edges.push((u, v))
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (strip weights):
-      #|unweighted_edges contains edges[0..i) without weights.
-      #|MAINTENANCE:
-      #|Push (u, v) for edges[i], discarding the weight.
-      #|TERMINATION:
-      #|At i = edges.length(), all weighted edges are stripped.
-    ),
   }
   let lca = LCA::new(n, unweighted_edges)
 
   // Build weighted adjacency list
-  let wadj : Array[Array[(Int, Int64)]] = []
-  for i = 0; i < n; i = i + 1 {
-    wadj.push([])
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (init weighted adj):
-      #|wadj[0..i) are initialized as empty adjacency lists.
-      #|MAINTENANCE:
-      #|Push a fresh empty list for vertex i.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v, w) = edges[i]
+  let wadj : Array[Array[(Int, Int64)]] = Array::makei(n, fn(_) { [] })
+  for edge in edges {
+    let (u, v, w) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       wadj[u].push((v, w))
       wadj[v].push((u, w))
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (add weighted edges):
-      #|All valid edges in edges[0..i) are added to wadj in both directions.
-      #|MAINTENANCE:
-      #|Insert (u, v, w) into both adjacency lists when endpoints are valid.
-      #|TERMINATION:
-      #|At i = edges.length(), the weighted graph is fully built.
-    ),
   }
 
   // DFS to compute distances
