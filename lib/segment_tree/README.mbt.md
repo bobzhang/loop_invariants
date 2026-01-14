@@ -8,6 +8,12 @@ A **Segment Tree** is a binary tree for efficient:
 
 Unlike Fenwick Trees, Segment Trees support any associative operation (min, max, GCD, etc.).
 
+## Core Idea
+
+- Represent ranges in a **binary tree** where each node stores an aggregate.
+- Queries split into **O(log n)** disjoint segments.
+- Point updates touch the **root-to-leaf path**.
+
 ## Tree Structure
 
 For array `[1, 2, 3, 4, 5]`:
