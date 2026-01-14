@@ -4,30 +4,30 @@
 // ============================================================================
 
 ///|
-struct BNode {
-  keys : Array[Int]
-  children : Array[BNode]
+struct BNode[T] {
+  keys : Array[T]
+  children : Array[BNode[T]]
 } derive(Show)
 
 ///|
-pub enum Tree {
+pub enum Tree[T] {
   Empty
-  Node(node~ : BNode)
+  Node(node~ : BNode[T])
 } derive(Show)
 
 ///|
-enum InsertResult {
-  Done(node~ : BNode)
-  Split(key~ : Int, left~ : BNode, right~ : BNode)
+enum InsertResult[T] {
+  Done(node~ : BNode[T])
+  Split(key~ : T, left~ : BNode[T], right~ : BNode[T])
 } derive(Show)
 
 ///|
-fn is_leaf(node : BNode) -> Bool {
+fn[T] is_leaf(node : BNode[T]) -> Bool {
   node.children.length() == 0
 }
 
 ///|
-fn node_size(node : BNode) -> Int {
+fn[T] node_size(node : BNode[T]) -> Int {
   if is_leaf(node) {
     node.keys.length()
   } else {
@@ -40,7 +40,7 @@ fn node_size(node : BNode) -> Int {
 }
 
 ///|
-fn tree_size(t : Tree) -> Int {
+fn[T] tree_size(t : Tree[T]) -> Int {
   match t {
     Tree::Empty => 0
     Tree::Node(node=n) => node_size(n)
@@ -48,7 +48,7 @@ fn tree_size(t : Tree) -> Int {
 }
 
 ///|
-fn insert_key(keys : Array[Int], pos : Int, key : Int) -> Array[Int] {
+fn[T] insert_key(keys : Array[T], pos : Int, key : T) -> Array[T] {
   let out = Array::new()
   for i = 0; i < keys.length(); i = i + 1 {
     if i == pos {
@@ -73,12 +73,12 @@ fn insert_key(keys : Array[Int], pos : Int, key : Int) -> Array[Int] {
 }
 
 ///|
-fn insert_children(
-  children : Array[BNode],
+fn[T] insert_children(
+  children : Array[BNode[T]],
   pos : Int,
-  left : BNode,
-  right : BNode,
-) -> Array[BNode] {
+  left : BNode[T],
+  right : BNode[T],
+) -> Array[BNode[T]] {
   let out = Array::new()
   for i = 0; i < children.length(); i = i + 1 {
     if i == pos {
@@ -106,16 +106,16 @@ fn insert_children(
 }
 
 ///|
-fn find_pos(keys : Array[Int], key : Int) -> (Int, Bool) {
+fn[T : Compare] find_pos(keys : Array[T], key : T) -> (Int, Bool) {
   for i = 0 {
     if i >= keys.length() {
       break (keys.length(), false)
-    } else if key == keys[i] {
-      break (i, true)
     } else if key < keys[i] {
       break (i, false)
-    } else {
+    } else if keys[i] < key {
       continue i + 1
+    } else {
+      break (i, true)
     }
   } where {
     invariant: i >= 0 && i <= keys.length(),
@@ -131,10 +131,10 @@ fn find_pos(keys : Array[Int], key : Int) -> (Int, Bool) {
 }
 
 ///|
-fn split_node(
-  keys : Array[Int],
-  children : Array[BNode],
-) -> (Int, BNode, BNode) {
+fn[T] split_node(
+  keys : Array[T],
+  children : Array[BNode[T]],
+) -> (T, BNode[T], BNode[T]) {
   let promote = keys[2]
   let left_keys = keys[0:2].to_array()
   let right_keys = keys[3:4].to_array()
@@ -154,7 +154,7 @@ fn split_node(
 }
 
 ///|
-fn insert_node(node : BNode, key : Int) -> InsertResult {
+fn[T : Compare] insert_node(node : BNode[T], key : T) -> InsertResult[T] {
   let (pos, exists) = find_pos(node.keys, key)
   if exists {
     InsertResult::Done(node~)
@@ -190,19 +190,19 @@ fn insert_node(node : BNode, key : Int) -> InsertResult {
 
 ///|
 /// Create an empty B-tree.
-pub fn empty() -> Tree {
+pub fn[T] empty() -> Tree[T] {
   Tree::Empty
 }
 
 ///|
 /// Return the number of keys in the tree.
-pub fn size(t : Tree) -> Int {
+pub fn[T] size(t : Tree[T]) -> Int {
   tree_size(t)
 }
 
 ///|
 /// Insert key and return the new tree.
-pub fn insert(t : Tree, key : Int) -> Tree {
+pub fn[T : Compare] insert(t : Tree[T], key : T) -> Tree[T] {
   match t {
     Tree::Empty => Tree::Node(node={ keys: [key], children: [] })
     Tree::Node(node=n) =>
@@ -215,10 +215,8 @@ pub fn insert(t : Tree, key : Int) -> Tree {
 }
 
 ///|
-
-///|
 /// Check whether a key exists in the tree.
-pub fn contains(t : Tree, key : Int) -> Bool {
+pub fn[T : Compare] contains(t : Tree[T], key : T) -> Bool {
   match t {
     Tree::Empty => false
     Tree::Node(node=n) => {
@@ -237,7 +235,7 @@ pub fn contains(t : Tree, key : Int) -> Bool {
 ///|
 /// Build a B-tree by inserting keys in order.
 #warnings("+missing_invariant+missing_reasoning")
-pub fn from_array(arr : ArrayView[Int]) -> Tree {
+pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Tree[T] {
   let n = arr.length()
   for i = 0, tree = Tree::Empty {
     if i >= n {

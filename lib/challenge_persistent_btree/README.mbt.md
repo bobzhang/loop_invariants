@@ -2,6 +2,8 @@
 
 Small-degree B-tree with path-copying insertions.
 
+This B-tree is generic over the key type: `T : Compare`.
+
 ## Core Idea
 
 B-trees keep keys sorted within each node and maintain balance by splitting
