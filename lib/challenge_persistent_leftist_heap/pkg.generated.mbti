@@ -2,28 +2,28 @@
 package "bobzhang/loop_invariants/lib/challenge_persistent_leftist_heap"
 
 // Values
-pub fn delete_min(Heap) -> Heap?
+pub fn[T : Compare] delete_min(Heap[T]) -> Heap[T]?
 
-pub fn empty() -> Heap
+pub fn[T] empty() -> Heap[T]
 
-pub fn find_min(Heap) -> Int?
+pub fn[T] find_min(Heap[T]) -> T?
 
-pub fn from_array(ArrayView[Int]) -> Heap
+pub fn[T : Compare] from_array(ArrayView[T]) -> Heap[T]
 
-pub fn insert(Heap, Int) -> Heap
+pub fn[T : Compare] insert(Heap[T], T) -> Heap[T]
 
-pub fn merge(Heap, Heap) -> Heap
+pub fn[T : Compare] merge(Heap[T], Heap[T]) -> Heap[T]
 
-pub fn size(Heap) -> Int
+pub fn[T] size(Heap[T]) -> Int
 
 // Errors
 
 // Types and methods
-pub enum Heap {
+pub enum Heap[T] {
   Empty
-  Node(value~ : Int, rank~ : Int, left~ : Heap, right~ : Heap)
+  Node(value~ : T, rank~ : Int, left~ : Heap[T], right~ : Heap[T])
 }
-pub impl Show for Heap
+pub impl[T : Show] Show for Heap[T]
 
 // Type aliases
 
