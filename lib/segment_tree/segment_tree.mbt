@@ -327,27 +327,33 @@ fn IterativeSegTree::query(self : IterativeSegTree, l : Int, r : Int) -> Int64 {
     return 0L
   }
 
-  // Convert to tree indices
-  let mut left = l + self.n
-  let mut right = r + self.n + 1
-  let mut sum = 0L
-
-  // Traverse from leaves to root
-  while left < right {
-    if (left & 1) == 1 {
-      // Left is right child, include it
-      sum = sum + self.tree[left]
-      left = left + 1
+  // Traverse from leaves to root, accumulating sum
+  for left = l + self.n, right = r + self.n + 1, sum = 0L; left < right; {
+    let (new_left, sum1) = if (left & 1) == 1 {
+      (left + 1, sum + self.tree[left])
+    } else {
+      (left, sum)
     }
-    if (right & 1) == 1 {
-      // Right is right child, include left sibling
-      right = right - 1
-      sum = sum + self.tree[right]
+    let (new_right, sum2) = if (right & 1) == 1 {
+      (right - 1, sum1 + self.tree[right - 1])
+    } else {
+      (right, sum1)
     }
-    left = left / 2
-    right = right / 2
+    continue new_left / 2, new_right / 2, sum2
+  } else {
+    sum
+  } where {
+    invariant: left >= 0 && right >= 0 && left <= right,
+    reasoning: (
+      #|INVARIANT (iterative segtree query):
+      #|sum accumulates the range sum for nodes processed so far.
+      #|left and right converge toward each other as we move up the tree.
+      #|MAINTENANCE:
+      #|Include boundary nodes if they are right children, then move to parents.
+      #|TERMINATION:
+      #|left and right halve each iteration, eventually meeting.
+    ),
   }
-  sum
 }
 
 // ============================================================================

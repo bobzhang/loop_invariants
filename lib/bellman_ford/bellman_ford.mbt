@@ -162,10 +162,19 @@ pub fn BellmanFord::get_path(self : BellmanFord, target : Int) -> Array[Int]? {
     return None
   }
   let path : Array[Int] = []
-  let mut current = target
-  while current >= 0 {
+  for current = target; current >= 0; {
     path.push(current)
-    current = self.parent[current]
+    continue self.parent[current]
+  } where {
+    invariant: current >= -1,
+    reasoning: (
+      #|INVARIANT (path traversal):
+      #|path contains vertices from target back to current's predecessor.
+      #|MAINTENANCE:
+      #|Push current vertex and follow parent pointer.
+      #|TERMINATION:
+      #|parent[source] = -1, so we eventually reach -1.
+    ),
   }
 
   // Reverse path
@@ -213,10 +222,8 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
   let queue : Array[Int] = [source]
   self.in_queue[source] = true
   self.count[source] = 1
-  let mut front = 0
-  while front < queue.length() {
+  for front = 0; front < queue.length(); {
     let u = queue[front]
-    front = front + 1
     self.in_queue[u] = false
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let (v, w) = self.adj[u][i]
@@ -243,6 +250,17 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
         #|At i = deg(u), all outgoing edges from u are processed.
       ),
     }
+    continue front + 1
+  } where {
+    invariant: front >= 0 && front <= queue.length(),
+    reasoning: (
+      #|INVARIANT (SPFA queue):
+      #|All vertices in queue[0..front) have been dequeued and processed.
+      #|MAINTENANCE:
+      #|Process queue[front], relax neighbors, enqueue improved vertices.
+      #|TERMINATION:
+      #|front advances until queue is exhausted or negative cycle detected.
+    ),
   }
   Some(self.dist)
 }

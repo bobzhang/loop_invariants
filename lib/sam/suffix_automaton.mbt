@@ -432,22 +432,24 @@ fn SuffixAutomaton::longest_common_substring(
   self : SuffixAutomaton,
   other : String,
 ) -> String {
-  let mut best_len = 0
-  let mut best_end = 0
-  for state = 0, cur_len = 0, i = 0; i < other.length(); {
+  let (best_len, best_end) = for state = 0, cur_len = 0, i = 0, best_len = 0, best_end = 0; i <
+  other.length(); {
     let c = other[i].to_int()
     let next = self.states[state].trans[c]
     if next >= 0 {
       let new_len = cur_len + 1
-      if new_len > best_len {
-        best_len = new_len
-        best_end = i + 1
+      let (new_best_len, new_best_end) = if new_len > best_len {
+        (new_len, i + 1)
+      } else {
+        (best_len, best_end)
       }
-      continue next, new_len, i + 1
+      continue next, new_len, i + 1, new_best_len, new_best_end
     } else {
       let result = find_suffix_match(self, state, c)
-      continue result.0, result.1, i + 1
+      continue result.0, result.1, i + 1, best_len, best_end
     }
+  } else {
+    (best_len, best_end)
   } where {
     invariant: state >= 0 && cur_len >= 0 && i >= 0,
     reasoning: (
@@ -460,7 +462,7 @@ fn SuffixAutomaton::longest_common_substring(
       #|Extend on matching transition or follow suffix links on mismatch.
       #|Update best_len/best_end when a longer match is found.
       #|TERMINATION:
-      #|At i = other.length(), best_len/best_end identify the LCS.
+      #|At i = other.length(), best_len/best_end identify the LCS (via else).
     ),
   }
   if best_len == 0 {

@@ -212,11 +212,21 @@ fn[T] AVLTree::find_min(self : AVLTree[T], node : Int) -> Int {
   if node < 0 {
     return -1
   }
-  let mut cur = node
-  while self.nodes[cur].left >= 0 {
-    cur = self.nodes[cur].left
+  for cur = node; self.nodes[cur].left >= 0; {
+    continue self.nodes[cur].left
+  } else {
+    cur
+  } where {
+    invariant: cur >= 0 && cur < self.nodes.length(),
+    reasoning: (
+      #|INVARIANT (find min):
+      #|cur points to a valid node in the left subtree of the original node.
+      #|MAINTENANCE:
+      #|Follow left child until no more left children exist.
+      #|TERMINATION:
+      #|Tree is finite; eventually reach a node with no left child.
+    ),
   }
-  cur
 }
 
 ///|
@@ -266,17 +276,27 @@ fn[T : Compare] AVLTree::delete(self : AVLTree[T], key : T) -> Bool {
 
 ///|
 fn[T : Compare] AVLTree::search(self : AVLTree[T], key : T) -> Bool {
-  let mut node = self.root
-  while node >= 0 {
+  for node = self.root; node >= 0; {
     if key == self.nodes[node].key {
-      return true
+      break true
     } else if key < self.nodes[node].key {
-      node = self.nodes[node].left
+      continue self.nodes[node].left
     } else {
-      node = self.nodes[node].right
+      continue self.nodes[node].right
     }
+  } else {
+    false
+  } where {
+    invariant: node >= -1,
+    reasoning: (
+      #|INVARIANT (BST search):
+      #|If key exists in tree, it must be in subtree rooted at node.
+      #|MAINTENANCE:
+      #|Compare key and descend left or right preserving BST property.
+      #|TERMINATION:
+      #|Find key (return true) or reach -1 (return false).
+    ),
   }
-  false
 }
 
 ///|
@@ -294,9 +314,20 @@ fn[T] AVLTree::max(self : AVLTree[T]) -> T? {
   if self.root < 0 {
     return None
   }
-  let mut cur = self.root
-  while self.nodes[cur].right >= 0 {
-    cur = self.nodes[cur].right
+  let cur = for cur = self.root; self.nodes[cur].right >= 0; {
+    continue self.nodes[cur].right
+  } else {
+    cur
+  } where {
+    invariant: cur >= 0 && cur < self.nodes.length(),
+    reasoning: (
+      #|INVARIANT (find max):
+      #|cur points to a valid node in the right subtree.
+      #|MAINTENANCE:
+      #|Follow right child until no more right children exist.
+      #|TERMINATION:
+      #|Tree is finite; eventually reach a node with no right child.
+    ),
   }
   Some(self.nodes[cur].key)
 }

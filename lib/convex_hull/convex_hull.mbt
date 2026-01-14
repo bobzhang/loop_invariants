@@ -397,30 +397,25 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
     return 0L
   }
 
-  // Shoelace formula
-  // INVARIANT: area accumulates signed areas of triangles from origin
-  // Shoelace formula sums cross products of adjacent edges; total equals 2x signed area
-  let mut area = 0L
-  for i = 0; i < n; i = i + 1 {
+  // Shoelace formula: sum cross products of adjacent edges
+  let area = for i = 0, acc = 0L; i < n; {
     let j = (i + 1) % n
     let delta = hull[i].x * hull[j].y - hull[j].x * hull[i].y
-    area = area + delta
+    continue i + 1, acc + delta
+  } else {
+    acc
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
       #|INVARIANT (shoelace):
-      #|area accumulates cross terms for edges in [0, i).
+      #|acc accumulates cross terms for edges in [0, i).
       #|MAINTENANCE:
       #|Add the cross term for edge (i, i+1).
       #|TERMINATION:
-      #|At i = n, area is the full shoelace sum.
+      #|At i = n, acc is the full shoelace sum (returned via else).
     ),
   }
-  if area < 0L {
-    -area
-  } else {
-    area
-  }
+  if area < 0L { -area } else { area }
 }
 
 ///|
