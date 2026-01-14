@@ -8,6 +8,12 @@ all points. Think of stretching a rubber band around pins on a board.
 - **Time**: O(n log n) for most algorithms
 - **Space**: O(n)
 
+## Core Idea
+
+- Sort points, then build **upper and lower chains** with a turn test.
+- Maintain a stack and **pop right turns** to keep convexity.
+- The hull is the concatenation of both chains.
+
 ## Visual Intuition
 
 ```
