@@ -2,6 +2,12 @@
 
 Line container supporting min queries over a fixed integer domain.
 
+## Core Idea
+
+- Each node stores the **best line** on its segment.
+- Insertion compares lines at the midpoint and **swaps** to keep the better one.
+- Persist via **path copying** so old versions remain queryable.
+
 ## Example
 
 ```mbt check
