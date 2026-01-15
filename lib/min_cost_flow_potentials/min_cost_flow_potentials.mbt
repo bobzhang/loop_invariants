@@ -125,7 +125,7 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
 ///|
 /// Create a min-cost flow network with n vertices.
 pub fn MinCostFlowPotentials::new(n : Int) -> MinCostFlowPotentials {
-  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Edge]] = Array::makei(n, _ => [])
   {
     n,
     adj,
