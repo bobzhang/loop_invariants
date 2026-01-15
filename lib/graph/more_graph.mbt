@@ -328,8 +328,8 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
       // BFS from this vertex
       let queue : Array[Int] = [start]
       color[start] = 0
-      for front = 0; front < queue.length(); {
-        let u = queue[front]
+      let mut front = 0
+      while queue.get(front) is Some(u) {
         for i = 0; i < adj[u].length(); i = i + 1 {
           let v = adj[u][i]
           if color[v] == -1 {
@@ -353,20 +353,7 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
             #|At i == adj[u].length(), all neighbors of u are checked.
           ),
         }
-        continue front + 1
-      } where {
-        invariant: front >= 0 && front <= queue.length(),
-        reasoning: (
-          #|INVARIANT (BFS levels):
-          #|Vertices in queue[0..front) have been expanded, and their neighbors
-          #|are colored with the opposite color. This enforces a 2-coloring
-          #|consistent with BFS levels; any violation implies an odd cycle.
-          #|MAINTENANCE:
-          #|Expanding queue[front] colors its neighbors and enqueues them,
-          #|preserving the layered coloring.
-          #|TERMINATION:
-          #|When front reaches queue.length(), the component is fully colored.
-        ),
+        front = front + 1
       }
     }
   } where {
