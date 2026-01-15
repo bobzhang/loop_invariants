@@ -29,7 +29,7 @@
 
 ///|
 fn build_adj_lists(n : Int) -> Array[Array[Int]] {
-  Array::makei(n, fn(_) { [] })
+  Array::makei(n, _ => [])
 }
 
 ///|
