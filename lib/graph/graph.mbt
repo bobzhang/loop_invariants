@@ -530,23 +530,11 @@ fn floyd_warshall(
   edges : ArrayView[(Int, Int, Int)],
 ) -> Array[Array[Int]] {
   let inf = 0x7FFFFFFF
-  let dist : Array[Array[Int]] = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    dist[i] = Array::make(n, inf)
-    dist[i][i] = 0
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Distance matrix init):
-      #|Rows [0..i) are fully initialized with dist[v][v] = 0 and dist[v][u] = inf
-      #|for u != v. This sets the base case of zero-length paths.
-      #|MAINTENANCE:
-      #|Initialize row i by setting dist[i][i] = 0 and all other entries to inf,
-      #|then move to the next row.
-      #|TERMINATION:
-      #|At i == n, all rows are initialized.
-    ),
-  }
+  let dist : Array[Array[Int]] = Array::makei(n, fn(i) {
+    let row = Array::make(n, inf)
+    row[i] = 0
+    row
+  })
 
   // Initialize with direct edges
   for e = 0; e < edges.length(); e = e + 1 {

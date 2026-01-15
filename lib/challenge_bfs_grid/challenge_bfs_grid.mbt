@@ -21,20 +21,7 @@ pub fn shortest_path_grid(
   if grid[sx][sy] != 0 || grid[tx][ty] != 0 {
     return None
   }
-  let dist : Array[Array[Int]] = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    dist[i] = Array::make(m, -1)
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Row allocation):
-      #|dist[0..i) are distinct rows initialized to -1.
-      #|MAINTENANCE:
-      #|Create a fresh row for dist[i] and advance i.
-      #|TERMINATION:
-      #|At i = n, all rows are initialized.
-    ),
-  }
+  let dist : Array[Array[Int]] = Array::makei(n, fn(_) { Array::make(m, -1) })
   let queue : Array[(Int, Int)] = []
   dist[sx][sy] = 0
   queue.push((sx, sy))

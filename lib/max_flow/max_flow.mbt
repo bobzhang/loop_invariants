@@ -56,20 +56,7 @@ priv struct MaxFlow {
 
 ///|
 fn MaxFlow::new(n : Int) -> MaxFlow {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|Adjacency lists for vertices in [0, i) are initialized and independent.
-      #|MAINTENANCE:
-      #|Assign a fresh empty list to adj[i].
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
   { n, adj, level: Array::make(n, -1), iter: Array::make(n, 0) }
 }
 

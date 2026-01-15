@@ -38,20 +38,7 @@ priv struct EulerTour {
 
 ///|
 fn EulerTour::new(n : Int) -> EulerTour {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|adj[0..i) contains distinct empty arrays; indices in [i..n) are pending.
-      #|MAINTENANCE:
-      #|Assign a fresh empty array to adj[i], preserving prior entries.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,
@@ -292,20 +279,7 @@ priv struct EulerTourLCA {
 
 ///|
 fn EulerTourLCA::new(n : Int) -> EulerTourLCA {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|adj[0..i) contains distinct empty arrays; indices in [i..n) are pending.
-      #|MAINTENANCE:
-      #|Assign a fresh empty array to adj[i], preserving prior entries.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,

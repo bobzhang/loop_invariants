@@ -114,22 +114,7 @@ fn find_cycle(n : Int, root : Int, parent : Array[Int]) -> Array[Int] {
 ///   Array[Bool] where result[v] = true iff v is reachable from root
 fn build_reachable(n : Int, edges : Array[Edge], root : Int) -> Array[Bool] {
   // Build adjacency list for forward edges
-  let adj : Array[Array[Int]] = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adjacency init):
-      #|  adj[0..i) contains distinct empty arrays.
-      #|
-      #|MAINTENANCE:
-      #|  Assign fresh empty array at adj[i].
-      #|
-      #|TERMINATION:
-      #|  At i = n, all adjacency lists initialized.
-    ),
-  }
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   for e in edges {
     adj[e.from].push(e.to)
   }
