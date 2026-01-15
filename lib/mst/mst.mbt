@@ -172,7 +172,7 @@ priv struct PrimMST {
 
 ///|
 fn PrimMST::new(n : Int) -> PrimMST {
-  let adj : Array[Array[(Int, Int64)]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[(Int, Int64)]] = Array::makei(n, _ => [])
   { n, adj }
 }
 
