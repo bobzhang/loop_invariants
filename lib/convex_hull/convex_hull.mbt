@@ -212,20 +212,7 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
 
   // Sort by polar angle with pivot
   // For points with same angle, keep the farthest one
-  let rest : Array[Point] = []
-  for i = 1; i < n; i = i + 1 {
-    rest.push(pts[i])
-  } where {
-    invariant: i >= 1 && i <= n,
-    reasoning: (
-      #|INVARIANT (rest points):
-      #|rest contains pts[1..i) (all points except the pivot).
-      #|MAINTENANCE:
-      #|Append pts[i] to rest.
-      #|TERMINATION:
-      #|At i = n, rest contains all non-pivot points.
-    ),
-  }
+  let rest = pts[1:].to_array()
   rest.sort_by(fn(a, b) {
     let cp = cross(pivot, a, b)
     if cp > 0L {
