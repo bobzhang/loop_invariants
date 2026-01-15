@@ -11,23 +11,12 @@ pub fn build_adj(
   edges : ArrayView[(Int, Int)],
 ) -> Array[Array[Int]] {
   let adj : Array[Array[Int]] = Array::makei(left_n, _ => [])
-  let m = edges.length()
-  for i = 0; i < m; i = i + 1 {
-    let (u, v) = edges[i]
+  edges.each(fn(edge) {
+    let (u, v) = edge
     if u >= 0 && u < left_n && v >= 0 && v < right_n {
       adj[u].push(v)
     }
-  } where {
-    invariant: i >= 0 && i <= m,
-    reasoning: (
-      #|INVARIANT (Build adjacency):
-      #|adj includes all valid edges from edges[0..i).
-      #|MAINTENANCE:
-      #|Append v to adj[u] for each valid edge.
-      #|TERMINATION:
-      #|At i = m, adjacency is complete.
-    ),
-  }
+  })
   adj
 }
 
