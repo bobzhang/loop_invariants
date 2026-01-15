@@ -222,8 +222,8 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
   let queue : Array[Int] = [source]
   self.in_queue[source] = true
   self.count[source] = 1
-  for front = 0; front < queue.length(); {
-    let u = queue[front]
+  let mut front = 0
+  while queue.get(front) is Some(u) {
     self.in_queue[u] = false
     for i = 0; i < self.adj[u].length(); i = i + 1 {
       let (v, w) = self.adj[u][i]
@@ -250,17 +250,7 @@ fn SPFA::compute(self : SPFA, source : Int) -> Array[Int64]? {
         #|At i = deg(u), all outgoing edges from u are processed.
       ),
     }
-    continue front + 1
-  } where {
-    invariant: front >= 0 && front <= queue.length(),
-    reasoning: (
-      #|INVARIANT (SPFA queue):
-      #|All vertices in queue[0..front) have been dequeued and processed.
-      #|MAINTENANCE:
-      #|Process queue[front], relax neighbors, enqueue improved vertices.
-      #|TERMINATION:
-      #|front advances until queue is exhausted or negative cycle detected.
-    ),
+    front = front + 1
   }
   Some(self.dist)
 }
