@@ -11,7 +11,7 @@ pub fn tsp_min_cycle(dist : Array[Array[Int]], inf : Int) -> Int {
     return 0
   }
   let total = 1 << n
-  let dp : Array[Array[Int]] = Array::makei(total, fn(_) { Array::make(n, inf) })
+  let dp : Array[Array[Int]] = Array::makei(total, _ => Array::make(n, inf))
   dp[1][0] = 0
   for mask = 1; mask < total; mask = mask + 1 {
     for u = 0; u < n; u = u + 1 {
