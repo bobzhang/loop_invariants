@@ -47,7 +47,7 @@ pub fn build_disjoint_sparse_table(arr : ArrayView[Int]) -> DisjointSparseTable 
     return { n: 0, table: [] }
   }
   let levels = highest_bit(n - 1) + 1
-  let table = Array::makei(levels, fn(_) { Array::make(n, 0) })
+  let table = Array::makei(levels, _ => Array::make(n, 0))
   for i = 0; i < n; i = i + 1 {
     table[0][i] = arr[i]
   } where {
