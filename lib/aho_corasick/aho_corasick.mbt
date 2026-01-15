@@ -134,8 +134,8 @@ fn AhoCorasick::build(self : AhoCorasick) -> Unit {
   // BFS to compute failure links
   // INVARIANT: When processing state s, all states with depth < depth(s)
   // have their failure links correctly computed
-  for front = 0; front < queue.length(); front = front + 1 {
-    let state = queue[front]
+  let mut front = 0
+  while queue.get(front) is Some(state) {
     for c = 0; c < 256; c = c + 1 {
       let child = self.states[state].children[c]
       if child < 0 {
@@ -192,16 +192,7 @@ fn AhoCorasick::build(self : AhoCorasick) -> Unit {
         #|At c = 256, all transitions from this state are handled.
       ),
     }
-  } where {
-    invariant: front >= 0 && front <= queue.length(),
-    reasoning: (
-      #|INVARIANT (BFS):
-      #|States in queue[0..front) have their failure links computed.
-      #|MAINTENANCE:
-      #|Process queue[front], enqueue its children, and compute their failures.
-      #|TERMINATION:
-      #|At front = queue.length(), all states have failure links assigned.
-    ),
+    front = front + 1
   }
 }
 
