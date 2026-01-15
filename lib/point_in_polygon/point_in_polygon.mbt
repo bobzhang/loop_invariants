@@ -43,41 +43,24 @@ pub fn point_in_polygon(poly : Array[Point], p : Point) -> Location {
   if n < 3 {
     return Outside
   }
-  let inside = for i = 0, inside = false; i < n; {
-    let a = poly[i]
-    let b = poly[(i + 1) % n]
+  let mut inside = false
+  let mut a = poly[n - 1]
+  for b in poly {
     let c = cross(a, b, p)
     if c == 0 && on_segment(a, b, p) {
       return Boundary
     }
     let above_a = a.y > p.y
     let above_b = b.y > p.y
-    let new_inside = if above_a != above_b {
+    if above_a != above_b {
       let lhs = (b.x - a.x) * (p.y - a.y)
       let rhs = (p.x - a.x) * (b.y - a.y)
       let intersects = if b.y > a.y { lhs > rhs } else { lhs < rhs }
       if intersects {
-        not(inside)
-      } else {
-        inside
+        inside = not(inside)
       }
-    } else {
-      inside
     }
-    continue i + 1, new_inside
-  } else {
-    inside
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (ray casting):
-      #|inside reflects the parity of ray crossings among edges poly[0..i).
-      #|Boundary points are detected immediately via collinearity checks.
-      #|MAINTENANCE:
-      #|For edge (i, i+1), toggle inside when the ray crosses it to the right.
-      #|TERMINATION:
-      #|At i = n, inside is true iff the total crossing count is odd.
-    ),
+    a = b
   }
   if inside {
     Inside
