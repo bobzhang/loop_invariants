@@ -246,7 +246,7 @@ fn all_borders(s : String) -> Array[Int] {
   }
 
   // Sort borders in ascending order
-  borders.sort_by(fn(a, b) { a - b })
+  borders.sort_by((a, b) => a - b)
   borders
 }
 
