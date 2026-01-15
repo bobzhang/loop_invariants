@@ -348,7 +348,7 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   }
 
   // Convert weighted edges to unweighted for LCA structure using map
-  let unweighted_edges = edges[:].map(fn(edge) { (edge.0, edge.1) })
+  let unweighted_edges = edges[:].map(edge => (edge.0, edge.1))
   let lca = LCA::new(n, unweighted_edges)
 
   // Build weighted adjacency list
