@@ -39,7 +39,7 @@ fn build_lca(
       #|When pow >= n, log is large enough for binary lifting.
     ),
   }
-  let up : Array[Array[Int]] = Array::makei(log, fn(_) { Array::make(n, root) })
+  let up : Array[Array[Int]] = Array::makei(log, _ => Array::make(n, root))
   let depth = Array::make(n, 0)
   let tin = Array::make(n, 0)
   let tout = Array::make(n, 0)
