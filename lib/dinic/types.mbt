@@ -112,7 +112,7 @@ pub(all) struct Dinic {
 ///|
 /// Create a new Dinic instance with n vertices.
 pub fn Dinic::new(n : Int) -> Dinic {
-  let adj = Array::makei(n, fn(_i) { [] })
+  let adj = Array::makei(n, _ => [])
   { n, adj, level: Array::make(n, 0), iter: Array::make(n, 0) }
 }
 
