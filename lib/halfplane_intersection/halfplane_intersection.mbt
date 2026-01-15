@@ -272,10 +272,10 @@ test "halfplane square" {
   ]
   let poly = halfplane_intersection(planes).unwrap()
   inspect(poly.length(), content="4")
-  let min_x = poly[:].iter().map(fn(p) { p.x }).minimum().unwrap()
-  let max_x = poly[:].iter().map(fn(p) { p.x }).maximum().unwrap()
-  let min_y = poly[:].iter().map(fn(p) { p.y }).minimum().unwrap()
-  let max_y = poly[:].iter().map(fn(p) { p.y }).maximum().unwrap()
+  let min_x = poly[:].iter().map(p => p.x).minimum().unwrap()
+  let max_x = poly[:].iter().map(p => p.x).maximum().unwrap()
+  let min_y = poly[:].iter().map(p => p.y).minimum().unwrap()
+  let max_y = poly[:].iter().map(p => p.y).maximum().unwrap()
   inspect(approx(min_x, 0.0) && approx(max_x, 1.0), content="true")
   inspect(approx(min_y, 0.0) && approx(max_y, 1.0), content="true")
 }
