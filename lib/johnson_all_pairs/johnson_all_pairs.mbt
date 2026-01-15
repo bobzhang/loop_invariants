@@ -102,7 +102,7 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
 
 ///|
 fn build_adj(n : Int) -> Array[Array[(Int, Int64)]] {
-  Array::makei(n, fn(_) { [] })
+  Array::makei(n, _ => [])
 }
 
 ///|
