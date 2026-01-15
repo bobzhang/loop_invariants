@@ -49,35 +49,10 @@ pub fn MinCostMaxFlow::spfa(
   sink : Int,
 ) -> Bool {
   // Reset all arrays
-  for i = 0; i < self.n; i = i + 1 {
-    self.dist[i] = MCMF_INF
-    self.prev_v[i] = -1
-    self.prev_e[i] = -1
-    self.in_queue[i] = false
-  } where {
-    invariant: i >= 0 &&
-    i <= self.n &&
-    self.dist.length() == self.n &&
-    self.prev_v.length() == self.n &&
-    self.prev_e.length() == self.n &&
-    self.in_queue.length() == self.n,
-    reasoning: (
-      #|INVARIANT (SPFA reset):
-      #|  Arrays are reset for vertices [0..i).
-      #|
-      #|RESET VALUES:
-      #|  dist = INF (unreachable)
-      #|  prev_v = -1 (no predecessor)
-      #|  prev_e = -1 (no edge)
-      #|  in_queue = false (not queued)
-      #|
-      #|MAINTENANCE:
-      #|  Reset vertex i.
-      #|
-      #|TERMINATION:
-      #|  At i = n, all vertices are reset.
-    ),
-  }
+  self.dist.fill(MCMF_INF)
+  self.prev_v.fill(-1)
+  self.prev_e.fill(-1)
+  self.in_queue.fill(false)
 
   // Initialize source
   self.dist[source] = 0L
