@@ -32,7 +32,7 @@ priv struct TopoSorter {
 
 ///|
 fn TopoSorter::new(n : Int) -> TopoSorter {
-  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   { n, adj, state: Array::make(n, 0), order: [] }
 }
 
