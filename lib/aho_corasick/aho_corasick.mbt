@@ -268,7 +268,7 @@ fn AhoCorasick::state_count(self : AhoCorasick) -> Int {
 /// Build automaton from array of patterns
 fn AhoCorasick::from_patterns(patterns : Array[String]) -> AhoCorasick {
   let ac = AhoCorasick::new()
-  patterns.each(fn(pattern) { ac.add_pattern(pattern) })
+  patterns.each(pattern => ac.add_pattern(pattern))
   ac.build()
   ac
 }
@@ -364,9 +364,9 @@ test "aho corasick basic" {
   inspect(matches.length(), content="3")
 
   // Verify matches
-  let found_she = matches.filter(fn(m) { m.1 == 1 }).length() > 0 // "she"
-  let found_he = matches.filter(fn(m) { m.1 == 0 }).length() > 0 // "he"
-  let found_hers = matches.filter(fn(m) { m.1 == 3 }).length() > 0 // "hers"
+  let found_she = matches.filter(m => m.1 == 1).length() > 0 // "she"
+  let found_he = matches.filter(m => m.1 == 0).length() > 0 // "he"
+  let found_hers = matches.filter(m => m.1 == 3).length() > 0 // "hers"
   inspect(found_she, content="true")
   inspect(found_he, content="true")
   inspect(found_hers, content="true")
