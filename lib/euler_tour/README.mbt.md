@@ -101,7 +101,7 @@ test "euler tour subtree nodes" {
   let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (1, 3)]
   let tour = @euler_tour.build_euler_tour(4, edges[:], 0)
   let nodes = tour.subtree_nodes(1)
-  nodes.sort_by(fn(a, b) { a - b })
+  nodes.sort_by((a, b) => a - b)
   inspect(nodes, content="[1, 2, 3]")
 }
 ```
