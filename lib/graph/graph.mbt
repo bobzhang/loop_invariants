@@ -323,7 +323,7 @@ priv struct UnionFind {
 
 ///|
 fn make_union_find(n : Int) -> UnionFind {
-  let parent : Array[Int] = Array::makei(n, fn(i) { i })
+  let parent : Array[Int] = Array::makei(n, i => i)
   { parent, rank: Array::make(n, 0) }
 }
 
