@@ -228,7 +228,7 @@ test "centroid depth bound" {
   ct.build()
 
   // Check all depths are reasonable (<= log2(7) ~= 3)
-  let max_depth = Array::makei(7, fn(i) { ct.get_depth(i) })
+  let max_depth = Array::makei(7, i => ct.get_depth(i))
     .iter()
     .maximum()
     .unwrap_or(0)
