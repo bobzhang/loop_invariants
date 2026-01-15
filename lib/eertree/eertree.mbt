@@ -580,36 +580,15 @@ test "eertree get palindromes" {
   inspect(palindromes.length(), content="3")
 
   // Verify each is a palindrome
-  for i = 0; i < palindromes.length(); i = i + 1 {
-    let p = palindromes[i]
+  for p in palindromes {
     let is_palindrome = for j = 0; j < p.length() / 2; j = j + 1 {
       if p[j] != p[p.length() - 1 - j] {
         break false
       }
     } else {
       true
-    } where {
-      invariant: j >= 0 && j <= p.length() / 2,
-      reasoning: (
-        #|INVARIANT (palindrome check):
-        #|All checked pairs in [0..j) are symmetric for this candidate.
-        #|MAINTENANCE:
-        #|Compare positions j and len-1-j; extend j when they match.
-        #|TERMINATION:
-        #|At j = len/2, the candidate is confirmed palindromic.
-      ),
     }
     guard is_palindrome else { fail("Not a palindrome: " + p) }
-  } where {
-    invariant: i >= 0 && i <= palindromes.length(),
-    reasoning: (
-      #|INVARIANT (verify list):
-      #|All palindromes in palindromes[0..i) have been verified as palindromes.
-      #|MAINTENANCE:
-      #|Check palindromes[i] before advancing i.
-      #|TERMINATION:
-      #|At i = palindromes.length(), all entries are verified.
-    ),
   }
 
   // Test get_palindrome_at for a specific node

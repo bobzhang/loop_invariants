@@ -276,22 +276,11 @@ pub fn prufer_decode(code : ArrayView[Int]) -> Array[(Int, Int)]? {
     return None
   }
   let deg = Array::make(n, 1)
-  for i = 0; i < code.length(); i = i + 1 {
-    let v = code[i]
+  for v in code {
     if v < 0 || v >= n {
       return None
     }
     deg[v] = deg[v] + 1
-  } where {
-    invariant: i >= 0 && i <= code.length(),
-    reasoning: (
-      #|INVARIANT (degree init):
-      #|deg reflects base degree 1 plus occurrences in code[0..i).
-      #|MAINTENANCE:
-      #|Increment deg for code[i].
-      #|TERMINATION:
-      #|At i = code.length(), degree counts are complete.
-    ),
   }
   let heap = MinHeap::new()
   for v = 0; v < n; v = v + 1 {
@@ -310,25 +299,14 @@ pub fn prufer_decode(code : ArrayView[Int]) -> Array[(Int, Int)]? {
     ),
   }
   let edges : Array[(Int, Int)] = []
-  for i = 0; i < code.length(); i = i + 1 {
+  for v in code {
     let leaf = heap.pop().unwrap()
-    let v = code[i]
     edges.push((leaf, v))
     deg[leaf] = 0
     deg[v] = deg[v] - 1
     if deg[v] == 1 {
       heap.push(v)
     }
-  } where {
-    invariant: i >= 0 && i <= code.length(),
-    reasoning: (
-      #|INVARIANT (decode steps):
-      #|After i steps, edges has length i and the degrees reflect remaining nodes.
-      #|MAINTENANCE:
-      #|Connect the smallest leaf to code[i], then update degrees and heap.
-      #|TERMINATION:
-      #|At i = code.length(), n-2 edges are added.
-    ),
   }
   if heap.is_empty() {
     return None
