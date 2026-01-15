@@ -47,7 +47,7 @@ pub fn coordinate_compress(values : ArrayView[Int]) -> (Array[Int], Array[Int]) 
       #|At i = n, sorted is a full copy.
     ),
   }
-  sorted.sort_by_key(fn(x) { x })
+  sorted.sort_by_key(x => x)
   let unique : Array[Int] = []
   for i = 0; i < sorted.length(); i = i + 1 {
     if i == 0 || sorted[i] != sorted[i - 1] {
