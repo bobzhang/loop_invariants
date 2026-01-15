@@ -195,7 +195,7 @@ fn Eertree::propagate_counts(self : Eertree) -> Unit {
 ///|
 /// Get total number of palindrome occurrences (counting multiplicity)
 fn Eertree::count_total(self : Eertree) -> Int {
-  self.nodes[2:].fold(init=0, fn(acc, node) { acc + node.count })
+  self.nodes[2:].fold(init=0, (acc, node) => acc + node.count)
 }
 
 ///|
@@ -258,7 +258,7 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
 ///|
 /// Get length of longest palindrome
 fn Eertree::longest_length(self : Eertree) -> Int {
-  self.nodes[2:].iter().map(fn(n) { n.len }).maximum().unwrap_or(0)
+  self.nodes[2:].iter().map(n => n.len).maximum().unwrap_or(0)
 }
 
 ///|
