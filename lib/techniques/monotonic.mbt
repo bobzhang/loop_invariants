@@ -114,15 +114,23 @@ fn sliding_window_maximum(arr : ArrayView[Int], k : Int) -> Array[Int] {
       break result
     } else {
       // Remove elements outside current window from front
-      while not(deque.is_empty()) && deque.front().unwrap() <= i - k {
-        let _ = deque.pop_front()
+      while deque.front() is Some(front) {
+        if front <= i - k {
+          let _ = deque.pop_front()
 
+        } else {
+          break
+        }
       }
 
       // Remove elements smaller than current from back (they can't be max)
-      while not(deque.is_empty()) && arr[deque.back().unwrap()] < arr[i] {
-        let _ = deque.pop_back()
+      while deque.back() is Some(back) {
+        if arr[back] < arr[i] {
+          let _ = deque.pop_back()
 
+        } else {
+          break
+        }
       }
 
       // Add current element
