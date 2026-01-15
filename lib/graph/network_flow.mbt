@@ -434,20 +434,8 @@ fn MCMFNetwork::spfa_mcmf(
   parent : Array[(Int, Int)?],
 ) -> Bool {
   let inf = 2147483647
-  for i = 0; i < self.n; i = i + 1 {
-    dist[i] = inf
-    parent[i] = None
-  } where {
-    invariant: i >= 0 && i <= self.n,
-    reasoning: (
-      #|INVARIANT (init SPFA):
-      #|dist/parent for indices [0..i) are reset to inf/None.
-      #|MAINTENANCE:
-      #|Set dist[i] = inf and parent[i] = None for the next vertex.
-      #|TERMINATION:
-      #|At i = n, all vertices are reset for the new shortest-path search.
-    ),
-  }
+  dist.fill(inf)
+  parent.fill(None)
   dist[source] = 0
   let in_queue : Array[Bool] = Array::make(self.n, false)
   let queue : Array[Int] = []
