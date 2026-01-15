@@ -20,7 +20,7 @@ priv struct FlowNetwork {
 ///|
 fn FlowNetwork::new(n : Int) -> FlowNetwork {
   // Use makei to create adjacency list with independent empty arrays
-  let adj : Array[Array[FlowEdge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[FlowEdge]] = Array::makei(n, _ => [])
   { adj, n }
 }
 
@@ -213,7 +213,7 @@ priv struct DinicNetwork {
 ///|
 fn DinicNetwork::new(n : Int) -> DinicNetwork {
   // Use makei to create adjacency list with independent empty arrays
-  let adj : Array[Array[FlowEdge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[FlowEdge]] = Array::makei(n, _ => [])
   { adj, level: Array::make(n, -1), iter: Array::make(n, 0), n }
 }
 
@@ -401,7 +401,7 @@ priv struct MCMFNetwork {
 ///|
 fn MCMFNetwork::new(n : Int) -> MCMFNetwork {
   // Use makei to create adjacency list with independent empty arrays
-  let adj : Array[Array[MCMFEdge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[MCMFEdge]] = Array::makei(n, _ => [])
   { adj, n }
 }
 
