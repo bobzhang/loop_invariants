@@ -247,28 +247,24 @@ pub fn longest_palindrome_range(s : ArrayView[Char]) -> (Int, Int) {
   guard n > 0 else { return (0, 0) }
   let p = manacher(s)
 
-  // Find position with maximum radius
-  let mut max_radius = 0
-  let mut max_center = 0
-  for i = 0; i < p.length(); i = i + 1 {
-    if p[i] > max_radius {
-      max_radius = p[i]
-      max_center = i
+  // Find position with maximum radius using functional for loop
+  let (max_center, max_radius) = for i = 0, best = (0, 0); i < p.length(); {
+    if p[i] > best.1 {
+      continue i + 1, (i, p[i])
+    } else {
+      continue i + 1, best
     }
+  } else {
+    best
   } where {
     invariant: i >= 0 && i <= p.length(),
     reasoning: (
-      #|INVARIANT (Maximum radius scan):
-      #|After processing centers [0..i), max_radius is the maximum p value
-      #|seen so far, and max_center is an index achieving that maximum.
-      #|
-      #|Because p stores the palindrome radius at every center in the
-      #|transformed string, the maximum radius corresponds to the longest
-      #|palindromic substring in the original string (after conversion).
+      #|INVARIANT (max scan):
+      #|best is (center, radius) of the longest palindrome in p[0..i).
       #|MAINTENANCE:
-      #|Compare p[i] with max_radius and update max_center when larger.
+      #|Compare p[i] with best.1 and update if larger.
       #|TERMINATION:
-      #|At i == p.length(), max_center marks the longest palindrome.
+      #|At i = p.length(), best holds the global maximum.
     ),
   }
 

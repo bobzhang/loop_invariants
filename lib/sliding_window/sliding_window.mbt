@@ -83,13 +83,8 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
     return []
   }
   if k >= n {
-    // Single window containing all elements
-    let mut m = arr[0]
-    for i in 1..<n {
-      if arr[i] > m {
-        m = arr[i]
-      }
-    }
+    // Single window containing all elements - find max using fold
+    let m = arr[1:].fold(init=arr[0], fn(acc, x) { if x > acc { x } else { acc } })
     return [m]
   }
   let result : Array[Int64] = []
@@ -171,12 +166,8 @@ fn sliding_window_min(arr : Array[Int64], k : Int) -> Array[Int64] {
     return []
   }
   if k >= n {
-    let mut m = arr[0]
-    for i in 1..<n {
-      if arr[i] < m {
-        m = arr[i]
-      }
-    }
+    // Single window containing all elements - find min using fold
+    let m = arr[1:].fold(init=arr[0], fn(acc, x) { if x < acc { x } else { acc } })
     return [m]
   }
   let result : Array[Int64] = []
@@ -251,21 +242,28 @@ fn sliding_window_sum(arr : Array[Int64], k : Int) -> Array[Int64] {
   if n == 0 || k <= 0 || k > n {
     return []
   }
-  let result : Array[Int64] = []
-  let mut window_sum = 0L
+  // Initialize first window sum using fold
+  let initial_sum = arr[:k].fold(init=0L, fn(acc, x) { acc + x })
+  let result : Array[Int64] = [initial_sum]
 
-  // Initialize first window
-  for i in 0..<k {
-    window_sum = window_sum + arr[i]
+  // Slide window - use functional for loop to track running sum
+  for i = k, sum = initial_sum; i < n; {
+    let new_sum = sum + arr[i] - arr[i - k]
+    result.push(new_sum)
+    continue i + 1, new_sum
+  } else {
+    result
+  } where {
+    invariant: i >= k && i <= n,
+    reasoning: (
+      #|INVARIANT (sliding sum):
+      #|sum equals the sum of arr[i-k..i) at each step.
+      #|MAINTENANCE:
+      #|Subtract arr[i-k] and add arr[i] to slide the window.
+      #|TERMINATION:
+      #|At i = n, all window sums have been recorded.
+    ),
   }
-  result.push(window_sum)
-
-  // Slide window
-  for i in k..<n {
-    window_sum = window_sum + arr[i] - arr[i - k]
-    result.push(window_sum)
-  }
-  result
 }
 
 // ============================================================================

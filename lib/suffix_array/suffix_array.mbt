@@ -382,23 +382,24 @@ pub fn SuffixArray::longest_repeated_substring(self : SuffixArray) -> String {
   if n < 2 {
     return ""
   }
-  let mut max_lcp = 0
-  let mut max_idx = 0
-  for i = 1; i < n; i = i + 1 {
-    if self.lcp[i] > max_lcp {
-      max_lcp = self.lcp[i]
-      max_idx = i
+  // Find max LCP and its index using functional for loop
+  let (max_idx, max_lcp) = for i = 1, best = (0, 0); i < n; {
+    if self.lcp[i] > best.1 {
+      continue i + 1, (i, self.lcp[i])
+    } else {
+      continue i + 1, best
     }
+  } else {
+    best
   } where {
     invariant: i >= 1 && i <= n,
     reasoning: (
       #|INVARIANT (max LCP):
-      #|max_lcp is the maximum LCP among indices in [1, i), and max_idx
-      #|records where that maximum occurs.
+      #|best is (index, lcp) of the maximum LCP among indices in [1, i).
       #|MAINTENANCE:
-      #|Update max_lcp and max_idx when a larger LCP is found.
+      #|Update best when a larger LCP is found.
       #|TERMINATION:
-      #|At i = n, max_lcp identifies the longest repeated substring.
+      #|At i = n, best identifies the longest repeated substring.
     ),
   }
   if max_lcp == 0 {
@@ -415,22 +416,10 @@ pub fn SuffixArray::count_distinct_substrings(self : SuffixArray) -> Int64 {
   if n == 0 {
     return 0L
   }
-  let mut total = n.to_int64() * (n.to_int64() + 1L) / 2L
-  for i = 1; i < n; i = i + 1 {
-    total = total - self.lcp[i].to_int64()
-  } where {
-    invariant: i >= 1 && i <= n,
-    reasoning: (
-      #|INVARIANT (distinct count):
-      #|total equals n(n+1)/2 minus the sum of lcp[1..i). Each LCP counts
-      #|overlapping prefixes between adjacent suffixes.
-      #|MAINTENANCE:
-      #|Subtract lcp[i] to remove duplicate substrings introduced by sa[i].
-      #|TERMINATION:
-      #|At i = n, total is the number of distinct substrings.
-    ),
-  }
-  total
+  // Total possible substrings minus overlaps (LCP sum)
+  let total = n.to_int64() * (n.to_int64() + 1L) / 2L
+  let lcp_sum = self.lcp[1:].fold(init=0L, fn(sum, v) { sum + v.to_int64() })
+  total - lcp_sum
 }
 
 ///|

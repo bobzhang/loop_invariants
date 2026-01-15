@@ -261,23 +261,24 @@ fn ManacherResult::longest_palindrome(self : ManacherResult) -> String {
   if self.radii.length() == 0 {
     return ""
   }
-  let mut max_len = 0
-  let mut max_center = 0
-  for i = 0; i < self.radii.length(); i = i + 1 {
-    if self.radii[i] > max_len {
-      max_len = self.radii[i]
-      max_center = i
+  // Find max radius and its center using functional for loop
+  let (max_center, max_len) = for i = 0, best = (0, 0); i < self.radii.length(); {
+    if self.radii[i] > best.1 {
+      continue i + 1, (i, self.radii[i])
+    } else {
+      continue i + 1, best
     }
+  } else {
+    best
   } where {
     invariant: i >= 0 && i <= self.radii.length(),
     reasoning: (
       #|INVARIANT (max radius):
-      #|max_len is the largest radius among centers in [0, i), and max_center
-      #|records its position.
+      #|best is (center, length) of the longest palindrome in radii[0..i).
       #|MAINTENANCE:
-      #|Update max_len and max_center when a larger radius is found.
+      #|Update best when a larger radius is found.
       #|TERMINATION:
-      #|At i = radii.length(), max_center marks the longest palindrome.
+      #|At i = radii.length(), best holds the global maximum.
     ),
   }
 
@@ -332,25 +333,10 @@ fn ManacherResult::is_palindrome(
 ///|
 /// Count all palindromic substrings
 fn ManacherResult::count_palindromes(self : ManacherResult) -> Int {
-  let mut count = 0
-  for i = 0; i < self.radii.length(); i = i + 1 {
-    // Each center contributes (radius + 1) / 2 palindromes
-    // For separator positions (even i), these are even-length palindromes
-    // For character positions (odd i), these are odd-length palindromes
-    count = count + (self.radii[i] + 1) / 2
-  } where {
-    invariant: i >= 0 && i <= self.radii.length(),
-    reasoning: (
-      #|INVARIANT (palindrome count):
-      #|count equals the total number of palindromic substrings contributed by
-      #|centers in [0, i).
-      #|MAINTENANCE:
-      #|Each center adds (radii[i] + 1) / 2 palindromes in the original string.
-      #|TERMINATION:
-      #|At i = radii.length(), count is the total number of palindromic substrings.
-    ),
-  }
-  count
+  // Each center contributes (radius + 1) / 2 palindromes
+  // For separator positions (even i), these are even-length palindromes
+  // For character positions (odd i), these are odd-length palindromes
+  self.radii[:].fold(init=0, fn(count, r) { count + (r + 1) / 2 })
 }
 
 ///|
@@ -389,19 +375,26 @@ pub fn longest_palindrome(s : String) -> String {
 /// Return the length of the longest palindromic substring in s.
 pub fn longest_palindrome_len(s : String) -> Int {
   let (d1, d2) = manacher_radii(s)
-  let n = d1.length()
-  let mut best = 0
-  for i in 0..<n {
+  // Find max length by comparing odd and even palindromes at each center
+  for i = 0, best = 0; i < d1.length(); {
     let odd = d1[i] * 2 - 1
-    if odd > best {
-      best = odd
-    }
     let even = d2[i] * 2
-    if even > best {
-      best = even
-    }
+    let max_at_i = if odd > even { odd } else { even }
+    let new_best = if max_at_i > best { max_at_i } else { best }
+    continue i + 1, new_best
+  } else {
+    best
+  } where {
+    invariant: i >= 0 && i <= d1.length(),
+    reasoning: (
+      #|INVARIANT (max palindrome length):
+      #|best is the maximum palindrome length in [0..i).
+      #|MAINTENANCE:
+      #|Compare odd and even lengths at center i and update best.
+      #|TERMINATION:
+      #|At i = n, best holds the global maximum palindrome length.
+    ),
   }
-  best
 }
 
 ///|
