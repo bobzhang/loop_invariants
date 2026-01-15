@@ -73,7 +73,7 @@ pub fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
   }
   let log_n = compute_log(n)
   // Use makei to create adjacency list - each element is an independent empty array
-  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
 
   // Build adjacency list
   for edge in edges {
@@ -352,7 +352,7 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
   let lca = LCA::new(n, unweighted_edges)
 
   // Build weighted adjacency list
-  let wadj : Array[Array[(Int, Int64)]] = Array::makei(n, fn(_) { [] })
+  let wadj : Array[Array[(Int, Int64)]] = Array::makei(n, _ => [])
   for edge in edges {
     let (u, v, w) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
