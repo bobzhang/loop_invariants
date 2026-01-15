@@ -77,7 +77,7 @@ pub fn best_subset_sum_leq(nums : ArrayView[Int], target : Int) -> Int {
   let right = nums[mid:]
   let left_sums = subset_sums(left)
   let right_sums = subset_sums(right)
-  right_sums.sort_by_key(fn(x) { x })
+  right_sums.sort_by_key(x => x)
   for i = 0, best = 0 {
     if i >= left_sums.length() {
       break best
