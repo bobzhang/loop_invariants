@@ -374,23 +374,10 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
   }
 
   // Shoelace formula: sum cross products of adjacent edges
-  let area = for i = 0, acc = 0L; i < n; {
-    let j = (i + 1) % n
-    let delta = hull[i].x * hull[j].y - hull[j].x * hull[i].y
-    continue i + 1, acc + delta
-  } else {
-    acc
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (shoelace):
-      #|acc accumulates cross terms for edges in [0, i).
-      #|MAINTENANCE:
-      #|Add the cross term for edge (i, i+1).
-      #|TERMINATION:
-      #|At i = n, acc is the full shoelace sum (returned via else).
-    ),
-  }
+  let area = hull[:].foldi(init=0L, fn(i, acc, point) {
+    let next = hull[(i + 1) % n]
+    acc + point.x * next.y - next.x * point.y
+  })
   if area < 0L {
     -area
   } else {
