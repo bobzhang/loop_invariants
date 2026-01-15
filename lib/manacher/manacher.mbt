@@ -336,7 +336,7 @@ fn ManacherResult::count_palindromes(self : ManacherResult) -> Int {
   // Each center contributes (radius + 1) / 2 palindromes
   // For separator positions (even i), these are even-length palindromes
   // For character positions (odd i), these are odd-length palindromes
-  self.radii[:].fold(init=0, fn(count, r) { count + (r + 1) / 2 })
+  self.radii[:].fold(init=0, (count, r) => count + (r + 1) / 2)
 }
 
 ///|
