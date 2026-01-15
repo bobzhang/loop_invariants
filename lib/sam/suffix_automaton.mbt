@@ -433,7 +433,7 @@ fn SuffixAutomaton::longest_common_substring(
   other : String,
 ) -> String {
   let (best_len, best_end) = for state = 0, cur_len = 0, i = 0, best_len = 0, best_end = 0; i <
-  other.length(); {
+                                other.length(); {
     let c = other[i].to_int()
     let next = self.states[state].trans[c]
     if next >= 0 {

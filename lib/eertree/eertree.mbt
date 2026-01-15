@@ -186,7 +186,9 @@ fn Eertree::propagate_counts(self : Eertree) -> Unit {
     self.nodes[suffix].count = self.nodes[suffix].count + self.nodes[i].count
   } where {
     invariant: i >= 1 && i < self.nodes.length(),
-    reasoning: #| i decreases from nodes.length()-1 toward 2
+    reasoning: (
+      #| i decreases from nodes.length()-1 toward 2
+    ),
   }
 }
 
@@ -231,7 +233,9 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
         sb.write_char(Int::unsafe_to_char(current[i]))
       } where {
         invariant: i >= -1 && i <= start,
-        reasoning: #| i decreases from start toward -1
+        reasoning: (
+          #| i decreases from start toward -1
+        ),
       }
       result.push(sb.to_string())
     }
@@ -243,6 +247,7 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
         current.push(c)
         dfs(tree, child, current, result)
         let _ = current.pop()
+
       }
     }
   }
@@ -295,7 +300,9 @@ fn Eertree::contains_palindrome(self : Eertree, p : String) -> Bool {
     node = next
   } where {
     invariant: i >= -1 && i <= start_idx,
-    reasoning: #| i decreases from start_idx toward -1
+    reasoning: (
+      #| i decreases from start_idx toward -1
+    ),
   }
 
   // Check if we reached a node with correct length
@@ -334,6 +341,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
           return true
         }
         let _ = path.pop()
+
       }
     }
     false
@@ -358,7 +366,9 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
     sb.write_char(Int::unsafe_to_char(path[i]))
   } where {
     invariant: i >= -1 && i <= rev_start,
-    reasoning: #| i decreases from rev_start toward -1
+    reasoning: (
+      #| i decreases from rev_start toward -1
+    ),
   }
   sb.to_string()
 }
@@ -464,7 +474,7 @@ test "eertree get palindromes" {
 
   // Verify each is a palindrome
   for p in palindromes {
-    let is_palindrome = for j in  0..< (p.length() / 2) {
+    let is_palindrome = for j in 0..<(p.length() / 2) {
       if p[j] != p[p.length() - 1 - j] {
         break false
       }

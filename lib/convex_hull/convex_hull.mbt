@@ -257,6 +257,7 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
       let second = hull[hull.length() - 2]
       if cross(second, top, point) <= 0L {
         let _ = hull.pop()
+
       } else {
         break
       }
@@ -403,7 +404,11 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
       #|At i = n, acc is the full shoelace sum (returned via else).
     ),
   }
-  if area < 0L { -area } else { area }
+  if area < 0L {
+    -area
+  } else {
+    area
+  }
 }
 
 ///|

@@ -107,6 +107,7 @@ fn CentroidTree::decompose(
   for v in self.adj[centroid] {
     if not(self.removed[v]) {
       let _ = self.decompose(v, centroid, depth + 1)
+
     }
   }
   centroid

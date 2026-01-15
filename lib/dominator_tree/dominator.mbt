@@ -294,7 +294,7 @@ pub fn DominatorTree::dominates(self : DominatorTree, u : Int, v : Int) -> Bool 
   }
 
   // Walk up the dominator tree from v
-  for cur = v; ; {
+  for cur = v {
     if cur == u {
       break true // Found u on the path
     }
