@@ -39,10 +39,7 @@ pub struct PushRelabel {
 ///|
 /// Create a push-relabel flow network with n vertices.
 pub fn PushRelabel::new(n : Int) -> PushRelabel {
-  let adj = Array::make(n, [])
-  for i in 0..<n {
-    adj[i] = []
-  }
+  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,

@@ -36,10 +36,7 @@ pub struct Graph {
 ///|
 /// Create a graph with n vertices and maximum edge weight max_weight.
 pub fn Graph::new(n : Int, max_weight : Int) -> Graph {
-  let adj = Array::make(n, [])
-  for i in 0..<n {
-    adj[i] = []
-  }
+  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
   { n, max_weight, adj }
 }
 

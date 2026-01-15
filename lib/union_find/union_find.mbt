@@ -46,13 +46,9 @@ pub struct UnionFind {
 /// Create a new Union-Find structure with n elements (0 to n-1)
 /// Initially, each element is in its own set
 pub fn UnionFind::new(n : Int) -> UnionFind {
-  let parent = Array::make(n, 0)
+  // Each element is its own parent (self-loop = root)
+  let parent = Array::makei(n, fn(i) { i })
   let rank = Array::make(n, 0)
-
-  // Initialize: each element is its own parent (self-loop = root)
-  for i in 0..<n {
-    parent[i] = i
-  }
   { parent, rank, num_sets: n }
 }
 
@@ -159,12 +155,9 @@ priv struct WeightedUnionFind {
 
 ///|
 fn WeightedUnionFind::new(n : Int) -> WeightedUnionFind {
-  let parent = Array::make(n, 0)
+  let parent = Array::makei(n, fn(i) { i })
   let rank = Array::make(n, 0)
   let weight = Array::make(n, 0L)
-  for i in 0..<n {
-    parent[i] = i
-  }
   { parent, rank, weight }
 }
 

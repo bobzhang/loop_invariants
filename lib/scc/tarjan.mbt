@@ -136,27 +136,8 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
       let comp_v = component[v]
       guard comp_u != comp_v else { continue }
 
-      // Check if edge already exists (simple linear scan)
-      let mut exists = false
-      for k = 0; k < scc_adj[comp_u].length(); k = k + 1 {
-        if scc_adj[comp_u][k] == comp_v {
-          exists = true
-          break
-        }
-      } where {
-        invariant: k >= 0 && k <= scc_adj[comp_u].length(),
-        reasoning: (
-          #|INVARIANT (duplicate detection):
-          #|  exists = true iff comp_v in scc_adj[comp_u][0..k)
-          #|
-          #|MAINTENANCE:
-          #|  Check one more element.
-          #|
-          #|TERMINATION:
-          #|  At k = length, full check complete.
-        ),
-      }
-      if not(exists) {
+      // Check for duplicate edge using contains
+      if not(scc_adj[comp_u][:].contains(comp_v)) {
         scc_adj[comp_u].push(comp_v)
       }
     } where {

@@ -308,23 +308,7 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
 ///|
 /// Get length of longest palindrome
 fn Eertree::longest_length(self : Eertree) -> Int {
-  let mut max_len = 0
-  for i = 2; i < self.nodes.length(); i = i + 1 {
-    if self.nodes[i].len > max_len {
-      max_len = self.nodes[i].len
-    }
-  } where {
-    invariant: i >= 2 && i <= self.nodes.length(),
-    reasoning: (
-      #|INVARIANT (max length):
-      #|max_len equals the maximum palindrome length among nodes in [2, i).
-      #|MAINTENANCE:
-      #|Update max_len when a longer node is found.
-      #|TERMINATION:
-      #|At i = nodes.length(), max_len is the longest palindrome length.
-    ),
-  }
-  max_len
+  self.nodes[2:].iter().map(fn(n) { n.len }).maximum().unwrap_or(0)
 }
 
 ///|
