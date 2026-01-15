@@ -15,7 +15,7 @@ const NO_PARENT : Int = -1
 
 ///|
 fn make_adj(n : Int) -> Array[Array[Int]] {
-  Array::makei(n, fn(_) { [] })
+  Array::makei(n, _ => [])
 }
 
 ///|
