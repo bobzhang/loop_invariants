@@ -16,7 +16,7 @@ fn max_non_overlapping(intervals : Array[Interval]) -> Int {
   if intervals.length() == 0 {
     return 0
   }
-  intervals.sort_by_key(fn(it) { it.end })
+  intervals.sort_by_key(it => it.end)
   for i = 0, count = 0, last_end = -1_000_000_000 {
     if i >= intervals.length() {
       break count
