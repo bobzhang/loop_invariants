@@ -25,57 +25,6 @@
 // SPACE COMPLEXITY: O(k) for deque
 
 ///|
-priv struct Deque {
-  data : Array[Int]
-  mut front : Int
-  mut back : Int
-}
-
-///|
-fn Deque::new(capacity : Int) -> Deque {
-  { data: Array::make(capacity, 0), front: 0, back: 0 }
-}
-
-///|
-fn Deque::is_empty(self : Deque) -> Bool {
-  self.front == self.back
-}
-
-///|
-fn Deque::push_back(self : Deque, x : Int) -> Unit {
-  self.data[self.back] = x
-  self.back = self.back + 1
-}
-
-///|
-fn Deque::pop_back(self : Deque) -> Unit {
-  if not(self.is_empty()) {
-    self.back = self.back - 1
-  }
-}
-
-///|
-fn Deque::pop_front(self : Deque) -> Unit {
-  if not(self.is_empty()) {
-    self.front = self.front + 1
-  }
-}
-
-///|
-fn Deque::peek_front(self : Deque) -> Int {
-  self.data[self.front]
-}
-
-///|
-fn Deque::peek_back(self : Deque) -> Int {
-  self.data[self.back - 1]
-}
-
-// ============================================================================
-// SLIDING WINDOW MAXIMUM
-// ============================================================================
-
-///|
 /// Compute maximum in each sliding window of size k
 fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
   let n = arr.length()
@@ -88,16 +37,16 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
     return [m]
   }
   let result : Array[Int64] = []
-  let dq = Deque::new(n)
+  let dq : @deque.Deque[Int] = @deque.new()
   for i = 0; i < n; i = i + 1 {
     // Remove elements outside window
-    while not(dq.is_empty()) && dq.peek_front() <= i - k {
-      dq.pop_front()
+    while not(dq.is_empty()) && dq.front().unwrap() <= i - k {
+      let _ = dq.pop_front()
     }
 
     // Remove smaller elements from back
-    while not(dq.is_empty()) && arr[dq.peek_back()] <= arr[i] {
-      dq.pop_back()
+    while not(dq.is_empty()) && arr[dq.back().unwrap()] <= arr[i] {
+      let _ = dq.pop_back()
     }
 
     // Add current index
@@ -105,29 +54,28 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
 
     // Record maximum once we have a full window
     if i >= k - 1 {
-      result.push(arr[dq.peek_front()])
+      result.push(arr[dq.front().unwrap()])
     }
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|INVARIANT 1 (Bounds): i iterates through [0, n], and deque pointers stay
-      #|within a valid slice of the backing array.
+      #|INVARIANT 1 (Bounds): i iterates through [0, n], and deque stores indices
+      #|from the processed prefix [0, i).
       #|MAINTENANCE:
       #|Each iteration increments i by 1; deque operations keep indices in [0, i].
       #|TERMINATION:
       #|At i = n, all positions are processed.
     ),
-    invariant: dq.front >= 0 && dq.back >= dq.front && dq.back <= i,
+    invariant: dq.length() >= 0 && dq.length() <= i,
     reasoning: (
-      #|INVARIANT 2 (Deque indices): front/back delimit a valid slice of dq.data
-      #|containing indices from the processed prefix [0, i).
+      #|INVARIANT 2 (Deque size): deque contains at most i indices from [0, i).
       #|MAINTENANCE:
-      #|Pop operations move the slice inward; push_back appends the new index i.
+      #|Pop operations remove indices; push_back appends the new index i.
       #|TERMINATION:
       #|At loop end, deque indices refer only to processed elements.
     ),
     invariant: dq.is_empty() ||
-    (dq.peek_front() >= i - k && dq.peek_front() <= i - 1),
+    (dq.front().unwrap() >= i - k && dq.front().unwrap() <= i - 1),
     reasoning: (
       #|INVARIANT 3 (Window membership): if deque is non-empty, its front index
       #|lies inside the current window for prefix [0, i): [i-k, i-1].
@@ -171,39 +119,38 @@ fn sliding_window_min(arr : Array[Int64], k : Int) -> Array[Int64] {
     return [m]
   }
   let result : Array[Int64] = []
-  let dq = Deque::new(n)
+  let dq : @deque.Deque[Int] = @deque.new()
   for i = 0; i < n; i = i + 1 {
-    while not(dq.is_empty()) && dq.peek_front() <= i - k {
-      dq.pop_front()
+    while not(dq.is_empty()) && dq.front().unwrap() <= i - k {
+      let _ = dq.pop_front()
     }
-    while not(dq.is_empty()) && arr[dq.peek_back()] >= arr[i] {
-      dq.pop_back()
+    while not(dq.is_empty()) && arr[dq.back().unwrap()] >= arr[i] {
+      let _ = dq.pop_back()
     }
     dq.push_back(i)
     if i >= k - 1 {
-      result.push(arr[dq.peek_front()])
+      result.push(arr[dq.front().unwrap()])
     }
   } where {
     invariant: i >= 0 && i <= n,
     reasoning: (
-      #|INVARIANT 1 (Bounds): i advances through [0, n], deque pointers stay
-      #|within a valid slice of the backing array.
+      #|INVARIANT 1 (Bounds): i advances through [0, n], deque stores indices
+      #|from the processed prefix [0, i).
       #|MAINTENANCE:
       #|Increment i by 1; deque operations keep indices within [0, i].
       #|TERMINATION:
       #|At i = n, all positions are processed.
     ),
-    invariant: dq.front >= 0 && dq.back >= dq.front && dq.back <= i,
+    invariant: dq.length() >= 0 && dq.length() <= i,
     reasoning: (
-      #|INVARIANT 2 (Deque indices): front/back delimit a valid slice of dq.data
-      #|containing indices from the processed prefix [0, i).
+      #|INVARIANT 2 (Deque size): deque contains at most i indices from [0, i).
       #|MAINTENANCE:
-      #|Pop operations move the slice inward; push_back appends the new index i.
+      #|Pop operations remove indices; push_back appends the new index i.
       #|TERMINATION:
       #|At loop end, deque indices refer only to processed elements.
     ),
     invariant: dq.is_empty() ||
-    (dq.peek_front() >= i - k && dq.peek_front() <= i - 1),
+    (dq.front().unwrap() >= i - k && dq.front().unwrap() <= i - 1),
     reasoning: (
       #|INVARIANT 3 (Window membership): if deque is non-empty, its front index
       #|lies inside the current window for prefix [0, i): [i-k, i-1].

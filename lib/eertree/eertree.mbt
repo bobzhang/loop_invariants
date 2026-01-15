@@ -186,17 +186,7 @@ fn Eertree::propagate_counts(self : Eertree) -> Unit {
     self.nodes[suffix].count = self.nodes[suffix].count + self.nodes[i].count
   } where {
     invariant: i >= 1 && i < self.nodes.length(),
-    reasoning: (
-      #|INVARIANT (count propagation):
-      #|All nodes with index > i have already pushed their counts to their
-      #|suffix links, so their parents reflect those occurrences.
-      #|MAINTENANCE:
-      #|Add node i's count to its suffix link, aggregating occurrences of
-      #|longer palindromes into their largest proper palindromic suffix.
-      #|TERMINATION:
-      #|After i = 1, every node's count includes contributions from all
-      #|palindromes that have it as a suffix.
-    ),
+    reasoning: #| i decreases from nodes.length()-1 toward 2
   }
 }
 
@@ -204,18 +194,8 @@ fn Eertree::propagate_counts(self : Eertree) -> Unit {
 /// Get total number of palindrome occurrences (counting multiplicity)
 fn Eertree::count_total(self : Eertree) -> Int {
   let mut total = 0
-  for i = 2; i < self.nodes.length(); i = i + 1 {
-    total = total + self.nodes[i].count
-  } where {
-    invariant: i >= 2 && i <= self.nodes.length(),
-    reasoning: (
-      #|INVARIANT (sum counts):
-      #|total equals the sum of counts for nodes in [2, i).
-      #|MAINTENANCE:
-      #|Add node i's count to the running total.
-      #|TERMINATION:
-      #|At i = nodes.length(), total is the sum over all palindrome nodes.
-    ),
+  for node in self.nodes[2:] {
+    total = total + node.count
   }
   total
 }
@@ -238,19 +218,8 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
       let len = tree.nodes[node].len
       let sb = StringBuilder::new()
       // First half (including middle for odd length)
-      for i = 0; i < current.length(); i = i + 1 {
-        sb.write_char(Int::unsafe_to_char(current[i]))
-      } where {
-        invariant: i >= 0 && i <= current.length(),
-        reasoning: (
-          #|INVARIANT (first half):
-          #|sb contains the characters of current[0..i) in order, so it is
-          #|the prefix used to build the palindrome string.
-          #|MAINTENANCE:
-          #|Append current[i] to extend the prefix by one character.
-          #|TERMINATION:
-          #|At i = current.length(), the first half (and middle if odd) is built.
-        ),
+      for c in current {
+        sb.write_char(Int::unsafe_to_char(c))
       }
       // Second half (reverse, skip middle for odd length)
       let start = if len % 2 == 0 {
@@ -262,39 +231,19 @@ fn Eertree::get_palindromes(self : Eertree) -> Array[String] {
         sb.write_char(Int::unsafe_to_char(current[i]))
       } where {
         invariant: i >= -1 && i <= start,
-        reasoning: (
-          #|INVARIANT (mirror half):
-          #|sb already contains the first half, and the mirrored suffix for
-          #|indices (i+1..start] has been appended in reverse order.
-          #|MAINTENANCE:
-          #|Append current[i] to extend the mirrored half by one character.
-          #|TERMINATION:
-          #|At i = -1, the full palindrome string is constructed.
-        ),
+        reasoning: #| i decreases from start toward -1
       }
       result.push(sb.to_string())
     }
 
     // Explore children
-    for c = 0; c < 256; c = c + 1 {
+    for c in 0..<256 {
       let child = tree.nodes[node].edges[c]
       if child >= 0 {
         current.push(c)
         dfs(tree, child, current, result)
         let _ = current.pop()
-
       }
-    } where {
-      invariant: c >= 0 && c <= 256,
-      reasoning: (
-        #|INVARIANT (child DFS):
-        #|All outgoing edges with labels < c have been explored, and current
-        #|has been restored to the path for node after each recursive call.
-        #|MAINTENANCE:
-        #|If an edge exists, push its label, recurse, then pop to backtrack.
-        #|TERMINATION:
-        #|At c = 256, every child edge has been visited exactly once.
-      ),
     }
   }
 
@@ -320,21 +269,10 @@ fn Eertree::contains_palindrome(self : Eertree, p : String) -> Bool {
   }
 
   // First check if p is actually a palindrome
-  for i = 0; i < p.length() / 2; i = i + 1 {
+  for i in 0..<(p.length() / 2) {
     if p[i] != p[p.length() - 1 - i] {
       return false // Not a palindrome
     }
-  } where {
-    invariant: i >= 0 && i <= p.length() / 2,
-    reasoning: (
-      #|INVARIANT (palindrome check):
-      #|All checked pairs in indices [0, i) are symmetric, so the prefix tested
-      #|so far remains palindromic.
-      #|MAINTENANCE:
-      #|Compare the next symmetric pair; return false on mismatch.
-      #|TERMINATION:
-      #|At i = p.length()/2, all symmetric pairs match and p is a palindrome.
-    ),
   }
 
   // Navigate tree: edges from node with palindrome P and char c lead to cPc
@@ -357,16 +295,7 @@ fn Eertree::contains_palindrome(self : Eertree, p : String) -> Bool {
     node = next
   } where {
     invariant: i >= -1 && i <= start_idx,
-    reasoning: (
-      #|INVARIANT (center expansion):
-      #|node represents the palindrome built from the center using characters
-      #|p[i+1..start_idx], added symmetrically outward.
-      #|MAINTENANCE:
-      #|Follow the edge labeled by p[i]; failure means the palindrome is not
-      #|represented in the tree.
-      #|TERMINATION:
-      #|At i = -1, node represents the full palindrome p.
-    ),
+    reasoning: #| i decreases from start_idx toward -1
   }
 
   // Check if we reached a node with correct length
@@ -393,7 +322,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
     if current == target {
       return true
     }
-    for c = 0; c < 256; c = c + 1 {
+    for c in 0..<256 {
       let child = tree.nodes[current].edges[c]
       if child >= 0 && child == target {
         path.push(c)
@@ -405,19 +334,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
           return true
         }
         let _ = path.pop()
-
       }
-    } where {
-      invariant: c >= 0 && c <= 256,
-      reasoning: (
-        #|INVARIANT (path search):
-        #|All outgoing edges with labels < c have been explored, and path has
-        #|been restored after backtracking from any explored child.
-        #|MAINTENANCE:
-        #|Try edge c; if it does not lead to target, backtrack and continue.
-        #|TERMINATION:
-        #|At c = 256, all children have been tried with no path found.
-      ),
     }
     false
   }
@@ -429,18 +346,8 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
   // Build palindrome string
   let len = self.nodes[node_idx].len
   let sb = StringBuilder::new()
-  for i = 0; i < path.length(); i = i + 1 {
-    sb.write_char(Int::unsafe_to_char(path[i]))
-  } where {
-    invariant: i >= 0 && i <= path.length(),
-    reasoning: (
-      #|INVARIANT (prefix build):
-      #|sb contains path[0..i) in order, forming the first half of the palindrome.
-      #|MAINTENANCE:
-      #|Append path[i] to extend the prefix by one character.
-      #|TERMINATION:
-      #|At i = path.length(), the first half is complete.
-    ),
+  for c in path {
+    sb.write_char(Int::unsafe_to_char(c))
   }
   let rev_start = if len % 2 == 0 {
     path.length() - 1
@@ -451,15 +358,7 @@ fn Eertree::get_palindrome_at(self : Eertree, node_idx : Int) -> String {
     sb.write_char(Int::unsafe_to_char(path[i]))
   } where {
     invariant: i >= -1 && i <= rev_start,
-    reasoning: (
-      #|INVARIANT (mirror build):
-      #|sb already contains the first half and the mirrored suffix for indices
-      #|(i+1..rev_start] has been appended in reverse order.
-      #|MAINTENANCE:
-      #|Append path[i] to extend the mirrored half.
-      #|TERMINATION:
-      #|At i = -1, the palindrome string is fully constructed.
-    ),
+    reasoning: #| i decreases from rev_start toward -1
   }
   sb.to_string()
 }
@@ -565,7 +464,7 @@ test "eertree get palindromes" {
 
   // Verify each is a palindrome
   for p in palindromes {
-    let is_palindrome = for j = 0; j < p.length() / 2; j = j + 1 {
+    let is_palindrome = for j in  0..< (p.length() / 2) {
       if p[j] != p[p.length() - 1 - j] {
         break false
       }
