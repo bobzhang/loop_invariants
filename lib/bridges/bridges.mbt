@@ -41,7 +41,7 @@ priv struct BridgeFinder {
 
 ///|
 fn BridgeFinder::new(n : Int) -> BridgeFinder {
-  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   {
     n,
     adj,
