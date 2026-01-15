@@ -33,7 +33,7 @@ pub struct Graph {
 ///|
 /// Create a graph with n vertices.
 pub fn Graph::new(n : Int) -> Graph {
-  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Edge]] = Array::makei(n, _ => [])
   { n, adj }
 }
 
