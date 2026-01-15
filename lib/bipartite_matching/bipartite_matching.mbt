@@ -212,8 +212,8 @@ fn HopcroftKarp::bfs(self : HopcroftKarp) -> Bool {
     ),
   }
   self.dist[self.graph.n_left] = HK_INF // Sentinel for unmatched
-  for front = 0; front < queue.length(); {
-    let u = queue[front]
+  let mut front = 0
+  while queue.get(front) is Some(u) {
     if self.dist[u] < self.dist[self.graph.n_left] {
       self.graph.adj[u].each(fn(v) {
         let next = if self.match_right[v] < 0 {
@@ -229,17 +229,7 @@ fn HopcroftKarp::bfs(self : HopcroftKarp) -> Bool {
         }
       })
     }
-    continue front + 1
-  } where {
-    invariant: front >= 0 && front <= queue.length(),
-    reasoning: (
-      #|INVARIANT (HK BFS):
-      #|All vertices in queue[0..front) have been processed at their BFS layer.
-      #|MAINTENANCE:
-      #|Process queue[front], updating distances for adjacent vertices.
-      #|TERMINATION:
-      #|front advances until queue is exhausted.
-    ),
+    front = front + 1
   }
   self.dist[self.graph.n_left] != HK_INF
 }
