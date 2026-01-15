@@ -320,38 +320,8 @@ pub fn SuffixAutomaton::count_occurrences(
   let order : Array[Int] = []
 
   // Sort states by length (longest first)
-  let by_len : Array[Array[Int]] = []
-  let mut max_len = 0
-  for i = 0; i < self.size; i = i + 1 {
-    if self.states[i].len > max_len {
-      max_len = self.states[i].len
-    }
-  } where {
-    invariant: i >= 0 && i <= self.size && max_len >= 0,
-    reasoning: (
-      #|INVARIANT (Max length scan):
-      #|max_len is the maximum length among states [0..i). Updating with state i
-      #|maintains this property. After the loop, max_len is the longest state.
-      #|MAINTENANCE:
-      #|Compare state i length with max_len and update if larger.
-      #|TERMINATION:
-      #|At i == self.size, max_len is the maximum state length.
-    ),
-  }
-  for iter = 0; iter <= max_len; iter = iter + 1 {
-    by_len.push([])
-  } where {
-    invariant: iter >= 0 && iter <= max_len + 1,
-    reasoning: (
-      #|INVARIANT (Bucket init):
-      #|by_len has empty buckets for lengths [0..iter). After the loop, we
-      #|have buckets for every possible length up to max_len.
-      #|MAINTENANCE:
-      #|Push an empty bucket for length iter.
-      #|TERMINATION:
-      #|At iter == max_len + 1, all buckets are initialized.
-    ),
-  }
+  let max_len = self.states[:self.size].iter().map(fn(s) { s.len }).maximum().unwrap_or(0)
+  let by_len : Array[Array[Int]] = Array::makei(max_len + 1, fn(_) { [] })
   for i = 0; i < self.size; i = i + 1 {
     by_len[self.states[i].len].push(i)
   } where {

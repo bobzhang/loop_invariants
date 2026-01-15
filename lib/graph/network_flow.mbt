@@ -19,20 +19,8 @@ priv struct FlowNetwork {
 
 ///|
 fn FlowNetwork::new(n : Int) -> FlowNetwork {
-  let adj : Array[Array[FlowEdge]] = []
-  for i = 0; i < n; i = i + 1 {
-    adj.push([])
-  } where {
-    invariant: i >= 0 && i <= n && adj.length() == i,
-    reasoning: (
-      #|INVARIANT (init network):
-      #|adj[0..i) are allocated as empty adjacency lists.
-      #|MAINTENANCE:
-      #|Push a fresh empty list for vertex i.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  // Use makei to create adjacency list with independent empty arrays
+  let adj : Array[Array[FlowEdge]] = Array::makei(n, fn(_) { [] })
   { adj, n }
 }
 
@@ -240,20 +228,8 @@ priv struct DinicNetwork {
 
 ///|
 fn DinicNetwork::new(n : Int) -> DinicNetwork {
-  let adj : Array[Array[FlowEdge]] = []
-  for i = 0; i < n; i = i + 1 {
-    adj.push([])
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (init dinic):
-      #|adj[0..i) are allocated as empty adjacency lists.
-      #|MAINTENANCE:
-      #|Push a fresh empty list for vertex i.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  // Use makei to create adjacency list with independent empty arrays
+  let adj : Array[Array[FlowEdge]] = Array::makei(n, fn(_) { [] })
   { adj, level: Array::make(n, -1), iter: Array::make(n, 0), n }
 }
 
@@ -464,20 +440,8 @@ priv struct MCMFNetwork {
 
 ///|
 fn MCMFNetwork::new(n : Int) -> MCMFNetwork {
-  let adj : Array[Array[MCMFEdge]] = []
-  for i = 0; i < n; i = i + 1 {
-    adj.push([])
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (init mcmf):
-      #|adj[0..i) are allocated as empty adjacency lists.
-      #|MAINTENANCE:
-      #|Push a fresh empty list for vertex i.
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are initialized.
-    ),
-  }
+  // Use makei to create adjacency list with independent empty arrays
+  let adj : Array[Array[MCMFEdge]] = Array::makei(n, fn(_) { [] })
   { adj, n }
 }
 

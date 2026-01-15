@@ -76,10 +76,8 @@ pub(all) struct TwoSAT {
 ///|
 /// Create a new 2-SAT instance with n boolean variables.
 pub fn TwoSAT::new(n : Int) -> TwoSAT {
-  let adj : Array[Array[Int]] = []
-  for _ in 0..<(2 * n) {
-    adj.push([])
-  }
+  // Use makei to create 2n adjacency lists (n vars + n negated vars)
+  let adj : Array[Array[Int]] = Array::makei(2 * n, fn(_) { [] })
   { n, adj }
 }
 

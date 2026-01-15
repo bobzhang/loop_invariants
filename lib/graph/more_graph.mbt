@@ -130,38 +130,18 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
   let n = adj.length()
   let inf = 2147483647 / 2 // Avoid overflow
 
-  // Initialize distance matrix
-  let dist : Array[Array[Int]] = []
-  for i = 0; i < n; i = i + 1 {
-    let row = Array::make(n, inf)
-    row[i] = 0
-    for j = 0; j < n; j = j + 1 {
-      if adj[i][j] != 0 || i == j {
-        row[j] = adj[i][j]
+  // Initialize distance matrix using makei
+  let dist : Array[Array[Int]] = Array::makei(n, fn(i) {
+    Array::makei(n, fn(j) {
+      if i == j {
+        0
+      } else if adj[i][j] != 0 {
+        adj[i][j]
+      } else {
+        inf
       }
-    } where {
-      invariant: j >= 0 && j <= n,
-      reasoning: (
-        #|INVARIANT (init row):
-        #|row[0..j) reflects direct edge weights from adj[i][0..j).
-        #|MAINTENANCE:
-        #|Copy adj[i][j] (or 0 for diagonal) into row[j].
-        #|TERMINATION:
-        #|At j = n, row i is fully initialized.
-      ),
-    }
-    dist.push(row)
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (init dist):
-      #|dist[0..i) contains direct-edge distances for rows already built.
-      #|MAINTENANCE:
-      #|Create and push the initialized row for index i.
-      #|TERMINATION:
-      #|At i = n, all rows are initialized.
-    ),
-  }
+    })
+  })
 
   // Main algorithm: consider each vertex as intermediate
   for k = 0; k < n; k = k + 1 {
@@ -244,10 +224,7 @@ test "floyd warshall" {
 fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
   // Calculate in-degrees
   let in_degree = Array::make(n, 0)
-  let adj : Array[Array[Int]] = []
-  for _ in 0..<n {
-    adj.push([])
-  }
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   for e = 0; e < edges.length(); e = e + 1 {
     let (u, v) = edges[e]
     adj[u].push(v)
@@ -526,11 +503,8 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
     ),
   }
 
-  // Build reverse graph
-  let rev_adj : Array[Array[Int]] = []
-  for _ in 0..<n {
-    rev_adj.push([])
-  }
+  // Build reverse graph using makei
+  let rev_adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   for u = 0; u < n; u = u + 1 {
     for i = 0; i < adj[u].length(); i = i + 1 {
       rev_adj[adj[u][i]].push(u)

@@ -203,11 +203,7 @@ pub fn subtree_color_mode_sum(
 
 ///|
 fn make_adj(n : Int) -> Array[Array[Int]] {
-  let adj : Array[Array[Int]] = []
-  for _ in 0..<n {
-    adj.push([])
-  }
-  adj
+  Array::makei(n, fn(_) { [] })
 }
 
 ///|

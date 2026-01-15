@@ -72,10 +72,8 @@ pub fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
     return { n: 0, log_n: 0, up: [], depth: [] }
   }
   let log_n = compute_log(n)
-  let adj : Array[Array[Int]] = []
-  for _ in 0..<n {
-    adj.push([])
-  }
+  // Use makei to create adjacency list - each element is an independent empty array
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
 
   // Build adjacency list
   for edge in edges {
@@ -86,12 +84,9 @@ pub fn LCA::new(n : Int, edges : Array[(Int, Int)]) -> LCA {
     }
   }
 
-  // Initialize arrays
+  // Initialize arrays using makei
   let depth = Array::make(n, 0)
-  let up : Array[Array[Int]] = []
-  for _ in 0..<n {
-    up.push(Array::make(log_n, -1))
-  }
+  let up : Array[Array[Int]] = Array::makei(n, fn(_) { Array::make(log_n, -1) })
 
   // DFS to compute depth and immediate parent
   let visited = Array::make(n, false)
@@ -329,24 +324,10 @@ fn LCA::get_path(self : LCA, u : Int, v : Int) -> Array[Int] {
     ),
   }
 
-  // Combine paths (path_u + reversed path_v without LCA)
-  let result : Array[Int] = []
-  for v in path_u {
-    result.push(v)
-  }
-  for i = path_v.length() - 1; i >= 0; i = i - 1 {
-    result.push(path_v[i])
-  } where {
-    invariant: i >= -1 && i < path_v.length(),
-    reasoning: (
-      #|INVARIANT (path_v append):
-      #|result already has path_u; we append path_v in reverse to reach v.
-      #|MAINTENANCE:
-      #|Push path_v[i], moving upward toward v without duplicating the LCA.
-      #|TERMINATION:
-      #|At i = -1, the full u->v path is constructed.
-    ),
-  }
+  // Combine paths: path_u + reversed path_v (without duplicating LCA)
+  // Use copy() to start with path_u, then append reversed path_v
+  let result = path_u.copy()
+  result.append(path_v.rev()[:])
   result
 }
 
@@ -366,12 +347,8 @@ fn WeightedLCA::new(n : Int, edges : Array[(Int, Int, Int64)]) -> WeightedLCA {
     return { lca: LCA::new(0, []), dist_to_root: [] }
   }
 
-  // Convert weighted edges to unweighted for LCA structure
-  let unweighted_edges : Array[(Int, Int)] = []
-  for edge in edges {
-    let (u, v, _) = edge
-    unweighted_edges.push((u, v))
-  }
+  // Convert weighted edges to unweighted for LCA structure using map
+  let unweighted_edges = edges[:].map(fn(edge) { (edge.0, edge.1) })
   let lca = LCA::new(n, unweighted_edges)
 
   // Build weighted adjacency list

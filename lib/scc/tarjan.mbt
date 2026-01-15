@@ -126,10 +126,7 @@ pub fn find_sccs(n : Int, adj : Array[Array[Int]]) -> SCCResult {
 
   // Build condensation graph (DAG of SCCs)
   let num_sccs = scc_count.val
-  let scc_adj : Array[Array[Int]] = []
-  for _ in 0..<num_sccs {
-    scc_adj.push([])
-  }
+  let scc_adj : Array[Array[Int]] = Array::makei(num_sccs, fn(_) { [] })
 
   // Add edges between SCCs (avoiding duplicates)
   for u = 0; u < n; u = u + 1 {
