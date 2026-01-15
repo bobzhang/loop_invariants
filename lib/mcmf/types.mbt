@@ -109,7 +109,7 @@ pub(all) struct MinCostMaxFlow {
 ///|
 /// Create a new MinCostMaxFlow instance with n vertices.
 pub fn MinCostMaxFlow::new(n : Int) -> MinCostMaxFlow {
-  let adj : Array[Array[MCMFEdge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[MCMFEdge]] = Array::makei(n, _ => [])
   {
     n,
     adj,
