@@ -56,7 +56,7 @@ priv struct MaxFlow {
 
 ///|
 fn MaxFlow::new(n : Int) -> MaxFlow {
-  let adj : Array[Array[Edge]] = Array::makei(n, fn(_) { [] })
+  let adj : Array[Array[Edge]] = Array::makei(n, _ => [])
   { n, adj, level: Array::make(n, -1), iter: Array::make(n, 0) }
 }
 
