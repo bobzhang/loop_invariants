@@ -32,20 +32,7 @@ priv struct TopoSorter {
 
 ///|
 fn TopoSorter::new(n : Int) -> TopoSorter {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|adj[0..i) are initialized empty lists.
-      #|MAINTENANCE:
-      #|Assign a fresh list to adj[i].
-      #|TERMINATION:
-      #|At i = n, all adjacency lists are ready.
-    ),
-  }
+  let adj : Array[Array[Int]] = Array::makei(n, fn(_) { [] })
   { n, adj, state: Array::make(n, 0), order: [] }
 }
 

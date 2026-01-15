@@ -55,13 +55,7 @@ fn Matrix::from_array(arr : Array[Array[Int64]]) -> Matrix {
     return Matrix::new(0, 0)
   }
   let cols = arr[0].length()
-  let data = Array::make(rows, [])
-  for i in 0..<rows {
-    data[i] = Array::make(cols, 0L)
-    for j in 0..<cols {
-      data[i][j] = arr[i][j]
-    }
-  }
+  let data = Array::makei(rows, fn(i) { arr[i].copy() })
   { data, rows, cols }
 }
 

@@ -94,22 +94,7 @@ priv struct BiconnectedFinder {
 ///|
 /// Create a new biconnected component finder.
 fn BiconnectedFinder::new(n : Int) -> BiconnectedFinder {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adjacency init):
-      #|  adj[0..i) contains distinct empty arrays.
-      #|
-      #|MAINTENANCE:
-      #|  Assign fresh empty array at adj[i].
-      #|
-      #|TERMINATION:
-      #|  At i = n, all adjacency lists initialized.
-    ),
-  }
+  let adj : Array[Array[(Int, Int)]] = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,

@@ -109,25 +109,7 @@ pub(all) struct MinCostMaxFlow {
 ///|
 /// Create a new MinCostMaxFlow instance with n vertices.
 pub fn MinCostMaxFlow::new(n : Int) -> MinCostMaxFlow {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n && adj.length() == n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|  Adjacency lists for vertices [0..i) are independent empty arrays.
-      #|
-      #|WHY SEPARATE INIT:
-      #|  Array::make creates shared references; we need independent lists.
-      #|
-      #|MAINTENANCE:
-      #|  Assign fresh empty list to adj[i].
-      #|
-      #|TERMINATION:
-      #|  At i = n, all adjacency lists are independent.
-    ),
-  }
+  let adj : Array[Array[MCMFEdge]] = Array::makei(n, fn(_) { [] })
   {
     n,
     adj,

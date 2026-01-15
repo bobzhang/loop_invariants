@@ -101,21 +101,7 @@ fn MinHeap::pop(self : MinHeap) -> Int? {
 
 ///|
 fn build_adj(n : Int) -> Array[Array[Int]] {
-  let adj = Array::make(n, [])
-  for i = 0; i < n; i = i + 1 {
-    adj[i] = []
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (adj init):
-      #|adj[0..i) are distinct empty lists.
-      #|MAINTENANCE:
-      #|Assign a fresh list to adj[i].
-      #|TERMINATION:
-      #|At i = n, adjacency lists are initialized.
-    ),
-  }
-  adj
+  Array::makei(n, fn(_) { [] })
 }
 
 ///|

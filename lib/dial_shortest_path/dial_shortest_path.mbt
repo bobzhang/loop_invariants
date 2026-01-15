@@ -72,10 +72,7 @@ pub fn dial_shortest_paths(graph : Graph, source : Int) -> Array[Int] {
   } else {
     graph.max_weight * (n - 1)
   }
-  let buckets = Array::make(max_dist + 1, [])
-  for i in 0..<buckets.length() {
-    buckets[i] = []
-  }
+  let buckets : Array[Array[Int]] = Array::makei(max_dist + 1, fn(_) { [] })
   dist[source] = 0
   buckets[0].push(source)
   for d = 0; d <= max_dist; d = d + 1 {
