@@ -173,5 +173,5 @@ fn build_reachable(n : Int, edges : Array[Edge], root : Int) -> Array[Bool] {
 ///   to get the true total cost.
 /// ```
 fn cycle_cost(in_cost : Array[Int64], cycle : Array[Int]) -> Int64 {
-  cycle.fold(init=0L, fn(total, v) { total + in_cost[v] })
+  cycle.fold(init=0L, (total, v) => total + in_cost[v])
 }
