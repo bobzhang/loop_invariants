@@ -49,7 +49,7 @@ pub fn SparseTableMin::new(arr : Array[Int64]) -> SparseTableMin {
     log_table[i] = log_table[i / 2] + 1
   }
   let k = log_table[n] + 1
-  let table = Array::makei(n, fn(i) {
+  let table = Array::makei(n, i => {
     let row = Array::make(k, 0L)
     row[0] = arr[i]
     row
@@ -106,7 +106,7 @@ fn SparseTableMax::new(arr : Array[Int64]) -> SparseTableMax {
     log_table[i] = log_table[i / 2] + 1
   }
   let k = log_table[n] + 1
-  let table = Array::makei(n, fn(i) {
+  let table = Array::makei(n, i => {
     let row = Array::make(k, 0L)
     row[0] = arr[i]
     row
@@ -172,7 +172,7 @@ fn SparseTableGCD::new(arr : Array[Int64]) -> SparseTableGCD {
     log_table[i] = log_table[i / 2] + 1
   }
   let k = log_table[n] + 1
-  let table = Array::makei(n, fn(i) {
+  let table = Array::makei(n, i => {
     let row = Array::make(k, 0L)
     row[0] = arr[i]
     row
