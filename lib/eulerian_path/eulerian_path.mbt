@@ -63,20 +63,10 @@ fn is_connected_undirected(
       #|When idx reaches stack.length(), all reachable vertices are visited.
     ),
   }
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     if has_degree[i] && not(seen[i]) {
       return false
     }
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (connectivity check):
-      #|All vertices with degree in [0..i) are verified reachable if has_degree.
-      #|MAINTENANCE:
-      #|If a degree-positive vertex is unseen, connectivity fails.
-      #|TERMINATION:
-      #|At i = n, all degree-positive vertices are confirmed reachable.
-    ),
   }
   true
 }
@@ -99,8 +89,8 @@ pub fn eulerian_path_directed(
   let in_deg = Array::make(n, 0)
   let out_deg = Array::make(n, 0)
   let has_degree = Array::make(n, false)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for edge in edges {
+    let (u, v) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       adj[u].push(v)
       undirected[u].push(v)
@@ -110,17 +100,6 @@ pub fn eulerian_path_directed(
       has_degree[u] = true
       has_degree[v] = true
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (edge build):
-      #|Edges[0..i) are inserted; in/out degrees and has_degree are correct
-      #|for those edges.
-      #|MAINTENANCE:
-      #|Insert the next edge and update degree counters.
-      #|TERMINATION:
-      #|At i = edges.length(), the graph and degree arrays are complete.
-    ),
   }
   let mut start = -1
   let mut end = -1
@@ -233,8 +212,8 @@ pub fn eulerian_path_undirected(
   let adj = build_adj_lists(n)
   let deg = Array::make(n, 0)
   let has_degree = Array::make(n, false)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for i, edge in edges {
+    let (u, v) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       adj[u].push(i)
       adj[v].push(i)
@@ -243,32 +222,12 @@ pub fn eulerian_path_undirected(
       has_degree[u] = true
       has_degree[v] = true
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (edge build):
-      #|Edges[0..i) are inserted with correct degrees and adjacency indices.
-      #|MAINTENANCE:
-      #|Insert the next edge id into both endpoints.
-      #|TERMINATION:
-      #|At i = edges.length(), the graph is fully built.
-    ),
   }
   let odd : Array[Int] = []
-  for v = 0; v < n; v = v + 1 {
+  for v in 0..<n {
     if deg[v] % 2 == 1 {
       odd.push(v)
     }
-  } where {
-    invariant: v >= 0 && v <= n,
-    reasoning: (
-      #|INVARIANT (odd degree scan):
-      #|odd contains exactly the odd-degree vertices in [0..v).
-      #|MAINTENANCE:
-      #|Append v if its degree is odd.
-      #|TERMINATION:
-      #|At v = n, odd lists all odd-degree vertices.
-    ),
   }
   if odd.length() != 0 && odd.length() != 2 {
     return None
@@ -288,21 +247,12 @@ pub fn eulerian_path_undirected(
     return Some([])
   }
   let undirected = build_adj_lists(n)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v) = edges[i]
+  for edge in edges {
+    let (u, v) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       undirected[u].push(v)
       undirected[v].push(u)
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (undirected build):
-      #|Edges[0..i) are added to the undirected adjacency list.\n      #|MAINTENANCE:
-      #|Insert both directions for each edge.
-      #|TERMINATION:
-      #|At i = edges.length(), the connectivity graph is complete.
-    ),
   }
   if not(is_connected_undirected(n, undirected, has_degree, start)) {
     return None
