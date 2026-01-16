@@ -22,12 +22,10 @@ fn dfs_size(
   removed : Array[Bool],
   sub : Array[Int],
 ) -> Int {
-  let size = adj[u].fold(init=1, fn(size, v) {
-    if v != p && !removed[v] {
-      size + dfs_size(v, u, adj, removed, sub)
-    } else {
-      size
-    }
+  let size = adj[u].fold(init=1, (size, v) => if v != p && !removed[v] {
+    size + dfs_size(v, u, adj, removed, sub)
+  } else {
+    size
   })
   sub[u] = size
   size
