@@ -113,24 +113,11 @@ pub fn SuffixAutomaton::extend(self : SuffixAutomaton, c : Int) -> Unit {
 ///|
 /// Build suffix automaton from string
 pub fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
-  for i = 0; i < s.length(); i = i + 1 {
+  for i in 0..<s.length() {
     let c = s[i].to_int() - 97 // 'a' = 97
     if c >= 0 && c < SAM_ALPHABET {
       self.extend(c)
     }
-  } where {
-    invariant: i >= 0 && i <= s.length(),
-    reasoning: (
-      #|INVARIANT (Prefix build):
-      #|After processing s[0..i), the SAM recognizes all substrings of that
-      #|prefix, and self.last corresponds to the entire prefix. Each extend
-      #|adds a new state for the new prefix and updates suffix links, so the
-      #|property holds inductively.
-      #|MAINTENANCE:
-      #|Extend with s[i], updating transitions and suffix links.
-      #|TERMINATION:
-      #|At i == s.length(), all substrings of s are represented.
-    ),
   }
 }
 
@@ -138,7 +125,7 @@ pub fn SuffixAutomaton::build(self : SuffixAutomaton, s : String) -> Unit {
 /// Check if substring exists
 pub fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
   let mut state = 0
-  for i = 0; i < s.length(); i = i + 1 {
+  for i in 0..<s.length() {
     let c = s[i].to_int() - 97
     if c < 0 || c >= SAM_ALPHABET {
       return false
@@ -148,18 +135,6 @@ pub fn SuffixAutomaton::contains(self : SuffixAutomaton, s : String) -> Bool {
       return false
     }
     state = next
-  } where {
-    invariant: i >= 0 && i <= s.length() && state >= 0 && state < self.size,
-    reasoning: (
-      #|INVARIANT (Traverse pattern):
-      #|state corresponds to the SAM state for prefix s[0..i). If a transition
-      #|is missing, the substring does not exist. Reaching the end means the
-      #|entire pattern is accepted as a substring.
-      #|MAINTENANCE:
-      #|Follow the transition for s[i]; if missing, return false.
-      #|TERMINATION:
-      #|At i == s.length(), the pattern has been matched.
-    ),
   }
   true
 }
@@ -170,22 +145,10 @@ pub fn SuffixAutomaton::count_distinct_substrings(
   self : SuffixAutomaton,
 ) -> Int64 {
   let mut count = 0L
-  for i = 1; i < self.size; i = i + 1 {
+  for i in 1..<self.size {
     let link = self.states[i].link
     let link_len = if link >= 0 { self.states[link].len } else { 0 }
     count = count + (self.states[i].len - link_len).to_int64()
-  } where {
-    invariant: i >= 1 && i <= self.size,
-    reasoning: (
-      #|INVARIANT (Distinct substrings):
-      #|After processing states [1..i), count equals the total number of
-      #|distinct substrings contributed by those states, where each state
-      #|adds len[v] - len[link[v]] new substrings.
-      #|MAINTENANCE:
-      #|Accumulate the contribution of state i and advance.
-      #|TERMINATION:
-      #|At i == self.size, count is the total number of distinct substrings.
-    ),
   }
   count
 }
@@ -259,7 +222,7 @@ pub fn SuffixAutomaton::count_occurrences(
 ) -> Int {
   // First, find the state for pattern
   let mut state = 0
-  for i = 0; i < pattern.length(); i = i + 1 {
+  for i in 0..<pattern.length() {
     let c = pattern[i].to_int() - 97
     if c < 0 || c >= SAM_ALPHABET {
       return 0
@@ -269,21 +232,6 @@ pub fn SuffixAutomaton::count_occurrences(
       return 0
     }
     state = next
-  } where {
-    invariant: i >= 0 &&
-    i <= pattern.length() &&
-    state >= 0 &&
-    state < self.size,
-    reasoning: (
-      #|INVARIANT (Pattern state):
-      #|state corresponds to pattern[0..i). If a transition is missing, the
-      #|pattern does not occur. Reaching the end gives the state representing
-      #|the full pattern.
-      #|MAINTENANCE:
-      #|Follow the transition for pattern[i] or return 0 on failure.
-      #|TERMINATION:
-      #|At i == pattern.length(), state represents the full pattern.
-    ),
   }
 
   // Count using topological sort on suffix link tree
@@ -298,34 +246,12 @@ pub fn SuffixAutomaton::count_occurrences(
     .maximum()
     .unwrap_or(0)
   let by_len : Array[Array[Int]] = Array::makei(max_len + 1, _ => [])
-  for i = 0; i < self.size; i = i + 1 {
+  for i in 0..<self.size {
     by_len[self.states[i].len].push(i)
-  } where {
-    invariant: i >= 0 && i <= self.size,
-    reasoning: (
-      #|INVARIANT (Bucket fill):
-      #|States [0..i) have been placed into their length buckets. After the
-      #|loop, every state appears exactly once in by_len[len].
-      #|MAINTENANCE:
-      #|Push state i into by_len at its length.
-      #|TERMINATION:
-      #|At i == self.size, all states are bucketed.
-    ),
   }
   for len = max_len; len >= 0; len = len - 1 {
-    for j = 0; j < by_len[len].length(); j = j + 1 {
+    for j in 0..<by_len[len].length() {
       order.push(by_len[len][j])
-    } where {
-      invariant: j >= 0 && j <= by_len[len].length(),
-      reasoning: (
-        #|INVARIANT (Append bucket):
-        #|order contains the first j states from by_len[len]. After the loop,
-        #|all states of length len are appended in arbitrary order.
-        #|MAINTENANCE:
-        #|Append by_len[len][j] and advance j.
-        #|TERMINATION:
-        #|At j == bucket size, the entire bucket is appended.
-      ),
     }
   } where {
     invariant: len >= -1 && len <= max_len,
@@ -349,24 +275,12 @@ pub fn SuffixAutomaton::count_occurrences(
   }
 
   // Propagate counts through suffix links
-  for i = 0; i < order.length(); i = i + 1 {
+  for i in 0..<order.length() {
     let v = order[i]
     let link = self.states[v].link
     if link >= 0 {
       cnt[link] = cnt[link] + cnt[v]
     }
-  } where {
-    invariant: i >= 0 && i <= order.length(),
-    reasoning: (
-      #|INVARIANT (Count propagation):
-      #|After processing order[0..i), all states in that prefix have pushed
-      #|their counts to their suffix links. Because order is by decreasing
-      #|length, every state contributes before its link is processed.
-      #|MAINTENANCE:
-      #|Add cnt[v] to cnt[link] and advance i.
-      #|TERMINATION:
-      #|At i == order.length(), all counts are fully propagated.
-    ),
   }
   cnt[state]
 }
