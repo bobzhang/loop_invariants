@@ -16,7 +16,7 @@ pub fn knapsack_01(
     values.length()
   }
   let dp : Array[Int] = Array::make(capacity + 1, 0)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     let w_i = weights[i]
     let v_i = values[i]
     for w = capacity; w >= w_i; w = w - 1 {
@@ -36,16 +36,6 @@ pub fn knapsack_01(
         #|When w < w_i, all feasible weights for item i are processed.
       ),
     }
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Items processed):
-      #|After processing items [0..i), dp[w] is the best value with weight ≤ w.
-      #|MAINTENANCE:
-      #|The inner loop incorporates item i exactly once into dp.
-      #|TERMINATION:
-      #|At i = n, dp[capacity] is the optimal value.
-    ),
   }
   dp[capacity]
 }
