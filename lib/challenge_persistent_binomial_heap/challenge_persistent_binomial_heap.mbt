@@ -186,11 +186,10 @@ fn[T] heap_from_children(children : Array[Tree[T]], rank : Int) -> Heap[T] {
 ///|
 /// Delete the minimum element and return the new heap.
 pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
-  let len = h.trees.length()
   let mut min_idx : Int? = None
   let mut min_val : T? = None
-  for i = 0; i < len; i = i + 1 {
-    match h.trees[i] {
+  for i, tree in h.trees {
+    match tree {
       None => ()
       Some(t) =>
         match min_val {
@@ -205,20 +204,6 @@ pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
             }
         }
     }
-  } where {
-    invariant: i >= 0 && i <= len,
-    invariant: min_idx is None || (min_idx is Some(idx) && idx >= 0 && idx < i),
-    invariant: min_idx is None || min_val is Some(_),
-    invariant: min_idx is None ||
-    (min_idx is Some(idx) && h.trees[idx] is Some(_)),
-    reasoning: (
-      #|INVARIANT (Min index scan):
-      #|min_idx/min_val track the smallest root seen in trees[0..i).
-      #|MAINTENANCE:
-      #|Update min_idx when a smaller root is found.
-      #|TERMINATION:
-      #|At i = len, min_idx is the index of the minimum tree.
-    ),
   }
   match min_idx {
     None => None
