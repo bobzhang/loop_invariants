@@ -44,18 +44,8 @@ pub fn build_sqrt_decomp(arr : ArrayView[Int]) -> SqrtDecomp {
   let block_count = (n + block_size - 1) / block_size
   let data = arr.to_array()
   let block_sum = Array::make(block_count, 0)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     block_sum[i / block_size] = block_sum[i / block_size] + data[i]
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (block sums):
-      #|block_sum accumulates the sums of data[0..i) per block.
-      #|MAINTENANCE:
-      #|Add data[i] to its block.
-      #|TERMINATION:
-      #|At i = n, all block sums are ready.
-    ),
   }
   { n, block_size, arr: data, block_sum }
 }
