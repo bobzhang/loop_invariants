@@ -33,13 +33,7 @@ fn sliding_window_max(arr : Array[Int64], k : Int) -> Array[Int64] {
   }
   if k >= n {
     // Single window containing all elements - find max using fold
-    let m = arr[1:].fold(init=arr[0], fn(acc, x) {
-      if x > acc {
-        x
-      } else {
-        acc
-      }
-    })
+    let m = arr[1:].fold(init=arr[0], (acc, x) => if x > acc { x } else { acc })
     return [m]
   }
   let result : Array[Int64] = []
@@ -131,13 +125,7 @@ fn sliding_window_min(arr : Array[Int64], k : Int) -> Array[Int64] {
   }
   if k >= n {
     // Single window containing all elements - find min using fold
-    let m = arr[1:].fold(init=arr[0], fn(acc, x) {
-      if x < acc {
-        x
-      } else {
-        acc
-      }
-    })
+    let m = arr[1:].fold(init=arr[0], (acc, x) => if x < acc { x } else { acc })
     return [m]
   }
   let result : Array[Int64] = []
