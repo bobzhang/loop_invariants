@@ -55,18 +55,8 @@ pub fn max_flow(g : FlowGraph, s : Int, t : Int) -> Int {
     return 0
   }
   let mut edge_count = 0
-  for i = 0; i < n; i = i + 1 {
-    edge_count = edge_count + g.adj[i].length()
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Edge count):
-      #|edge_count equals the sum of adj[0..i) lengths.
-      #|MAINTENANCE:
-      #|Accumulate adjacency sizes as we scan vertices.
-      #|TERMINATION:
-      #|At i = n, edge_count equals the total number of edges.
-    ),
+  for neighbors in g.adj {
+    edge_count = edge_count + neighbors.length()
   }
   let limit = n * edge_count + 1
   let mut flow = 0
