@@ -222,7 +222,7 @@ fn sliding_window_sum(arr : Array[Int64], k : Int) -> Array[Int64] {
     return []
   }
   // Initialize first window sum using fold
-  let initial_sum = arr[:k].fold(init=0L, fn(acc, x) { acc + x })
+  let initial_sum = arr[:k].fold(init=0L, (acc, x) => acc + x)
   let result : Array[Int64] = [initial_sum]
 
   // Slide window - use functional for loop to track running sum
