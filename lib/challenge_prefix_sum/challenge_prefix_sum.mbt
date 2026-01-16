@@ -9,26 +9,10 @@
 pub fn build_prefix_sum(arr : ArrayView[Int]) -> Array[Int] {
   let n = arr.length()
   let prefix : Array[Int] = Array::make(n + 1, 0)
-  for i = 0, sum = 0 {
-    if i >= n {
-      break
-    } else {
-      let new_sum = sum + arr[i]
-      prefix[i + 1] = new_sum
-      continue i + 1, new_sum
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: sum == prefix[i],
-    reasoning: (
-      #|INVARIANT (Prefix accumulation):
-      #|sum equals prefix[i], the sum of arr[0..i).
-      #|MAINTENANCE:
-      #|Compute new_sum = sum + arr[i] and set prefix[i+1] = new_sum.
-      #|After continue, sum == prefix[i] holds for the next i.
-      #|TERMINATION:
-      #|At i = n, prefix stores sums for all prefixes of arr.
-    ),
+  let mut sum = 0
+  for i, val in arr {
+    sum = sum + val
+    prefix[i + 1] = sum
   }
   prefix
 }
