@@ -60,8 +60,7 @@ pub fn mo_range_sum(
   let mut cur_l = 0
   let mut cur_r = 0
   let mut sum = 0
-  for qi = 0; qi < q; qi = qi + 1 {
-    let target = qs[qi]
+  for target in qs {
     let (l1, sum1) = for l = cur_l, s = sum {
       if l <= target.l {
         break (l, s)
@@ -138,18 +137,6 @@ pub fn mo_range_sum(
     cur_r = r2
     sum = sum4
     ans[target.idx] = sum
-  } where {
-    invariant: qi >= 0 && qi <= q && cur_l >= 0 && cur_l <= cur_r,
-    reasoning: (
-      #|INVARIANT (Mo scan):
-      #|After processing qs[0..qi), sum equals the range sum for the current
-      #|window [cur_l, cur_r) associated with the last processed query.
-      #|MAINTENANCE:
-      #|Move the window to the next query by adjusting boundaries and updating
-      #|sum accordingly.
-      #|TERMINATION:
-      #|At qi = q, all queries are answered in their original order.
-    ),
   }
   ans
 }
