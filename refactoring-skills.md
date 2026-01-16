@@ -83,6 +83,26 @@ let compute = lambda =>
     (20L, 1)
   }
 
+## 2026-01-16: Prefer for-in for simple copies
+- Problem: Trivial index loops with invariants were noisy for straightforward copies.
+- Change: Use `for x in xs` (or `for i, x in xs`) and drop invariants for simple scans.
+- Result: Cleaner loops while keeping invariants for complex control flow.
+- Example:
+// Before
+for i = 0; i < n; i = i + 1 {
+  out.push(values[i])
+} where {
+  invariant: i >= 0 && i <= n,
+  reasoning: (
+    #|out contains values[0..i).
+  ),
+}
+
+// After
+for val in values {
+  out.push(val)
+}
+
 ## 2026-01-17: Deque Peek Without Unwrap in Sliding Window
 - Problem: Sliding-window maintenance used `is_empty()` plus `unwrap()` calls for peeks.
 - Change: Match on `front()` and `back()` inside the loop and break when in range.

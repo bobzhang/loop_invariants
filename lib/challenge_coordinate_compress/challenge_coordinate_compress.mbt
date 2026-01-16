@@ -34,35 +34,15 @@ fn lower_bound(arr : ArrayView[Int], target : Int) -> Int {
 pub fn coordinate_compress(values : ArrayView[Int]) -> (Array[Int], Array[Int]) {
   let n = values.length()
   let sorted : Array[Int] = []
-  for i = 0; i < n; i = i + 1 {
-    sorted.push(values[i])
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Copy):
-      #|sorted contains values[0..i).
-      #|MAINTENANCE:
-      #|Push values[i] into sorted and advance i.
-      #|TERMINATION:
-      #|At i = n, sorted is a full copy.
-    ),
+  for val in values {
+    sorted.push(val)
   }
   sorted.sort_by_key(x => x)
   let unique : Array[Int] = []
-  for i = 0; i < sorted.length(); i = i + 1 {
-    if i == 0 || sorted[i] != sorted[i - 1] {
-      unique.push(sorted[i])
+  for i, val in sorted {
+    if i == 0 || val != sorted[i - 1] {
+      unique.push(val)
     }
-  } where {
-    invariant: i >= 0 && i <= sorted.length(),
-    reasoning: (
-      #|INVARIANT (Unique scan):
-      #|unique holds the distinct sorted values from sorted[0..i).
-      #|MAINTENANCE:
-      #|Add sorted[i] only when it differs from the previous value.
-      #|TERMINATION:
-      #|At i = sorted.length(), unique contains all distinct values.
-    ),
   }
   let compressed : Array[Int] = Array::make(n, 0)
   for i, val in values {
