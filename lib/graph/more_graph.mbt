@@ -131,17 +131,14 @@ fn floyd_warshall_all_pairs(adj : Array[Array[Int]]) -> Array[Array[Int]] {
   let inf = 2147483647 / 2 // Avoid overflow
 
   // Initialize distance matrix using makei
-  let dist : Array[Array[Int]] = Array::makei(n, fn(i) {
-    Array::makei(n, fn(j) {
-      if i == j {
-        0
-      } else if adj[i][j] != 0 {
-        adj[i][j]
-      } else {
-        inf
-      }
-    })
-  })
+  let dist : Array[Array[Int]] = Array::makei(n, i => Array::makei(n, j => if i ==
+    j {
+    0
+  } else if adj[i][j] != 0 {
+    adj[i][j]
+  } else {
+    inf
+  }))
 
   // Main algorithm: consider each vertex as intermediate
   for k = 0; k < n; k = k + 1 {
