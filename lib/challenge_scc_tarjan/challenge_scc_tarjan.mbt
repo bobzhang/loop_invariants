@@ -8,12 +8,12 @@
 #warnings("+missing_invariant+missing_reasoning")
 pub fn scc_tarjan(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int] {
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
-  edges.each(fn(edge) {
+  for edge in edges {
     let (u, v) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       adj[u].push(v)
     }
-  })
+  }
   let index = Array::make(n, -1)
   let low = Array::make(n, 0)
   let onstack = Array::make(n, false)
