@@ -376,7 +376,7 @@ fn longest_common_substring(s1 : String, s2 : String) -> Int {
     }
 
     // Sort for binary search
-    hashes.sort_by(fn(a, b) {
+    hashes.sort_by((a, b) => {
       let (a1, a2) = a
       let (b1, b2) = b
       if a1 != b1 {
@@ -505,7 +505,7 @@ fn count_distinct_substrings(s : String) -> Int {
   }
 
   // Sort and count unique
-  seen.sort_by(fn(a, b) {
+  seen.sort_by((a, b) => {
     let (a1, a2) = a
     let (b1, b2) = b
     if a1 != b1 {
