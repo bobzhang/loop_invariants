@@ -32,20 +32,9 @@ const RK_MOD : Int64 = 1000000007L
 /// Compute hash of string
 fn compute_hash(s : String, start : Int, len : Int) -> Int64 {
   let mut h = 0L
-  for i = 0; i < len; i = i + 1 {
-    let c = s[start + i].to_int() - 96 // 'a' = 97, so 'a' -> 1
+  for offset in 0..<len {
+    let c = s[start + offset].to_int() - 96 // 'a' = 97, so 'a' -> 1
     h = (h * RK_BASE + c.to_int64()) % RK_MOD
-  } where {
-    invariant: i >= 0 && i <= len,
-    reasoning: (
-      #|INVARIANT (rolling hash):
-      #|h equals the polynomial hash of s[start..start+i).
-      #|MAINTENANCE:
-      #|Incorporate s[start+i] by multiplying by RK_BASE and adding the new
-      #|character value, all modulo RK_MOD.
-      #|TERMINATION:
-      #|At i = len, h is the hash of the full substring of length len.
-    ),
   }
   h
 }
@@ -82,22 +71,11 @@ pub fn rabin_karp_search(text : String, pattern : String) -> Array[Int] {
     if text_hash == pattern_hash {
       // Verify match to handle collisions
       let mut match_found = true
-      for j = 0; j < m; j = j + 1 {
+      for j in 0..<m {
         if text[i + j] != pattern[j] {
           match_found = false
           break
         }
-      } where {
-        invariant: j >= 0 && j <= m,
-        reasoning: (
-          #|INVARIANT (collision check):
-          #|If match_found is true, then text[i..i+j) matches pattern[0..j).
-          #|MAINTENANCE:
-          #|Compare the next character; on mismatch, set match_found to false.
-          #|TERMINATION:
-          #|At j = m or after breaking, match_found is true iff the full
-          #|pattern matches at position i.
-        ),
       }
       if match_found {
         result.push(i)
@@ -155,27 +133,15 @@ pub fn rabin_karp_multi(
 
   // Group patterns by length
   let by_length : Map[Int, Array[(Int, Int64)]] = {} // length -> [(pattern_idx, hash)]
-  for i = 0; i < patterns.length(); i = i + 1 {
-    let m = patterns[i].length()
+  for i, pat in patterns {
+    let m = pat.length()
     if m > 0 && m <= n {
-      let h = compute_hash(patterns[i], 0, m)
+      let h = compute_hash(pat, 0, m)
       if not(by_length.contains(m)) {
         by_length[m] = []
       }
       by_length[m].push((i, h))
     }
-  } where {
-    invariant: i >= 0 && i <= patterns.length(),
-    reasoning: (
-      #|INVARIANT (group patterns):
-      #|by_length groups hashes for patterns[0..i) by their length, mapping
-      #|each length to the list of (pattern_idx, hash).
-      #|MAINTENANCE:
-      #|If patterns[i] is valid, compute its hash and insert into the proper
-      #|bucket keyed by length.
-      #|TERMINATION:
-      #|At i = patterns.length(), all patterns are grouped by length.
-    ),
   }
 
   // For each pattern length, do rolling hash
@@ -189,22 +155,11 @@ pub fn rabin_karp_multi(
         if text_hash == pat_hash {
           // Verify
           let mut match_found = true
-          for k = 0; k < len; k = k + 1 {
+          for k in 0..<len {
             if text[i + k] != patterns[pat_idx][k] {
               match_found = false
               break
             }
-          } where {
-            invariant: k >= 0 && k <= len,
-            reasoning: (
-              #|INVARIANT (collision check):
-              #|If match_found is true, text[i..i+k) matches pattern[0..k).
-              #|MAINTENANCE:
-              #|Compare the next character; on mismatch, set match_found to false.
-              #|TERMINATION:
-              #|At k = len or after breaking, match_found is true iff the full
-              #|pattern matches at position i.
-            ),
           }
           if match_found {
             result.push((pat_idx, i))
@@ -267,20 +222,10 @@ fn HashArray::new(s : String) -> HashArray {
   let n = s.length()
   let prefix_hash = Array::make(n + 1, 0L)
   let powers = Array::make(n + 1, 1L)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     let c = (s[i].to_int() - 96).to_int64()
     prefix_hash[i + 1] = (prefix_hash[i] * RK_BASE + c) % RK_MOD
     powers[i + 1] = powers[i] * RK_BASE % RK_MOD
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (prefix tables):
-      #|prefix_hash and powers are correct for all prefix lengths in [0, i].
-      #|MAINTENANCE:
-      #|Extend the hash and powers by one character using the recurrence.
-      #|TERMINATION:
-      #|At i = n, all prefix hashes and base powers are precomputed.
-    ),
   }
   { prefix_hash, powers, n }
 }
