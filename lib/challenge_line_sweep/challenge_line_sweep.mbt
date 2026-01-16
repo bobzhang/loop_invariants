@@ -21,26 +21,15 @@ pub fn max_overlap(intervals : ArrayView[(Int, Int)]) -> Int {
     }
   }
   events.sort_by_key(e => e.pos)
-  for i = 0, cur = 0, best = 0 {
-    if i >= events.length() {
-      break best
-    } else {
-      let new_cur = cur + events[i].delta
-      let new_best = if new_cur > best { new_cur } else { best }
-      continue i + 1, new_cur, new_best
+  let mut cur = 0
+  let mut best = 0
+  for ev in events {
+    cur = cur + ev.delta
+    if cur > best {
+      best = cur
     }
-  } where {
-    invariant: i >= 0 && i <= events.length(),
-    reasoning: (
-      #|INVARIANT (Sweep count):
-      #|cur is the overlap count after processing events[0..i).
-      #|best is the maximum overlap seen so far.
-      #|MAINTENANCE:
-      #|Apply the next delta and update best if needed.
-      #|TERMINATION:
-      #|At i = events.length(), best is the maximum overlap.
-    ),
   }
+  best
 }
 
 ///|
