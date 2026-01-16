@@ -50,21 +50,11 @@ fn[T] tree_size(t : Tree[T]) -> Int {
 ///|
 fn[T] insert_key(keys : Array[T], pos : Int, key : T) -> Array[T] {
   let out = Array::new()
-  for i = 0; i < keys.length(); i = i + 1 {
+  for i, item in keys {
     if i == pos {
       out.push(key)
     }
-    out.push(keys[i])
-  } where {
-    invariant: i >= 0 && i <= keys.length(),
-    reasoning: (
-      #|INVARIANT (Insert key):
-      #|out equals keys[0..i) with key inserted at position pos.
-      #|MAINTENANCE:
-      #|Append keys[i] and inject key when i == pos.
-      #|TERMINATION:
-      #|After the loop, key is inserted into the proper position.
-    ),
+    out.push(item)
   }
   if pos >= keys.length() {
     out.push(key)
@@ -80,23 +70,13 @@ fn[T] insert_children(
   right : BNode[T],
 ) -> Array[BNode[T]] {
   let out = Array::new()
-  for i = 0; i < children.length(); i = i + 1 {
+  for i, child in children {
     if i == pos {
       out.push(left)
       out.push(right)
     } else {
-      out.push(children[i])
+      out.push(child)
     }
-  } where {
-    invariant: i >= 0 && i <= children.length(),
-    reasoning: (
-      #|INVARIANT (Insert children):
-      #|out equals children[0..i) with the split inserted at position pos.
-      #|MAINTENANCE:
-      #|Replace the old child at pos with left/right, keep others in order.
-      #|TERMINATION:
-      #|After the loop, the children array is updated for the split.
-    ),
   }
   if pos >= children.length() {
     out.push(left)
