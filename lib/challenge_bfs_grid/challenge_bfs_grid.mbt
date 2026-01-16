@@ -29,7 +29,7 @@ pub fn shortest_path_grid(
   let dy : Array[Int] = [0, 0, 1, -1]
   for head = 0; head < queue.length(); head = head + 1 {
     let (x, y) = queue[head]
-    for d = 0; d < 4; d = d + 1 {
+    for d in 0..<4 {
       let nx = x + dx[d]
       let ny = y + dy[d]
       if nx >= 0 && nx < n && ny >= 0 && ny < m {
@@ -38,16 +38,6 @@ pub fn shortest_path_grid(
           queue.push((nx, ny))
         }
       }
-    } where {
-      invariant: d >= 0 && d <= 4,
-      reasoning: (
-        #|INVARIANT (Neighbor scan):
-        #|All directions < d have been processed for (x, y).
-        #|MAINTENANCE:
-        #|Check direction d and enqueue unseen open neighbors.
-        #|TERMINATION:
-        #|At d = 4, all neighbors of (x, y) are considered.
-      ),
     }
   } where {
     invariant: head >= 0 && head <= queue.length(),
