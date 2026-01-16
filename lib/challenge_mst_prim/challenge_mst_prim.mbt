@@ -13,23 +13,12 @@ pub fn build_adj(
   edges : ArrayView[(Int, Int, Int)],
 ) -> Array[Array[(Int, Int)]] {
   let adj : Array[Array[(Int, Int)]] = Array::makei(n, _ => [])
-  let m = edges.length()
-  for i = 0; i < m; i = i + 1 {
-    let (u, v, w) = edges[i]
+  for edge in edges {
+    let (u, v, w) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       adj[u].push((v, w))
       adj[v].push((u, w))
     }
-  } where {
-    invariant: i >= 0 && i <= m,
-    reasoning: (
-      #|INVARIANT (Adjacency build):
-      #|adj reflects all undirected edges in edges[0..i).
-      #|MAINTENANCE:
-      #|Insert (u, v) and (v, u) for each valid edge.
-      #|TERMINATION:
-      #|At i = m, all edges are inserted.
-    ),
   }
   adj
 }
@@ -50,21 +39,11 @@ pub fn mst_weight(adj : Array[Array[(Int, Int)]]) -> Int? {
   for iter = 0; iter < n; iter = iter + 1 {
     let mut v = -1
     let mut best = INF
-    for i = 0; i < n; i = i + 1 {
+    for i in 0..<n {
       if !in_mst[i] && min_edge[i] < best {
         v = i
         best = min_edge[i]
       }
-    } where {
-      invariant: i >= 0 && i <= n,
-      reasoning: (
-        #|INVARIANT (Select next):
-        #|best is the smallest edge weight among nodes not yet in the MST.
-        #|MAINTENANCE:
-        #|Update best when a smaller candidate is found.
-        #|TERMINATION:
-        #|At i = n, v is the best next node (if any).
-      ),
     }
     if v < 0 || best == INF {
       break
@@ -73,21 +52,11 @@ pub fn mst_weight(adj : Array[Array[(Int, Int)]]) -> Int? {
     total = total + best
     added = added + 1
     let neighbors = adj[v]
-    for j = 0; j < neighbors.length(); j = j + 1 {
-      let (to, w) = neighbors[j]
+    for edge in neighbors {
+      let (to, w) = edge
       if !in_mst[to] && w < min_edge[to] {
         min_edge[to] = w
       }
-    } where {
-      invariant: j >= 0 && j <= neighbors.length(),
-      reasoning: (
-        #|INVARIANT (Update frontier):
-        #|All edges neighbors[0..j) have been considered for min_edge.
-        #|MAINTENANCE:
-        #|Decrease min_edge[to] when a cheaper connection is found.
-        #|TERMINATION:
-        #|After the loop, frontier costs from v are updated.
-      ),
     }
   } where {
     invariant: iter >= 0 && iter <= n,
