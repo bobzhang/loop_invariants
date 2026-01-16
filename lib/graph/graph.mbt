@@ -530,7 +530,7 @@ fn floyd_warshall(
   edges : ArrayView[(Int, Int, Int)],
 ) -> Array[Array[Int]] {
   let inf = 0x7FFFFFFF
-  let dist : Array[Array[Int]] = Array::makei(n, fn(i) {
+  let dist : Array[Array[Int]] = Array::makei(n, i => {
     let row = Array::make(n, inf)
     row[i] = 0
     row
