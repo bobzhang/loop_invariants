@@ -20,31 +20,11 @@ pub fn edit_distance(s1 : ArrayView[Char], s2 : ArrayView[Char]) -> Int {
   let m = s1.length()
   let n = s2.length()
   let dp : Array[Int] = Array::make((m + 1) * (n + 1), 0)
-  for i = 0; i <= m; i = i + 1 {
+  for i in 0..=m {
     dp[i * (n + 1)] = i
-  } where {
-    invariant: i >= 0 && i <= m + 1,
-    reasoning: (
-      #|INVARIANT (Base column):
-      #|dp[i,0] = i for all processed i, representing i deletions.
-      #|MAINTENANCE:
-      #|Set dp[i,0] and advance i.
-      #|TERMINATION:
-      #|At i = m + 1, the full base column is initialized.
-    ),
   }
-  for j = 0; j <= n; j = j + 1 {
+  for j in 0..=n {
     dp[j] = j
-  } where {
-    invariant: j >= 0 && j <= n + 1,
-    reasoning: (
-      #|INVARIANT (Base row):
-      #|dp[0,j] = j for all processed j, representing j insertions.
-      #|MAINTENANCE:
-      #|Set dp[0,j] and advance j.
-      #|TERMINATION:
-      #|At j = n + 1, the full base row is initialized.
-    ),
   }
   for i = 1; i <= m; i = i + 1 {
     for j = 1; j <= n; j = j + 1 {
