@@ -26,33 +26,13 @@ pub fn build_sparse_table(arr : ArrayView[Int]) -> SparseTable {
     return { log: [0], table: [] }
   }
   let log = Array::make(n + 1, 0)
-  for i = 2; i <= n; i = i + 1 {
+  for i in 2..=n {
     log[i] = log[i / 2] + 1
-  } where {
-    invariant: i >= 2 && i <= n + 1,
-    reasoning: (
-      #|INVARIANT (log table):
-      #|log[t] is computed for all t in [2, i). Each value is floor(log2(t)).
-      #|MAINTENANCE:
-      #|Use log[i/2] + 1 to extend to the next integer.
-      #|TERMINATION:
-      #|At i = n + 1, log is ready for all lengths up to n.
-    ),
   }
   let kmax = log[n]
   let table = Array::makei(kmax + 1, _ => Array::make(n, 0))
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     table[0][i] = arr[i]
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (level 0):
-      #|table[0][0..i) stores arr[0..i), i.e., minimums for length-1 ranges.
-      #|MAINTENANCE:
-      #|Copy arr[i] into table[0][i].
-      #|TERMINATION:
-      #|At i = n, the base level is fully populated.
-    ),
   }
   for k = 1; k <= kmax; k = k + 1 {
     let span = 1 << k
