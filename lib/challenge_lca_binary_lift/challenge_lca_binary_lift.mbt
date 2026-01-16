@@ -76,31 +76,11 @@ pub fn build_lca(n : Int, edges : ArrayView[(Int, Int)], root : Int) -> Lca {
       #|At head = queue.length(), all nodes have depth and immediate parent.
     ),
   }
-  for k = 1; k < log; k = k + 1 {
-    for v = 0; v < n; v = v + 1 {
+  for k in 1..<log {
+    for v in 0..<n {
       let mid = up[k - 1][v]
       up[k][v] = if mid >= 0 { up[k - 1][mid] } else { -1 }
-    } where {
-      invariant: v >= 0 && v <= n,
-      reasoning: (
-        #|INVARIANT (lift table):
-        #|up[k][0..v) holds the 2^k ancestors for those nodes.
-        #|MAINTENANCE:
-        #|Use up[k-1] twice to jump 2^k.
-        #|TERMINATION:
-        #|At v = n, the k-th level is complete.
-      ),
     }
-  } where {
-    invariant: k >= 1 && k <= log,
-    reasoning: (
-      #|INVARIANT (levels):
-      #|Levels [0..k) of up are built, providing 2^j ancestors for j < k.
-      #|MAINTENANCE:
-      #|Compute level k from level k-1.
-      #|TERMINATION:
-      #|At k = log, all lifting levels are available.
-    ),
   }
   { up, depth }
 }
@@ -118,21 +98,10 @@ pub fn lca(tree : Lca, u : Int, v : Int) -> Int {
     b = tmp
   }
   let diff = tree.depth[a] - tree.depth[b]
-  for k = 0; k < log; k = k + 1 {
+  for k in 0..<log {
     if ((diff >> k) & 1) == 1 {
       a = tree.up[k][a]
     }
-  } where {
-    invariant: k >= 0 && k <= log,
-    reasoning: (
-      #|INVARIANT (lift depth):
-      #|a has been lifted to reduce the depth difference by the bits handled
-      #|so far.
-      #|MAINTENANCE:
-      #|If the k-th bit is set, jump a up by 2^k.
-      #|TERMINATION:
-      #|At k = log, a and b are at the same depth.
-    ),
   }
   if a == b {
     return a
