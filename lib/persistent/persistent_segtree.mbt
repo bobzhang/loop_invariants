@@ -359,20 +359,10 @@ fn KthSmallestTree::build(arr : Array[Int]) -> KthSmallestTree {
 
   // Remove duplicates
   let unique : Array[Int] = []
-  for i = 0; i < sorted.length(); i = i + 1 {
-    if i == 0 || sorted[i] != sorted[i - 1] {
-      unique.push(sorted[i])
+  for i, val in sorted {
+    if i == 0 || val != sorted[i - 1] {
+      unique.push(val)
     }
-  } where {
-    invariant: i >= 0 && i <= sorted.length(),
-    reasoning: (
-      #|INVARIANT (deduplicate):
-      #|unique contains distinct values from sorted[0..i) in order.
-      #|MAINTENANCE:
-      #|Append sorted[i] when it differs from the previous value.
-      #|TERMINATION:
-      #|At i = sorted.length(), unique is the sorted list of unique values.
-    ),
   }
   let m = unique.length()
 
@@ -381,9 +371,9 @@ fn KthSmallestTree::build(arr : Array[Int]) -> KthSmallestTree {
 
   // Build versions - version i has count of values in arr[0..i-1]
   // We need version 0 to be empty, then version i = prefix [0..i-1]
-  for i = 0; i < arr.length(); i = i + 1 {
+  for i, value in arr {
     // Find rank of arr[i] in unique
-    let rank = binary_search(unique, arr[i])
+    let rank = binary_search(unique, value)
 
     // Get previous version (i for 0-indexed prefix)
     let prev_ver = i
@@ -392,16 +382,6 @@ fn KthSmallestTree::build(arr : Array[Int]) -> KthSmallestTree {
     let old_val = pst.get(prev_ver, rank)
     let _ = pst.update(prev_ver, rank, old_val + 1L)
 
-  } where {
-    invariant: i >= 0 && i <= arr.length(),
-    reasoning: (
-      #|INVARIANT (build versions):
-      #|Versions 0..i represent prefix counts for arr[0..i-1].
-      #|MAINTENANCE:
-      #|Update version i at the rank of arr[i], creating version i+1.
-      #|TERMINATION:
-      #|At i = n, there are n+1 versions representing all prefixes.
-    ),
   }
   { pst, sorted_values: unique, n: arr.length() }
 }
