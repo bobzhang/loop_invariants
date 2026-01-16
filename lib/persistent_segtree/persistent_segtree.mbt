@@ -299,15 +299,7 @@ fn KthSmallest::new(arr : Array[Int64]) -> KthSmallest {
       #|At i = n, sorted_vals is a copy of arr.
     ),
   }
-  sorted_vals.sort_by(fn(a, b) {
-    if a < b {
-      -1
-    } else if a > b {
-      1
-    } else {
-      0
-    }
-  })
+  sorted_vals.sort_by((a, b) => if a < b { -1 } else if a > b { 1 } else { 0 })
 
   // Remove duplicates and build value -> index map
   let unique_vals : Array[Int64] = []
