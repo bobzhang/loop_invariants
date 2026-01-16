@@ -48,18 +48,8 @@ pub fn build_disjoint_sparse_table(arr : ArrayView[Int]) -> DisjointSparseTable 
   }
   let levels = highest_bit(n - 1) + 1
   let table = Array::makei(levels, _ => Array::make(n, 0))
-  for i = 0; i < n; i = i + 1 {
-    table[0][i] = arr[i]
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (level 0):
-      #|table[0][0..i) equals arr[0..i).
-      #|MAINTENANCE:
-      #|Copy arr[i] into table[0][i].
-      #|TERMINATION:
-      #|At i = n, level 0 is fully populated.
-    ),
+  for i, val in arr {
+    table[0][i] = val
   }
   for k = 1; k < levels; k = k + 1 {
     let span = 1 << (k + 1)
