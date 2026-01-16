@@ -406,14 +406,14 @@ fn AhoCorasick::collect_matches(
   matches : Array[ACMatch],
 ) -> Unit {
   // Collect direct outputs
-  self.nodes[state].output.each(fn(pat_idx) {
+  for pat_idx in self.nodes[state].output {
     matches.push({ position: end_pos, pattern_idx: pat_idx })
-  })
+  }
   // Follow suffix_output links
   for suf = self.nodes[state].suffix_output; suf != -1; {
-    self.nodes[suf].output.each(fn(pat_idx) {
+    for pat_idx in self.nodes[suf].output {
       matches.push({ position: end_pos, pattern_idx: pat_idx })
-    })
+    }
     continue self.nodes[suf].suffix_output
   } where {
     invariant: suf == -1 || suf >= 0,
