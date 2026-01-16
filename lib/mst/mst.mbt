@@ -112,14 +112,12 @@ fn MST::kruskal(self : MST) -> (Array[Edge], Int64) {
 
   // Sort edges by weight
   let sorted_edges = self.edges.copy()
-  sorted_edges.sort_by(fn(a, b) {
-    if a.weight < b.weight {
-      -1
-    } else if a.weight > b.weight {
-      1
-    } else {
-      0
-    }
+  sorted_edges.sort_by((a, b) => if a.weight < b.weight {
+    -1
+  } else if a.weight > b.weight {
+    1
+  } else {
+    0
   })
   let uf = UF::new(self.n)
   let mst_edges : Array[Edge] = []
