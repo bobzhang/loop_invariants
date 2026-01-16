@@ -121,7 +121,7 @@ fn build_lcp_array(s : String, sa : ArrayView[Int]) -> Array[Int] {
 
   // Build rank array: rank[i] = position of suffix i in sorted order
   let rank = Array::make(n, 0)
-  sa.eachi(fn(i, pos) { rank[pos] = i })
+  sa.eachi((i, pos) => rank[pos] = i)
   let lcp = Array::make(n, 0)
   let mut k = 0
 
