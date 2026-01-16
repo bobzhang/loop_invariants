@@ -213,7 +213,7 @@ pub fn convex_hull_graham(points : Array[Point]) -> Array[Point] {
   // Sort by polar angle with pivot
   // For points with same angle, keep the farthest one
   let rest = pts[1:].to_array()
-  rest.sort_by(fn(a, b) {
+  rest.sort_by((a, b) => {
     let cp = cross(pivot, a, b)
     if cp > 0L {
       -1 // a comes before b (counterclockwise)
@@ -374,7 +374,7 @@ pub fn polygon_area_2x(hull : Array[Point]) -> Int64 {
   }
 
   // Shoelace formula: sum cross products of adjacent edges
-  let area = hull[:].foldi(init=0L, fn(i, acc, point) {
+  let area = hull[:].foldi(init=0L, (i, acc, point) => {
     let next = hull[(i + 1) % n]
     acc + point.x * next.y - next.x * point.y
   })
