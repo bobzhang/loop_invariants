@@ -126,14 +126,11 @@ fn MoDistinct::answer_queries(
 
   // Sort queries by (left_block, right)
   // INVARIANT: After sort, queries in same block have increasing right
-  mo_queries.sort_by(fn(a, b) {
-    let block_a = a.left / self.block_size
-    let block_b = b.left / self.block_size
-    if block_a != block_b {
-      block_a - block_b
-    } else {
-      a.right - b.right
-    }
+  mo_queries.sort_by((a, b) => if a.left / self.block_size !=
+    b.left / self.block_size {
+    a.left / self.block_size - b.left / self.block_size
+  } else {
+    a.right - b.right
   })
 
   // Initialize frequency count map
@@ -284,14 +281,11 @@ fn MoSum::answer_queries(
     let (l, r) = queries[i]
     { left: l, right: r, index: i }
   })
-  mo_queries.sort_by(fn(a, b) {
-    let block_a = a.left / self.block_size
-    let block_b = b.left / self.block_size
-    if block_a != block_b {
-      block_a - block_b
-    } else {
-      a.right - b.right
-    }
+  mo_queries.sort_by((a, b) => if a.left / self.block_size !=
+    b.left / self.block_size {
+    a.left / self.block_size - b.left / self.block_size
+  } else {
+    a.right - b.right
   })
   let mut current_sum = 0L
   let mut cur_l = 0
@@ -422,16 +416,11 @@ fn MoRangeCount::answer_queries(
   })
 
   // Sort by Mo ordering
-  mo_queries.sort_by(fn(a, b) {
-    let (qa, _, _) = a
-    let (qb, _, _) = b
-    let block_a = qa.left / self.block_size
-    let block_b = qb.left / self.block_size
-    if block_a != block_b {
-      block_a - block_b
-    } else {
-      qa.right - qb.right
-    }
+  mo_queries.sort_by((a, b) => if a.0.left / self.block_size !=
+    b.0.left / self.block_size {
+    a.0.left / self.block_size - b.0.left / self.block_size
+  } else {
+    a.0.right - b.0.right
   })
   let mut cur_l = 0
   let mut cur_r = -1
@@ -569,14 +558,11 @@ fn MoMode::answer_queries(
     let (l, r) = queries[i]
     { left: l, right: r, index: i }
   })
-  mo_queries.sort_by(fn(a, b) {
-    let block_a = a.left / self.block_size
-    let block_b = b.left / self.block_size
-    if block_a != block_b {
-      block_a - block_b
-    } else {
-      a.right - b.right
-    }
+  mo_queries.sort_by((a, b) => if a.left / self.block_size !=
+    b.left / self.block_size {
+    a.left / self.block_size - b.left / self.block_size
+  } else {
+    a.right - b.right
   })
   let mut cur_l = 0
   let mut cur_r = -1
