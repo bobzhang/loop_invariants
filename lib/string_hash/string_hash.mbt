@@ -39,20 +39,10 @@ fn StringHash::new(s : String) -> StringHash {
   let n = s.length()
   let prefix = Array::make(n + 1, 0L)
   let powers = Array::make(n + 1, 1L)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     let c = (s[i].to_int() - 96).to_int64() // 'a' = 97, so 'a' -> 1
     prefix[i + 1] = (prefix[i] * HASH_BASE + c) % HASH_MOD
     powers[i + 1] = powers[i] * HASH_BASE % HASH_MOD
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (prefix tables):
-      #|prefix and powers are correct for all prefix lengths in [0, i].
-      #|MAINTENANCE:
-      #|Extend the prefix hash and power tables with s[i].
-      #|TERMINATION:
-      #|At i = n, all prefix hashes and base powers are computed.
-    ),
   }
   { prefix, powers, n }
 }
@@ -115,22 +105,12 @@ fn DoubleHash::new(s : String) -> DoubleHash {
   let prefix2 = Array::make(n + 1, 0L)
   let powers1 = Array::make(n + 1, 1L)
   let powers2 = Array::make(n + 1, 1L)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     let c = (s[i].to_int() - 96).to_int64()
     prefix1[i + 1] = (prefix1[i] * HASH_BASE + c) % HASH_MOD
     prefix2[i + 1] = (prefix2[i] * HASH_BASE2 + c) % HASH_MOD2
     powers1[i + 1] = powers1[i] * HASH_BASE % HASH_MOD
     powers2[i + 1] = powers2[i] * HASH_BASE2 % HASH_MOD2
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (double prefix tables):
-      #|prefix1/2 and powers1/2 are correct for all prefix lengths in [0, i].
-      #|MAINTENANCE:
-      #|Extend both hashes and power tables with s[i] using their bases/mods.
-      #|TERMINATION:
-      #|At i = n, both prefix hashes and power tables are computed.
-    ),
   }
   { prefix1, prefix2, powers1, powers2, n }
 }
@@ -207,20 +187,10 @@ pub fn hash_pattern_match(text : String, pattern : String) -> Array[Int] {
   let text_hash = StringHash::new(text)
   let pattern_hash = StringHash::new(pattern)
   let target = pattern_hash.get_hash(0, m)
-  for i = 0; i <= n - m; i = i + 1 {
+  for i in 0..=(n - m) {
     if text_hash.get_hash(i, i + m) == target {
       result.push(i)
     }
-  } where {
-    invariant: i >= 0 && i <= n - m + 1,
-    reasoning: (
-      #|INVARIANT (pattern scan):
-      #|All positions in [0, i) have been checked against the target hash.
-      #|MAINTENANCE:
-      #|Compare the hash at position i and record a match if it equals target.
-      #|TERMINATION:
-      #|At i = n - m + 1, all candidate positions are processed.
-    ),
   }
   result
 }
@@ -234,19 +204,9 @@ fn count_distinct_substrings(s : String, k : Int) -> Int {
   }
   let hash = StringHash::new(s)
   let seen : Map[Int64, Bool] = {}
-  for i = 0; i <= n - k; i = i + 1 {
+  for i in 0..=(n - k) {
     let h = hash.get_hash(i, i + k)
     seen[h] = true
-  } where {
-    invariant: i >= 0 && i <= n - k + 1,
-    reasoning: (
-      #|INVARIANT (distinct length-k):
-      #|seen contains hashes for substrings starting in [0, i).
-      #|MAINTENANCE:
-      #|Insert the hash for the substring starting at i.
-      #|TERMINATION:
-      #|At i = n - k + 1, all length-k substrings are recorded.
-    ),
   }
   seen.length()
 }
