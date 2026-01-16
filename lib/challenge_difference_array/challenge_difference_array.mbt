@@ -14,8 +14,8 @@ pub fn apply_range_add(
   let n = base.length()
   let diff : Array[Int] = Array::make(n + 1, 0)
   // Mark range boundaries in the difference array.
-  for i = 0; i < updates.length(); i = i + 1 {
-    let (l, r, delta) = updates[i]
+  for update in updates {
+    let (l, r, delta) = update
     if l < 0 || r < l || r >= n {
       continue
     }
@@ -23,17 +23,6 @@ pub fn apply_range_add(
     if r + 1 < n {
       diff[r + 1] = diff[r + 1] - delta
     }
-  } where {
-    invariant: i >= 0 && i <= updates.length(),
-    reasoning: (
-      #|INVARIANT (Diff marks):
-      #|All updates in updates[0..i) have been applied to diff by adding
-      #|delta at l and subtracting delta at r+1.
-      #|MAINTENANCE:
-      #|Processing updates[i] adds its boundary markers, preserving correctness.
-      #|TERMINATION:
-      #|At i = updates.length(), diff encodes all range updates.
-    ),
   }
   let result : Array[Int] = Array::make(n, 0)
   // Prefix-sum the difference array to reconstruct final values.
