@@ -14,18 +14,8 @@ pub struct RollbackDSU {
 pub fn RollbackDSU::new(n : Int) -> RollbackDSU {
   let parent : Array[Int] = Array::make(n, 0)
   let size : Array[Int] = Array::make(n, 1)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     parent[i] = i
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (Parent init):
-      #|parent[0..i) are initialized to themselves.
-      #|MAINTENANCE:
-      #|Set parent[i] = i and advance.
-      #|TERMINATION:
-      #|At i = n, all parents are initialized.
-    ),
   }
   { parent, size, history: [] }
 }
