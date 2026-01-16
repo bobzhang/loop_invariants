@@ -107,15 +107,7 @@ fn strip_closest(
   let mut p2 = best_p2
 
   // Sort strip by y coordinate
-  strip.sort_by(fn(a, b) {
-    if a.y < b.y {
-      -1
-    } else if a.y > b.y {
-      1
-    } else {
-      0
-    }
-  })
+  strip.sort_by((a, b) => if a.y < b.y { -1 } else if a.y > b.y { 1 } else { 0 })
 
   // Check each point against at most 6 points below it
   for i = 0; i < n; i = i + 1 {
@@ -219,33 +211,19 @@ pub fn closest_pair(points : Array[(Double, Double)]) -> (Double, Int, Int) {
   }
 
   // Create Point array with indices
-  let pts : Array[Point] = Array::makei(n, fn(i) {
-    { x: points[i].0, y: points[i].1, idx: i }
+  let pts : Array[Point] = Array::makei(n, i => {
+    x: points[i].0,
+    y: points[i].1,
+    idx: i,
   })
 
   // Sort by x for divide and conquer
   let pts_x = pts.copy()
-  pts_x.sort_by(fn(a, b) {
-    if a.x < b.x {
-      -1
-    } else if a.x > b.x {
-      1
-    } else {
-      0
-    }
-  })
+  pts_x.sort_by((a, b) => if a.x < b.x { -1 } else if a.x > b.x { 1 } else { 0 })
 
   // Sort by y for strip processing
   let pts_y = pts.copy()
-  pts_y.sort_by(fn(a, b) {
-    if a.y < b.y {
-      -1
-    } else if a.y > b.y {
-      1
-    } else {
-      0
-    }
-  })
+  pts_y.sort_by((a, b) => if a.y < b.y { -1 } else if a.y > b.y { 1 } else { 0 })
   closest_pair_rec(pts_x[:], pts_y)
 }
 
@@ -336,15 +314,7 @@ fn k_closest_pairs(
   }
 
   // Sort by distance
-  pairs.sort_by(fn(a, b) {
-    if a.0 < b.0 {
-      -1
-    } else if a.0 > b.0 {
-      1
-    } else {
-      0
-    }
-  })
+  pairs.sort_by((a, b) => if a.0 < b.0 { -1 } else if a.0 > b.0 { 1 } else { 0 })
 
   // Take first k
   let result : Array[(Double, Int, Int)] = []
