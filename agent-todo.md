@@ -17,8 +17,8 @@
 - [x] lib/block_cut_tree
 - [x] lib/bridges
 - [x] lib/cartesian_tree
-- [ ] lib/centroid (in progress)
-- [ ] lib/challenge_bfs_grid
+- [x] lib/centroid
+- [ ] lib/challenge_bfs_grid (in progress)
 
 ## Initial pass
 

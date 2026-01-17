@@ -1,85 +1,65 @@
-# Centroid Decomposition (Tree Divide & Conquer)
+# Centroid Decomposition (Tree Divide and Conquer)
 
-## What It Is
+Centroid decomposition breaks a tree into smaller pieces by repeatedly removing
+**centroid** nodes. The removed centroids form a new tree (the *centroid tree*)
+with height O(log n). This structure is powerful for distance and path queries
+that are difficult to answer with standard subtree techniques.
 
-**Centroid decomposition** breaks a tree into smaller pieces by repeatedly
-removing a **centroid**. The centroids become the nodes of a new tree
-(the *centroid tree*), which has **O(log n)** height.
-
-This structure makes many tree queries fast because any node has only
-O(log n) centroid ancestors.
-
-## The Problem It Solves
-
-Tree problems often ask for *path* or *distance* queries (not just subtree
-queries). Examples:
-
-- Count pairs of nodes at distance k
-- Find the nearest "marked" node to a query node
-- Count paths with certain properties
-
-Centroid decomposition turns these into **logarithmic** queries after
-preprocessing.
-
-## What Is a Centroid?
+## What is a centroid?
 
 For a tree with `n` nodes, a **centroid** is a node whose removal splits the
 tree into components of size at most `n/2`.
 
 Facts:
 
-- Every tree has **at least one centroid**.
-- There can be two centroids (adjacent) in some trees.
+- Every tree has at least one centroid.
+- Some trees have two centroids (adjacent). Either choice is valid.
 
-Example (n = 7):
-
-```
-        1
-       /|\
-      2 3 4
-     /|   |
-    5 6   7
-
-Removing node 1 leaves components of size 3,1,2  (all <= 7/2)
-So node 1 is a centroid.
-```
-
-## Core Idea of Decomposition
+## How decomposition works
 
 1. Find a centroid `c` of the current tree.
-2. Remove `c`. The tree splits into smaller subtrees.
-3. Recurse on each subtree and connect their centroids under `c`.
+2. Remove `c` (conceptually). The tree splits into smaller subtrees.
+3. Recursively decompose each subtree.
+4. Connect each subtree centroid to `c` in the centroid tree.
 
-Because each subtree is at most half the size, the centroid tree has
-**O(log n)** depth.
+Because each subtree has size at most half, the centroid tree height is
+O(log n).
 
-## How to Find a Centroid
+## Why it helps
 
-Two DFS passes:
+A node has only O(log n) centroid ancestors. Many query problems can be solved
+by aggregating data along these ancestors, giving O(log n) query time.
 
-1. Compute subtree sizes.
-2. Walk again to find a node where no component exceeds n/2.
+Common uses:
 
-Pseudo-logic:
+- Nearest marked node queries
+- Path counting by distance
+- Tree distance aggregation
+
+## Public API
 
 ```
-size[u] = 1 + sum(size[child])
-
-u is centroid if:
-  max( size[child] for children, n - size[u] ) <= n/2
+@centroid.build_centroid(n, edges)
 ```
 
-## Why It Helps
+Returns a `CentroidDecomp` with:
 
-Any node appears in the decomposition path only once per level, and the
-height is O(log n). So operations that combine data along centroid ancestors
-are typically **O(log n)**.
+- `parent(v)`: centroid parent of `v` (or `-1` if `v` is the centroid root)
+- `depth(v)`: depth of `v` in the centroid tree
 
-## Example Usage
+## Examples
+
+### Example 1: a path
+
+```
+0 - 1 - 2 - 3 - 4
+```
+
+The unique centroid is node 2.
 
 ```mbt check
 ///|
-test "centroid path" {
+test "path centroid" {
   let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 3), (3, 4)]
   let cd = @centroid.build_centroid(5, edges[:])
   inspect(cd.depth(2), content="0")
@@ -87,47 +67,66 @@ test "centroid path" {
 }
 ```
 
+### Example 2: a star
+
+```
+    1
+    |
+2 - 0 - 3
+    |
+    4
+```
+
+The center is the centroid and becomes the root of the centroid tree.
+
 ```mbt check
 ///|
-test "centroid star" {
+test "star centroid" {
   let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (0, 3), (0, 4)]
   let cd = @centroid.build_centroid(5, edges[:])
   inspect(cd.depth(0), content="0")
+  inspect(cd.parent(0), content="-1")
   inspect(cd.parent(1), content="0")
 }
 ```
 
-## Common Applications
+### Example 3: invalid index
 
-### 1. Nearest Marked Node
-Maintain for each centroid the best distance to a marked node. Query walks
-up the centroid ancestors and takes the minimum.
+```mbt check
+///|
+test "invalid index" {
+  let edges : Array[(Int, Int)] = [(0, 1)]
+  let cd = @centroid.build_centroid(2, edges[:])
+  inspect(cd.parent(-1), content="-1")
+  inspect(cd.depth(10), content="-1")
+}
+```
 
-### 2. Count Pairs at Distance k
-For each centroid, combine distances in its subtrees using counting arrays
-or maps. This gives O(n log n) total time for all counts.
+## How to use the centroid tree in queries
 
-### 3. Path Queries with Constraints
-If you can break a path into contributions from centroid ancestors, you
-get logarithmic query time.
+A typical pattern is:
+
+1. Precompute distances from every node to each of its centroid ancestors.
+2. Maintain a data structure at each centroid (for example, the nearest marked
+   node distance).
+3. For a query at node `u`, walk up the centroid parents and combine answers.
+
+The walk is only O(log n) steps.
 
 ## Complexity
 
-- Build centroid tree: **O(n log n)**
-- Depth of centroid tree: **O(log n)**
-- Typical query: **O(log n)**
+- Build time: O(n log n)
+- Centroid tree depth: O(log n)
+- Typical query using centroid ancestors: O(log n)
 
-## Pitfalls
+## Practical notes and pitfalls
 
-- Always mark removed nodes so they are skipped in DFS.
-- If values are weighted, store distances while climbing centroid ancestors.
-- Handle the case of two possible centroids (either choice is valid).
+- The decomposition assumes a **static** tree (no edge updates).
+- If there are two centroids, the algorithm may choose either; both are valid.
+- Always skip "removed" nodes when recursing into subtrees.
 
-## When to Use
+## When to use it
 
-Use centroid decomposition when:
-
-- The tree is static (no edge updates), and
-- You need many path/distance queries
-
-If you only need subtree queries, Euler tours are simpler.
+Use centroid decomposition when you need fast path or distance queries on a
+static tree. If you only need subtree queries, simpler techniques (Euler tour,
+Fenwick/segment tree) are often enough.
