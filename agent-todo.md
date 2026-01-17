@@ -112,8 +112,8 @@
 - [x] lib/challenge_sparse_table_rmq
 - [x] lib/challenge_sqrt_decomposition_sum
 - [x] lib/challenge_ternary_search
-- [ ] lib/challenge_toposort_kahn (in progress)
-- [ ] lib/challenge_tree_diameter
+- [x] lib/challenge_toposort_kahn
+- [ ] lib/challenge_tree_diameter (in progress)
 - [ ] lib/challenge_two_pointers
 - [ ] lib/challenge_union_find_rollback
 - [ ] lib/closest_pair

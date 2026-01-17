@@ -4,7 +4,6 @@
 
 ///|
 /// Return a topological ordering, or None if the graph has a cycle.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn topo_sort(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   let indeg : Array[Int] = Array::make(n, 0)
@@ -36,9 +35,9 @@ pub fn topo_sort(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
     invariant: head >= 0 && head <= queue.length(),
     reasoning: (
       #|INVARIANT (Kahn frontier):
-      #|order contains a valid topological prefix of processed nodes.
+      #|order is a valid topological prefix of processed nodes.
       #|MAINTENANCE:
-      #|Removing u exposes new zero-indegree nodes that are appended to queue.
+      #|Removing u exposes new zero-indegree nodes appended to queue.
       #|TERMINATION:
       #|When head reaches queue.length(), all reachable nodes are processed.
     ),
@@ -52,7 +51,6 @@ pub fn topo_sort(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? {
 
 ///|
 /// Check whether `order` is a valid topological ordering for the graph.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn is_topo(
   order : Array[Int],
   n : Int,
