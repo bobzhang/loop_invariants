@@ -187,3 +187,28 @@ pub fn build(n : Int, edges : Array[(Int, Int, Int64)]) -> Graph { ... }
 
 // After
 pub fn build(n : Int, edges : ArrayView[(Int, Int, Int64)]) -> Graph { ... }
+
+## 2026-01-19: Replace while + mut Front With loop
+- Problem: BFS/queue scans used `mut front` with `while queue.get(front) is Some`.
+- Change: Use `loop` with an explicit `front` state and `match` on `queue.get`.
+- Result: Keeps the queue scan functional and matches the preferred loop style.
+- Example:
+// Before
+let mut front = 0
+while queue.get(front) is Some(u) {
+  process(u)
+  front = front + 1
+}
+
+// After
+let _ = loop 0 {
+  front => {
+    match queue.get(front) {
+      None => break ()
+      Some(u) => {
+        process(u)
+        continue front + 1
+      }
+    }
+  }
+}

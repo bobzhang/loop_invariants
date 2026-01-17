@@ -1,207 +1,409 @@
-# Graph Algorithms
+# Graph Algorithms (Reference + Invariants)
 
-## Overview
+## What This Package Is
 
-This package provides reference implementations of fundamental graph algorithms
-with detailed loop invariants and reasoning. It serves as an educational
-resource for understanding algorithm correctness.
+This package is a **teaching collection** of classic graph algorithms with
+extra correctness notes in the source. The code favors clarity and invariants
+so you can see *why* an algorithm works, not just *how* it runs.
 
-## Core Idea
+If you need production-ready APIs, use the dedicated packages (for example
+`@dijkstra`, `@union_find`, `@max_flow`, `@scc`, etc.). This package is meant
+as the readable reference and a place to study loop invariants.
 
-- Model problems as **graph traversal or relaxation**.
-- Maintain invariants (e.g., finalized distances, acyclic order).
-- Use the right structure: queues, heaps, disjoint sets, or DP over vertices.
+## File Map (Read This First)
 
-## Algorithms Covered
+- `lib/graph/graph.mbt`: topological sort, Dijkstra, Union-Find,
+  Bellman-Ford, Floyd-Warshall.
+- `lib/graph/tarjan.mbt`: Tarjan SCC with explicit stack reasoning.
+- `lib/graph/more_graph.mbt`: bipartite check, cycle detection, Kosaraju SCC,
+  Prim MST, Kruskal MST, additional shortest-path variants.
+- `lib/graph/network_flow.mbt`: Edmonds-Karp, Dinic, min-cost max-flow,
+  bipartite matching, Hungarian algorithm for assignment.
 
-### 1. Topological Sort (Kahn's Algorithm)
+## Graph Basics (Very Short, Very Practical)
+
+We use 0-based vertex indices.
+
+- Directed edge: `u -> v`
+- Undirected edge: `u -- v` (implemented as two directed edges)
+- Weighted edge: `(u, v, w)` with `w` as the weight/capacity
+
+Adjacency list conventions:
+
 ```
-Order vertices so all edges point forward.
-Only works on DAGs (Directed Acyclic Graphs).
+Unweighted:
+  graph[u] = [v1, v2, v3]
 
-Algorithm:
-1. Count in-degrees for all vertices
-2. Add vertices with in-degree 0 to queue
-3. Process queue: output vertex, decrement neighbors' in-degrees
-4. Add newly zero-degree vertices to queue
-
-Time: O(V + E)
-
-     A → B → D
-     ↓   ↓
-     C → E
-
-Topological order: A, B, C, D, E (or A, C, B, E, D, etc.)
-```
-
-### 2. Dijkstra's Shortest Paths
-```
-Find shortest paths from source to all vertices.
-Requires non-negative edge weights.
-
-Algorithm:
-1. Initialize: dist[source] = 0, dist[others] = ∞
-2. Use priority queue ordered by distance
-3. Extract minimum, relax outgoing edges
-4. Update distances and add to queue if improved
-
-Time: O((V + E) log V) with binary heap
-
-     A --1-- B --2-- D
-     |       |
-     3       1
-     |       |
-     C --1-- E
-
-Shortest from A: A=0, B=1, C=3, E=2, D=3
+Weighted:
+  graph[u] = [(v1, w1), (v2, w2)]
 ```
 
-### 3. Union-Find (Disjoint Set Union)
+Example (undirected triangle 0-1-2-0):
+
 ```
-Maintain disjoint sets with efficient union and find.
-Key optimizations: path compression + union by rank.
-
-Operations:
-- find(x): Return representative of x's set
-- union(x, y): Merge sets containing x and y
-
-Time: O(α(n)) ≈ O(1) per operation
-
-     Initially: {0}, {1}, {2}, {3}, {4}
-     union(0,1): {0,1}, {2}, {3}, {4}
-     union(2,3): {0,1}, {2,3}, {4}
-     union(0,2): {0,1,2,3}, {4}
-     find(3) → representative of {0,1,2,3}
+graph[0] = [1, 2]
+graph[1] = [0, 2]
+graph[2] = [0, 1]
 ```
 
-### 4. Bellman-Ford Shortest Paths
+## How to Read the Invariants
+
+Some loops have a `where` block with `invariant` and `reasoning`. Those are
+Dafny-style loop specs written in plain language. Read them as:
+
+- **Invariant**: What must stay true at each step
+- **Reasoning**: Why the loop preserves that truth
+- **Termination**: Why the loop finishes
+
+Simple `for .. in` loops usually skip invariants to keep the code focused.
+
+# Algorithms, Explained With Stories and Examples
+
+## 1) Topological Sort (Kahn's Algorithm)
+
+**Problem**: Order tasks so every dependency comes before the task that needs it.
+
+**Idea**: Only tasks with no remaining prerequisites can be taken now.
+
+Example DAG:
+
 ```
-Find shortest paths with possibly negative edges.
-Can detect negative cycles.
-
-Algorithm:
-1. Initialize: dist[source] = 0, dist[others] = ∞
-2. Repeat V-1 times: relax all edges
-3. One more pass to detect negative cycles
-
-Time: O(V × E)
-
-     A --(-1)-- B --(2)-- D
-     |          |
-    (4)        (3)
-     |          |
-     C --(5)--- E
-
-Handles negative edges correctly!
-```
-
-### 5. Floyd-Warshall All-Pairs
-```
-Find shortest paths between ALL pairs of vertices.
-Handles negative edges (but not negative cycles).
-
-Algorithm:
-1. Initialize dist[i][j] = weight(i,j) or ∞
-2. For each intermediate vertex k:
-   dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
-
-Time: O(V³)
-
-The DP insight: gradually allow more intermediate vertices.
+A -> B -> D
+|    |
+V    V
+C -> E
 ```
 
-### 6. Kruskal's MST
+**Step-by-step**:
+
 ```
-Find minimum spanning tree using greedy edge selection.
+In-degrees:
+A:0 B:1 C:1 D:1 E:2
 
-Algorithm:
-1. Sort edges by weight
-2. For each edge (u,v) in order:
-   If u and v are in different components:
-     Add edge to MST
-     Union u and v
-3. Stop when MST has V-1 edges
-
-Time: O(E log E)
-
-     A --1-- B --4-- D
-     |       |       |
-     2       3       5
-     |       |       |
-     C --6-- E --7-- F
-
-MST edges: AB(1), AC(2), BE(3), BD(4), DF(5)
-Total weight: 15
+Queue starts with [A]
+Pop A -> output [A], decrement B and C
+Queue now [B, C]
+Pop B -> output [A, B], decrement D and E
+Queue now [C, D]
+Pop C -> output [A, B, C], decrement E
+Queue now [D, E]
+Pop D -> output [A, B, C, D]
+Pop E -> output [A, B, C, D, E]
 ```
 
-## Key Invariants
+If the queue becomes empty before all vertices are output, there is a cycle.
 
-### Dijkstra's Invariant
+## 2) Single-Source Shortest Paths
+
+### 2.1 Dijkstra (Non-Negative Weights)
+
+**Problem**: Fast shortest paths when all edges have `w >= 0`.
+
+**Idea**: Once a node is the smallest tentative distance, it can never improve.
+
+Example:
+
 ```
-After processing vertex u:
-  dist[u] = actual shortest path distance from source
-  All vertices in "done" set have optimal distances
-
-Why it works:
-  When we extract minimum from queue, no shorter
-  path can exist (requires negative edges to fail).
-```
-
-### Bellman-Ford Invariant
-```
-After k iterations:
-  dist[v] ≤ length of shortest path using ≤ k edges
-
-Why V-1 iterations suffice:
-  Shortest path has at most V-1 edges (no cycles in path).
-```
-
-### Floyd-Warshall Invariant
-```
-After processing intermediate vertex k:
-  dist[i][j] = shortest path from i to j
-               using only vertices {0, 1, ..., k} as intermediates
-
-Why it works:
-  Either the optimal path uses k, or it doesn't.
-  We check both possibilities.
+0 --1--> 1 --2--> 3
+|         |
+4         1
+|         |
+V         V
+2 --1-->  3
 ```
 
-### Union-Find Invariant
+**Walkthrough (dist table)**:
+
 ```
-Each set forms a tree with representative at root.
-Path compression: flatten tree during find.
-Union by rank: attach shorter tree under taller.
-
-Together: nearly constant time per operation.
-```
-
-## Usage Pattern
-
-```mbt nocheck
-// These are reference implementations - read the source!
-// For callable APIs, use the dedicated packages:
-
-// @dijkstra.dijkstra(...)
-// @dijkstra.dijkstra_dense(...)
-// @union_find.UnionFind::new(...)
-// @challenge_toposort_kahn.topo_sort(...)
+Start: dist[0]=0, others=inf
+Pick 0: relax 1 -> 1, relax 2 -> 4
+Pick 1: relax 3 -> 3 (via 1)
+Pick 2: relax 3 -> min(3, 5) = 3
+Done
 ```
 
-## Algorithm Selection Guide
+**Pitfall**: Dijkstra fails with negative weights.
 
-| Problem | Algorithm | Time |
-|---------|-----------|------|
-| Shortest path, non-negative | Dijkstra | O((V+E) log V) |
-| Shortest path, negative | Bellman-Ford | O(VE) |
-| All-pairs shortest | Floyd-Warshall | O(V³) |
-| Minimum spanning tree | Kruskal/Prim | O(E log V) |
-| Topological order | Kahn's | O(V + E) |
-| Connectivity | Union-Find | O(α(n)) per op |
+### 2.2 Bellman-Ford (Negative Weights, Detects Cycles)
 
-## Implementation Notes
+**Idea**: After k full edge scans, all shortest paths using <= k edges are known.
 
-- All implementations include detailed invariants
-- Read `lib/graph/graph.mbt` for annotated source
-- Use challenge packages for production APIs
-- Implementations are intentionally verbose for learning
+Example:
+
+```
+0 --1--> 1 --(-2)--> 2
+
+Shortest to 2 is -1
+```
+
+**Negative cycle check**:
+If you can still relax an edge after `n-1` rounds, a negative cycle exists.
+
+Example negative cycle:
+
+```
+0 -> 1 (1)
+1 -> 2 (1)
+2 -> 0 (-3)
+
+Cycle total = -1, distances can shrink forever.
+```
+
+### 2.3 Floyd-Warshall (All Pairs)
+
+**Idea**: Allow more and more intermediate vertices in paths.
+
+Matrix update:
+
+```
+for k in 0..n-1:
+  for i in 0..n-1:
+    for j in 0..n-1:
+      dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j])
+```
+
+Tiny example (n=3):
+
+```
+Initial dist:
+  0  5  9
+  5  0  2
+  9  2  0
+
+Allow k=1 as intermediate:
+  dist[0][2] = min(9, dist[0][1] + dist[1][2]) = min(9, 5+2) = 7
+```
+
+**Use when**: `n` is small (O(n^3)), but you need every pair.
+
+## 3) Union-Find (Disjoint Set Union)
+
+**Problem**: Keep track of connected components under unions.
+
+```
+Start: {0}, {1}, {2}, {3}, {4}
+union(0,1) -> {0,1}
+union(2,3) -> {2,3}
+union(1,2) -> {0,1,2,3}
+```
+
+Path compression + union by rank gives near O(1) per operation.
+
+Visual intuition:
+
+```
+Before compression:
+0 <- 1 <- 2 <- 3
+
+After find(3):
+0 <- 1
+0 <- 2
+0 <- 3
+```
+
+## 4) Strongly Connected Components (SCC)
+
+A **SCC** is a maximal group where every vertex can reach every other.
+
+### 4.1 Tarjan (One DFS + Stack)
+
+Key intuition:
+
+- `disc[v]`: when `v` was first visited
+- `low[v]`: earliest discovery reachable from `v` while staying on the stack
+
+```
+When disc[v] == low[v], v is the root of an SCC.
+Pop stack until v to get the SCC.
+```
+
+Example:
+
+```
+0 -> 1 -> 2 -> 0
+2 -> 3 -> 4 -> 3
+
+SCCs: {0,1,2} and {3,4}
+```
+
+Condensation graph (SCC DAG):
+
+```
+{0,1,2} -> {3,4}
+```
+
+### 4.2 Kosaraju (Two DFS Passes)
+
+1) DFS on original graph, record finish order
+2) DFS on reversed graph in reverse finish order
+
+This cleanly finds SCCs in topological order of the SCC DAG.
+
+## 5) Bipartite Check and Cycle Detection
+
+### 5.1 Bipartite Check (BFS Coloring)
+
+**Rule**: adjacent vertices must have opposite colors.
+
+```
+Square 0-1-2-3-0 is bipartite:
+Colors alternate 0/1 on BFS layers.
+```
+
+If you ever see an edge between same-colored vertices, there is an odd cycle.
+
+### 5.2 Directed Cycle Detection (DFS States)
+
+Use three states:
+
+- WHITE (unvisited)
+- GRAY (in recursion stack)
+- BLACK (finished)
+
+Encountering a GRAY neighbor means a back edge -> cycle.
+
+## 6) Minimum Spanning Tree (MST)
+
+### 6.1 Prim (Grow a Tree)
+
+Maintain the cheapest edge that connects the current tree to any new vertex.
+
+```
+Start at 0
+Always pick smallest crossing edge
+```
+
+### 6.2 Kruskal (Sort Edges)
+
+Sort edges by weight and add if they do not create a cycle.
+
+```
+Use Union-Find to test if two endpoints are already connected.
+```
+
+Mini example:
+
+```
+Edges (weight):
+0-1 (1), 1-2 (4), 0-2 (2)
+
+Pick 0-1 (1), then 0-2 (2)
+Skip 1-2 (4) because it would create a cycle.
+```
+
+## 7) Network Flow and Matching
+
+### 7.1 Max Flow (Edmonds-Karp)
+
+**Idea**: Repeatedly find an augmenting path in the residual graph.
+
+Example:
+
+```
+source ->(10)-> A ->(10)-> sink
+source ->(10)-> B ->(10)-> sink
+
+Max flow = 20
+```
+
+Augmenting path view:
+
+```
+Residual path: source -> A -> sink
+Send 10, capacities drop to 0 on that path.
+Then use: source -> B -> sink
+Send 10, total = 20.
+```
+Edmonds-Karp uses BFS to find shortest augmenting paths.
+
+### 7.2 Dinic (Faster Max Flow)
+
+- Build level graph with BFS
+- Send blocking flows with DFS
+- Repeat until sink is unreachable
+
+### 7.3 Min-Cost Max-Flow
+
+Each edge has a cost; find the cheapest way to push as much flow as possible.
+This implementation uses SPFA for shortest augmenting paths in the residual
+network.
+
+### 7.4 Bipartite Matching via Flow
+
+Left side -> Right side edges become capacity-1 edges.
+Max flow equals maximum matching.
+
+Bipartite to flow sketch:
+
+```
+source -> L0, L1, L2 (cap 1)
+L nodes -> R nodes (cap 1)
+R0, R1, R2 -> sink (cap 1)
+```
+
+### 7.5 Assignment Problem (Hungarian Algorithm)
+
+Given a cost matrix, pick one column per row with minimum total cost.
+Hungarian runs in O(n^3) and is optimal for dense assignment problems.
+
+Small example (rows are workers, columns are jobs):
+
+```
+cost =
+  [4, 1, 3]
+  [2, 0, 5]
+  [3, 2, 2]
+
+Optimal assignment:
+  row0 -> col1 (1)
+  row1 -> col0 (2)
+  row2 -> col2 (2)
+Total cost = 5
+```
+
+# Algorithm Selection Guide
+
+| Problem | Use | Constraints |
+|--------|-----|-------------|
+| Task ordering | Topological sort | DAG only |
+| Shortest path (non-negative) | Dijkstra | w >= 0 |
+| Shortest path (negative) | Bellman-Ford | no neg cycle |
+| All-pairs shortest | Floyd-Warshall | small n |
+| Connectivity | Union-Find | unions + finds |
+| SCCs | Tarjan or Kosaraju | directed graphs |
+| MST | Prim (dense), Kruskal (sparse) | undirected |
+| Max flow | Edmonds-Karp or Dinic | capacities >= 0 |
+| Min-cost flow | SPFA MCMF | capacities + costs |
+| Matching | Flow or Hungarian | bipartite |
+
+# Common Pitfalls
+
+- Dijkstra fails with negative edges.
+- Floyd-Warshall needs a safe INF to avoid overflow.
+- Topological sort returns fewer than n nodes if a cycle exists.
+- In flow algorithms, do not forget the reverse edges in the residual graph.
+- In SCC problems, do not mix up directed and undirected edges.
+
+# Complexity Cheat Sheet
+
+| Algorithm | Time | Notes |
+|----------|------|-------|
+| Kahn topological sort | O(V + E) | DAG only |
+| Dijkstra (binary heap) | O((V + E) log V) | non-negative weights |
+| Bellman-Ford | O(VE) | negative edges ok |
+| Floyd-Warshall | O(V^3) | all pairs |
+| Union-Find | ~O(1) | inverse Ackermann |
+| Tarjan SCC | O(V + E) | one DFS |
+| Kosaraju SCC | O(V + E) | two DFS |
+| Prim MST | O(V^2) or O(E log V) | depends on PQ |
+| Kruskal MST | O(E log E) | sort edges |
+| Edmonds-Karp | O(VE^2) | BFS augmenting paths |
+| Dinic | O(V^2 E) | faster in practice |
+| Min-cost max-flow | varies | depends on shortest path |
+| Hungarian | O(n^3) | assignment |
+
+# Where to Go Next
+
+- Read the annotated source files in this package for invariant details.
+- For reusable APIs, see the specialized packages mentioned above.
+- For performance-critical code, check the dedicated implementations in `lib/`.

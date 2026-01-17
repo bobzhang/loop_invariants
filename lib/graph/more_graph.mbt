@@ -25,25 +25,12 @@ fn bellman_ford_with_neg_cycle(
   // Relax all edges n-1 times
   for i = 0; i < n - 1; i = i + 1 {
     let mut changed = false
-    for e = 0; e < edges.length(); e = e + 1 {
-      let (u, v, w) = edges[e]
+    for edge in edges {
+      let (u, v, w) = edge
       if dist[u] != inf && dist[u] + w < dist[v] {
         dist[v] = dist[u] + w
         changed = true
       }
-    } where {
-      invariant: e >= 0 && e <= edges.length(),
-      reasoning: (
-        #|INVARIANT (Relaxation scan):
-        #|After processing edges[0..e), dist reflects the shortest distances
-        #|obtainable using at most i+1 edges whose last edge appears in this
-        #|prefix. Any improvement sets changed = true for early termination.
-        #|MAINTENANCE:
-        #|Relaxing edge e can only decrease dist[v] using a path with <= i+1
-        #|edges, so the invariant extends to the longer prefix.
-        #|TERMINATION:
-        #|When e == edges.length(), all edges have been relaxed once this pass.
-      ),
     }
     // Early termination if no changes
     if not(changed) {
@@ -73,25 +60,12 @@ fn bellman_ford_with_neg_cycle(
 
   // Check for negative cycles - one more iteration
   let mut has_negative_cycle = false
-  for e = 0; e < edges.length(); e = e + 1 {
-    let (u, v, w) = edges[e]
+  for edge in edges {
+    let (u, v, w) = edge
     if dist[u] != inf && dist[u] + w < dist[v] {
       has_negative_cycle = true
       break
     }
-  } where {
-    invariant: e >= 0 && e <= edges.length(),
-    reasoning: (
-      #|INVARIANT (Negative-cycle check):
-      #|After scanning edges[0..e), no edge in this prefix can further relax
-      #|dist. If any relaxable edge exists after n-1 passes, then some path
-      #|can be improved indefinitely, implying a reachable negative cycle.
-      #|MAINTENANCE:
-      #|Each edge that fails to relax confirms the prefix cannot improve dist.
-      #|TERMINATION:
-      #|If we complete the scan without a relax, there is no reachable
-      #|negative cycle; otherwise we mark has_negative_cycle.
-    ),
   }
   (dist, has_negative_cycle)
 }
@@ -222,24 +196,10 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
   // Calculate in-degrees
   let in_degree = Array::make(n, 0)
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
-  for e = 0; e < edges.length(); e = e + 1 {
-    let (u, v) = edges[e]
+  for edge in edges {
+    let (u, v) = edge
     adj[u].push(v)
     in_degree[v] = in_degree[v] + 1
-  } where {
-    invariant: e >= 0 && e <= edges.length(),
-    reasoning: (
-      #|INVARIANT (Edge ingestion):
-      #|After processing edges[0..e), adj contains exactly those edges,
-      #|and in_degree[v] equals the number of incoming edges to v from
-      #|that prefix. This initializes the dependency counts for Kahn's queue.
-      #|MAINTENANCE:
-      #|Each edge adds one adjacency entry and increments exactly one
-      #|in-degree, preserving the counts for the prefix.
-      #|TERMINATION:
-      #|At e == edges.length(), all edges are represented and in-degrees
-      #|are accurate.
-    ),
   }
 
   // Queue of vertices with in-degree 0
@@ -250,32 +210,23 @@ fn topological_sort_kahn(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int]? 
     }
   }
   let result : Array[Int] = []
-  let mut front = 0
-  while queue.get(front) is Some(u) {
-    result.push(u)
+  let _ = loop 0 {
+    front =>
+      match queue.get(front) {
+        None => break ()
+        Some(u) => {
+          result.push(u)
 
-    // Reduce in-degree of neighbors
-    for i = 0; i < adj[u].length(); i = i + 1 {
-      let v = adj[u][i]
-      in_degree[v] = in_degree[v] - 1
-      if in_degree[v] == 0 {
-        queue.push(v)
+          // Reduce in-degree of neighbors
+          for v in adj[u] {
+            in_degree[v] = in_degree[v] - 1
+            if in_degree[v] == 0 {
+              queue.push(v)
+            }
+          }
+          continue front + 1
+        }
       }
-    } where {
-      invariant: i >= 0 && i <= adj[u].length(),
-      reasoning: (
-        #|INVARIANT (Neighbor updates):
-        #|After processing adj[u][0..i), all edges u→v in this prefix have been
-        #|"removed" by decrementing in_degree[v]. Any v that drops to 0 is now
-        #|ready to be processed and is enqueued.
-        #|MAINTENANCE:
-        #|Each processed neighbor consumes exactly one incoming edge from u,
-        #|so in_degree reflects the remaining predecessors outside result.
-        #|TERMINATION:
-        #|When i reaches adj[u].length(), all outgoing edges of u are removed.
-      ),
-    }
-    front = front + 1
   }
   if result.length() == n {
     Some(result)
@@ -306,33 +257,24 @@ fn is_bipartite(n : Int, adj : Array[Array[Int]]) -> Bool {
       // BFS from this vertex
       let queue : Array[Int] = [start]
       color[start] = 0
-      let mut front = 0
-      while queue.get(front) is Some(u) {
-        for i = 0; i < adj[u].length(); i = i + 1 {
-          let v = adj[u][i]
-          if color[v] == -1 {
-            color[v] = 1 - color[u]
-            queue.push(v)
-          } else if color[v] == color[u] {
-            return false // Same color = odd cycle = not bipartite
+      let _ = loop 0 {
+        front =>
+          match queue.get(front) {
+            None => break ()
+            Some(u) => {
+              for v in adj[u] {
+                if color[v] == -1 {
+                  color[v] = 1 - color[u]
+                  queue.push(v)
+                } else if color[v] == color[u] {
+                  return false // Same color = odd cycle = not bipartite
+                }
+              }
+              continue front + 1
+            }
           }
-        } where {
-          invariant: i >= 0 && i <= adj[u].length(),
-          reasoning: (
-            #|INVARIANT (Coloring):
-            #|After processing adj[u][0..i), every neighbor examined either
-            #|receives the opposite color (if unvisited) or is confirmed to
-            #|have a compatible color. Any same-color edge immediately
-            #|detects an odd cycle and returns false.
-            #|MAINTENANCE:
-            #|Assigning color[v] = 1 - color[u] preserves bipartite parity
-            #|across each processed edge.
-            #|TERMINATION:
-            #|At i == adj[u].length(), all neighbors of u are checked.
-          ),
-        }
-        front = front + 1
       }
+
     }
   } where {
     invariant: start >= 0 && start <= n,
@@ -402,27 +344,13 @@ fn dfs_has_cycle(
   black : Int,
 ) -> Bool {
   state[u] = gray // Mark as in-progress
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  for v in adj[u] {
     if state[v] == gray {
       return true // Back edge = cycle
     }
     if state[v] == 0 && dfs_has_cycle(adj, state, v, gray, black) {
       return true
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (DFS edge scan):
-      #|After processing neighbors[0..i), all DFS tree edges in this prefix
-      #|have been explored. Encountering a GRAY vertex indicates a back edge
-      #|to the current recursion stack, which is exactly a directed cycle.
-      #|MAINTENANCE:
-      #|Each neighbor is either explored recursively or checked for a gray
-      #|back edge, preserving the invariant over the processed prefix.
-      #|TERMINATION:
-      #|At i == adj[u].length(), all outgoing edges of u are checked.
-    ),
   }
   state[u] = black // Mark as finished
   false
@@ -471,19 +399,8 @@ fn count_sccs(n : Int, adj : Array[Array[Int]]) -> Int {
   // Build reverse graph using makei
   let rev_adj : Array[Array[Int]] = Array::makei(n, _ => [])
   for u = 0; u < n; u = u + 1 {
-    for i = 0; i < adj[u].length(); i = i + 1 {
-      rev_adj[adj[u][i]].push(u)
-    } where {
-      invariant: i >= 0 && i <= adj[u].length(),
-      reasoning: (
-        #|INVARIANT (Edge reversal):
-        #|After processing adj[u][0..i), all edges u→v in this prefix have been
-        #|reversed into rev_adj[v], so rev_adj holds the transpose graph.
-        #|MAINTENANCE:
-        #|Each processed edge adds exactly one reversed adjacency entry.
-        #|TERMINATION:
-        #|At i == adj[u].length(), all edges from u are reversed.
-      ),
+    for v in adj[u] {
+      rev_adj[v].push(u)
     }
   } where {
     invariant: u >= 0 && u <= n,
@@ -519,22 +436,10 @@ fn dfs_order(
   u : Int,
 ) -> Unit {
   visited[u] = true
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  for v in adj[u] {
     if not(visited[v]) {
       dfs_order(adj, visited, order, v)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (DFS1):
-      #|After processing neighbors[0..i), all vertices reachable from u through
-      #|those neighbors are visited and appended to order after their descendants.
-      #|MAINTENANCE:
-      #|Each recursive visit finishes before we advance i, preserving post-order.
-      #|TERMINATION:
-      #|At i == adj[u].length(), all descendants of u are visited.
-    ),
   }
   order.push(u)
 }
@@ -542,22 +447,10 @@ fn dfs_order(
 ///|
 fn dfs_mark(adj : Array[Array[Int]], visited : Array[Bool], u : Int) -> Unit {
   visited[u] = true
-  for i = 0; i < adj[u].length(); i = i + 1 {
-    let v = adj[u][i]
+  for v in adj[u] {
     if not(visited[v]) {
       dfs_mark(adj, visited, v)
     }
-  } where {
-    invariant: i >= 0 && i <= adj[u].length(),
-    reasoning: (
-      #|INVARIANT (DFS2):
-      #|After processing neighbors[0..i), all vertices reachable from u via
-      #|those edges are marked visited and belong to the same SCC.
-      #|MAINTENANCE:
-      #|Each recursive visit marks an additional vertex in this SCC.
-      #|TERMINATION:
-      #|At i == adj[u].length(), all vertices in u's SCC are visited.
-    ),
   }
 }
 
@@ -614,23 +507,11 @@ fn prim_mst(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
     total_weight = total_weight + key[u]
 
     // Update keys of adjacent vertices
-    for i = 0; i < adj[u].length(); i = i + 1 {
-      let (v, weight) = adj[u][i]
+    for edge in adj[u] {
+      let (v, weight) = edge
       if not(in_mst[v]) && weight < key[v] {
         key[v] = weight
       }
-    } where {
-      invariant: i >= 0 && i <= adj[u].length(),
-      reasoning: (
-        #|INVARIANT (Key updates):
-        #|After processing adj[u][0..i), key[v] stores the minimum edge weight
-        #|connecting v to the current MST for every neighbor seen so far.
-        #|MAINTENANCE:
-        #|Each neighbor update applies a min with edge (u, v), preserving the
-        #|best-known crossing edge to the MST.
-        #|TERMINATION:
-        #|When i == adj[u].length(), all outgoing edges from u are applied.
-      ),
     }
   } where {
     invariant: count >= 0 && count <= n,

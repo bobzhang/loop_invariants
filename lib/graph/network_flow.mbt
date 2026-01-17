@@ -53,40 +53,25 @@ fn FlowNetwork::bfs_find_path(
   let queue : Array[Int] = []
   queue.push(source)
   visited[source] = true
-  let mut front = 0
-  while queue.get(front) is Some(u) {
-    if visited[sink] {
-      break
-    }
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let edge = self.adj[u][i]
-      let residual = edge.capacity - edge.flow
-      if residual > 0 && not(visited[edge.to]) {
-        visited[edge.to] = true
-        parent[edge.to] = Some((u, i))
-        queue.push(edge.to)
+  let _ = loop 0 {
+    front =>
+      match queue.get(front) {
+        None => break ()
+        Some(u) => {
+          if visited[sink] {
+            break ()
+          }
+          for i, edge in self.adj[u] {
+            let residual = edge.capacity - edge.flow
+            if residual > 0 && not(visited[edge.to]) {
+              visited[edge.to] = true
+              parent[edge.to] = Some((u, i))
+              queue.push(edge.to)
+            }
+          }
+          continue front + 1
+        }
       }
-    } where {
-      invariant: i >= 0 &&
-      i <= self.adj[u].length() &&
-      parent.length() == self.n &&
-      visited.length() == self.n,
-      reasoning: (
-        #|INVARIANT 1 (Edge scan):
-        #|After processing edges adj[u][0..i), every neighbor reachable via a
-        #|positive-residual edge from u has been marked visited and enqueued
-        #|(if it was previously undiscovered), with parent set to (u, edge_idx).
-        #|
-        #|This preserves the BFS tree: parent[v] records the first edge that
-        #|discovers v, giving a shortest (fewest-edge) path from source.
-        #|MAINTENANCE:
-        #|Each newly discovered neighbor is marked and queued exactly once,
-        #|so the invariant extends to the next edge.
-        #|TERMINATION:
-        #|When i == adj[u].length(), all residual edges out of u are scanned.
-      ),
-    }
-    front = front + 1
   }
   (visited[sink], parent)
 }
@@ -240,30 +225,21 @@ fn DinicNetwork::bfs_dinic(
   self.level[source] = 0
   let queue : Array[Int] = []
   queue.push(source)
-  let mut front = 0
-  while queue.get(front) is Some(u) {
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let edge = self.adj[u][i]
-      let residual = edge.capacity - edge.flow
-      if residual > 0 && self.level[edge.to] < 0 {
-        self.level[edge.to] = self.level[u] + 1
-        queue.push(edge.to)
+  let _ = loop 0 {
+    front =>
+      match queue.get(front) {
+        None => break ()
+        Some(u) => {
+          for edge in self.adj[u] {
+            let residual = edge.capacity - edge.flow
+            if residual > 0 && self.level[edge.to] < 0 {
+              self.level[edge.to] = self.level[u] + 1
+              queue.push(edge.to)
+            }
+          }
+          continue front + 1
+        }
       }
-    } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
-      reasoning: (
-        #|INVARIANT (Edge scan):
-        #|After processing edges adj[u][0..i), all neighbors reachable from u
-        #|by a positive-residual edge have been assigned a level and enqueued.
-        #|Each such neighbor gets level = level[u] + 1, preserving BFS layers.
-        #|MAINTENANCE:
-        #|Assigning a level to each newly discovered neighbor extends the
-        #|layering property to the next edge.
-        #|TERMINATION:
-        #|At i == adj[u].length(), all outgoing residual edges of u are scanned.
-      ),
-    }
-    front = front + 1
   }
   self.level[sink] >= 0
 }
@@ -325,18 +301,8 @@ fn DinicNetwork::dinic_max_flow(
     if not(self.bfs_dinic(source, sink)) {
       break max_flow
     }
-    for i = 0; i < self.n; i = i + 1 {
+    for i in 0..<self.n {
       self.iter[i] = 0
-    } where {
-      invariant: i >= 0 && i <= self.n,
-      reasoning: (
-        #|INVARIANT (reset iter):
-        #|iter[0..i) are reset to 0 for the next blocking-flow phase.
-        #|MAINTENANCE:
-        #|Set iter[i] = 0 to restart edge scans from the beginning.
-        #|TERMINATION:
-        #|At i = n, all iterators are reset.
-      ),
     }
     for pushed = self.dfs_dinic(source, sink, 2147483647); pushed > 0; {
       max_flow = max_flow + pushed
@@ -441,35 +407,26 @@ fn MCMFNetwork::spfa_mcmf(
   let queue : Array[Int] = []
   queue.push(source)
   in_queue[source] = true
-  let mut front = 0
-  while queue.get(front) is Some(u) {
-    in_queue[u] = false
-    for i = 0; i < self.adj[u].length(); i = i + 1 {
-      let edge = self.adj[u][i]
-      let residual = edge.capacity - edge.flow
-      if residual > 0 && dist[u] + edge.cost < dist[edge.to] {
-        dist[edge.to] = dist[u] + edge.cost
-        parent[edge.to] = Some((u, i))
-        if not(in_queue[edge.to]) {
-          queue.push(edge.to)
-          in_queue[edge.to] = true
+  let _ = loop 0 {
+    front =>
+      match queue.get(front) {
+        None => break ()
+        Some(u) => {
+          in_queue[u] = false
+          for i, edge in self.adj[u] {
+            let residual = edge.capacity - edge.flow
+            if residual > 0 && dist[u] + edge.cost < dist[edge.to] {
+              dist[edge.to] = dist[u] + edge.cost
+              parent[edge.to] = Some((u, i))
+              if not(in_queue[edge.to]) {
+                queue.push(edge.to)
+                in_queue[edge.to] = true
+              }
+            }
+          }
+          continue front + 1
         }
       }
-    } where {
-      invariant: i >= 0 && i <= self.adj[u].length(),
-      reasoning: (
-        #|INVARIANT (Relaxation):
-        #|After processing edges adj[u][0..i), any neighbor reachable from u
-        #|via a positive-residual edge has been relaxed. If a shorter path
-        #|is found, dist and parent are updated and the neighbor is queued.
-        #|MAINTENANCE:
-        #|Each edge relaxation updates dist/parent only when it improves the
-        #|best known cost, preserving shortest-path estimates.
-        #|TERMINATION:
-        #|At i == adj[u].length(), all residual edges from u are processed.
-      ),
-    }
-    front = front + 1
   }
   dist[sink] < inf
 }
@@ -579,31 +536,11 @@ fn bipartite_matching(
   let source = 0
   let sink = n - 1
   let network = FlowNetwork::new(n)
-  for i = 0; i < left_size; i = i + 1 {
+  for i in 0..<left_size {
     network.add_edge(source, i + 1, 1)
-  } where {
-    invariant: i >= 0 && i <= left_size,
-    reasoning: (
-      #|INVARIANT (source edges):
-      #|Edges from source to left vertices [0..i) are added.
-      #|MAINTENANCE:
-      #|Add edge from source to left vertex i with capacity 1.
-      #|TERMINATION:
-      #|At i = left_size, all left vertices are connected to the source.
-    ),
   }
-  for i = 0; i < right_size; i = i + 1 {
+  for i in 0..<right_size {
     network.add_edge(left_size + 1 + i, sink, 1)
-  } where {
-    invariant: i >= 0 && i <= right_size,
-    reasoning: (
-      #|INVARIANT (sink edges):
-      #|Edges from right vertices [0..i) to sink are added.
-      #|MAINTENANCE:
-      #|Add edge from right vertex i to sink with capacity 1.
-      #|TERMINATION:
-      #|At i = right_size, all right vertices are connected to the sink.
-    ),
   }
   for edge in edges {
     let (left, right) = edge

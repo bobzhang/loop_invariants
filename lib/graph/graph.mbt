@@ -207,24 +207,11 @@ fn dijkstra(graph : Array[Array[(Int, Int)]], source : Int) -> Array[Int] {
       visited[u] = true
 
       // Relax all edges from u
-      for i = 0; i < graph[u].length(); i = i + 1 {
-        let (v, weight) = graph[u][i]
+      for edge in graph[u] {
+        let (v, weight) = edge
         if dist[u] + weight < dist[v] {
           dist[v] = dist[u] + weight
         }
-      } where {
-        invariant: i >= 0 && i <= graph[u].length(),
-        reasoning: (
-          #|INVARIANT (Edge relaxation):
-          #|After processing edges[0..i), all those neighbors v have been
-          #|relaxed with the finalized distance dist[u]. Any shortest path
-          #|that ends with u -> v among processed edges is now reflected in dist[v].
-          #|MAINTENANCE:
-          #|Relaxing edge (u, v) updates dist[v] to min(current, dist[u] + w),
-          #|so all processed neighbors incorporate the best path via u.
-          #|TERMINATION:
-          #|When i reaches degree(u), every outgoing edge of u has been relaxed.
-        ),
       }
       continue count + 1
     }
@@ -411,26 +398,12 @@ fn bellman_ford(
       break
     } else {
       let mut changed = false
-      for e = 0; e < edges.length(); e = e + 1 {
-        let (u, v, w) = edges[e]
+      for edge in edges {
+        let (u, v, w) = edge
         if dist[u] != inf && dist[u] + w < dist[v] {
           dist[v] = dist[u] + w
           changed = true
         }
-      } where {
-        invariant: e >= 0 && e <= edges.length(),
-        reasoning: (
-          #|INVARIANT (Edge sweep):
-          #|After processing edges[0..e), every path that ends with one of those
-          #|edges has been considered for this iteration. When the loop ends,
-          #|all edges have been relaxed once, yielding shortest paths with up to
-          #|i+1 edges.
-          #|MAINTENANCE:
-          #|Relaxing edge e updates dist[v] using the current dist[u], so the
-          #|prefix [0..e] has been fully considered for this iteration.
-          #|TERMINATION:
-          #|At e == edges.length(), every edge has been relaxed once.
-        ),
       }
       if not(changed) {
         break // Early termination if no changes
@@ -476,23 +449,11 @@ fn bellman_ford(
   }
 
   // Check for negative cycles: if any edge can still be relaxed
-  for e = 0; e < edges.length(); e = e + 1 {
-    let (u, v, w) = edges[e]
+  for edge in edges {
+    let (u, v, w) = edge
     if dist[u] != inf && dist[u] + w < dist[v] {
       return None // Negative cycle detected
     }
-  } where {
-    invariant: e >= 0 && e <= edges.length(),
-    reasoning: (
-      #|INVARIANT (No further relaxation):
-      #|Edges[0..e) cannot improve any dist value. If an improvement is possible
-      #|after the full scan, a negative cycle must be reachable from the source.
-      #|MAINTENANCE:
-      #|Each examined edge that fails to relax confirms no shorter path using
-      #|that edge exists given current dist values.
-      #|TERMINATION:
-      #|If any edge can still relax after the full scan, a negative cycle exists.
-    ),
   }
   Some(dist)
 }
@@ -537,24 +498,11 @@ fn floyd_warshall(
   })
 
   // Initialize with direct edges
-  for e = 0; e < edges.length(); e = e + 1 {
-    let (u, v, w) = edges[e]
+  for edge in edges {
+    let (u, v, w) = edge
     if w < dist[u][v] {
       dist[u][v] = w
     }
-  } where {
-    invariant: e >= 0 && e <= edges.length(),
-    reasoning: (
-      #|INVARIANT (Direct edges):
-      #|After processing edges[0..e), dist captures the minimum direct edge
-      #|weight for each pair (u, v) among those edges, preserving the best
-      #|one-edge paths before the main DP.
-      #|MAINTENANCE:
-      #|For each edge, update dist[u][v] to the smaller direct weight if needed,
-      #|so the prefix property remains true.
-      #|TERMINATION:
-      #|After e == edges.length(), all direct edges are incorporated.
-    ),
   }
 
   // Main DP: consider each vertex k as intermediate

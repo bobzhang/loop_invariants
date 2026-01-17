@@ -139,8 +139,8 @@
 - [x] lib/fwht
 - [x] lib/gauss
 - [x] lib/gomory_hu_tree
-- [ ] lib/graph (in progress)
-- [ ] lib/halfplane_intersection
+- [x] lib/graph
+- [ ] lib/halfplane_intersection (in progress)
 - [ ] lib/hld
 - [ ] lib/implicit_treap
 - [ ] lib/johnson_all_pairs
