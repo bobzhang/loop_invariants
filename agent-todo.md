@@ -134,8 +134,8 @@
 - [x] lib/fenwick
 - [x] lib/fenwick2d
 - [x] lib/fenwick_range_add_range_sum
-- [ ] lib/fft (in progress)
-- [ ] lib/floor_sum
+- [x] lib/fft
+- [ ] lib/floor_sum (in progress)
 - [ ] lib/fwht
 - [ ] lib/gauss
 - [ ] lib/gomory_hu_tree

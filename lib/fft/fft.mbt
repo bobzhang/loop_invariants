@@ -31,7 +31,7 @@
 // SPACE COMPLEXITY: O(n)
 
 ///|
-const NTT_MOD : Int64 = 998244353L
+pub const NTT_MOD : Int64 = 998244353L
 
 ///|
 const NTT_ROOT : Int64 = 3L
@@ -279,6 +279,21 @@ fn NTT::multiply(
   // Inverse transform
   self.transform(pa, true)
   pa
+}
+
+///|
+/// Multiply two polynomials modulo NTT_MOD using NTT.
+pub fn ntt_convolution(
+  a : ArrayView[Int64],
+  b : ArrayView[Int64],
+) -> Array[Int64] {
+  if a.length() == 0 || b.length() == 0 {
+    return []
+  }
+  let size = a.length() + b.length() - 1
+  let ntt = NTT::new(size)
+  let result = ntt.multiply(a.to_array(), b.to_array())
+  result[:size].to_array()
 }
 
 // ============================================================================

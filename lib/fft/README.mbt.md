@@ -8,6 +8,7 @@ and point-value representations.
 
 - **Time**: O(n log n)
 - **Space**: O(n)
+- **NTT modulus**: `998244353` (primitive root `3`)
 
 ## Core Idea
 
@@ -152,7 +153,25 @@ Multiply A(x) = 1 + 2x and B(x) = 3 + 4x using NTT:
 Result: 3 + 10x + 8x²
 ```
 
+## API (NTT)
+
+```
+@fft.ntt_convolution(a, b)
+  - Multiplies two integer polynomials modulo 998244353
+  - Returns coefficients of length a.len + b.len - 1
+```
+
 ## Example Usage
+
+```mbt check
+///|
+test "ntt convolution example" {
+  let a : Array[Int64] = [1L, 2L]
+  let b : Array[Int64] = [3L, 4L]
+  let c = @fft.ntt_convolution(a[:], b[:])
+  inspect(c, content="[3, 10, 8]")
+}
+```
 
 ```mbt check
 ///|
@@ -224,6 +243,20 @@ A(x) / B(x) and A(x) mod B(x):
 
 **Choose NTT when**: You need exact integer results and n is large.
 **Choose FFT when**: Floating-point precision is acceptable.
+
+## Common Pitfalls
+
+- **Modulo wrap**: NTT results are modulo `998244353`.
+- **Length**: output length is `a.len + b.len - 1`.
+- **Padding**: NTT internally pads to a power of two.
+- **Negative coefficients**: normalize into `[0, mod)` before comparison.
+
+## Edge Cases
+
+```
+If either polynomial is empty, the product is empty [].
+If one polynomial is constant, the output is just a scaled copy.
+```
 
 ## Why O(n log n)?
 
