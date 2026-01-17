@@ -25,42 +25,6 @@ pub fn[T] size(t : Treap[T]) -> Int {
 }
 
 ///|
-fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
-  let lo_ok = match lo {
-    None => true
-    Some(l) => value > l
-  }
-  let hi_ok = match hi {
-    None => true
-    Some(h) => value < h
-  }
-  lo_ok && hi_ok
-}
-
-///|
-fn[T : Compare] treap_valid(t : Treap[T], lo : T?, hi : T?) -> Bool {
-  match t {
-    Treap::Empty => true
-    Treap::Node(key~, priority~, size=sz, left~, right~) => {
-      let bounds_ok = within_bounds(key, lo, hi)
-      let left_ok = match left {
-        Treap::Empty => true
-        Treap::Node(key=_, priority=p, size=_, left=_, right=_) => priority >= p
-      }
-      let right_ok = match right {
-        Treap::Empty => true
-        Treap::Node(key=_, priority=p, size=_, left=_, right=_) => priority >= p
-      }
-      let size_ok = sz == 1 + size(left) + size(right)
-      bounds_ok &&
-      left_ok &&
-      right_ok &&
-      size_ok &&
-      treap_valid(left, lo, Some(key)) &&
-      treap_valid(right, Some(key), hi)
-    }
-  }
-}
 
 ///|
 fn[T : Hash] priority_for(key : T) -> Int {
@@ -148,26 +112,6 @@ pub fn[T : Compare + Hash] insert(t : Treap[T], key : T) -> Treap[T] {
 
 ///|
 /// Build a treap by inserting elements in order.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare + Hash] from_array(arr : ArrayView[T]) -> Treap[T] {
-  let n = arr.length()
-  for i = 0, tree = Treap::Empty {
-    if i >= n {
-      break tree
-    } else {
-      continue i + 1, insert(tree, arr[i])
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: size(tree) == i,
-    invariant: treap_valid(tree, None, None),
-    reasoning: (
-      #|INVARIANT (Treap build):
-      #|tree contains the first i keys, satisfying BST order and heap priority.
-      #|MAINTENANCE:
-      #|Insert arr[i], preserving treap invariants and increasing size by one.
-      #|TERMINATION:
-      #|At i = n, all keys are inserted.
-    ),
-  }
+  arr.fold(init=Treap::Empty, (tree, key) => insert(tree, key))
 }

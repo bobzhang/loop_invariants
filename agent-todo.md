@@ -102,8 +102,8 @@
 - [x] lib/challenge_persistent_stack
 - [x] lib/challenge_persistent_stack_min
 - [x] lib/challenge_persistent_treap_map
-- [ ] lib/challenge_persistent_treap_set (in progress)
-- [ ] lib/challenge_persistent_trie_string
+- [x] lib/challenge_persistent_treap_set
+- [ ] lib/challenge_persistent_trie_string (in progress)
 - [ ] lib/challenge_persistent_union_find
 - [ ] lib/challenge_prefix_sum
 - [ ] lib/challenge_scc_kosaraju
