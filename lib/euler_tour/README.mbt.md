@@ -9,6 +9,19 @@ each node during a DFS traversal.
 - **Build**: O(n)
 - **Space**: O(n)
 
+## What You Get From the Tour
+
+```
+For each node u:
+  entry[u] = time when DFS first enters u
+  exit[u]  = time after DFS finishes u's subtree
+
+And:
+  tour[]   = nodes in preorder (each node once)
+  depth[]  = depth of each node (if you track it)
+  parent[] = parent in rooted tree
+```
+
 ## The Key Insight
 
 ```
@@ -25,25 +38,52 @@ Tree:           DFS Order:
                     4 (enter, exit)
                     1 (exit)
 
-Euler tour: [1, 2, 5, 5, 6, 6, 2, 3, 3, 4, 4, 1]
-            └─────subtree of 2─────┘
+Preorder tour (entry only): [1, 2, 5, 6, 3, 4]
+                           └──subtree of 2──┘
 ```
 
 ## Entry and Exit Times
 
 ```
       tin  tout
-  1:   0    11
-  2:   1     6
-  3:   7     8
-  4:   9    10
+  1:   0     6
+  2:   1     4
+  3:   4     5
+  4:   5     6
   5:   2     3
-  6:   4     5
+  6:   3     4
 
-Subtree of node u = all nodes with tin in [tin[u], tout[u]]
+Subtree of node u = all nodes with tin in [tin[u], tout[u])
 
-Subtree of 2: tin in [1, 6]
-  → Nodes 2, 5, 6 (check: tin[5]=2, tin[6]=4 are in [1,6] ✓)
+Subtree of 2: tin in [1, 4)
+  → Nodes 2, 5, 6 (check: tin[5]=2, tin[6]=3 are in [1,4) ✓)
+```
+
+## Subtree Sum as a Range Sum
+
+```
+Tree (root = 0):
+    0
+   / \
+  1   2
+ / \
+3   4
+
+Values:
+  val[0]=5, val[1]=1, val[2]=4, val[3]=2, val[4]=3
+
+Suppose the tour gives:
+  entry = [0, 1, 4, 2, 3]
+  exit  = [5, 4, 5, 3, 4]
+
+Flatten by entry:
+  flat[entry[u]] = val[u]
+  flat = [5, 1, 2, 3, 4]
+
+Subtree sum of node 1:
+  range = [entry[1], exit[1]) = [1, 4)
+  flat[1..4) = [1, 2, 3]
+  sum = 6
 ```
 
 ## Algorithm Walkthrough
@@ -56,16 +96,16 @@ DFS from root 1:
   Visit 1: tin[1] = 0
     Visit 2: tin[2] = 1
       Visit 5: tin[5] = 2, tout[5] = 3
-      Visit 6: tin[6] = 4, tout[6] = 5
-    tout[2] = 6
-    Visit 3: tin[3] = 7, tout[3] = 8
-    Visit 4: tin[4] = 9, tout[4] = 10
-  tout[1] = 11
+      Visit 6: tin[6] = 3, tout[6] = 4
+    tout[2] = 4
+    Visit 3: tin[3] = 4, tout[3] = 5
+    Visit 4: tin[4] = 5, tout[4] = 6
+  tout[1] = 6
 
 Final:
   Node:  1  2  3  4  5  6
-  tin:   0  1  7  9  2  4
-  tout: 11  6  8 10  3  5
+  tin:   0  1  4  5  2  3
+  tout:  6  4  5  6  3  4
 ```
 
 ## Two Types of Euler Tours
@@ -81,6 +121,26 @@ Type 2: Full tour with entries and exits
 
 For subtree queries, Type 1 suffices.
 For LCA queries, Type 2 is often used.
+```
+
+### Type 2 Example (for LCA)
+
+```
+Tree:
+    0
+   / \
+  1   2
+     / \
+    3   4
+
+Full Euler walk (node, depth):
+  0(0), 1(1), 0(0), 2(1), 3(2), 2(1), 4(2), 2(1), 0(0)
+
+First occurrence:
+  first[1] = 1, first[3] = 4, first[4] = 6
+
+LCA(3, 4) is the node with minimum depth between
+positions 4..6 in the Euler walk => node 2.
 ```
 
 ## Example Usage
@@ -113,6 +173,23 @@ test "euler tour arrays" {
   let (tin, tout, order) = @euler_tour.euler_tour(5, edges[:], 0)
   inspect(order.length(), content="5")
   inspect(tin[0] < tout[0], content="true")
+}
+```
+
+```mbt check
+///|
+test "euler tour subtree sum" {
+  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (1, 3), (1, 4)]
+  let info = @euler_tour.build_euler_tour(5, edges[:], 0)
+  let values : Array[Int] = [5, 1, 4, 2, 3]
+  let flat = Array::make(5, 0)
+  for i in 0..<5 {
+    flat[info.entry[i]] = values[i]
+  }
+  let start = info.entry[1]
+  let end = info.exit[1]
+  let total = flat[start:end].fold(init=0, (acc, v) => acc + v)
+  inspect(total, content="6")
 }
 ```
 
@@ -207,9 +284,17 @@ Example:
   Yes!
 ```
 
+## Common Pitfalls
+
+- **Not a tree**: Euler tour assumes a tree (connected, n-1 edges).
+- **Wrong root**: entry/exit times depend on the chosen root.
+- **Off-by-one**: subtree range is `[entry[u], exit[u])` (exit is exclusive).
+- **Mixing tour types**: LCA needs the full tour, subtree queries need entry/exit.
+
 ## Implementation Notes
 
-- Use iterative DFS with explicit stack to avoid stack overflow on deep trees
+- This implementation uses recursive DFS for clarity
+- For very deep trees, consider an iterative stack-based DFS
 - For Type 2 tour, record node on both entry and exit
 - tin[u] is always < tout[u] for the same node
 - Children of u have tin values in (tin[u], tout[u])

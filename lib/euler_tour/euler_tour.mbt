@@ -26,7 +26,6 @@
 
 ///|
 priv struct EulerTour {
-  n : Int
   adj : Array[Array[Int]]
   entry : Array[Int] // Entry time of each node
   exit : Array[Int] // Exit time of each node
@@ -40,7 +39,6 @@ priv struct EulerTour {
 fn EulerTour::new(n : Int) -> EulerTour {
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   {
-    n,
     adj,
     entry: Array::make(n, 0),
     exit: Array::make(n, 0),
@@ -73,24 +71,10 @@ fn EulerTour::dfs(self : EulerTour, u : Int, p : Int, d : Int) -> Unit {
   self.entry[u] = self.timer
   self.timer = self.timer + 1
   self.tour.push(u)
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    let v = self.adj[u][i]
+  for v in self.adj[u] {
     if v != p {
       self.dfs(v, u, d + 1)
     }
-  } where {
-    invariant: i >= 0 &&
-    i <= self.adj[u].length() &&
-    self.adj.length() == self.n,
-    reasoning: (
-      #|INVARIANT (dfs neighbors):
-      #|Neighbors adj[u][0..i) are processed; every child subtree in that prefix
-      #|has been fully traversed and appended to tour with correct entry/exit.
-      #|MAINTENANCE:
-      #|If v is not the parent, recurse to append v's subtree tour.
-      #|TERMINATION:
-      #|At i = deg(u), all child subtrees of u are explored.
-    ),
   }
   self.exit[u] = self.timer
 }
@@ -119,18 +103,8 @@ fn EulerTour::get_subtree(self : EulerTour, v : Int) -> Array[Int] {
   let result : Array[Int] = []
   let start = self.entry[v]
   let end = self.exit[v]
-  for i = start; i < end; i = i + 1 {
+  for i in start..<end {
     result.push(self.tour[i])
-  } where {
-    invariant: i >= start && i <= end,
-    reasoning: (
-      #|INVARIANT (subtree slice):
-      #|result equals tour[start..i), preserving subtree order.
-      #|MAINTENANCE:
-      #|Append tour[i] to extend the slice by one element.
-      #|TERMINATION:
-      #|At i = end, result contains the full subtree interval.
-    ),
   }
   result
 }
@@ -246,18 +220,8 @@ pub fn EulerTourInfo::subtree_nodes(
   let result : Array[Int] = []
   let start = self.entry[v]
   let end = self.exit[v]
-  for i = start; i < end; i = i + 1 {
+  for i in start..<end {
     result.push(self.tour[i])
-  } where {
-    invariant: i >= start && i <= end,
-    reasoning: (
-      #|INVARIANT (subtree slice):
-      #|result equals tour[start..i), preserving subtree order.
-      #|MAINTENANCE:
-      #|Append tour[i] to extend the slice by one element.
-      #|TERMINATION:
-      #|At i = end, result contains the full subtree interval.
-    ),
   }
   result
 }
@@ -268,7 +232,6 @@ pub fn EulerTourInfo::subtree_nodes(
 
 ///|
 priv struct EulerTourLCA {
-  n : Int
   adj : Array[Array[Int]]
   first : Array[Int] // First occurrence in tour
   euler : Array[Int] // Euler tour (with revisits)
@@ -281,7 +244,6 @@ priv struct EulerTourLCA {
 fn EulerTourLCA::new(n : Int) -> EulerTourLCA {
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   {
-    n,
     adj,
     first: Array::make(n, -1),
     euler: [],
@@ -307,26 +269,12 @@ fn EulerTourLCA::dfs_euler(
   self.first[u] = self.euler.length()
   self.euler.push(u)
   self.depth.push(d)
-  for i = 0; i < self.adj[u].length(); i = i + 1 {
-    let v = self.adj[u][i]
+  for v in self.adj[u] {
     if v != p {
       self.dfs_euler(v, u, d + 1)
       self.euler.push(u)
       self.depth.push(d)
     }
-  } where {
-    invariant: i >= 0 &&
-    i <= self.adj[u].length() &&
-    self.adj.length() == self.n,
-    reasoning: (
-      #|INVARIANT (euler neighbors):
-      #|Neighbors adj[u][0..i) are visited; each child visit appends its subtree
-      #|walk plus the return step to u in euler/depth arrays.
-      #|MAINTENANCE:
-      #|Recurse into v, then append u to record the return edge.
-      #|TERMINATION:
-      #|At i = deg(u), the full Euler walk for u's adjacency is recorded.
-    ),
   }
 }
 
@@ -339,18 +287,8 @@ fn EulerTourLCA::build(self : EulerTourLCA, root : Int) -> Unit {
   let m = self.euler.length()
 
   // Precompute log values
-  for i = 2; i <= m; i = i + 1 {
+  for i in 2 ..<= m {
     self.log[i] = self.log[i / 2] + 1
-  } where {
-    invariant: i >= 2 && i <= m + 1,
-    reasoning: (
-      #|INVARIANT (log table):
-      #|log[2..i) is initialized with log[x] = floor(log2(x)).
-      #|MAINTENANCE:
-      #|Use log[i/2] to compute log[i] for the next entry.
-      #|TERMINATION:
-      #|At i = m + 1, all log values up to m are set.
-    ),
   }
 
   // Build sparse table for minimum depth
@@ -358,24 +296,15 @@ fn EulerTourLCA::build(self : EulerTourLCA, root : Int) -> Unit {
   self.sparse = Array::makei(k, _ => Array::make(m, 0))
 
   // Initialize with indices
-  for i = 0; i < m; i = i + 1 {
+  for i in 0..<m {
     self.sparse[0][i] = i
-  } where {
-    invariant: i >= 0 && i <= m,
-    reasoning: (
-      #|INVARIANT (sparse base):
-      #|sparse[0][0..i) stores the index of each single-element interval.
-      #|MAINTENANCE:
-      #|Set sparse[0][i] = i as the RMQ base case.
-      #|TERMINATION:
-      #|At i = m, the base row is fully initialized.
-    ),
   }
 
   // Fill sparse table
-  for j = 1; j < k; j = j + 1 {
+  for j in 1..<k {
     let len = 1 << j
-    for i = 0; i + len <= m; i = i + 1 {
+    let limit = m - len + 1
+    for i in 0..<limit {
       let left = self.sparse[j - 1][i]
       let right = self.sparse[j - 1][i + (1 << (j - 1))]
       if self.depth[left] <= self.depth[right] {
@@ -383,45 +312,21 @@ fn EulerTourLCA::build(self : EulerTourLCA, root : Int) -> Unit {
       } else {
         self.sparse[j][i] = right
       }
-    } where {
-      invariant: i >= 0 && i + len <= m + 1,
-      reasoning: (
-        #|INVARIANT (sparse fill):
-        #|sparse[j][0..i) stores min-depth indices for intervals of length len.
-        #|MAINTENANCE:
-        #|Combine two half-intervals of length len/2 from level j-1.
-        #|TERMINATION:
-        #|At i + len = m + 1, all length-len intervals are covered.
-      ),
     }
-  } where {
-    invariant: j >= 1 && j <= k,
-    reasoning: (
-      #|INVARIANT (sparse levels):
-      #|Levels [1..j) are fully built with interval length 2^lvl at level lvl.
-      #|MAINTENANCE:
-      #|Fill level j using two adjacent intervals from level j-1.
-      #|TERMINATION:
-      #|At j = k, the sparse table is complete.
-    ),
   }
 }
 
 ///|
 /// Query LCA of two nodes
 fn EulerTourLCA::lca(self : EulerTourLCA, u : Int, v : Int) -> Int {
-  let mut l = self.first[u]
-  let mut r = self.first[v]
-  if l > r {
-    let tmp = l
-    l = r
-    r = tmp
-  }
-  r = r + 1
-  let len = r - l
+  let left = self.first[u]
+  let right = self.first[v]
+  let (l, r) = if left <= right { (left, right) } else { (right, left) }
+  let r_exclusive = r + 1
+  let len = r_exclusive - l
   let k = self.log[len]
   let left = self.sparse[k][l]
-  let right = self.sparse[k][r - (1 << k)]
+  let right = self.sparse[k][r_exclusive - (1 << k)]
   if self.depth[left] <= self.depth[right] {
     self.euler[left]
   } else {

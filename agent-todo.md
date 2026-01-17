@@ -129,8 +129,8 @@
 - [x] lib/duval_lyndon
 - [x] lib/edmonds_arborescence
 - [x] lib/eertree
-- [ ] lib/euler_tour (in progress)
-- [ ] lib/eulerian_path
+- [x] lib/euler_tour
+- [ ] lib/eulerian_path (in progress)
 - [ ] lib/fenwick
 - [ ] lib/fenwick2d
 - [ ] lib/fenwick_range_add_range_sum
