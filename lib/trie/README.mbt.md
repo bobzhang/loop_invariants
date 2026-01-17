@@ -1,161 +1,255 @@
-# Trie (Prefix Tree)
+# Trie (Prefix Tree) - Beginner-Friendly Guide
 
-## Overview
+A **trie** stores strings so that **common prefixes share the same path**.
+This makes prefix queries and autocomplete fast.
 
-A **Trie** (pronounced "try") is a tree for storing strings where each node
-represents a character. Paths from root to nodes represent prefixes.
+This package implements:
 
-- **Insert/Search/Delete**: O(m) where m = word length
-- **Prefix queries**: O(p) where p = prefix length
-- **Space**: O(ALPHABET * total characters)
+- a classic trie for lowercase letters `a..z`
+- a compressed trie (radix tree) for saving space
 
-## Structure Visualization
+The implementation is internal, but the tests show how to use it.
 
-For words: "cat", "car", "card", "care":
+---
 
-```
-           (root)
-              |
-             'c'
-              |
-             'a'
-            /   \
-          't'   'r' [car]
-         [cat]  /|\
-               'd' 'e'
-            [card] [care]
+## 1) Why a trie?
 
-[] = word end marker
-```
-
-## How It Works
-
-### Insert "cat"
+Consider these words:
 
 ```
-Step 1: Start at root
-        root
-         |
-        'c' <- create
-
-Step 2: Continue from 'c'
-        root
-         |
-        'c'
-         |
-        'a' <- create
-
-Step 3: Continue from 'a'
-        root
-         |
-        'c'
-         |
-        'a'
-         |
-        't' <- create, mark as word end
+car, card, care, cat
 ```
 
-### Search "car"
+A normal set stores each word separately.  
+A trie stores shared prefixes once:
 
 ```
-        root
-         |
-        'c' <- found
-         |
-        'a' <- found
-         |
-        'r' <- found, check is_end = true? YES!
-
-Result: "car" exists
+root
+ |
+'c'
+ |
+'a'
+ / \
+'r'   't'
+ |     |
+ |     [end]
+ |
+[end]--'d'--[end]
+ |
+ 'e'--[end]
 ```
 
-### Prefix Query "ca"
+`[end]` marks a complete word.
+
+Prefix queries like `"ca"` or `"car"` are now just a path walk.
+
+---
+
+## 2) Core operations (all O(length))
+
+If `m` is the word length:
+
+- Insert: O(m)
+- Search exact word: O(m)
+- Starts-with prefix: O(m)
+- Count words with a prefix: O(m)
+- Autocomplete: O(m + output size)
+
+---
+
+## 3) Basic trie (lowercase a..z)
+
+### Conceptual structure
+
+Each node has:
+
+- `children[26]` for letters
+- `is_end` (is this a full word?)
+- `count` (how many times word ends here)
+- `prefix_count` (how many words share this prefix)
+
+This implementation only accepts lowercase letters `a..z`.  
+Other characters are skipped.
+
+---
+
+## 4) Example 1: insert + search
+
+```mbt nocheck
+///|
+test "trie insert and search" {
+  let trie = Trie::new()
+  trie.insert("hello")
+  trie.insert("world")
+  trie.insert("help")
+  inspect(trie.search("hello"), content="true")
+  inspect(trie.search("help"), content="true")
+  inspect(trie.search("hell"), content="false")
+}
+```
+
+---
+
+## 5) Example 2: prefix queries
+
+```mbt nocheck
+///|
+test "trie prefix queries" {
+  let trie = Trie::new()
+  trie.insert("car")
+  trie.insert("card")
+  trie.insert("care")
+  trie.insert("cat")
+  inspect(trie.starts_with("ca"), content="true")
+  inspect(trie.count_prefix("ca"), content="4")
+  inspect(trie.count_prefix("car"), content="3")
+  inspect(trie.count_prefix("dog"), content="0")
+}
+```
+
+---
+
+## 6) Example 3: duplicates
+
+Duplicates are tracked with `count`.
+
+```mbt nocheck
+///|
+test "trie duplicates" {
+  let trie = Trie::new()
+  trie.insert("hello")
+  trie.insert("hello")
+  trie.insert("hello")
+  inspect(trie.count_word("hello"), content="3")
+  inspect(trie.count_prefix("hello"), content="3")
+}
+```
+
+---
+
+## 7) Example 4: delete
+
+`delete` removes **one** copy.
+
+```mbt nocheck
+///|
+test "trie delete one copy" {
+  let trie = Trie::new()
+  trie.insert("hello")
+  trie.insert("hello")
+  inspect(trie.count_word("hello"), content="2")
+  inspect(trie.delete("hello"), content="true")
+  inspect(trie.count_word("hello"), content="1")
+  inspect(trie.search("hello"), content="true")
+  inspect(trie.delete("hello"), content="true")
+  inspect(trie.search("hello"), content="false")
+}
+```
+
+---
+
+## 8) Example 5: autocomplete
+
+Autocomplete returns all words with a prefix.
+
+```mbt nocheck
+///|
+test "trie autocomplete" {
+  let trie = Trie::new()
+  trie.insert("car")
+  trie.insert("card")
+  trie.insert("care")
+  trie.insert("cat")
+  let results = trie.autocomplete("car")
+  inspect(results.length(), content="3") // car, card, care
+}
+```
+
+---
+
+## 9) Example 6: longest prefix
+
+Find the longest prefix of a word that exists in the trie.
+
+```mbt nocheck
+///|
+test "trie longest prefix" {
+  let trie = Trie::new()
+  trie.insert("a")
+  trie.insert("app")
+  trie.insert("apple")
+  inspect(trie.longest_prefix("application"), content="app")
+  inspect(trie.longest_prefix("apple"), content="apple")
+  inspect(trie.longest_prefix("appetizer"), content="app")
+}
+```
+
+---
+
+## 10) Compressed trie (radix tree)
+
+The compressed trie stores **strings on edges** instead of single characters.
+This reduces memory when many nodes have only one child.
+
+Example:
 
 ```
-        root
-         |
-        'c' <- found
-         |
-        'a' <- found, this node exists!
+Normal trie for:
+  test, testing, tested
 
-Result: Prefix "ca" exists
-All words: cat, car, card, care
-```
+root - t - e - s - t - [end]
+                         |
+                         i - n - g - [end]
+                         |
+                         e - d - [end]
 
-## Common Use Cases
-
-1. **Autocomplete**
-   ```
-   User types: "pro"
-   Suggestions: program, project, promise, protect...
-   ```
-
-2. **Spell Checker**
-   ```
-   Is "teh" a word? -> No
-   Did you mean: "the", "ten", "tea"?
-   ```
-
-3. **IP Routing** (Longest prefix match)
-   ```
-   Route 192.168.1.* -> Gateway A
-   Route 192.168.* -> Gateway B
-   ```
-
-4. **Word Games**
-   ```
-   Scrabble: Is "QI" a valid word?
-   Boggle: Find all words in grid
-   ```
-
-## Complexity Analysis
-
-| Operation        | Time  | Space |
-|------------------|-------|-------|
-| Insert           | O(m)  | O(m)  |
-| Search           | O(m)  | O(1)  |
-| Delete           | O(m)  | O(1)  |
-| Prefix exists    | O(p)  | O(1)  |
-| Count with prefix| O(p)  | O(1)  |
-
-Where m = word length, p = prefix length
-
-## Trie vs Other Structures
-
-| Structure   | Search    | Prefix Query | Space    |
-|-------------|-----------|--------------|----------|
-| **Trie**    | O(m)      | O(p)         | O(Σ*N*M) |
-| Hash Set    | O(m) avg  | O(N*M)       | O(N*M)   |
-| Sorted Array| O(m log N)| O(m log N)   | O(N*M)   |
-| BST         | O(m log N)| O(m log N)   | O(N*M)   |
-
-Σ = alphabet size, N = words, M = avg length
-
-**Choose Trie when**: You need prefix operations or autocomplete.
-
-## Variations
-
-### Compressed Trie (Radix Tree)
-Merge chains of single-child nodes:
-
-```
-Standard:          Compressed:
-   c                  car
-   |                 / | \
-   a               d   e   t
+Compressed trie:
+root
+ |
+"test" [end]
    |
-   r
-  /|\
- d e t
+  "ing" [end]
+   |
+  "ed" [end]
 ```
 
-### Ternary Search Trie
-Each node has 3 children: less, equal, greater.
-More space-efficient for sparse alphabets.
+The implementation here supports insert and search.
 
-## Implementation Notes
+```mbt nocheck
+///|
+test "compressed trie basic" {
+  let trie = CompressedTrie::new()
+  trie.insert("test")
+  trie.insert("testing")
+  trie.insert("tested")
+  inspect(trie.search("test"), content="true")
+  inspect(trie.search("testing"), content="true")
+  inspect(trie.search("tested"), content="true")
+  inspect(trie.search("tes"), content="false")
+}
+```
 
-- Children array indexed by character (a=0, b=1, ...)
-- `is_end` marks complete words
-- `prefix_count` tracks words sharing this prefix
-- For Unicode: use hash map instead of array for children
+---
+
+## 11) Common pitfalls
+
+- This trie is **lowercase only** (`a..z`).
+  Non-lowercase letters are skipped.
+- Autocomplete output order depends on traversal order (lexicographic here).
+- The structure is mutable; if you need persistence, use a persistent trie.
+
+---
+
+## 12) Complexity summary
+
+```
+Operation            Time
+--------------------------------
+insert/search         O(m)
+starts_with           O(m)
+count_prefix          O(m)
+autocomplete          O(m + output)
+delete                O(m)
+```
+
+`m` = string length.

@@ -201,7 +201,7 @@
 - [x] lib/topological_sort_dfs
 - [x] lib/treap
 - [x] lib/tree
-- [ ] lib/trie
+- [x] lib/trie
 - [ ] lib/two_sat
 - [ ] lib/union_find
 - [ ] lib/virtual_tree
