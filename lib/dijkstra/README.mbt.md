@@ -14,6 +14,12 @@ other vertices in a weighted graph with **non-negative edge weights**.
 - When a node is extracted, its distance is **final** (non-negative weights).
 - Relax outgoing edges to improve neighbors' tentative distances.
 
+### Mental model
+
+Each node carries a best-known distance label. Dijkstra repeatedly **locks in**
+the smallest label because no future path can reduce it (all edges are
+non-negative).
+
 ## The Algorithm Visualized
 
 Find shortest paths from vertex 0:
@@ -110,6 +116,23 @@ test "dense dijkstra" {
 }
 ```
 
+### 1c. Zero-weight edges and unreachable nodes
+
+```mbt check
+///|
+test "zero weight edges and unreachable" {
+  let g = @dijkstra.Graph::new(4)
+  g.add_edge(0, 1, 0)
+  g.add_edge(1, 2, 0)
+  // Node 3 is unreachable from 0.
+  let res = @dijkstra.dijkstra(g, 0)
+  inspect(res.dist[0], content="0")
+  inspect(res.dist[1], content="0")
+  inspect(res.dist[2], content="0")
+  inspect(res.dist[3] > 1000000, content="true")
+}
+```
+
 ### 2. Path Reconstruction
 
 ```mbt check
@@ -124,6 +147,19 @@ test "path reconstruction" {
   let path = @dijkstra.reconstruct_path(res, 3)
   inspect(path, content="[0, 1, 2, 3]") // Actual path
 }
+```
+
+### 2b. Understanding `parent`
+
+When the shortest path to `v` is finalized, `parent[v]` stores the previous
+node on that path. `reconstruct_path` walks backwards and reverses.
+
+```
+dist:   [0, 1, 3, 4]
+parent: [-1, 0, 1, 2]
+
+Path to 3: 3 <- 2 <- 1 <- 0
+Reverse:   0 -> 1 -> 2 -> 3
 ```
 
 ### 3. Single Pair Query
@@ -201,6 +237,17 @@ be popped; we skip it if the vertex is already marked visited.
 
 This keeps the heap logic simple and still guarantees correctness because the
 first time a vertex is popped, it has the smallest possible distance.
+
+Visual intuition:
+
+```
+Heap contains:
+  (v=2, dist=10)  // old
+  (v=2, dist=7)   // newer, better
+
+When dist=7 is popped, v=2 is finalized.
+Later dist=10 is skipped.
+```
 
 ## Edge Cases to Keep in Mind
 
