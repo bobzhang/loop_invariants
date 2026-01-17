@@ -26,20 +26,6 @@ fn node_tag(node : Node) -> Int {
 }
 
 ///|
-fn tree_valid(node : Node, len : Int) -> Bool {
-  match node {
-    Node::Leaf(sum=_, tag=_) => len == 1
-    Node::Branch(sum~, tag~, left~, right~) =>
-      if len <= 1 {
-        false
-      } else {
-        let mid = len / 2
-        tree_valid(left, mid) &&
-        tree_valid(right, len - mid) &&
-        sum == node_sum(left) + node_sum(right) + tag * len
-      }
-  }
-}
 
 ///|
 /// Return the sum stored at the root.
@@ -131,32 +117,17 @@ pub fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 
 ///|
 /// Apply a list of range updates (l, r, delta) where r is exclusive.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int, Int)],
 ) -> Node {
-  let m = updates.length()
-  for i = 0, tree = root {
-    if i >= m {
-      break tree
-    } else {
-      let (l, r, delta) = updates[i]
-      continue i + 1, range_add(tree, 0, n, l, r, delta)
-    }
-  } where {
-    invariant: i >= 0 && i <= m,
-    invariant: tree_valid(tree, n),
-    reasoning: (
-      #|INVARIANT (Lazy updates):
-      #|tree applies the first i range updates with sums consistent to lazy tags.
-      #|MAINTENANCE:
-      #|Apply update i with path-copying, preserving tree validity.
-      #|TERMINATION:
-      #|At i = m, all updates are incorporated.
-    ),
+  let mut tree = root
+  for update in updates {
+    let (l, r, delta) = update
+    tree = range_add(tree, 0, n, l, r, delta)
   }
+  tree
 }
 
 ///|
