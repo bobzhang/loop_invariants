@@ -10,8 +10,8 @@
 - [x] lib/aho_corasick
 - [x] lib/avl_tree
 - [x] lib/bellman_ford
-- [ ] lib/berlekamp_massey (in progress)
-- [ ] lib/biconnected_components
+- [x] lib/berlekamp_massey
+- [ ] lib/biconnected_components (in progress)
 - [ ] lib/binary_trie_xor
 - [ ] lib/bipartite_matching
 - [ ] lib/block_cut_tree
