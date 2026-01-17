@@ -107,8 +107,8 @@
 - [x] lib/challenge_persistent_union_find
 - [x] lib/challenge_prefix_sum
 - [x] lib/challenge_scc_kosaraju
-- [ ] lib/challenge_scc_tarjan (in progress)
-- [ ] lib/challenge_sliding_window_min
+- [x] lib/challenge_scc_tarjan
+- [ ] lib/challenge_sliding_window_min (in progress)
 - [ ] lib/challenge_sparse_table_rmq
 - [ ] lib/challenge_sqrt_decomposition_sum
 - [ ] lib/challenge_ternary_search

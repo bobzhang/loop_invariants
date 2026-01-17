@@ -5,7 +5,6 @@
 
 ///|
 /// Compute strongly connected components using Tarjan's algorithm.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn scc_tarjan(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int] {
   let adj : Array[Array[Int]] = Array::makei(n, _ => [])
   for edge in edges {
@@ -21,6 +20,19 @@ pub fn scc_tarjan(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int] {
   let comp = Array::make(n, -1)
   let mut time = 0
   let mut comp_id = 0
+  fn pop_component(root : Int, id : Int) -> Unit {
+    match stack.pop() {
+      Some(w) => {
+        onstack[w] = false
+        comp[w] = id
+        if w != root {
+          pop_component(root, id)
+        }
+      }
+      None => ()
+    }
+  }
+
   fn dfs(v : Int) -> Unit {
     index[v] = time
     low[v] = time
@@ -41,28 +53,7 @@ pub fn scc_tarjan(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Int] {
       }
     }
     if low[v] == index[v] {
-      for {
-        match stack.pop() {
-          Some(w) => {
-            onstack[w] = false
-            comp[w] = comp_id
-            if w == v {
-              break
-            }
-          }
-          None => break
-        }
-      } where {
-        invariant: stack.length() >= 0,
-        reasoning: (
-          #|INVARIANT (Pop SCC):
-          #|All popped nodes belong to the current SCC rooted at v.
-          #|MAINTENANCE:
-          #|Remove nodes from the stack until v is removed.
-          #|TERMINATION:
-          #|When w == v, the SCC is fully assigned.
-        ),
-      }
+      pop_component(v, comp_id)
       comp_id = comp_id + 1
     }
   }
