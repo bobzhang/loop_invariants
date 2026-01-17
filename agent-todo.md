@@ -65,8 +65,8 @@
 - [x] lib/challenge_mst_kruskal
 - [x] lib/challenge_mst_prim
 - [x] lib/challenge_palindrome_partition
-- [ ] lib/challenge_persistent_23_tree (in progress)
-- [ ] lib/challenge_persistent_aa_tree
+- [x] lib/challenge_persistent_23_tree
+- [ ] lib/challenge_persistent_aa_tree (in progress)
 - [ ] lib/challenge_persistent_array
 - [ ] lib/challenge_persistent_avl_set
 - [ ] lib/challenge_persistent_binary_trie
