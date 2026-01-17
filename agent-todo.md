@@ -158,7 +158,7 @@
 - [x] lib/lucas_theorem
 - [x] lib/manacher
 - [x] lib/math
-- [ ] lib/matrix_exp
+- [x] lib/matrix_exp
 - [ ] lib/max_flow
 - [ ] lib/mcmf
 - [ ] lib/min_cost_flow_potentials

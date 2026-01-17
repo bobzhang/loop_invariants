@@ -1,209 +1,264 @@
-# Matrix Exponentiation
+# Matrix Exponentiation (linear recurrences in log n)
 
-## Overview
+## 1. What problem does this solve?
 
-**Matrix Exponentiation** computes M^n efficiently using binary exponentiation
-(square-and-multiply). It's the key technique for computing linear recurrences
-in O(k³ log n) time, where k is the matrix dimension.
+Matrix exponentiation computes **M^n** fast using binary exponentiation. This is
+useful because many problems (Fibonacci, linear recurrences, path counting) can
+be written as repeated matrix multiplication.
 
-- **Time**: O(k³ log n) for k×k matrix to power n
-- **Space**: O(k²)
+- Time: O(k^3 log n) for k x k matrices
+- Space: O(k^2)
 
-## The Key Insight
+This package is a **teaching example** with rich loop invariants. It does not
+export a public API, so code examples are marked `mbt nocheck` and mirror the
+package tests.
 
-```
-Just like computing a^n in O(log n) multiplications,
-we can compute M^n in O(log n) matrix multiplications!
+## 2. Key idea: binary exponentiation for matrices
 
-Binary exponentiation:
-  a^13 = a^8 × a^4 × a^1    (13 = 1101 in binary)
-
-Matrix version:
-  M^13 = M^8 × M^4 × M^1
-
-Precompute: M^1, M^2, M^4, M^8, ...
-Each is square of previous: M^(2k) = M^k × M^k
-```
-
-## Fibonacci Example
+Scalar version:
 
 ```
-Fibonacci: F(n) = F(n-1) + F(n-2)
-
-As matrix equation:
-┌ F(n)   ┐   ┌ 1 1 ┐   ┌ F(n-1) ┐
-│        │ = │     │ × │        │
-└ F(n-1) ┘   └ 1 0 ┘   └ F(n-2) ┘
-
-Apply n-1 times:
-┌ F(n)   ┐   ┌ 1 1 ┐^(n-1)   ┌ F(1) ┐   ┌ 1 1 ┐^(n-1)   ┌ 1 ┐
-│        │ = │     │       × │      │ = │     │       × │   │
-└ F(n-1) ┘   └ 1 0 ┘         └ F(0) ┘   └ 1 0 ┘         └ 0 ┘
-
-F(10) via matrix:
-┌ 1 1 ┐^9   ┌ 55 34 ┐
-│     │   = │       │
-└ 1 0 ┘     └ 34 21 ┘
-
-F(10) = 55 ✓
+a^13 = a^8 * a^4 * a^1  (13 = 1101b)
 ```
 
-## Algorithm
+Matrix version is identical:
 
 ```
-def matrix_power(M, n):
-    result = identity_matrix
-    base = M
-
-    while n > 0:
-        if n is odd:
-            result = result × base
-        base = base × base
-        n = n // 2
-
-    return result
-
-# For Fibonacci(n):
-M = [[1, 1], [1, 0]]
-answer = matrix_power(M, n-1)[0][0]
+M^13 = M^8 * M^4 * M^1
 ```
 
-## Walkthrough: M^5
+We build powers by squaring:
 
 ```
-M = ┌ 2 1 ┐
-    └ 1 1 ┘
-
-n = 5 = 101 in binary
-
-Iteration 1: n=5 (odd)
-  result = I × M = M
-  base = M² = ┌ 5 3 ┐
-              └ 3 2 ┘
-  n = 2
-
-Iteration 2: n=2 (even)
-  result = M (unchanged)
-  base = M⁴ = ┌ 34 21 ┐
-              └ 21 13 ┘
-  n = 1
-
-Iteration 3: n=1 (odd)
-  result = M × M⁴ = M⁵ = ┌ 89 55 ┐
-                         └ 55 34 ┘
-  base = M⁸
-  n = 0
-
-Done! M⁵ computed in 3 iterations.
+M^1, M^2, M^4, M^8, ...
 ```
 
-## Common Applications
+Each step halves the exponent, so the loop runs in O(log n) steps.
 
-### 1. Linear Recurrences
+## 3. The invariant that makes it correct
+
+Inside the loop we maintain:
+
 ```
-Any recurrence f(n) = a₁f(n-1) + a₂f(n-2) + ... + aₖf(n-k)
+result * base^e = M^n
+```
+
+- If `e` is odd, multiply `result` by `base`.
+- Then square `base` and halve `e`.
+
+Because matrix multiplication is associative, the same reasoning as scalar
+exponentiation applies.
+
+## 4. Matrix multiplication (why O(k^3))
+
+For two matrices A (k x k) and B (k x k):
+
+```
+C[i,j] = sum_{t=0..k-1} A[i,t] * B[t,j]
+```
+
+This is the classic triple loop and costs O(k^3).
+
+Diagram (dot product for one cell):
+
+```
+Row i of A:   a0  a1  a2 ...
+Column j of B: b0  b1  b2 ...
+C[i,j] = a0*b0 + a1*b1 + a2*b2 + ...
+```
+
+## 5. Walkthrough: M^5 by hand
+
+Take:
+
+```
+M = [ 2 1 ]
+    [ 1 1 ]
+
+n = 5 (101b)
+```
+
+Process bits from least significant:
+
+```
+result = I
+base = M
+
+n=5 odd: result = I*M = M
+base = M^2
+n=2 even: result unchanged
+base = M^4
+n=1 odd: result = M * M^4 = M^5
+n=0 stop
+```
+
+Only 3 squarings and 2 multiplies.
+
+## 6. Fibonacci as a matrix
+
+The Fibonacci recurrence:
+
+```
+F(n) = F(n-1) + F(n-2)
+```
 
 Matrix form:
-┌ f(n)   ┐   ┌ a₁ a₂ ... aₖ ┐   ┌ f(n-1) ┐
-│ f(n-1) │   │ 1  0  ... 0  │   │ f(n-2) │
-│  ...   │ = │ 0  1  ... 0  │ × │  ...   │
-└ f(n-k+1)┘   └ 0  0  ... 0  ┘   └ f(n-k) ┘
-```
-
-### 2. Path Counting
-```
-Count paths of exactly n edges in graph:
-  (A^n)[i][j] = number of paths from i to j
-
-A = adjacency matrix
-```
-
-### 3. Markov Chains
-```
-State after n transitions:
-  π(n) = π(0) × P^n
-
-P = transition probability matrix
-```
-
-### 4. Dynamic Programming Optimization
-```
-Some DP with fixed transition structure:
-  dp[n] = M × dp[n-1]
-
-Compute dp[n] in O(k³ log n) instead of O(kn).
-```
-
-## Example: Tribonacci
 
 ```
-T(n) = T(n-1) + T(n-2) + T(n-3)
-T(0)=0, T(1)=0, T(2)=1
-
-Transition matrix:
-┌ T(n)   ┐   ┌ 1 1 1 ┐   ┌ T(n-1) ┐
-│ T(n-1) │ = │ 1 0 0 │ × │ T(n-2) │
-└ T(n-2) ┘   └ 0 1 0 ┘   └ T(n-3) ┘
-
-T(10) = 149 (sequence: 0,0,1,1,2,4,7,13,24,44,81,149,...)
+[ F(n+1) ]   [ 1 1 ]^n [ 1 ]
+[ F(n)   ] = [ 1 0 ]   [ 0 ]
 ```
 
-## Modular Matrix Exponentiation
+So `F(n)` is the (0,1) entry of `M^n` where:
 
 ```
-For large exponents, compute M^n mod p:
-
-def mat_mult_mod(A, B, p):
-    C = new matrix of zeros
-    for i, j, k:
-        C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % p
-    return C
-
-def mat_pow_mod(M, n, p):
-    // Same as before, but use mat_mult_mod
+M = [ 1 1 ]
+    [ 1 0 ]
 ```
 
-## Complexity Analysis
-
-| Operation | Time |
-|-----------|------|
-| Matrix multiply (k×k) | O(k³) |
-| Matrix power M^n | O(k³ log n) |
-| Nth Fibonacci | O(log n) |
-| Nth term of k-order recurrence | O(k³ log n) |
-
-## Matrix Exponentiation vs Naive
-
-| Method | Time | When to Use |
-|--------|------|-------------|
-| **Matrix exp** | O(k³ log n) | n is huge |
-| Naive DP | O(kn) | k is huge or n is small |
-| Generating functions | Analytical | When closed form exists |
-
-**Choose Matrix Exponentiation when**: n is large and k is small.
-
-## Building the Matrix
+Example result:
 
 ```
-General k-th order recurrence:
-  f(n) = c₁f(n-1) + c₂f(n-2) + ... + cₖf(n-k) + d
-
-With constant term d:
-┌ f(n)   ┐   ┌ c₁ c₂ ... cₖ d ┐   ┌ f(n-1) ┐
-│ f(n-1) │   │ 1  0  ... 0  0 │   │ f(n-2) │
-│  ...   │ = │ 0  1  ... 0  0 │ × │  ...   │
-│ f(n-k+1)│   │ 0  0  ... 0  0 │   │ f(n-k) │
-└   1    ┘   └ 0  0  ... 0  1 ┘   └   1    ┘
-
-The extra row/column handles the constant term.
+M^9 = [ 55 34 ]
+      [ 34 21 ]
+F(10) = 55
 ```
 
-## Implementation Notes
+```mbt nocheck
+///|
+test "fibonacci example" {
+  inspect(fibonacci(10L), content="55")
+  inspect(fibonacci(20L), content="6765")
+}
+```
 
-- Use modular arithmetic to avoid overflow
-- Precompute base cases correctly
-- Matrix should be square; pad if needed
-- For sparse matrices, use sparse multiplication
-- Identity matrix is the "1" for matrix multiplication
-- Consider Strassen's algorithm for very large matrices (rarely needed)
+## 7. Generic linear recurrence
 
+Any k-term recurrence:
+
+```
+f(n) = c0*f(n-1) + c1*f(n-2) + ... + c(k-1)*f(n-k)
+```
+
+can be written with a k x k companion matrix:
+
+```
+[ f(n)   ]   [ c0 c1 c2 ... c(k-1) ] [ f(n-1) ]
+[ f(n-1) ] = [ 1  0  0  ... 0      ] [ f(n-2) ]
+[ ...    ]   [ 0  1  0  ... 0      ] [ ...    ]
+[ f(n-k+1)]  [ 0  0  0  ... 1      ] [ f(n-k) ]
+```
+
+Raise this matrix to power `n-k+1` and multiply by the initial vector.
+
+```mbt nocheck
+///|
+test "solve_recurrence examples" {
+  let coeffs : Array[Int64] = [1L, 1L]
+  let initial : Array[Int64] = [0L, 1L]
+  inspect(solve_recurrence(coeffs, initial, 10L), content="55")
+}
+```
+
+## 8. Path counting in graphs
+
+If `A` is an adjacency matrix of a graph, then:
+
+```
+(A^k)[i,j] = number of paths of length k from i to j
+```
+
+Example graph:
+
+```
+0 -> 1 -> 2 -> 0
+```
+
+Adjacency matrix:
+
+```
+[0 1 0]
+[0 0 1]
+[1 0 0]
+```
+
+```mbt nocheck
+///|
+test "count_paths example" {
+  let adj : Array[Array[Int64]] = [[0L, 1L, 0L], [0L, 0L, 1L], [1L, 0L, 0L]]
+  let paths2 = count_paths(adj, 2L)
+  inspect(paths2.get(0, 2), content="1")
+}
+```
+
+## 9. Modulo arithmetic
+
+This implementation uses a fixed modulus:
+
+```
+MATRIX_MOD = 1_000_000_007
+```
+
+This prevents overflow and keeps values in range for large exponents. There is
+also a `multiply_no_mod` path for pure integer math when you know values are
+small.
+
+## 10. Identity matrix
+
+The identity matrix acts like 1 for multiplication:
+
+```
+I = [1 0]
+    [0 1]
+
+I * A = A * I = A
+```
+
+It is used to initialize `result` in exponentiation.
+
+```mbt nocheck
+///|
+test "identity example" {
+  let a = Matrix::from_array([[1L, 2L], [3L, 4L]])
+  let i = Matrix::identity(2)
+  inspect(a.multiply_no_mod(i).equals(a), content="true")
+}
+```
+
+## 11. Complexity summary
+
+```
+Matrix multiply:   O(k^3)
+Matrix exponent:   O(k^3 log n)
+Fibonacci:         O(log n)
+Recurrence (k):    O(k^3 log n)
+```
+
+## 12. Common pitfalls
+
+- Exponentiating a non-square matrix (invalid)
+- Forgetting the identity matrix as the neutral element
+- Mixing modulo and non-modulo arithmetic
+- Overflow when using `multiply_no_mod` on large values
+
+## 13. When to use matrix exponentiation
+
+Use it when:
+
+- `n` is huge (10^12, 10^18, ...)
+- The recurrence has small fixed dimension `k`
+- You need many queries for large indices
+
+For small `n`, a simple DP loop is often faster and simpler.
+
+## 14. API overview (internal)
+
+The main building blocks inside the package:
+
+- `Matrix::multiply` / `Matrix::multiply_no_mod`
+- `Matrix::power`
+- `fibonacci(n)`
+- `solve_recurrence(coeffs, initial, n)`
+- `count_paths(adj, k)`
+
+See the test cases in `lib/matrix_exp/matrix_exp.mbt` for exact usage.
