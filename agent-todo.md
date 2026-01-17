@@ -58,8 +58,8 @@
 - [x] lib/challenge_lca_binary_lift
 - [x] lib/challenge_lcs
 - [x] lib/challenge_line_sweep
-- [ ] lib/challenge_lis_nlogn (in progress)
-- [ ] lib/challenge_matrix_chain
+- [x] lib/challenge_lis_nlogn
+- [ ] lib/challenge_matrix_chain (in progress)
 - [ ] lib/challenge_meet_in_middle
 - [ ] lib/challenge_mo_algorithm_sum
 - [ ] lib/challenge_mst_kruskal
