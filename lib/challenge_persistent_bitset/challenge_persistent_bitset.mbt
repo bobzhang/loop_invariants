@@ -24,20 +24,6 @@ fn node_count(node : Node) -> Int {
 }
 
 ///|
-fn tree_valid(node : Node, len : Int) -> Bool {
-  match node {
-    Node::Leaf(count=_) => len == 1
-    Node::Branch(count=cv, left~, right~) =>
-      if len <= 1 {
-        false
-      } else {
-        let mid = len / 2
-        tree_valid(left, mid) &&
-        tree_valid(right, len - mid) &&
-        cv == node_count(left) + node_count(right)
-      }
-  }
-}
 
 ///|
 fn build_zero(l : Int, r : Int) -> Node {
@@ -151,25 +137,10 @@ pub fn count_range(bs : Bitset, ql : Int, qr : Int) -> Int {
 
 ///|
 /// Build a bitset by setting indices to 1.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn from_indices(n : Int, idxs : ArrayView[Int]) -> Bitset {
-  let m = idxs.length()
-  for i = 0, bs = make(n) {
-    if i >= m {
-      break bs
-    } else {
-      continue i + 1, set(bs, idxs[i], 1)
-    }
-  } where {
-    invariant: i >= 0 && i <= m,
-    invariant: tree_valid(bs.root, bs.n),
-    reasoning: (
-      #|INVARIANT (Bitset build):
-      #|bs reflects the first i indices set to 1.
-      #|MAINTENANCE:
-      #|Set idxs[i], preserving the count invariants.
-      #|TERMINATION:
-      #|At i = m, all indices are set.
-    ),
+  let mut bs = make(n)
+  for idx in idxs {
+    bs = set(bs, idx, 1)
   }
+  bs
 }

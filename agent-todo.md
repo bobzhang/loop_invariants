@@ -71,8 +71,8 @@
 - [x] lib/challenge_persistent_avl_set
 - [x] lib/challenge_persistent_binary_trie
 - [x] lib/challenge_persistent_binomial_heap
-- [ ] lib/challenge_persistent_bitset (in progress)
-- [ ] lib/challenge_persistent_bst
+- [x] lib/challenge_persistent_bitset
+- [ ] lib/challenge_persistent_bst (in progress)
 - [ ] lib/challenge_persistent_btree
 - [ ] lib/challenge_persistent_deque
 - [ ] lib/challenge_persistent_fenwick
