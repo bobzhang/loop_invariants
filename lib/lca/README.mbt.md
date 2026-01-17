@@ -1,204 +1,145 @@
-# Lowest Common Ancestor (LCA)
+# Lowest Common Ancestor (LCA) with Binary Lifting
 
-## Overview
+## What LCA Answers
 
-The **Lowest Common Ancestor** of two nodes u and v in a tree is the deepest
-node that is an ancestor of both. This package uses **Binary Lifting** for
-efficient queries.
+The **Lowest Common Ancestor** of two nodes `u` and `v` is the deepest node
+that is an ancestor of both. It is the core primitive behind distance queries,
+subtree checks, and many tree path algorithms.
 
-- **Preprocessing**: O(n log n)
+This package uses **binary lifting**:
+
+- **Preprocess**: O(n log n)
 - **Query**: O(log n)
 - **Space**: O(n log n)
 
-## Core Idea
-
-- Precompute **2^k ancestors** for each node (binary lifting).
-- Level nodes to the same depth, then jump up in powers of two.
-- The first diverging ancestor gives the LCA.
-
-## Visual Example
+## Visual Intuition
 
 ```
 Tree:
-          0 (root)
+          0
         / | \
        1  2  3
       / \
      4   5
 
-LCA(4, 5) = 1    (immediate parent of both)
-LCA(4, 2) = 0    (must go up to root)
-LCA(4, 3) = 0    (must go up to root)
-LCA(1, 5) = 1    (1 is ancestor of 5)
+LCA(4, 5) = 1
+LCA(4, 2) = 0
+LCA(4, 3) = 0
+LCA(1, 5) = 1
 ```
 
-## The Binary Lifting Technique
+The LCA is the last shared node on the two root‑to‑node paths.
 
-### Key Insight
+## Binary Lifting in One Picture
 
-Precompute 2^k-th ancestors for each node. Any ancestor can be reached
-by combining powers of 2 (like binary representation of a number).
+For each node, precompute ancestors at powers of two:
 
 ```
-up[v][k] = 2^k-th ancestor of node v
-
-up[v][0] = parent[v]
-up[v][1] = up[up[v][0]][0]  (grandparent)
-up[v][2] = up[up[v][1]][1]  (great-great-grandparent)
+up[v][0] = parent
+up[v][1] = 2^1 ancestor
+up[v][2] = 2^2 ancestor
 ...
-up[v][k] = up[up[v][k-1]][k-1]
 ```
 
-### Example Table
+Any jump by `k` levels is done by decomposing `k` into bits.
+
+Example: jump 13 = 8 + 4 + 1
 
 ```
-Tree:     0
-         / \
-        1   2
-       / \
-      3   4
-     /
-    5
-
-Depth:  0  1  2  2  3
-Node:   0  1  2  3  4  5
-
-up table (2^k ancestor):
-        k=0  k=1  k=2
-node 0:  -1   -1   -1
-node 1:   0   -1   -1
-node 2:   0   -1   -1
-node 3:   1    0   -1
-node 4:   1    0   -1
-node 5:   3    1    0
+13 = (1101)_2
+jump 2^3 -> jump 2^2 -> jump 2^0
 ```
 
-## LCA Query Algorithm
+## Step‑By‑Step Query
 
-### Step 1: Bring Nodes to Same Depth
+### 1) Equalize Depths
 
-```
-LCA(5, 2):
-  depth[5] = 3, depth[2] = 1
-  diff = 3 - 1 = 2 = binary 10
+Bring the deeper node up to the same depth.
 
-  Lift node 5 by 2:
-    k=0: bit not set, skip
-    k=1: bit set, lift by 2^1 = 2
-         5 → up[5][1] = 1
-
-  Now both at depth 1: node 1 and node 2
-```
-
-### Step 2: Binary Search for LCA
+Example: `LCA(5, 2)`
 
 ```
-After leveling: u=1, v=2
+Depth[5] = 3, Depth[2] = 1
+Diff = 2 (binary 10)
 
-Check from high k down to 0:
-  k=1: up[1][1]=-1, up[2][1]=-1, equal → don't jump
-  k=0: up[1][0]=0, up[2][0]=0, equal → don't jump
-
-Both already have same 2^k ancestors at every level?
-That means LCA = up[1][0] = 0
-
-Actually, we first check if u == v:
-  1 ≠ 2, so continue
-
-After loop, return up[1][0] = 0
-
-LCA(5, 2) = 0 ✓
+Lift node 5 by 2:
+  jump 2^1 -> 5 -> 1
+Now both at depth 1: nodes 1 and 2
 ```
 
-### Complete Example
+### 2) Jump Together
+
+From the highest power down, if `up[u][k] != up[v][k]`, jump both up.
+
+After this, the parent of either node is the LCA.
+
+## Example Table
+
+Tree:
 
 ```
-LCA(4, 5):
-  depth[4] = 2, depth[5] = 3
-  Lift 5 by 1: 5 → 3
-  Now depth[3] = 2 = depth[4]
-
-  Check: 3 ≠ 4
-  k=1: up[3][1]=0, up[4][1]=0, equal → don't jump
-  k=0: up[3][0]=1, up[4][0]=1, equal → don't jump
-
-  Return up[3][0] = 1
-
-LCA(4, 5) = 1 ✓
+    0
+   / \
+  1   2
+ / \
+3   4
+/
+5
 ```
 
-## Common Operations
+Depth and ancestor table:
+
+```
+node:   0  1  2  3  4  5
+up[][0]: -1 0  0  1  1  3
+up[][1]: -1 -1 -1 0  0  1
+up[][2]: -1 -1 -1 -1 -1 0
+```
+
+Now `LCA(5,4)`:
+
+```
+Depths: 5=3, 4=2 => lift 5 by 1 -> 3
+Now nodes 3 and 4
+Check from high k:
+  k=1: up[3][1]=0, up[4][1]=0 (equal)
+  k=0: up[3][0]=1, up[4][0]=1 (equal)
+Result = up[3][0] = 1
+```
+
+## Common Operations Using LCA
 
 ### Distance Between Nodes
 
 ```
 dist(u, v) = depth[u] + depth[v] - 2 * depth[LCA(u, v)]
-
-Example: dist(4, 5)
-  LCA(4, 5) = 1
-  dist = 2 + 3 - 2*1 = 3
-
-Path: 4 → 1 → 3 → 5 (3 edges)
 ```
 
-### k-th Ancestor
+### Ancestor Check
 
 ```
-To find the k-th ancestor of v:
-- Decompose k into binary: k = sum of 2^i
-- Jump using up[v][i] for each set bit
-
-10th ancestor of node v:
-  10 = 8 + 2 = 2^3 + 2^1
-  v → up[v][1] → up[...][3]
+Is u ancestor of v?  LCA(u, v) == u
 ```
+
+### k‑th Ancestor
+
+Decompose `k` into powers of two and jump using `up[v][bit]`.
 
 ### Path Queries
 
-```
-Query on path from u to v:
-1. Find LCA(u, v)
-2. Query u → LCA path
-3. Query LCA → v path
-4. Combine results
-```
-
-## Common Applications
-
-### 1. Tree Distance Queries
+Split by LCA and combine:
 
 ```
-Given: Tree with weighted edges
-Query: Distance between any two nodes
-
-Solution:
-- Precompute dist_to_root[v] during DFS
-- dist(u, v) = dist_to_root[u] + dist_to_root[v]
-             - 2 * dist_to_root[LCA(u, v)]
+query(u, v) = combine(query(u, lca), query(lca, v))
 ```
 
-### 2. Subtree Checks
+## Weighted Trees (Distance Queries)
+
+Store `dist_to_root[v]` during DFS:
 
 ```
-Is u an ancestor of v?
-  LCA(u, v) == u
-
-Is v in the subtree of u?
-  Same as above!
-```
-
-### 3. Path Aggregation
-
-```
-Maximum edge weight on path from u to v:
-- Store max weight to each 2^k ancestor
-- Query by combining along path to LCA
-```
-
-### 4. Tree Isomorphism
-
-```
-LCA queries help compare tree structures efficiently.
+dist(u, v) = dist_to_root[u] + dist_to_root[v]
+          - 2 * dist_to_root[LCA(u, v)]
 ```
 
 ## Example Usage
@@ -215,60 +156,37 @@ test "lca basic" {
 
 ```mbt check
 ///|
-test "lca ancestor" {
-  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (1, 3), (1, 4)]
-  let lca = @lca.LCA::new(5, edges)
-  inspect(lca.query(1, 4), content="1")
-  inspect(lca.query(3, 4), content="1")
+test "lca distance via depths" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (1, 3)]
+  let lca = @lca.LCA::new(4, edges)
+  let l = lca.query(2, 3)
+  let dist = lca.depth[2] + lca.depth[3] - 2 * lca.depth[l]
+  inspect(dist, content="2")
 }
 ```
 
-## Complexity Analysis
+## Common Pitfalls
 
-| Operation | Time |
-|-----------|------|
-| Preprocessing | O(n log n) |
-| LCA query | O(log n) |
-| Distance query | O(log n) |
-| k-th ancestor | O(log n) |
-| Path enumeration | O(path length) |
+- **Rooted tree**: LCA depends on a root (here root = 0).
+- **Invalid nodes**: queries outside `[0..n-1]` return `-1`.
+- **Disconnected graph**: this expects a tree, not a forest.
+- **Log size**: use `ceil(log2(n)) + 1` for ancestor table height.
 
-### Space Breakdown
+## Complexity
 
-```
-up[n][log n] table: O(n log n)
-depth[n]: O(n)
-Total: O(n log n)
-```
+| Operation | Time | Space |
+|----------|------|-------|
+| Build | O(n log n) | O(n log n) |
+| LCA query | O(log n) | O(1) extra |
+| Distance query | O(log n) | O(1) extra |
+| k‑th ancestor | O(log n) | O(1) extra |
 
-## LCA vs Other Methods
+## Binary Lifting vs Other Methods
 
-| Method | Preprocess | Query | Space |
-|--------|------------|-------|-------|
-| **Binary Lifting** | O(n log n) | O(log n) | O(n log n) |
-| Euler Tour + RMQ | O(n) | O(1) | O(n) |
-| Heavy-Light Decomp | O(n) | O(log n) | O(n) |
-| Naive (DFS each) | O(1) | O(n) | O(1) |
+| Method | Preprocess | Query | Notes |
+|--------|------------|-------|------|
+| Binary Lifting | O(n log n) | O(log n) | simple, fast |
+| Euler Tour + RMQ | O(n) | O(1) | more complex |
+| HLD | O(n) | O(log n) | if you already need HLD |
 
-**Choose Binary Lifting when**: You need simple implementation with good performance.
-
-## Weighted LCA
-
-For trees with edge weights:
-
-```
-Structure:
-  lca: LCA           // Standard LCA structure
-  dist_to_root[v]    // Weighted distance from root
-
-Query weighted distance:
-  dist(u, v) = dist_to_root[u] + dist_to_root[v]
-             - 2 * dist_to_root[LCA(u, v)]
-```
-
-## Implementation Notes
-
-- Root is typically node 0
-- Use -1 to indicate "no ancestor"
-- log_n should be ceil(log2(n)) + 1
-- Handle edge cases: same node, invalid indices
+Binary lifting is usually the best balance of simplicity and speed.

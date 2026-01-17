@@ -147,8 +147,8 @@
 - [x] lib/k_shortest_paths_yen
 - [x] lib/kmp
 - [x] lib/lazy_segtree
-- [ ] lib/lca (in progress)
-- [ ] lib/lct
+- [x] lib/lca
+- [ ] lib/lct (in progress)
 - [ ] lib/lichao
 - [ ] lib/line_segment_intersection
 - [ ] lib/linear_recurrence
