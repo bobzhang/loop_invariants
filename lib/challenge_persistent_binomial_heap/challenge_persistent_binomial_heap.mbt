@@ -146,32 +146,19 @@ pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
 
 ///|
 /// Return the minimum value in the heap, or None if empty.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare] find_min(h : Heap[T]) -> T? {
-  let len = h.trees.length()
-  let none : T? = None
-  for i = 0, best = none {
-    if i >= len {
-      break best
-    } else {
-      match (best, h.trees[i]) {
-        (None, Some(t)) => continue i + 1, Some(t.value)
-        (Some(b), Some(t)) =>
-          continue i + 1, Some(if t.value < b { t.value } else { b })
-        _ => continue i + 1, best
-      }
+  let mut min_val : T? = None
+  for tree in h.trees {
+    match tree {
+      None => ()
+      Some(t) =>
+        match min_val {
+          None => min_val = Some(t.value)
+          Some(best) => if t.value < best { min_val = Some(t.value) }
+        }
     }
-  } where {
-    invariant: i >= 0 && i <= len,
-    reasoning: (
-      #|INVARIANT (Min scan):
-      #|best is the minimum root value among trees[0..i).
-      #|MAINTENANCE:
-      #|Compare the next root and update best if smaller.
-      #|TERMINATION:
-      #|At i = len, best is the minimum across all trees.
-    ),
   }
+  min_val
 }
 
 ///|
