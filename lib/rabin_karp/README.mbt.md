@@ -128,7 +128,10 @@ test "rabin karp count" {
 test "rabin karp multi" {
   let patterns = ["aba", "bab", "ab"]
   let hits = @rabin_karp.rabin_karp_multi("ababab", patterns)
-  inspect(hits, content="[(0, 0), (1, 1), (0, 2), (1, 3), (2, 0), (2, 2), (2, 4)]")
+  inspect(
+    hits,
+    content="[(0, 0), (1, 1), (0, 2), (1, 3), (2, 0), (2, 2), (2, 4)]",
+  )
 }
 ```
 
