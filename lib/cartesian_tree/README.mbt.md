@@ -1,121 +1,145 @@
 # Cartesian Tree
 
-## What It Is
+A Cartesian tree turns an array into a binary tree that preserves both:
 
-A **Cartesian Tree** is a binary tree built from an array that satisfies two
-properties at the same time:
+1. **In-order order** (left-to-right traversal gives the original array), and
+2. **Heap order** (the minimum value sits above larger values).
 
-1. **In-order property**: in-order traversal yields the original array order.
-2. **Heap property**: each node is the minimum (or maximum) in its subtree.
+This combination makes it a powerful tool for **range minimum queries (RMQ)**.
 
-This makes it a natural tool for **Range Minimum Query (RMQ)**.
+## Problem statement
 
-## The Problem
-
-Given an array `arr`, answer queries like:
+Given an array `arr`, we want to answer queries like:
 
 ```
-min(arr[l..r])
+min(arr[l..=r])
 ```
 
-Many queries should be fast after preprocessing.
+efficiently after preprocessing.
 
-## Key Insight
+## Key properties
 
-Because the tree is a heap by value and keeps array order, the **minimum
-on a range [l, r]** is the **Lowest Common Ancestor (LCA)** of the nodes at
-indices `l` and `r`.
+For a *min-heap* Cartesian tree:
 
-So RMQ becomes:
+- The root is the **minimum** element in the array.
+- The left subtree contains exactly the elements to the left of the minimum.
+- The right subtree contains exactly the elements to the right of the minimum.
+- An in-order traversal returns the original array order.
 
-```
-RMQ(l, r) = LCA(node[l], node[r])
-```
+These properties uniquely determine the tree structure.
 
-## Properties (Easy to Remember)
+## How to build it in O(n)
 
-For an array `arr` and its Cartesian tree:
+We use a **monotonic stack** of indices:
 
-- The root is the global minimum of the array.
-- The left subtree contains exactly the elements left of the minimum.
-- The right subtree contains exactly the elements right of the minimum.
-- In-order traversal returns the original array.
+1. Scan the array left to right.
+2. While the stack top is larger than the current value, pop it.
+3. The last popped node becomes the **left child** of the current node.
+4. The current node becomes the **right child** of the new stack top (if any).
+5. Push the current index.
 
-Example:
-
-```
-Array: [3, 2, 6, 1, 9]
-
-Cartesian Tree (min-heap):
-        1 (idx 3)
-       / \
-      2   9
-     / \
-    3   6
-
-In-order: 3, 2, 6, 1, 9  ✓
-```
-
-## O(n) Construction (Monotonic Stack)
-
-We build the tree in one pass.
-
-Algorithm idea:
-
-- Keep a stack of indices with **increasing values**.
-- For each new value, pop all larger values.
-- The last popped node becomes the left child.
-- The new node becomes the right child of the remaining top (if any).
-
-Why this works:
-
-- The stack represents the **rightmost path** of the tree so far.
-- Each index is pushed once and popped once → O(n).
+Each index is pushed and popped at most once, so the total work is O(n).
 
 ## RMQ via LCA
 
-After building the tree, preprocess it for LCA (e.g., binary lifting or Euler
-Tour + RMQ). Then:
+The minimum in a range `[l, r]` is the **lowest common ancestor (LCA)** of the
+nodes at indices `l` and `r`. This holds because:
+
+- The heap property guarantees that every ancestor has the smallest value in
+  its subtree.
+- The in-order property guarantees that the subtree of the LCA corresponds
+  exactly to the interval `[l, r]`.
+
+So RMQ becomes:
 
 ```
 RMQ(l, r) = value at LCA(node[l], node[r])
 ```
 
-This gives **O(1)** or **O(log n)** queries depending on the LCA method.
+## Public API
 
-## Example
+This package exposes:
+
+```
+@cartesian_tree.range_min(arr, l, r)
+```
+
+It returns `Some(min)` if the range is valid, otherwise `None`.
+
+## Examples
+
+### Example 1: basic RMQ
 
 ```mbt check
 ///|
-test "cartesian tree rmq example" {
+test "basic rmq" {
   let arr : Array[Int64] = [3L, 2L, 6L, 1L, 9L]
   inspect(@cartesian_tree.range_min(arr[:], 1, 3), content="Some(1)")
   inspect(@cartesian_tree.range_min(arr[:], 0, 2), content="Some(2)")
 }
 ```
 
+### Example 2: duplicates and tie-breaking
+
+This implementation only pops **strictly larger** values. That means equal
+values keep their original order, and the leftmost minimum becomes higher in
+the tree.
+
+```mbt check
+///|
+test "duplicates" {
+  let arr : Array[Int64] = [5L, 5L, 2L, 5L]
+  inspect(@cartesian_tree.range_min(arr[:], 0, 1), content="Some(5)")
+  inspect(@cartesian_tree.range_min(arr[:], 0, 2), content="Some(2)")
+}
+```
+
+### Example 3: ascending and descending arrays
+
+```mbt check
+///|
+test "ascending and descending" {
+  let asc : Array[Int64] = [1L, 2L, 3L, 4L]
+  let desc : Array[Int64] = [4L, 3L, 2L, 1L]
+  inspect(@cartesian_tree.range_min(asc[:], 1, 3), content="Some(2)")
+  inspect(@cartesian_tree.range_min(desc[:], 1, 3), content="Some(1)")
+}
+```
+
+### Example 4: invalid ranges
+
+```mbt check
+///|
+test "invalid range" {
+  let arr : Array[Int64] = [3L, 2L, 6L]
+  inspect(@cartesian_tree.range_min(arr[:], -1, 1), content="None")
+  inspect(@cartesian_tree.range_min(arr[:], 2, 1), content="None")
+  inspect(@cartesian_tree.range_min(arr[:], 0, 10), content="None")
+}
+```
+
+## Applications
+
+- Range minimum queries
+- Nearest smaller elements
+- Largest rectangle in a histogram
+- Treaps (Cartesian tree by key order and random priority)
+
 ## Complexity
 
-- Build tree: **O(n)**
-- LCA preprocessing: **O(n log n)** (or **O(n)** with Euler tour)
-- RMQ query: **O(1)** (after preprocessing)
+- Build: O(n)
+- LCA preprocessing: O(n log n) with binary lifting
+- Query: O(log n) for the LCA (O(1) with Euler tour + RMQ)
 
-## Common Applications
+## Practical notes and pitfalls
 
-- **Range Minimum Query** (classic use)
-- **Largest rectangle in histogram** (nearest smaller to left/right)
-- **Treaps** (Cartesian tree with random priorities)
+- If values can repeat, always define a tie-breaking rule. This implementation
+  keeps the **leftmost** minimum higher in the tree.
+- The range is **inclusive**: `[l, r]`.
+- If you only need the tree structure, you can reuse the stack build step
+  without LCA preprocessing.
 
-## Pitfalls
+## When to use it
 
-- If values are not distinct, define a tie-breaking rule (e.g., smaller index
-  wins) so the tree is deterministic.
-- For RMQ, be consistent about inclusive ranges and index order.
-
-## When to Use
-
-Choose a Cartesian tree when you need:
-
-- Many RMQ queries
-- Optimal preprocessing + query time
-- A structure that preserves array order
+Use a Cartesian tree when you need fast RMQ and want a tree representation that
+preserves array order.

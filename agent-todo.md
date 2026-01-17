@@ -16,8 +16,8 @@
 - [x] lib/bipartite_matching
 - [x] lib/block_cut_tree
 - [x] lib/bridges
-- [ ] lib/cartesian_tree (in progress)
-- [ ] lib/centroid
+- [x] lib/cartesian_tree
+- [ ] lib/centroid (in progress)
 - [ ] lib/challenge_bfs_grid
 
 ## Initial pass

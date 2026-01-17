@@ -99,7 +99,7 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
   // INVARIANT: Stack contains nodes on rightmost path, in increasing depth order
   // Stack values are decreasing (since we're building min-heap)
   let stack : Array[Int] = []
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     // Pop nodes with larger values
     // INVARIANT: Popped nodes will become left subtree of current node
     let last_popped = for last_popped = -1; stack.length() > 0; {
@@ -137,16 +137,6 @@ fn CartesianTree::new(arr : Array[Int64]) -> CartesianTree {
       nodes[i].parent = parent
     }
     stack.push(i)
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (stack build):
-      #|Indices in [0..i) are processed and the monotonic stack is consistent.
-      #|MAINTENANCE:
-      #|Process index i, pop larger nodes, set links, then push i onto the stack.
-      #|TERMINATION:
-      #|At i = n, all nodes are integrated into the Cartesian tree.
-    ),
   }
 
   // Find root (node with no parent)
@@ -441,7 +431,7 @@ fn nearest_smaller_left(arr : Array[Int64]) -> Array[Int] {
   // Use monotonic stack
   // INVARIANT: Stack contains indices with strictly increasing values
   let stack : Array[Int] = []
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     // Pop elements >= arr[i]
     while stack.length() > 0 {
       let top = stack[stack.length() - 1]
@@ -456,18 +446,6 @@ fn nearest_smaller_left(arr : Array[Int64]) -> Array[Int] {
       result[i] = stack[stack.length() - 1]
     }
     stack.push(i)
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (nearest smaller left):
-      #|Stack holds indices with strictly increasing values from bottom to top
-      #|for processed positions in [0, i).
-      #|MAINTENANCE:
-      #|Pop indices with value >= arr[i] so the top is the nearest smaller,
-      #|record it, then push i to preserve monotonicity.
-      #|TERMINATION:
-      #|At i = n, nearest smaller to the left is computed for all positions.
-    ),
   }
   result
 }
