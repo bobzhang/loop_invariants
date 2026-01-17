@@ -142,6 +142,15 @@ test "dinic max flow example" {
 }
 ```
 
+```mbt check
+///|
+test "dinic no path" {
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 5), (2, 3, 7)]
+  let flow = @dinic.max_flow(4, edges[:], 0, 3)
+  inspect(flow, content="0")
+}
+```
+
 ## The Algorithm
 
 ```

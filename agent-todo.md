@@ -121,8 +121,8 @@
 - [x] lib/convex_hull_trick
 - [x] lib/dial_shortest_path
 - [x] lib/dijkstra
-- [ ] lib/dinic (in progress)
-- [ ] lib/disjoint_sparse
+- [x] lib/dinic
+- [ ] lib/disjoint_sparse (in progress)
 - [ ] lib/dominator_tree
 - [ ] lib/dp
 - [ ] lib/dsu_on_tree
