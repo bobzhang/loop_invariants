@@ -60,25 +60,20 @@ fn[T : Compare] push(s : MinStack[T], value : T) -> MinStack[T] {
 ///|
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
-fn[T : Compare] reverse_stack(s : MinStack[T]) -> MinStack[T] {
-  for cur = s, rev = MinStack::Nil {
-    match cur {
-      MinStack::Nil => break rev
-      MinStack::Cons(value~, min=_, tail~) => continue tail, push(rev, value)
-    }
-  } where {
-    invariant: size_stack(cur) + size_stack(rev) == size_stack(s),
-    reasoning: (
-      #|INVARIANT (Reversal with min):
-      #|rev is the reverse of the processed prefix; cur holds the remainder.
-      #|Each push recomputes the min for rev, preserving min correctness.
-      #|MAINTENANCE:
-      #|Move value from cur to rev, preserving total size and order reversal.
-      #|TERMINATION:
-      #|When cur is Nil, rev is the fully reversed stack.
-    ),
+fn[T : Compare] reverse_stack_acc(
+  cur : MinStack[T],
+  acc : MinStack[T],
+) -> MinStack[T] {
+  match cur {
+    MinStack::Nil => acc
+    MinStack::Cons(value~, min=_, tail~) =>
+      reverse_stack_acc(tail, push(acc, value))
   }
+}
+
+///|
+fn[T : Compare] reverse_stack(s : MinStack[T]) -> MinStack[T] {
+  reverse_stack_acc(s, MinStack::Nil)
 }
 
 ///|
