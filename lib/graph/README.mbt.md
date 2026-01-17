@@ -46,6 +46,85 @@ graph[1] = [0, 2]
 graph[2] = [0, 1]
 ```
 
+### Minimal adjacency list builder
+
+```mbt check
+///|
+fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
+  for edge in edges {
+    let (u, v) = edge
+    if u < 0 || u >= n || v < 0 || v >= n {
+      continue
+    }
+    // Undirected graph: add both directions.
+    adj[u].push(v)
+    adj[v].push(u)
+  }
+  adj
+}
+
+///|
+test "build adjacency list" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 0)]
+  let adj = build_adj(3, edges[:])
+  let a0 = adj[0].copy()
+  let a1 = adj[1].copy()
+  a0.sort()
+  a1.sort()
+  inspect(a0, content="[1, 2]")
+  inspect(a1, content="[0, 2]")
+}
+```
+
+### BFS vs DFS (when to use which)
+
+- **BFS**: shortest path in *unweighted* graphs, level order traversal.
+- **DFS**: exploring components, topological order, cycle detection.
+
+BFS example (levels from node 0):
+
+```
+0 -- 1 -- 2
+|    |
+3 -- 4
+
+levels from 0:
+0: {0}
+1: {1, 3}
+2: {2, 4}
+```
+
+```mbt check
+///|
+fn bfs_levels(adj : Array[Array[Int]], source : Int) -> Array[Int] {
+  let n = adj.length()
+  let dist = Array::make(n, -1)
+  dist[source] = 0
+  let queue : Array[Int] = [source]
+  let mut head = 0
+  while head < queue.length() {
+    let u = queue[head]
+    head = head + 1
+    for v in adj[u] {
+      if dist[v] < 0 {
+        dist[v] = dist[u] + 1
+        queue.push(v)
+      }
+    }
+  }
+  dist
+}
+
+///|
+test "bfs levels" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (0, 3), (1, 4), (3, 4)]
+  let adj = build_adj(5, edges[:])
+  let dist = bfs_levels(adj, 0)
+  inspect(dist, content="[0, 1, 2, 1, 2]")
+}
+```
+
 ## How to Read the Invariants
 
 Some loops have a `where` block with `invariant` and `reasoning`. Those are
