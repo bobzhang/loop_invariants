@@ -67,6 +67,29 @@ Explanation:
 
 ---
 
+## 2b. Visual LCP alignment
+
+```
+Suffixes in SA order:
+  a
+  ana
+  anana
+  banana
+  na
+  nana
+
+LCPs:
+  lcp(a, ana)       = 1  ("a")
+  lcp(ana, anana)   = 3  ("ana")
+  lcp(anana, banana)= 0
+  lcp(banana, na)   = 0
+  lcp(na, nana)     = 2  ("na")
+```
+
+The largest LCP tells you the longest repeated substring.
+
+---
+
 ## 3. Example usage (basic)
 
 ```mbt check
@@ -102,6 +125,20 @@ Original indices: SA[1]=3, SA[2]=1.
 
 ---
 
+## 4b. Binary search range idea
+
+We can find the range of suffixes that start with a pattern:
+
+```
+lo = first suffix >= pattern
+hi = first suffix > pattern_with_next_char
+matches are in [lo, hi)
+```
+
+`SuffixArray::search` returns this `[lo, hi)` range.
+
+---
+
 ## 5. Using the SuffixArray helper
 
 ```mbt check
@@ -129,6 +166,18 @@ test "longest repeated substring" {
 
 ---
 
+## 6b. Another example (repeated overlap)
+
+```mbt check
+///|
+test "longest repeated substring overlap" {
+  let sa = @suffix_array.SuffixArray::new("aaaaa")
+  inspect(sa.longest_repeated_substring(), content="aaaa")
+}
+```
+
+---
+
 ## 7. Count distinct substrings
 
 Formula:
@@ -145,6 +194,18 @@ test "distinct substrings" {
   inspect(sa.count_distinct_substrings(), content="15")
 }
 ```
+
+---
+
+## 7b. Why the formula works (intuition)
+
+When you add a new suffix to the sorted list, it introduces:
+
+```
+len(suffix) - LCP(previous_suffix, suffix)
+```
+
+new substrings. Summing this across all suffixes gives the formula.
 
 ---
 
