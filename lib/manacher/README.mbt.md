@@ -91,6 +91,16 @@ P[i]:          0 1 0 1 2 1 0 1 0
 
 The maximum radius is 2 at center 4, which corresponds to "bb".
 
+### Mapping radius to original length
+
+In the transformed string, a radius of `r` corresponds to:
+
+```
+original length = r
+```
+
+This is why `longest_palindrome_len` can be read directly from the max radius.
+
 ## 7. Radii in the original string (d1 and d2)
 
 This package exposes `manacher_radii` returning two arrays:
@@ -109,6 +119,17 @@ string:   a b b a
 d1:       1 1 1 1   (all odd palindromes are just the single letter)
 d2:       0 0 2 0   (center between 1 and 2 gives "bb" and "abba")
 ```
+
+### Quick sanity check
+
+```
+odd length = 2 * d1[i] - 1
+even length = 2 * d2[i]
+```
+
+So for "abba":
+- odd lengths = 1
+- even length at center 2 = 2 * 2 = 4
 
 ## 8. The mirror property (the key speedup)
 
@@ -132,6 +153,21 @@ P[i] >= min(P[i'], r - i)
 This gives a strong lower bound without any comparisons.
 We only expand past `r` if needed. The right boundary `r` only moves forward,
 so total expansions across the whole scan are linear.
+
+### Why the mirror bound is safe
+
+If `i` is inside the current palindrome `[l, r]`:
+
+```
+mirror = l + r - i
+```
+
+Then the palindrome around `i` is at least as large as the mirror, but it
+cannot extend past `r`, so the guaranteed radius is:
+
+```
+min(P[mirror], r - i)
+```
 
 ## 9. Walkthrough example: "cbbd"
 
@@ -159,6 +195,15 @@ length = radius
 
 This is exactly how `longest_palindrome` maps the answer back.
 
+### Example conversion
+
+```
+center = 4, radius = 2  (from transformed string)
+start = (4 - 2) / 2 = 1
+length = 2
+substring = s[1..3] = "bb"
+```
+
 ## 11. Counting palindromes from radii
 
 In the transformed string, each center contributes:
@@ -178,6 +223,16 @@ Palindromic substrings:
 - "aaa" at (0..2) -> 1
 
 Total = 6.
+
+### Another quick check: "abba"
+
+Palindromes:
+
+```
+"a","b","b","a","bb","abba" -> 6
+```
+
+`count_palindromes("abba")` should be 6.
 
 ## 12. Example usage (runnable)
 
