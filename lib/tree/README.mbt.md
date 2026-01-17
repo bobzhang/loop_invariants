@@ -1,246 +1,292 @@
-# Tree Utilities
+# Tree Techniques (Beginner-Friendly Guide)
 
-## Overview
+This folder is a **tutorial** for common tree techniques. It does not expose a
+public API. Instead, it explains how to:
 
-Tree-oriented data structures and algorithms that combine tree traversal
-techniques with efficient range structures. These utilities enable fast
-queries on tree paths and subtrees.
+- represent a tree,
+- run DFS/BFS iteratively (no recursion),
+- compute Euler tour ranges,
+- answer subtree queries,
+- compute LCA (lowest common ancestor).
 
-- **Euler Tour + Range Query**: O(log n) per subtree query
-- **Fenwick on Tree**: O(log n) update and query
-- **LCA with Binary Lifting**: O(log n) per query
+All code snippets are small, runnable, and use only basic arrays and loops.
 
-## The Key Insight
+---
 
-```
-Trees can be "flattened" into arrays for range queries!
+## 1) What is a tree?
 
-Euler Tour Technique:
-  Number nodes by DFS entry time (tin) and exit time (tout).
-  Subtree of v = all nodes with tin in [tin[v], tout[v]]
+A tree is a connected graph with **n nodes and n-1 edges**.
+That means:
 
-Original tree:        Euler order:
-       1              Node:  1  2  4  5  3  6
-      / \             tin:   0  1  2  3  4  5
-     2   3            tout:  3  2  2  3  5  5
-    / \   \
-   4   5   6
+- there is exactly one simple path between any two nodes,
+- no cycles.
 
-Subtree of 2 = nodes with tin in [1, 3] = {2, 4, 5} ✓
-```
+We often **root** a tree at a node (usually 0). Then every node (except root)
+has a parent.
 
-## Euler Tour Flattening
+Example tree (root = 0):
 
 ```
-DFS traversal assigns each node two timestamps:
-  tin[v] = when we enter v
-  tout[v] = when we leave v (after visiting all descendants)
-
-Tree:           DFS order:
-     A            Enter A (tin=0)
-    /|\             Enter B (tin=1)
-   B C D              Leave B (tout=1)
-  /\                Enter C (tin=2)
- E  F                  Leave C (tout=2)
-                    Enter D (tin=3)
-                      Enter E (tin=4)
-                        Leave E (tout=4)
-                      Enter F (tin=5)
-                        Leave F (tout=5)
-                      Leave D (tout=5)
-                    Leave A (tout=5)
-
-Result:
-  A: tin=0, tout=5  (subtree = all nodes)
-  B: tin=1, tout=1  (subtree = just B)
-  C: tin=2, tout=2  (subtree = just C)
-  D: tin=3, tout=5  (subtree = D, E, F)
-  E: tin=4, tout=4
-  F: tin=5, tout=5
-
-Query "sum of subtree D":
-  = sum of arr[tin[D]..tout[D]] = sum of arr[3..5]
+      0
+     / \
+    1   2
+   / \   \
+  3   4   5
 ```
 
-## Fenwick Tree on Euler Order
+Edges:
+`(0,1) (0,2) (1,3) (1,4) (2,5)`
 
-```
-Combine Euler tour with Fenwick tree for:
-  - Subtree sum queries: O(log n)
-  - Node value updates: O(log n)
+---
 
-Setup:
-  1. Run DFS to compute tin[], tout[]
-  2. Create Fenwick tree of size n
-  3. For node v with value w: fenwick.update(tin[v], w)
+## 2) Adjacency list (the standard representation)
 
-Query subtree sum of v:
-  fenwick.query(tout[v]) - fenwick.query(tin[v] - 1)
-
-Update value of v to new_val:
-  fenwick.update(tin[v], new_val - old_val)
-```
-
-## Path Queries with LCA
-
-```
-Query on path from u to v using LCA:
-
-Path(u, v) = Path(u, lca) ∪ Path(lca, v)
-
-For sum query:
-  sum(u→v) = sum(root→u) + sum(root→v) - 2*sum(root→lca) + val(lca)
-
-Tree:          Values:
-     A=10        A: 10
-    / \          B: 20
-   B   C         C: 30
-  / \            D: 40
- D   E           E: 50
-
-prefix_sum[v] = sum from root to v:
-  A: 10
-  B: 30
-  C: 40
-  D: 70
-  E: 80
-
-Query sum(D→C):
-  LCA(D, C) = A
-  sum = prefix[D] + prefix[C] - 2*prefix[A] + val[A]
-      = 70 + 40 - 20 + 10 = 100
-  Path: D→B→A→C = 40+20+10+30 = 100 ✓
+```mbt check
+///|
+fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
+  let adj : Array[Array[Int]] = Array::makei(n, _ => [])
+  for edge in edges {
+    let (u, v) = edge
+    if u < 0 || u >= n || v < 0 || v >= n {
+      continue
+    }
+    adj[u].push(v)
+    adj[v].push(u)
+  }
+  adj
+}
 ```
 
-## Heavy-Light Decomposition Overview
+This is the most flexible structure for tree algorithms.
 
-```
-Split tree into chains for efficient path queries.
+---
 
-Idea: Each node's "heavy" child is the one with largest subtree.
-      Following heavy edges forms a chain.
+## 3) Iterative DFS to get parent and depth
 
-Tree:            Chains:
-       1          Chain 1: 1-2-4 (heavy path)
-      /|\         Chain 2: 3
-     2 3 5        Chain 3: 5
-    /|            Chain 4: 6
-   4 6
+We avoid recursion by using an explicit stack.
 
-Path query u→v:
-  1. Move up chain by chain until same chain
-  2. Query within chain (segment tree)
-
-Total: O(log n) chains × O(log n) segment tree = O(log² n)
-```
-
-## Algorithm Walkthrough
-
-```
-Build Euler tour for path updates:
-
-Tree:       DFS:
-    1         Enter 1 (0)
-   / \          Enter 2 (1)
-  2   3           Enter 4 (2), Leave (2)
- / \              Enter 5 (3), Leave (3)
-4   5           Leave 2 (3)
-                Enter 3 (4), Leave (4)
-              Leave 1 (4)
-
-Euler array (entry values):
-  index: 0  1  2  3  4
-  node:  1  2  4  5  3
-
-Update subtree of node 2 by +5:
-  Range update on [tin[2], tout[2]] = [1, 3]
-  Result: nodes 2, 4, 5 get +5
-
-Query value at node 4:
-  Point query at tin[4] = 2
+```mbt check
+///|
+fn parent_and_depth(
+  n : Int,
+  adj : Array[Array[Int]],
+  root : Int,
+) -> (Array[Int], Array[Int]) {
+  let parent = Array::make(n, -1)
+  let depth = Array::make(n, 0)
+  parent[root] = root
+  let stack : Array[Int] = [root]
+  while stack.length() > 0 {
+    let v = stack[stack.length() - 1]
+    ignore(stack.pop())
+    for u in adj[v] {
+      if u != parent[v] {
+        parent[u] = v
+        depth[u] = depth[v] + 1
+        stack.push(u)
+      }
+    }
+  }
+  (parent, depth)
+}
 ```
 
-## Example Usage
+Depth is the distance from the root in edges.
 
-```mbt nocheck
-// Build tree
-let n = 6
-let adj = build_adjacency_list(edges)
+---
 
-// Compute Euler tour
-let (tin, tout) = euler_tour(adj, root=0)
+## 4) Euler tour (flattening the tree)
 
-// Initialize Fenwick tree with node values
-let fenwick = Fenwick::new(n)
-for v in 0..n {
-  fenwick.update(tin[v], values[v])
+The Euler tour assigns each node a contiguous range in an array.
+This makes subtree queries look like **range queries**.
+
+We store:
+
+- `tin[v]`: when we first enter v
+- `tout[v]`: last time index in v's subtree (inclusive)
+- `order`: nodes in visitation order
+
+```mbt check
+///|
+fn euler_tour(
+  n : Int,
+  adj : Array[Array[Int]],
+  root : Int,
+) -> (Array[Int], Array[Int], Array[Int]) {
+  let tin = Array::make(n, -1)
+  let tout = Array::make(n, -1)
+  let order : Array[Int] = []
+  let stack : Array[(Int, Int, Int)] = [(root, -1, 0)]
+  let mut timer = 0
+  while stack.length() > 0 {
+    let frame = stack.pop()
+    match frame {
+      None => break
+      Some((v, p, state)) =>
+        if state == 0 {
+          tin[v] = timer
+          order.push(v)
+          timer = timer + 1
+          stack.push((v, p, 1))
+          for u in adj[v] {
+            if u != p {
+              stack.push((u, v, 0))
+            }
+          }
+        } else {
+          tout[v] = timer - 1
+        }
+    }
+  }
+  (tin, tout, order)
+}
+```
+
+### Why it works (visual)
+
+For the example tree:
+
+```
+      0
+     / \
+    1   2
+   / \   \
+  3   4   5
+```
+
+One possible `order`:
+
+```
+order index: 0  1  2  3  4  5
+node:        0  2  5  1  4  3
+```
+
+Then:
+
+```
+subtree of node 1 = indices [tin[1], tout[1]] = [3, 5]
+nodes: order[3..5] = [1, 4, 3]
+```
+
+The subtree is always a **contiguous segment**.
+
+---
+
+## 5) Subtree sums with Euler + prefix sums
+
+If values are static (no updates), a prefix sum is enough.
+
+```mbt check
+///|
+fn prefix_sums(values : ArrayView[Int]) -> Array[Int] {
+  let n = values.length()
+  let pref = Array::make(n, 0)
+  let mut acc = 0
+  for i in 0..<n {
+    acc = acc + values[i]
+    pref[i] = acc
+  }
+  pref
 }
 
-// Query subtree sum of node 2
-let sum = fenwick.query(tout[2]) - fenwick.query(tin[2] - 1)
+///|
+test "euler tour subtree sums" {
+  let n = 6
+  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5)]
+  let values : Array[Int] = [5, 1, 4, 2, 3, 6]
+  let adj = build_adj(n, edges[:])
+  let (tin, tout, order) = euler_tour(n, adj, 0)
+  let euler_values : Array[Int] = []
+  for v in order {
+    euler_values.push(values[v])
+  }
+  let pref = prefix_sums(euler_values)
+  let subtree_sum = (v : Int) => {
+    let l = tin[v]
+    let r = tout[v]
+    let before = if l > 0 { pref[l - 1] } else { 0 }
+    pref[r] - before
+  }
 
-// Update node 3's value
-fenwick.update(tin[3], new_value - old_value)
+  // Subtree(1) has nodes {1,3,4} = 1 + 2 + 3 = 6
+  inspect(subtree_sum(1), content="6")
+  // Subtree(2) has nodes {2,5} = 4 + 6 = 10
+  inspect(subtree_sum(2), content="10")
+}
 ```
 
-## Common Applications
+If you need **updates**, replace prefix sums with a Fenwick tree or segment
+tree built over the Euler order.
 
-### 1. Subtree Queries
+---
+
+## 6) LCA (lowest common ancestor) by parent climbing
+
+The LCA of two nodes is their deepest shared ancestor.
+This simple version is O(height), good for small trees.
+
+```mbt check
+///|
+fn lca_naive(u : Int, v : Int, parent : Array[Int], depth : Array[Int]) -> Int {
+  let mut a = u
+  let mut b = v
+  while depth[a] > depth[b] {
+    a = parent[a]
+  }
+  while depth[b] > depth[a] {
+    b = parent[b]
+  }
+  while a != b {
+    a = parent[a]
+    b = parent[b]
+  }
+  a
+}
+
+///|
+test "lca by parent climbing" {
+  let n = 6
+  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5)]
+  let adj = build_adj(n, edges[:])
+  let (parent, depth) = parent_and_depth(n, adj, 0)
+  inspect(lca_naive(3, 4, parent, depth), content="1")
+  inspect(lca_naive(3, 5, parent, depth), content="0")
+}
 ```
-Sum/min/max of all values in subtree.
-Use Euler tour + range structure.
-Time: O(log n) per query after O(n) preprocessing.
+
+For large inputs or many queries, use **binary lifting**:
+precompute `up[v][k] = 2^k-th ancestor`. Then LCA is O(log n).
+
+---
+
+## 7) When to use which technique
+
+```
+Need subtree sum (static)      -> Euler tour + prefix sums
+Need subtree sum (dynamic)     -> Euler tour + Fenwick/segment tree
+Need LCA for a few queries     -> parent climbing
+Need LCA for many queries      -> binary lifting
+Need path queries + updates    -> HLD or Link-Cut Tree
 ```
 
-### 2. Path Queries
+---
+
+## Common pitfalls
+
+- Forgetting that trees are undirected: add edges both ways.
+- Mixing inclusive/exclusive ranges for `tout`.
+- Using LCA on a non-rooted tree (always pick a root).
+- Assuming DFS order is unique (it depends on adjacency order).
+
+---
+
+## Complexity at a glance
+
 ```
-Sum/min/max of values on path u→v.
-Use LCA + prefix sums, or HLD for updates.
-Time: O(log n) to O(log² n).
+Build adjacency list      O(n)
+Iterative DFS             O(n)
+Euler tour                O(n)
+Subtree sum query         O(1) with prefix sums
+LCA (parent climbing)     O(height)
+LCA (binary lifting)      O(log n) per query
 ```
-
-### 3. Subtree Updates
-```
-Add value to all nodes in subtree.
-Use Euler tour + lazy segment tree.
-Time: O(log n) per update.
-```
-
-### 4. Dynamic Connectivity
-```
-Track connected components with updates.
-Use Link-Cut Trees for full dynamism.
-Time: O(log n) amortized.
-```
-
-## Complexity Summary
-
-| Operation | Euler + Fenwick | HLD + Segtree | LCT |
-|-----------|-----------------|---------------|-----|
-| Subtree query | O(log n) | O(log n) | — |
-| Subtree update | O(log n) | O(log n) | — |
-| Path query | O(log n)* | O(log² n) | O(log n) |
-| Path update | O(log n)* | O(log² n) | O(log n) |
-| Link/Cut | — | — | O(log n) |
-
-*Path query with Euler needs LCA preprocessing
-
-## Tree Query Techniques Comparison
-
-| Technique | Query Type | Update Support | Complexity |
-|-----------|------------|----------------|------------|
-| Euler Tour | Subtree | Point | O(log n) |
-| HLD | Path + Subtree | Point + Range | O(log² n) |
-| LCT | Path | Point | O(log n) amort |
-| Centroid | Path decomp | Static | O(log n) |
-
-**Choose based on**: Query type (subtree vs path) and update requirements.
-
-## Implementation Notes
-
-- Euler tour: careful with tin/tout boundaries (inclusive vs exclusive)
-- For subtree queries: tout[v] should be inclusive of v's last descendant
-- HLD: break ties consistently when choosing heavy child
-- LCA with binary lifting: precompute 2^k ancestors
-- Consider using iterative DFS for deep trees (avoid stack overflow)
-

@@ -200,7 +200,7 @@
 - [x] lib/techniques
 - [x] lib/topological_sort_dfs
 - [x] lib/treap
-- [ ] lib/tree
+- [x] lib/tree
 - [ ] lib/trie
 - [ ] lib/two_sat
 - [ ] lib/union_find
