@@ -1,99 +1,93 @@
-# Sqrt Decomposition
+# Sqrt Decomposition (Range Sum + Point Update)
 
-## Overview
+This package implements a simple **sqrt decomposition** structure for range
+sum queries with point updates.
 
-**Sqrt Decomposition** divides an array into blocks of size √n, trading off
-between update and query time. Each block stores precomputed aggregate values,
-enabling O(√n) for both operations.
+It splits the array into blocks of size about √n and stores block sums.
 
-- **Query**: O(√n)
-- **Update**: O(1) to O(√n)
-- **Space**: O(n)
+---
 
-## The Key Insight
+## 1. Big idea (beginner friendly)
+
+Instead of scanning the whole range, we:
+
+1. Scan the left partial block.
+2. Add whole block sums in the middle.
+3. Scan the right partial block.
+
+This gives **O(√n)** time per query.
+
+---
+
+## 2. Small visual example
+
+Array:
 
 ```
-Split array into √n blocks of size √n each.
-Each block maintains its aggregate (sum, min, max, etc.).
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
 
-Array: [1, 2, 3, 4, 5, 6, 7, 8, 9]  (n = 9, block size = 3)
+Block size = 3:
 
-Block 0: [1, 2, 3]  sum = 6
-Block 1: [4, 5, 6]  sum = 15
-Block 2: [7, 8, 9]  sum = 24
+```
+Block 0: [1,2,3] sum = 6
+Block 1: [4,5,6] sum = 15
+Block 2: [7,8,9] sum = 24
+```
 
 Query [1, 7]:
-  - Partial block 0: just elements 2, 3 (indices 1-2)
-  - Full block 1: use precomputed sum = 15
-  - Partial block 2: just elements 7 (index 6)
-  Result: (2 + 3) + 15 + 7 = 27
-```
-
-## Query Algorithm
 
 ```
-Query range [l, r]:
+Left partial: indices 1..2 -> 2 + 3 = 5
+Full block: block 1 -> 15
+Right partial: indices 6..7 -> 7 + 8 = 15
 
-  ┌─────┬─────┬─────┬─────┬─────┐
-  │  0  │  1  │  2  │  3  │  4  │  blocks
-  └─────┴─────┴─────┴─────┴─────┘
-       l           r
-       ↓           ↓
-  [   |×××|█████|█████|××   ]
-
-  × = partial block (iterate element by element)
-  █ = full block (use precomputed aggregate)
-
-for i in l to end_of_first_block:
-    result += arr[i]           // O(√n) at most
-
-for block in first_full_block to last_full_block:
-    result += block_sum[block] // O(√n) blocks
-
-for i in start_of_last_block to r:
-    result += arr[i]           // O(√n) at most
+Answer = 5 + 15 + 15 = 35
 ```
 
-## Update Algorithm
+---
+
+## 3. Range query logic
 
 ```
-Point update at index i:
+range_sum(l, r):
+  sum = 0
 
-1. Update the element: arr[i] = new_value
-2. Recompute block aggregate:
-   block_sum[i / block_size] = sum of elements in block
+  // left partial
+  while l <= r and l % block_size != 0:
+    sum += arr[l]
+    l++
 
-Time: O(√n) to recompute block sum
-      (or O(1) if we track delta: new_sum = old_sum - old_val + new_val)
+  // full blocks
+  while l + block_size - 1 <= r:
+    sum += block_sum[l / block_size]
+    l += block_size
+
+  // right partial
+  while l <= r:
+    sum += arr[l]
+    l++
+
+  return sum
 ```
 
-## Algorithm Walkthrough
+---
+
+## 4. Point update logic
 
 ```
-Array: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-Block size: 3
-Block sums: [6, 15, 24]
-
-Query(1, 7):
-  Block of index 1: 0 (partial)
-  Block of index 7: 2 (partial)
-
-  Left partial (block 0, indices 1-2): 2 + 3 = 5
-  Full blocks (block 1): 15
-  Right partial (block 2, index 6-7): 7 + 8 = 15
-
-  Answer: 5 + 15 + 15 = 35
-
-Update(4, 10):  // Change arr[4] from 5 to 10
-  Block of index 4: 1
-  Old block sum: 15
-  Delta: 10 - 5 = 5
-  New block sum: 15 + 5 = 20
-
-  Block sums: [6, 20, 24]
+update(i, new_val):
+  old = arr[i]
+  arr[i] = new_val
+  block = i / block_size
+  block_sum[block] += (new_val - old)
 ```
 
-## Example Usage
+Only one block sum changes.
+
+---
+
+## 5. Example usage (public API)
 
 ```mbt check
 ///|
@@ -101,84 +95,49 @@ test "sqrt decomposition example" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let sd = @sqrt_decomposition.SqrtSum::new(arr)
   inspect(sd.query(1, 3), content="9")
-  sd.update(2, 10)
+  sd.update(2, 10L)
   inspect(sd.query(1, 3), content="16")
 }
 ```
 
-## Common Applications
+---
 
-### 1. Range Sum Queries
-```
-Query sum of [l, r] with point updates.
-Simpler alternative to Fenwick/Segment tree.
-```
+## 6. Why √n is optimal
 
-### 2. Mo's Algorithm
-```
-Process offline queries by ordering them.
-Move query endpoints √n times on average.
-Total: O((n + q)√n) for q queries.
-```
-
-### 3. Heavy-Light in Blocks
-```
-Split path into √n pieces.
-Each piece handled separately.
-```
-
-### 4. Block-Based String Matching
-```
-Divide text into blocks.
-Check each block for pattern matches.
-```
-
-## Complexity Comparison
-
-| Structure | Query | Point Update | Range Update |
-|-----------|-------|--------------|--------------|
-| **Sqrt Decomp** | O(√n) | O(1)-O(√n) | O(√n) |
-| Fenwick Tree | O(log n) | O(log n) | O(log n)* |
-| Segment Tree | O(log n) | O(log n) | O(log n) |
-
-*Fenwick needs two trees for range update + range query
-
-## Sqrt Decomposition vs Segment Tree
-
-| Aspect | Sqrt Decomposition | Segment Tree |
-|--------|-------------------|--------------|
-| Time complexity | O(√n) | O(log n) |
-| Implementation | Very simple | More complex |
-| Constant factor | Very low | Higher |
-| Lazy propagation | Simple | Tricky |
-| Memory usage | O(n) | O(n) |
-
-**Choose Sqrt Decomposition when**:
-- Simple implementation is priority
-- Constant factor matters (small n)
-- Complex operations that are hard to segment-tree-ify
-
-## Variations
+If block size is B:
 
 ```
-Block-based deque:
-  Maintain √n elements per block.
-  Push/pop in O(√n) amortized.
-
-2D sqrt decomposition:
-  Split matrix into √n × √n blocks.
-  Query/update in O(√n) per dimension.
-
-Time-based sqrt:
-  Process queries in batches of √q.
-  Rebuild structure between batches.
+work = O(B) for partial scan + O(n/B) for full blocks
 ```
 
-## Implementation Notes
+Minimized at B = √n.
 
-- Block size = ceil(√n) is common choice
-- Tune block size empirically: try n^0.4 to n^0.6
-- For min/max: block stores the minimum/maximum
-- Lazy updates: store pending update per block
-- Handle edge cases: last block may be smaller
+---
 
+## 7. Complexity
+
+```
+Build:  O(n)
+Query:  O(√n)
+Update: O(1)
+Space:  O(n)
+```
+
+---
+
+## 8. Beginner checklist
+
+1. Query ranges are inclusive [l, r].
+2. Choose block size around √n.
+3. Only the block containing i changes on update.
+4. Sqrt decomposition is best for medium‑sized data.
+
+---
+
+## 9. Summary
+
+Sqrt decomposition is a simple range‑sum structure:
+
+- fast enough (O(√n)),
+- easy to implement,
+- great when you want simplicity over a segment tree.

@@ -188,7 +188,7 @@
 - [x] lib/splay
 - [x] lib/splay_tree
 - [x] lib/sqrt
-- [ ] lib/sqrt_decomposition
+- [x] lib/sqrt_decomposition
 - [ ] lib/stoer_wagner_min_cut
 - [ ] lib/string
 - [ ] lib/string_hash
