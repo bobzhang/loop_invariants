@@ -38,8 +38,8 @@
 - [x] lib/challenge_bfs_grid
 - [x] lib/challenge_binary_lifting
 - [x] lib/challenge_binary_search_answer
-- [ ] lib/challenge_bipartite_matching_kuhn (in progress)
-- [ ] lib/challenge_bitmask_dp
+- [x] lib/challenge_bipartite_matching_kuhn
+- [ ] lib/challenge_bitmask_dp (in progress)
 - [ ] lib/challenge_bitmask_tsp
 - [ ] lib/challenge_centroid_decomposition
 - [ ] lib/challenge_coin_change_min

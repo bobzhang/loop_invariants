@@ -4,7 +4,6 @@
 
 ///|
 /// Build adjacency from left to right (u in [0,left_n), v in [0,right_n)).
-#warnings("+missing_invariant+missing_reasoning")
 pub fn build_adj(
   left_n : Int,
   right_n : Int,
@@ -47,7 +46,6 @@ fn try_kuhn(
 
 ///|
 /// Maximum bipartite matching size.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn max_matching(adj : Array[Array[Int]], right_n : Int) -> Int {
   let left_n = adj.length()
   let match_r = Array::make(right_n, -1)
