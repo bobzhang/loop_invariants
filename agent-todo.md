@@ -19,6 +19,7 @@
 - [x] lib/cartesian_tree
 - [x] lib/centroid
 - [x] lib/challenge_bfs_grid
+- [x] lib/splay_tree
 
 ## Initial pass
 
