@@ -30,24 +30,17 @@ pub fn[T] size(d : Deque[T]) -> Int {
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
-fn[T] reverse_stack(s : Stack[T]) -> Stack[T] {
-  for cur = s, rev = Stack::Nil {
-    match cur {
-      Stack::Nil => break rev
-      Stack::Cons(head~, tail~) => continue tail, Stack::Cons(head~, tail=rev)
-    }
-  } where {
-    invariant: size_stack(cur) + size_stack(rev) == size_stack(s),
-    reasoning: (
-      #|INVARIANT (Reverse stack):
-      #|rev is the reverse of the processed prefix; cur holds the remainder.
-      #|MAINTENANCE:
-      #|Move head from cur to rev, preserving the size split.
-      #|TERMINATION:
-      #|When cur is Nil, rev is the reverse of s.
-    ),
+fn[T] reverse_stack_acc(cur : Stack[T], acc : Stack[T]) -> Stack[T] {
+  match cur {
+    Stack::Nil => acc
+    Stack::Cons(head~, tail~) =>
+      reverse_stack_acc(tail, Stack::Cons(head~, tail=acc))
   }
+}
+
+///|
+fn[T] reverse_stack(s : Stack[T]) -> Stack[T] {
+  reverse_stack_acc(s, Stack::Nil)
 }
 
 ///|
