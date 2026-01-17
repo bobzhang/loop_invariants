@@ -1,66 +1,110 @@
 # Binary Trie for XOR Queries
 
-## Problem
+A binary trie stores integers bit by bit and answers XOR queries quickly. It is
+especially useful for problems like:
 
-Store many integers and answer queries like:
+- "What is the maximum XOR value with x?"
+- "What is the minimum XOR value with x?"
 
-- "What is the maximum XOR with x?"
-- "What is the minimum XOR with x?"
+Brute force checks all numbers and costs O(n) per query. The trie reduces this
+to O(B), where B is the number of bits.
 
-Checking all numbers is too slow.
+## Key idea: greedily choose bits
 
-## Simple Idea
+XOR is decided bit by bit from most significant to least significant. At each
+bit position:
 
-Store numbers bit-by-bit in a binary trie (MSB → LSB).
-For **max XOR**, try the opposite bit at each level.
-For **min XOR**, try the same bit.
+- To **maximize** XOR, you want the opposite bit if it exists.
+- To **minimize** XOR, you want the same bit if it exists.
 
-## How It Works
+The trie lets you check whether that desired bit exists among the stored
+numbers at the current prefix.
 
-For each bit from high to low:
+## What this package provides
 
-- Let `b` be the current bit of query `x`
-- Max XOR: go to child `1 - b` if possible
-- Min XOR: go to child `b` if possible
-- Otherwise, take the only available child
+`BinaryTrie` supports:
 
-Each step decides one bit of the XOR result.
+- `insert(x)` and `remove(x)`
+- `max_xor(x)` and `min_xor(x)`
+- `size()`
 
-## Example
+Duplicates are supported by reference counts in each node.
+
+## Example 1: basic usage
 
 ```mbt check
 ///|
-test "binary trie xor quick start" {
-  let trie = @binary_trie_xor.BinaryTrie::new(5) // bits [5..0]
-  trie.insert(5L)
-  trie.insert(1L)
-  trie.insert(7L)
+test "basic xor queries" {
+  let trie = @binary_trie_xor.BinaryTrie::new(3) // bits 3..0
+  trie.insert(5L) // 0101
+  trie.insert(1L) // 0001
+  trie.insert(7L) // 0111
   inspect(trie.size(), content="3")
-  inspect(trie.max_xor(2L), content="7")
-  inspect(trie.min_xor(2L), content="3")
+  inspect(trie.max_xor(2L), content="7") // 2 xor 5 = 7
+  inspect(trie.min_xor(2L), content="3") // 2 xor 1 = 3
 }
 ```
 
-## Duplicates
+Note: `max_xor` and `min_xor` return the **XOR value**, not the actual key.
 
-Each node keeps a count. This lets you:
+## Example 2: duplicates and removal
 
-- Insert duplicates
-- Remove safely
-- Detect empty trie
+```mbt check
+///|
+test "duplicates and remove" {
+  let trie = @binary_trie_xor.BinaryTrie::new(2)
+  trie.insert(3L) // 11
+  trie.insert(3L) // duplicate
+  trie.insert(1L) // 01
+  inspect(trie.size(), content="3")
+  inspect(trie.max_xor(0L), content="3")
+  inspect(trie.remove(3L), content="true")
+  inspect(trie.size(), content="2")
+  inspect(trie.max_xor(0L), content="3") // still present once
+  inspect(trie.remove(3L), content="true")
+  inspect(trie.size(), content="1")
+  inspect(trie.max_xor(0L), content="1")
+}
+```
 
-## Choosing max_bits
+## Example 3: empty trie behavior
 
-If values are in `[0, 2^k - 1]`, use `max_bits = k - 1`.
+```mbt check
+///|
+test "empty trie" {
+  let trie = @binary_trie_xor.BinaryTrie::new(4)
+  inspect(trie.size(), content="0")
+  inspect(trie.max_xor(10L), content="0")
+  inspect(trie.min_xor(10L), content="0")
+  inspect(trie.remove(10L), content="false")
+}
+```
 
-Example:
+## Choosing `max_bits`
 
-- values up to 255 → `max_bits = 7`
-- values up to 1e9 → `max_bits = 29`
+`max_bits` is the index of the highest bit you want to store. If all numbers
+are in `[0, 2^k - 1]`, use `max_bits = k - 1`.
+
+Examples:
+
+- values up to 255 (8 bits) -> `max_bits = 7`
+- values up to 1e9 (30 bits) -> `max_bits = 29`
+- values up to 2^63 - 1 -> `max_bits = 62`
+
+If you use too few bits, high bits are ignored and results are wrong. If you
+use too many bits, the trie is still correct but uses more memory.
+
+## Practical notes and pitfalls
+
+- This trie assumes non-negative values (or that you treat Int64 as an unsigned
+  bit pattern). For signed negatives, set `max_bits` high enough to include the
+  sign bit.
+- `remove` only deletes if the full path exists and the count is positive.
+- The structure stores only the XOR value, not which key produced it.
 
 ## Complexity
 
-- Insert/Remove/Query: **O(B)**
-- Space: **O(N × B)**
+- Insert / Remove / Query: O(B)
+- Space: O(N * B)
 
-`B` is the bit width (e.g., 32 or 64).
+Here, `B = max_bits + 1`.

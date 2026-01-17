@@ -106,7 +106,9 @@ pub fn BinaryTrie::max_xor(self : BinaryTrie, x : Int64) -> Int64 {
     return 0L
   }
   // Traverse trie, preferring the opposite bit to maximize XOR
-  for bit = self.max_bits, node = 0, result = 0L; bit >= 0; {
+  let mut node = 0
+  let mut result = 0L
+  for bit in self.max_bits >=.. 0 {
     let b = if ((x >> bit) & 1L) == 0L { 0 } else { 1 }
     let preferred = if b == 0 { 1 } else { 0 }
     let preferred_child = if preferred == 0 {
@@ -120,25 +122,15 @@ pub fn BinaryTrie::max_xor(self : BinaryTrie, x : Int64) -> Int64 {
       self.nodes[node].next0
     }
     if preferred_child != -1 && self.nodes[preferred_child].count > 0 {
-      continue bit - 1, preferred_child, result | (1L << bit)
+      node = preferred_child
+      result = result | (1L << bit)
     } else if other_child != -1 && self.nodes[other_child].count > 0 {
-      continue bit - 1, other_child, result
+      node = other_child
     } else {
-      break result
+      break
     }
-  } else {
-    result
-  } where {
-    invariant: bit >= -1 && bit <= self.max_bits,
-    reasoning: (
-      #|INVARIANT (maximize xor):
-      #|The chosen prefix yields the maximum possible XOR for processed bits.
-      #|MAINTENANCE:
-      #|Prefer the opposite bit when it exists; otherwise follow the same bit.
-      #|TERMINATION:
-      #|At bit < 0, result is the maximum XOR value (returned via else branch).
-    ),
   }
+  result
 }
 
 ///|
@@ -148,7 +140,9 @@ pub fn BinaryTrie::min_xor(self : BinaryTrie, x : Int64) -> Int64 {
     return 0L
   }
   // Traverse trie, preferring the same bit to minimize XOR
-  for bit = self.max_bits, node = 0, result = 0L; bit >= 0; {
+  let mut node = 0
+  let mut result = 0L
+  for bit in self.max_bits >=.. 0 {
     let b = if ((x >> bit) & 1L) == 0L { 0 } else { 1 }
     let preferred = if b == 0 { 0 } else { 1 }
     let preferred_child = if preferred == 0 {
@@ -162,23 +156,13 @@ pub fn BinaryTrie::min_xor(self : BinaryTrie, x : Int64) -> Int64 {
       self.nodes[node].next0
     }
     if preferred_child != -1 && self.nodes[preferred_child].count > 0 {
-      continue bit - 1, preferred_child, result
+      node = preferred_child
     } else if other_child != -1 && self.nodes[other_child].count > 0 {
-      continue bit - 1, other_child, result | (1L << bit)
+      node = other_child
+      result = result | (1L << bit)
     } else {
-      break result
+      break
     }
-  } else {
-    result
-  } where {
-    invariant: bit >= -1 && bit <= self.max_bits,
-    reasoning: (
-      #|INVARIANT (minimize xor):
-      #|The chosen prefix yields the minimum possible XOR for processed bits.
-      #|MAINTENANCE:
-      #|Prefer the same bit when it exists; otherwise take the opposite bit.
-      #|TERMINATION:
-      #|At bit < 0, result is the minimum XOR value (returned via else branch).
-    ),
   }
+  result
 }
