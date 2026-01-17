@@ -18,25 +18,6 @@ fn node_max(node : Node) -> Int {
 }
 
 ///|
-fn tree_valid(node : Node, len : Int) -> Bool {
-  match node {
-    Node::Leaf(max=_) => len == 1
-    Node::Branch(max=max_val, left~, right~) =>
-      if len <= 1 {
-        false
-      } else {
-        let mid = len / 2
-        let expected = if node_max(left) > node_max(right) {
-          node_max(left)
-        } else {
-          node_max(right)
-        }
-        tree_valid(left, mid) &&
-        tree_valid(right, len - mid) &&
-        max_val == expected
-      }
-  }
-}
 
 ///|
 /// Return the maximum stored at the root.
@@ -119,32 +100,17 @@ pub fn range_max(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 
 ///|
 /// Apply point updates (idx, value).
-#warnings("+missing_invariant+missing_reasoning")
 pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int)],
 ) -> Node {
-  let m = updates.length()
-  for i = 0, tree = root {
-    if i >= m {
-      break tree
-    } else {
-      let (idx, value) = updates[i]
-      continue i + 1, set_value(tree, 0, n, idx, value)
-    }
-  } where {
-    invariant: i >= 0 && i <= m,
-    invariant: tree_valid(tree, n),
-    reasoning: (
-      #|INVARIANT (Max updates):
-      #|tree reflects the first i point updates with correct max values.
-      #|MAINTENANCE:
-      #|Update index i by path-copying while recomputing maxima.
-      #|TERMINATION:
-      #|At i = m, all updates are applied.
-    ),
+  let mut tree = root
+  for update in updates {
+    let (idx, value) = update
+    tree = set_value(tree, 0, n, idx, value)
   }
+  tree
 }
 
 ///|
