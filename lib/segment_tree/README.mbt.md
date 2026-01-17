@@ -1,199 +1,162 @@
-# Segment Tree
+# Segment Tree (Range Sum, Point Update)
 
-## Overview
+This package implements a classic **segment tree** for range sum queries and
+point updates.
 
-A **Segment Tree** is a binary tree for efficient:
-- **Range queries**: Get aggregate (sum, min, max) of range [l, r] in **O(log n)**
-- **Point updates**: Update element at index i in **O(log n)**
+Segment trees are perfect when you need:
 
-Unlike Fenwick Trees, Segment Trees support any associative operation (min, max, GCD, etc.).
+- fast range queries in **O(log n)**,
+- fast point updates in **O(log n)**,
+- operations beyond simple sums (min, max, gcd, etc.).
 
-## Core Idea
+---
 
-- Represent ranges in a **binary tree** where each node stores an aggregate.
-- Queries split into **O(log n)** disjoint segments.
-- Point updates touch the **root-to-leaf path**.
+## 1. Big idea (beginner friendly)
 
-## Tree Structure
+A segment tree is a binary tree over array ranges.
 
-For array `[1, 2, 3, 4, 5]`:
+Each node stores the **sum of its range**.
 
-```
-                    [0-4]=15
-                   /        \
-              [0-2]=6      [3-4]=9
-             /      \       /    \
-         [0-1]=3  [2]=3  [3]=4  [4]=5
-         /     \
-      [0]=1  [1]=2
-
-Each node stores the SUM of its range.
-```
-
-## How Range Query Works
-
-Query sum of range [1, 3]:
+Example array `[1, 2, 3, 4, 5]`:
 
 ```
-                    [0-4]=15
-                   /        \
-              [0-2]=6      [3-4]=9
-             /      \       /    \
-         [0-1]=3  [2]=3  [3]=4  [4]=5
-         /     \
-      [0]=1  [1]=2
-
-Step 1: At root [0-4], range [1,3] overlaps both children
-        -> Go left to [0-2] and right to [3-4]
-
-Step 2: At [0-2], range [1,3] partially overlaps
-        -> [0-1]: only [1] overlaps -> Go to [1]=2
-        -> [2]: fully inside [1,3] -> Return 3
-
-Step 3: At [3-4], range [1,3] partially overlaps
-        -> [3]: fully inside [1,3] -> Return 4
-        -> [4]: outside [1,3] -> Return 0
-
-Result: 2 + 3 + 4 = 9
+                    [0..4] = 15
+                   /           \
+            [0..2] = 6        [3..4] = 9
+            /      \           /     \
+      [0..1]=3   [2]=3     [3]=4   [4]=5
+       /   \
+   [0]=1  [1]=2
 ```
 
-## How Point Update Works
+---
 
-Update index 2 to value 10:
+## 2. Range query walkthrough
+
+Query sum of [1, 3]:
 
 ```
-Before:                 After:
-    [0-4]=15               [0-4]=22
-   /        \             /        \
-[0-2]=6  [3-4]=9     [0-2]=13   [3-4]=9
-   \                     \
-  [2]=3               [2]=10
+Root [0..4] overlaps -> go both sides
 
-Path: root -> [0-2] -> [2]
-Updates propagate back up the tree.
+[0..2] overlaps:
+  [0..1] overlaps -> take [1] = 2
+  [2] fully inside -> take 3
+
+[3..4] overlaps:
+  [3] inside -> take 4
+  [4] outside -> ignore
+
+Total = 2 + 3 + 4 = 9
 ```
 
-## Use Cases
+So the query touches only O(log n) nodes.
 
-### 1. Range Sum Queries
-Find sum of elements in any range:
+---
+
+## 3. Point update walkthrough
+
+Update index 2 from 3 to 10:
+
+```
+Before:               After:
+  [0..4]=15             [0..4]=22
+  /      \              /      \
+[0..2]=6 [3..4]=9   [0..2]=13 [3..4]=9
+    \                     \
+   [2]=3                [2]=10
+```
+
+We update the leaf and recompute sums on the path to the root.
+
+---
+
+## 4. Example usage (public API)
 
 ```mbt check
 ///|
-test "range sum queries" {
+test "segment tree range sum" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L, 5L]
   let st = @segment_tree.SegmentTree::new(arr)
-  inspect(st.query(0, 4), content="15") // 1+2+3+4+5
-  inspect(st.query(1, 3), content="9") // 2+3+4
-  inspect(st.query(2, 2), content="3") // just element 2
+  inspect(st.query(0, 4), content="15")
+  inspect(st.query(1, 3), content="9")
+  inspect(st.query(2, 2), content="3")
 }
 ```
 
-### 2. Dynamic Updates
-Update elements and query efficiently:
-
 ```mbt check
 ///|
-test "dynamic updates" {
+test "segment tree update" {
   let arr : Array[Int64] = [1L, 2L, 3L, 4L]
   let st = @segment_tree.SegmentTree::new(arr)
   inspect(st.query(0, 3), content="10")
-  st.update(2, 10L) // Change arr[2] from 3 to 10
-  inspect(st.query(0, 3), content="17") // 1+2+10+4
-  inspect(st.query(2, 3), content="14") // 10+4
+  st.update(2, 10L)
+  inspect(st.query(0, 3), content="17")
+  inspect(st.query(2, 3), content="14")
 }
 ```
 
-### 3. Range Minimum/Maximum
+---
 
-The module includes min/max variants:
+## 5. Tournament bracket intuition
 
-```
-For array [3, 1, 4, 1, 5]:
-
-Min Tree:               Max Tree:
-    [0-4]=1                [0-4]=5
-   /       \              /       \
-[0-2]=1  [3-4]=1     [0-2]=4   [3-4]=5
-```
-
-## Common Applications
-
-1. **Range Statistics**: Sum, min, max, GCD of ranges
-2. **Computational Geometry**: Counting points in rectangles
-3. **Database Indexing**: Range queries on sorted data
-4. **Graphics**: Bounding box queries
-5. **Competitive Programming**: Classic data structure problem
-
-## Complexity Analysis
-
-| Operation     | Time     | Space |
-|---------------|----------|-------|
-| Build         | O(n)     | O(n)  |
-| Point Update  | O(log n) | -     |
-| Range Query   | O(log n) | -     |
-| Range Update* | O(log n) | -     |
-
-*With lazy propagation
-
-## Segment Tree vs Fenwick Tree
-
-| Feature           | Segment Tree | Fenwick Tree |
-|-------------------|--------------|--------------|
-| Space             | 4n           | n            |
-| Operations        | Any monoid   | Sum/XOR only |
-| Implementation    | More complex | Simple       |
-| Range updates     | Native       | With tricks  |
-| Constants         | Larger       | Smaller      |
-
-**Choose Segment Tree when**: You need min/max or other non-invertible operations.
-**Choose Fenwick Tree when**: You only need sum/XOR and want simplicity.
-
-## Variants Available
-
-### 1. Lazy Propagation
-For range updates (add value to all elements in [l, r]):
+Think of the tree like a tournament:
 
 ```
-Without lazy: O(n) per range update
-With lazy:    O(log n) per range update
-
-Key idea: Defer updates until needed ("lazy" propagation)
+Array: [5] [3] [7] [2]
+         \ /    \ /
+       [8]      [9]
+           \    /
+            [17]
 ```
 
-### 2. 2D Segment Tree
-For 2D range queries:
+Each internal node combines its children.
+
+If you store min instead of sum, the root gives the minimum.
+
+---
+
+## 6. Common applications
+
+1. **Range sum / min / max / gcd**
+2. **Dynamic statistics** (update elements frequently)
+3. **Interval queries** in geometry and games
+4. **Competitive programming** range problems
+
+---
+
+## 7. Complexity
 
 ```
-Query rectangle (x1,y1) to (x2,y2):
-  - Outer tree over x-coordinates
-  - Each node contains inner tree over y-coordinates
+Build:  O(n)
+Query:  O(log n)
+Update: O(log n)
+Space:  O(n)
 ```
 
-## Building Intuition
+---
 
-Think of a segment tree as a **tournament bracket**:
-
-```
-Array:     [5] [3] [7] [2]
-           ╲ ╱   ╲ ╱
-Round 1:   [8]   [9]     <- combine children
-            ╲   ╱
-Final:      [17]         <- root has total
-```
-
-For minimum queries, imagine a tournament where the winner (minimum) advances:
+## 8. Segment tree vs Fenwick tree
 
 ```
-Array:     [5] [3] [7] [2]
-           ╲ ╱   ╲ ╱
-Round 1:   [3]   [2]     <- min of each pair
-            ╲   ╱
-Final:      [2]          <- overall minimum
+Fenwick: simpler, small memory, but only for invertible ops (sum, xor)
+Segment: supports any associative operation (min, max, gcd), more flexible
 ```
 
-## Implementation Notes
+---
 
-- Tree size is typically 4n for safety (can be 2n with careful indexing)
-- Node numbering: root=1, left child=2i, right child=2i+1
-- Each node stores aggregate of its range [start, end]
+## 9. Beginner checklist
+
+1. The input array is 0‑indexed.
+2. Query range [l, r] is inclusive.
+3. Updates change one element at a time.
+4. The tree size is ~4n for safety.
+
+---
+
+## 10. Summary
+
+Segment trees are the go‑to tool for fast range queries with updates:
+
+- O(log n) per query/update
+- supports many operations
+- simple once you visualize the range tree

@@ -180,7 +180,7 @@
 - [x] lib/rotating_calipers_diameter
 - [x] lib/sam
 - [x] lib/scc
-- [ ] lib/segment_tree
+- [x] lib/segment_tree
 - [ ] lib/segment_tree_beats
 - [ ] lib/skiplist
 - [ ] lib/sliding_window
