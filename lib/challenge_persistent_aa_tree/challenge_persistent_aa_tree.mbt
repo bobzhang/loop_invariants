@@ -137,7 +137,6 @@ pub fn[T : Compare] insert(t : Aa[T], key : T) -> Aa[T] {
 
 ///|
 /// Check whether key exists in the tree.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare] contains(t : Aa[T], key : T) -> Bool {
   let none : T? = None
   for cur = t, lo = none, hi = none {
@@ -177,7 +176,6 @@ pub fn[T] inorder(t : Aa[T]) -> Array[T] {
 
 ///|
 /// Build an AA tree by inserting elements in order.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Aa[T] {
   let n = arr.length()
   for i = 0, tree = Aa::Empty {
