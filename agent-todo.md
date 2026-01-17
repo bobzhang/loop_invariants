@@ -207,6 +207,6 @@
 - [x] lib/virtual_tree
 - [x] lib/wavelet
 - [x] lib/wildcard_matching
-- [ ] lib/xor_basis
+- [x] lib/xor_basis
 - [ ] lib/z_algorithm
 - [ ] lib/zero_one_bfs
