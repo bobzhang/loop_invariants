@@ -41,8 +41,8 @@
 - [x] lib/challenge_bipartite_matching_kuhn
 - [x] lib/challenge_bitmask_dp
 - [x] lib/challenge_bitmask_tsp
-- [ ] lib/challenge_centroid_decomposition (in progress)
-- [ ] lib/challenge_coin_change_min
+- [x] lib/challenge_centroid_decomposition
+- [ ] lib/challenge_coin_change_min (in progress)
 - [ ] lib/challenge_coordinate_compress
 - [ ] lib/challenge_dag_shortest_path
 - [ ] lib/challenge_dfs_subtree

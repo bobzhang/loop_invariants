@@ -14,7 +14,6 @@ fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn dfs_size(
   u : Int,
   p : Int,
@@ -32,7 +31,6 @@ fn dfs_size(
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn find_centroid(
   u : Int,
   p : Int,
@@ -50,7 +48,6 @@ fn find_centroid(
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn decompose(
   u : Int,
   p : Int,
@@ -81,7 +78,6 @@ pub struct CentroidDecomp {
 
 ///|
 /// Build centroid decomposition and return parent/level arrays.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn build_centroid(n : Int, edges : ArrayView[(Int, Int)]) -> CentroidDecomp {
   let adj = build_adj(n, edges)
   let removed = Array::make(n, false)
