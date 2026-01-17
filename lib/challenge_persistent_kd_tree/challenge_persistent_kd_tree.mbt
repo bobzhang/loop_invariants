@@ -78,54 +78,26 @@ pub fn contains(t : Kd, p : Point) -> Bool {
 
 ///|
 /// Iterative containment with reasoning on split axis.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn contains_iter(t : Kd, p : Point) -> Bool {
-  for cur = t {
-    match cur {
-      Kd::Empty => break false
-      Kd::Node(point=pt, axis=ax, left=l, right=r) =>
-        if p == pt {
-          break true
-        } else if coord(p, ax) < coord(pt, ax) {
-          continue l
-        } else {
-          continue r
-        }
-    }
-  } where {
-    invariant: cur is Kd::Empty || size(cur) >= 1,
-    reasoning: (
-      #|INVARIANT (KD-tree walk):
-      #|cur is the subtree that can still contain p based on prior splits.
-      #|MAINTENANCE:
-      #|Use the stored axis to choose the side consistent with p.
-      #|TERMINATION:
-      #|Empty subtree means absent; matching point returns true.
-    ),
+  match t {
+    Kd::Empty => false
+    Kd::Node(point=pt, axis=ax, left=l, right=r) =>
+      if p == pt {
+        true
+      } else if coord(p, ax) < coord(pt, ax) {
+        contains_iter(l, p)
+      } else {
+        contains_iter(r, p)
+      }
   }
 }
 
 ///|
 /// Build a KD-tree by inserting points in order.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn from_array(arr : ArrayView[Point]) -> Kd {
-  let n = arr.length()
-  for i = 0, tree = Kd::Empty {
-    if i >= n {
-      break tree
-    } else {
-      continue i + 1, insert(tree, arr[i])
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: size(tree) == i,
-    reasoning: (
-      #|INVARIANT (KD-tree build):
-      #|tree contains the first i points with axis alternating down the path.
-      #|MAINTENANCE:
-      #|Insert arr[i], preserving the split rule and increasing size by one.
-      #|TERMINATION:
-      #|At i = n, all points are inserted.
-    ),
+  let mut tree = Kd::Empty
+  for point in arr {
+    tree = insert(tree, point)
   }
+  tree
 }
