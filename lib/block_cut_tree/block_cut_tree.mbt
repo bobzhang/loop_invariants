@@ -35,12 +35,12 @@ pub fn build_block_cut_tree(
   let c = comps.length()
   let total = n + c
   let adj = Array::makei(total, _ => [])
-  for ci = 0; ci < c; ci = ci + 1 {
+  for ci in 0..<c {
     let comp_edges = comps[ci]
     let in_comp = Array::make(n, false)
     let vertices : Array[Int] = []
-    for ei = 0; ei < comp_edges.length(); ei = ei + 1 {
-      let (u, v) = comp_edges[ei]
+    for edge in comp_edges {
+      let (u, v) = edge
       if not(in_comp[u]) {
         in_comp[u] = true
         vertices.push(u)
@@ -49,43 +49,12 @@ pub fn build_block_cut_tree(
         in_comp[v] = true
         vertices.push(v)
       }
-    } where {
-      invariant: ei >= 0 && ei <= comp_edges.length(),
-      reasoning: (
-        #|INVARIANT (collect component vertices):
-        #|vertices contains the unique endpoints seen in comp_edges[0..ei).
-        #|MAINTENANCE:
-        #|Add u and v when they appear for the first time.
-        #|TERMINATION:
-        #|At ei = len, all vertices in the component are collected.
-      ),
     }
     let comp_node = n + ci
-    for vi = 0; vi < vertices.length(); vi = vi + 1 {
-      let v = vertices[vi]
+    for v in vertices {
       adj[comp_node].push(v)
       adj[v].push(comp_node)
-    } where {
-      invariant: vi >= 0 && vi <= vertices.length(),
-      reasoning: (
-        #|INVARIANT (connect component):
-        #|Component node comp_node is connected to vertices[0..vi).
-        #|MAINTENANCE:
-        #|Add the next vertex as a neighbor of the component node.
-        #|TERMINATION:
-        #|At vi = len, the component node connects to all its vertices.
-      ),
     }
-  } where {
-    invariant: ci >= 0 && ci <= c,
-    reasoning: (
-      #|INVARIANT (block-cut construction):
-      #|Block-cut edges for components [0..ci) have been added.
-      #|MAINTENANCE:
-      #|Collect vertices for component ci and connect them to its node.
-      #|TERMINATION:
-      #|At ci = c, all components are connected in the block-cut tree.
-    ),
   }
   { original_vertices: n, component_count: c, adj }
 }
