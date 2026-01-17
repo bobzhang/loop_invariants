@@ -22,47 +22,20 @@ pub fn lcs_length(a : ArrayView[Char], b : ArrayView[Char]) -> Int {
   }
   let mut prev : Array[Int] = Array::make(n + 1, 0)
   let mut curr : Array[Int] = Array::make(n + 1, 0)
-  for i = 1 {
-    if i > m {
-      break prev[n]
-    } else {
-      for j = 1 {
-        if j > n {
-          break
-        } else if a[i - 1] == b[j - 1] {
-          curr[j] = prev[j - 1] + 1
-          continue j + 1
-        } else {
-          curr[j] = max(prev[j], curr[j - 1])
-          continue j + 1
-        }
-      } where {
-        invariant: j >= 1 && j <= n + 1,
-        reasoning: (
-          #|INVARIANT (Row DP):
-          #|curr[t] equals LCS length of a[0..i) and b[0..t) for t < j.
-          #|MAINTENANCE:
-          #|Update curr[j] from neighbors and advance j.
-          #|TERMINATION:
-          #|At j = n + 1, row i is complete.
-        ),
+  for i in 1 ..<= m {
+    curr[0] = 0
+    for j in 1 ..<= n {
+      if a[i - 1] == b[j - 1] {
+        curr[j] = prev[j - 1] + 1
+      } else {
+        curr[j] = max(prev[j], curr[j - 1])
       }
-      let tmp = prev
-      prev = curr
-      curr = tmp
-      continue i + 1
     }
-  } where {
-    invariant: i >= 1 && i <= m + 1,
-    reasoning: (
-      #|INVARIANT (Rows):
-      #|prev stores LCS lengths for a[0..i) against all prefixes of b.
-      #|MAINTENANCE:
-      #|After filling curr, swap so prev becomes the finished row.
-      #|TERMINATION:
-      #|At i = m + 1, prev[n] is the full LCS length.
-    ),
+    let tmp = prev
+    prev = curr
+    curr = tmp
   }
+  prev[n]
 }
 
 ///|

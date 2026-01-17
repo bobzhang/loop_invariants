@@ -56,8 +56,8 @@
 - [x] lib/challenge_knapsack_01
 - [x] lib/challenge_knapsack_unbounded
 - [x] lib/challenge_lca_binary_lift
-- [ ] lib/challenge_lcs (in progress)
-- [ ] lib/challenge_line_sweep
+- [x] lib/challenge_lcs
+- [ ] lib/challenge_line_sweep (in progress)
 - [ ] lib/challenge_lis_nlogn
 - [ ] lib/challenge_matrix_chain
 - [ ] lib/challenge_meet_in_middle
