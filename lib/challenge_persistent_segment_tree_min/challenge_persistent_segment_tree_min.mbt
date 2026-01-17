@@ -18,25 +18,6 @@ fn node_min(node : Node) -> Int {
 }
 
 ///|
-fn tree_valid(node : Node, len : Int) -> Bool {
-  match node {
-    Node::Leaf(min=_) => len == 1
-    Node::Branch(min=min_val, left~, right~) =>
-      if len <= 1 {
-        false
-      } else {
-        let mid = len / 2
-        let expected = if node_min(left) < node_min(right) {
-          node_min(left)
-        } else {
-          node_min(right)
-        }
-        tree_valid(left, mid) &&
-        tree_valid(right, len - mid) &&
-        min_val == expected
-      }
-  }
-}
 
 ///|
 /// Return the minimum stored at the root.
@@ -119,32 +100,15 @@ pub fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 
 ///|
 /// Apply point updates (idx, value).
-#warnings("+missing_invariant+missing_reasoning")
 pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int)],
 ) -> Node {
-  let m = updates.length()
-  for i = 0, tree = root {
-    if i >= m {
-      break tree
-    } else {
-      let (idx, value) = updates[i]
-      continue i + 1, set_value(tree, 0, n, idx, value)
-    }
-  } where {
-    invariant: i >= 0 && i <= m,
-    invariant: tree_valid(tree, n),
-    reasoning: (
-      #|INVARIANT (Min updates):
-      #|tree reflects the first i point updates with correct min values.
-      #|MAINTENANCE:
-      #|Update index i by path-copying while recomputing mins.
-      #|TERMINATION:
-      #|At i = m, all updates are applied.
-    ),
-  }
+  updates.fold(init=root, (tree, update) => {
+    let (idx, value) = update
+    set_value(tree, 0, n, idx, value)
+  })
 }
 
 ///|

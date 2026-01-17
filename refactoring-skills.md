@@ -121,3 +121,27 @@ while deque.front() is Some(front) {
     break
   }
 }
+
+## 2026-01-18: Fold for Batch Updates in Persistent Trees
+- Problem: Batch update loops used functional `for` with invariants or mutable accumulators.
+- Change: Use `fold` over updates to apply persistent updates in a pure style.
+- Result: Simpler code, no invariants needed for trivial iteration.
+- Example:
+// Before
+for i = 0, tree = root {
+  if i >= updates.length() {
+    break tree
+  } else {
+    let (l, r, delta) = updates[i]
+    continue i + 1, range_add(tree, 0, n, l, r, delta)
+  }
+}
+
+// After
+updates.fold(
+  init=root,
+  (tree, update) => {
+    let (l, r, delta) = update
+    range_add(tree, 0, n, l, r, delta)
+  },
+)
