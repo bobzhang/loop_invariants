@@ -49,6 +49,27 @@ Query min_cut(0, 3):
   Min-cut(0, 3) = min(5, 3, 1) = 1
 ```
 
+## Cut View: What a Tree Edge Means
+
+```
+Suppose the min-cut between s and t separates:
+  Left side (S)  = {0, 2}
+  Right side (T) = {1, 3}
+
+Then the Gomory-Hu tree contains an edge e with weight = cut(S, T)
+Removing e splits the tree into the same two sides.
+
+Tree cut picture:
+  0 --(w)---- 1
+  |           |
+  2           3
+
+Cut(S, T) = w = min-cut(0, 1) = min-cut(2, 3)
+```
+
+This is why the minimum edge on the path between any two nodes equals their
+min-cut value in the original graph.
+
 ## Why the Tree Works
 
 ```
@@ -132,6 +153,20 @@ test "gomory-hu tree example" {
 }
 ```
 
+## Example Usage: Line Graph with Known Cuts
+
+```mbt check
+///|
+test "gomory-hu tree on a line" {
+  // 0 --5-- 1 --3-- 2 --1-- 3
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 5L), (1, 2, 3L), (2, 3, 1L)]
+  let tree = @gomory_hu_tree.gomory_hu_tree(4, edges[:])
+  inspect(tree.min_cut(0, 3), content="1")
+  inspect(tree.min_cut(0, 2), content="3")
+  inspect(tree.min_cut(1, 2), content="3")
+}
+```
+
 ## More Examples
 
 ```mbt check
@@ -144,6 +179,31 @@ test "gomory-hu tree triangle" {
   inspect(tree.min_cut(0, 1), content="2")
   inspect(tree.min_cut(0, 2), content="2")
   inspect(tree.min_cut(1, 2), content="2")
+}
+```
+
+```mbt check
+///|
+test "gomory-hu tree two clusters" {
+  // Two dense clusters connected by a thin bridge.
+  // Cluster A: 0,1,2 (edges weight 5)
+  // Cluster B: 3,4,5 (edges weight 5)
+  // Bridge: 2 --1-- 3
+  let edges : Array[(Int, Int, Int64)] = [
+    (0, 1, 5L),
+    (1, 2, 5L),
+    (0, 2, 5L),
+    (3, 4, 5L),
+    (4, 5, 5L),
+    (3, 5, 5L),
+    (2, 3, 1L),
+  ]
+  let tree = @gomory_hu_tree.gomory_hu_tree(6, edges[:])
+  // Any cut separating the clusters must cut the bridge edge.
+  inspect(tree.min_cut(0, 4), content="1")
+  // Within a cluster, the minimum cut is larger.
+  inspect(tree.min_cut(0, 2), content="10")
+  inspect(tree.min_cut(3, 5), content="10")
 }
 ```
 
@@ -181,6 +241,22 @@ The algorithm runs `n-1` max-flow computations. After each flow between
 We attach `s` to `t` with the cut value, and redirect other vertices to keep
 the parent structure consistent. Repeating this builds a tree where the
 minimum edge on the path between any two vertices equals their min-cut.
+
+## Answering Queries from the Tree
+
+```
+Given u, v:
+1) Walk the path from u to v in the tree
+2) Return the smallest edge weight on that path
+
+Simple O(n) method:
+  - BFS/DFS from u, store parent and edge weight
+  - Walk back from v to u, tracking the minimum weight
+
+Faster method:
+  - Precompute LCA and minimum-edge-to-ancestor
+  - Answer each query in O(log n)
+```
 
 ## Complexity Analysis
 
@@ -228,3 +304,11 @@ may produce different (but equally valid) trees.
 - Each max-flow is on a contracted graph (merged super-nodes)
 - Path queries can be optimized with LCA for O(log n) time
 
+## Pitfalls and Edge Cases
+
+- The graph must be **undirected**; capacities are assumed non-negative.
+- Parallel edges are fine; they just add capacity.
+- Self-loops and non-positive edges are ignored in this implementation.
+- If the graph is disconnected, min-cut between components is `0`.
+- The tree is not unique; different root orders can produce different trees
+  while preserving all min-cut values.

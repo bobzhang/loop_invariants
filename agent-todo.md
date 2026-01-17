@@ -138,8 +138,8 @@
 - [x] lib/floor_sum
 - [x] lib/fwht
 - [x] lib/gauss
-- [ ] lib/gomory_hu_tree (in progress)
-- [ ] lib/graph
+- [x] lib/gomory_hu_tree
+- [ ] lib/graph (in progress)
 - [ ] lib/halfplane_intersection
 - [ ] lib/hld
 - [ ] lib/implicit_treap

@@ -176,3 +176,14 @@ while j < n && s[k] <= s[j] {
   }
   j = j + 1
 }
+
+## 2026-01-19: Prefer ArrayView for Read-Only Inputs
+- Problem: Helpers took `Array[T]` even when only reading, encouraging copies at call sites.
+- Change: Accept `ArrayView[T]` (or pattern match with `[..]`) to keep refactors allocation-free.
+- Result: Less copying and clearer intent, especially for library utilities.
+- Example:
+// Before
+pub fn build(n : Int, edges : Array[(Int, Int, Int64)]) -> Graph { ... }
+
+// After
+pub fn build(n : Int, edges : ArrayView[(Int, Int, Int64)]) -> Graph { ... }
