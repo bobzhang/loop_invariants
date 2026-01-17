@@ -181,7 +181,7 @@
 - [x] lib/sam
 - [x] lib/scc
 - [x] lib/segment_tree
-- [ ] lib/segment_tree_beats
+- [x] lib/segment_tree_beats
 - [ ] lib/skiplist
 - [ ] lib/sliding_window
 - [ ] lib/sparse_table
