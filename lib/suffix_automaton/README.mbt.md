@@ -1,131 +1,83 @@
 # Suffix Automaton (Extended)
 
-## Overview
+This package implements a **suffix automaton (SAM)** with extra utilities:
 
-A **Suffix Automaton (SAM)** is a minimal DFA that accepts exactly all suffixes
-of a string. This extended implementation provides additional utilities for
-substring queries and occurrence counting.
+- substring checks,
+- distinct substring count,
+- longest common substring length.
 
-- **Build**: O(n)
-- **Space**: O(n) states, O(n × σ) transitions
-- **Queries**: O(m) for substring of length m
+It builds in **O(n)** time and space.
 
-## Core Idea
+---
 
-Maintain states representing endpos equivalence classes and suffix links that
-connect each state to the longest proper suffix. Each new character extends
-the automaton by updating transitions and possibly cloning states.
+## 1. What is a suffix automaton?
 
-## The Key Insight
+A suffix automaton is a minimal DFA that recognizes **all substrings** of a
+string.
 
-```
-Group positions by their "right context" (endpos set).
-Positions where the same substring ends share a state.
-
-String: "aabab"
-         12345
-
-Endpos of "ab": {3, 5}  (appears ending at positions 3 and 5)
-Endpos of "b":  {2, 3, 5}
-Endpos of "aab": {3}
-Endpos of "a":  {1, 2, 4}
-
-Key property: If two strings have same endpos,
-              one must be a suffix of the other!
-
-This allows massive compression:
-  All substrings with same endpos → one state
-```
-
-## SAM Structure
+That means:
 
 ```
-String: "abab"
-
-SAM states and transitions:
-         ┌─a─→ [a] ──b──→ [ab] ─a─→ [aba] ─b─→ [abab]
-  [init] ─┤
-         └─b─→ [b] ──a──→ [ba] ──b──→ [bab]
-                           ↑
-                      (clone of aba minus ab prefix)
-
-Suffix links (form a tree):
-  [abab] → [bab] → [ab] → [b] → [init]
-  [aba] → [ba] → [a] → [init]
-
-Each state represents multiple substrings with same endpos!
+P is a substring of S  <=>  SAM built from S accepts P
 ```
 
-## State Properties
+Unlike a trie of all substrings (which is huge), SAM is compact:
 
 ```
-Each state q has:
-  - len[q]: length of longest string in this state
-  - link[q]: suffix link to state with shorter strings
-  - trans[q][c]: transition on character c
-
-Substrings represented by state q:
-  All strings of length (len[link[q]] + 1) to len[q]
-
-Example state for "abab":
-  len = 4, link points to state with len = 3 ("bab")
-  This state represents only "abab"
-
-Example state for ["ab", "b"]:
-  len = 2, link points to init (len = 0)
-  This state represents "ab" and "b" (both have endpos {2,4})
+at most 2n - 1 states for a string of length n
 ```
 
-## Clone Operation
+---
+
+## 2. Intuition: groups of substrings
+
+Many substrings end in the **same positions** in the text.
+
+SAM groups them into one state.
+
+Example with `"abab"`:
 
 ```
-When extending SAM with new character, sometimes we need to clone:
+"ab" ends at positions {1, 3}
+"b"  ends at positions {1, 3}
 
-Before adding 'b' to "aba":
-  State [a] has transition on 'a' to [a] (for "aa")
-
-Problem: New suffix "ab" has different endpos than "aab"
-         But they currently share a state!
-
-Solution: Clone the state
-  1. Create new state with same transitions
-  2. Split the endpos set between original and clone
-  3. Update suffix links appropriately
+Same end positions -> same SAM state
 ```
 
-## Algorithm Walkthrough
+This is the key compression.
+
+---
+
+## 3. Visual overview (small SAM)
+
+For `"abab"`:
 
 ```
-Build SAM for "ab":
-
-Initial: [init] (len=0, link=null)
-
-Add 'a':
-  Create [a] (len=1)
-  Transition: init ─a→ [a]
-  Suffix link: [a] → init
-
-  SAM: init ─a→ [a]
-
-Add 'b':
-  Create [ab] (len=2)
-  Transition: [a] ─b→ [ab]
-
-  Follow suffix links from [a]:
-    init has no 'b' transition → add init ─b→ [ab]?
-    No! "b" has different endpos than "ab"
-
-  Need separate state [b] for just "b":
-  Transition: init ─b→ [b]
-  Suffix link: [ab] → [b] → init
-
-  Final SAM:
-  init ─a→ [a] ─b→ [ab]
-      └─b→ [b]
-  Suffix links: [ab]→[b]→init, [a]→init
+init --a--> [a] --b--> [ab] --a--> [aba] --b--> [abab]
+  \                             ^
+   \--b--> [b] --a--> [ba] -----|
 ```
 
-## Example Usage
+Each state represents multiple substrings that share the same end positions.
+
+---
+
+## 4. Suffix links (backbone)
+
+Each state has a **suffix link** to the state representing its longest proper
+suffix.
+
+Example:
+
+```
+"abab" -> "bab" -> "ab" -> "b" -> ""
+```
+
+Following suffix links is like walking through suffixes.
+
+---
+
+## 5. Example usage (public API)
 
 ```mbt check
 ///|
@@ -133,6 +85,7 @@ test "suffix automaton example" {
   let sam = @suffix_automaton.SuffixAutomaton::new(10)
   sam.build("abab")
   inspect(sam.contains("aba"), content="true")
+  inspect(sam.contains("ac"), content="false")
   inspect(sam.count_distinct_substrings(), content="7")
   inspect(
     @suffix_automaton.longest_common_substring("abcde", "cdefg"),
@@ -141,84 +94,64 @@ test "suffix automaton example" {
 }
 ```
 
-## Common Applications
+---
 
-### 1. Substring Check
-```
-Is P a substring of S?
-Build SAM for S, walk P from init.
-If all transitions exist → P is substring.
-Time: O(|P|) after O(|S|) preprocessing.
-```
+## 6. Distinct substrings count
 
-### 2. Count Distinct Substrings
-```
-Sum of (len[q] - len[link[q]]) for all states.
-Each state contributes its unique substrings.
-Answer for "abab": 7 (a, b, ab, ba, aba, bab, abab)
-```
-
-### 3. Count Occurrences
-```
-How many times does P appear in S?
-Navigate to state for P, return endpos size.
-Precompute sizes via DFS on suffix link tree.
-```
-
-### 4. Longest Common Substring
-```
-Build SAM for S, walk T through it.
-Track maximum matched length.
-When stuck, follow suffix links.
-Time: O(|S| + |T|)
-```
-
-## Complexity Analysis
-
-| Operation | Time |
-|-----------|------|
-| Build SAM | O(n) |
-| Substring check | O(m) |
-| Distinct substrings | O(n) |
-| Occurrence count (with prep) | O(m) |
-| Longest common substring | O(n + m) |
-
-## SAM vs Other String Structures
-
-| Structure | Space | Build | Substring | LCS |
-|-----------|-------|-------|-----------|-----|
-| **SAM** | O(n) | O(n) | O(m) | O(n + m) |
-| Suffix Array | O(n) | O(n) | O(m log n) | O(n log n) |
-| Suffix Tree | O(n) | O(n) | O(m) | O(n + m) |
-| Trie (all substr) | O(n²) | O(n²) | O(m) | — |
-
-**Choose SAM when**: You need efficient substring operations with minimal space.
-
-## Endpos Classes Theory
+Each state `q` contributes:
 
 ```
-Endpos(s) = set of ending positions of substring s
-
-Properties:
-1. If u is suffix of v and both appear:
-   Endpos(v) ⊆ Endpos(u)
-
-2. For any two substrings u, v:
-   Endpos(u) and Endpos(v) are either
-   disjoint or one contains the other
-
-3. This forms a tree structure!
-   → The suffix link tree
-
-Number of distinct endpos classes = O(n)
-This is why SAM has O(n) states!
+len[q] - len[link[q]]
 ```
 
-## Implementation Notes
+Summing over all states gives the number of **distinct substrings**.
 
-- States: at most 2n - 1 states for string of length n
-- Transitions: at most 3n - 4 transitions
-- Use arrays for small alphabet (a-z), maps for large (Unicode)
-- Clone operation is the tricky part—handle suffix links carefully
-- For occurrence counting: compute endpos sizes via topological sort
-- Suffix link tree root is init state
+Example `"abab"`:
+
+```
+a, b, ab, ba, aba, bab, abab  -> 7
+```
+
+---
+
+## 7. Longest common substring (idea)
+
+Build SAM for S, then walk through T:
+
+```
+if transition exists -> extend match
+if not -> follow suffix links
+track max length seen
+```
+
+Total time: O(|S| + |T|).
+
+---
+
+## 8. Complexity
+
+```
+Build SAM: O(n)
+Substring check: O(m)
+Distinct substrings: O(n)
+Longest common substring: O(n + m)
+```
+
+---
+
+## 9. Beginner checklist
+
+1. SAM works for **substrings**, not just suffixes.
+2. It uses suffix links to compress states.
+3. Maximum states is 2n - 1.
+4. For each query, just walk transitions.
+
+---
+
+## 10. Summary
+
+Suffix automaton is one of the most powerful linear string structures:
+
+- compact,
+- fast substring checks,
+- useful for many advanced string tasks.
