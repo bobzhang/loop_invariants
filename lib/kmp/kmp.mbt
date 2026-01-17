@@ -191,20 +191,10 @@ pub fn z_search(text : String, pattern : String) -> Array[Int] {
   let concat = pattern.to_string() + "$" + text.to_string()
   let z = compute_z_function(concat)
   let offset = m + 1
-  for i = offset; i < concat.length(); i = i + 1 {
+  for i in offset..<concat.length() {
     if z[i] == m {
       matches.push(i - offset)
     }
-  } where {
-    invariant: i >= offset && i <= concat.length(),
-    reasoning: (
-      #|INVARIANT (Z scan):
-      #|Positions in [offset..i) are checked; matches found so far are recorded.
-      #|MAINTENANCE:
-      #|If z[i] == m, record the match starting at i - offset.
-      #|TERMINATION:
-      #|At i = concat.length(), all matches in the text are reported.
-    ),
   }
   matches
 }

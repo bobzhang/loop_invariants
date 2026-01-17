@@ -1,17 +1,19 @@
-# KMP (Knuth-Morris-Pratt) String Matching Algorithm
+# KMP (Knuth–Morris–Pratt) String Matching
 
-## Overview
+## What KMP Solves
 
-KMP finds all occurrences of a pattern in a text in **O(n + m)** time, where:
-- n = text length
-- m = pattern length
+KMP finds **all occurrences** of a pattern in a text in **O(n + m)** time:
 
-This is a significant improvement over naive O(n * m) search.
+- `n` = text length
+- `m` = pattern length
 
-## The Core Problem
+It avoids re-checking characters by using a **failure function** (also called
+LPS or prefix function).
 
-Given text `"ABABDABACDABABCABAB"` and pattern `"ABAB"`, find all positions
-where the pattern occurs.
+## Problem Example
+
+Text: `ABABDABACDABABCABAB`
+Pattern: `ABAB`
 
 ```
 Text:    ABABDABACDABABCABAB
@@ -19,167 +21,215 @@ Text:    ABABDABACDABABCABAB
 Matches: 0         10    15
 ```
 
-## Key Insight: The Failure Function
+## Why Naive Search Is Slow
 
-When a mismatch occurs, instead of restarting from scratch, we use
-previously matched characters. The **failure function** (or LPS array)
-tells us: "What's the longest proper prefix that's also a suffix?"
+Naive matching restarts at the next character every time a mismatch happens.
+This can repeat many comparisons.
 
-### Building the Failure Function
+Example:
 
 ```
-Pattern: A  B  A  B
-Index:   0  1  2  3
+Text:    AAAAAAB
+Pattern: AAAB
 
-Step-by-step:
-  i=0: "A"    -> fail[0] = 0  (no proper prefix)
-  i=1: "AB"   -> fail[1] = 0  (A != B)
-  i=2: "ABA"  -> fail[2] = 1  ("A" is prefix and suffix)
-  i=3: "ABAB" -> fail[3] = 2  ("AB" is prefix and suffix)
+Naive comparisons:
+  pos 0: AAA? fail
+  pos 1: AAA? fail
+  pos 2: AAA? fail
+  pos 3: AAAB match
 
-Result: fail = [0, 0, 1, 2]
+Lots of repeated work.
 ```
 
-### Visual Explanation of fail[3] = 2
+KMP avoids re-checking by jumping to the next possible valid prefix.
+
+## The Failure Function (LPS / Prefix Function)
+
+For each position `i`, the failure value tells us:
+
+```
+fail[i] = length of the longest proper prefix of pattern[0..i]
+         that is also a suffix of pattern[0..i]
+```
+
+### Example: Pattern "ABAB"
+
+```
+Index:   0 1 2 3
+Pattern: A B A B
+Fail:    0 0 1 2
+```
+
+Why `fail[3] = 2`?
 
 ```
 Pattern: A B A B
-         ===       <- prefix "AB"
-             ===   <- suffix "AB"
-
-"AB" appears both at start and end, so fail[3] = 2
+         ===       prefix "AB"
+             ===   suffix "AB"
 ```
 
-## The Matching Process
+### Another Example: Pattern "ABACABA"
 
 ```
-Text:    A B A B D A B A C D A B A B C A B A B
-Pattern: A B A B
-         i=0,j=0: A=A match, advance both
-
-Text:    A B A B D A B A C D A B A B C A B A B
-           ^
-Pattern:   A B A B
-           i=1,j=1: B=B match, advance both
-
-Text:    A B A B D A B A C D A B A B C A B A B
-             ^
-Pattern:     A B A B
-             i=2,j=2: A=A match, advance both
-
-Text:    A B A B D A B A C D A B A B C A B A B
-               ^
-Pattern:       A B A B
-               i=3,j=3: B=B match, j becomes 4
-
-j=4 (full match!) -> Record position 0
-
-After match, j = fail[3] = 2 (keep "AB" matched)
-
-Text:    A B A B D A B A C D A B A B C A B A B
-                 ^
-Pattern:     A B A B  <- shifted, but "AB" still aligned
-                 j=2: D != A, mismatch!
-
-j = fail[1] = 0, continue from j=0...
+Index:   0 1 2 3 4 5 6
+Pattern: A B A C A B A
+Fail:    0 0 1 0 1 2 3
 ```
 
-## Why It's Efficient
+At index 6 (`ABACABA`), the longest border is `ABA` (length 3).
 
-The naive approach re-examines characters:
+## How Matching Uses the Failure Function
+
+Let `i` be index in text, `j` in pattern.
+
+- If `text[i] == pattern[j]`, advance both.
+- If mismatch and `j > 0`, set `j = fail[j - 1]`.
+- If mismatch and `j == 0`, advance `i` only.
+
+This means `i` never goes backward, so the search is linear.
+
+## Walkthrough Example
+
+Text: `ABABDABACDABABCABAB`
+Pattern: `ABAB`
 
 ```
-Naive for "AAAAAAB" with pattern "AAAB":
-  Position 0: AAA? fail     (4 comparisons)
-  Position 1: AAA? fail     (4 comparisons) <- redundant!
-  Position 2: AAA? fail     (4 comparisons) <- redundant!
-  Position 3: AAAB match!   (4 comparisons)
-  Total: 16 comparisons
+Start: i=0, j=0
+A==A -> i=1, j=1
+B==B -> i=2, j=2
+A==A -> i=3, j=3
+B==B -> i=4, j=4 (match!)
+Record match at i-m = 0
+j = fail[3] = 2 (reuse "AB")
 
-KMP approach:
-  Uses failure function to skip redundant work
-  Total: O(n + m) = 11 comparisons
+Next:
+D vs A mismatch
+j = fail[1] = 0
+Continue from i=4
 ```
 
-## Use Cases
+KMP keeps the valid prefix and skips redundant comparisons.
 
-1. **Text Editors**: Find/replace functionality
-2. **DNA Analysis**: Find gene sequences in genomes
-3. **Plagiarism Detection**: Find copied text segments
-4. **Log Analysis**: Search for error patterns
-5. **Network Security**: Detect malicious packet patterns
-6. **Compilers**: Lexical analysis and token matching
+## Overlapping Matches (KMP Handles Them)
 
-## API Reference
+Text: `AAAA`
+Pattern: `AA`
+
+Matches at indices `[0, 1, 2]`:
+
+```
+AAAA
+^^
+ ^^
+  ^^
+```
+
+KMP naturally finds overlaps because after a match it falls back using `fail`.
+
+## API Examples
 
 ```mbt check
 ///|
 test "kmp complete example" {
-  // Find all occurrences
   let text = "ababcababa"
   let pattern = "aba"
+
+  // All occurrences
   inspect(@kmp.kmp_search(text, pattern), content="[0, 5, 7]")
 
-  // Find first occurrence
+  // First occurrence
   inspect(@kmp.kmp_find_first(text, "cab"), content="4")
   inspect(@kmp.kmp_find_first(text, "xyz"), content="-1")
 
   // Count occurrences
   inspect(@kmp.kmp_count(text, pattern), content="3")
 
-  // Build failure function directly
+  // Failure function
   let fail = @kmp.compute_failure("ABAB")
   inspect(fail, content="[0, 0, 1, 2]")
 
-  // Prefix-function alias (pi array)
+  // Prefix function alias
   let pi = @kmp.prefix_function("ababa")
   inspect(pi, content="[0, 0, 1, 2, 3]")
 }
 ```
 
-## The Z-Function Alternative
+## Z-Function (Alternative Tool)
 
-This module also includes the Z-function, which computes for each position
-the longest substring starting there that matches a prefix:
+The Z-function measures how far the prefix matches at each position.
+
+Example:
 
 ```
 String:  A A B X A A B
-Z-value: 7 1 0 0 3 1 0
-         ^       ^
-         |       "AAB" matches prefix
-         entire string matches itself
+Z:       7 1 0 0 3 1 0
+          ^       ^
+          |       "AAB" matches prefix
+          entire string matches itself
 ```
+
+You can use Z for pattern matching by building:
+
+```
+pattern + "$" + text
+```
+
+Then every position with `z[i] == pattern.length()` is a match.
 
 ```mbt check
 ///|
 test "z-function example" {
   let z = @kmp.compute_z_function("AABXAAB")
-  inspect(z[0], content="7") // whole string
-  inspect(z[1], content="1") // "A" matches
-  inspect(z[4], content="3") // "AAB" matches
-
-  // Use Z-function for pattern matching
+  inspect(z[0], content="7")
+  inspect(z[1], content="1")
+  inspect(z[4], content="3")
   let matches = @kmp.z_search("ABABDABACDABABCABAB", "ABAB")
   inspect(matches.length(), content="3")
 }
 ```
 
-## Algorithm Comparison
+## Diagram: Why Failure Saves Work
 
-| Algorithm   | Preprocess | Search   | Space  | Best For              |
-|-------------|------------|----------|--------|-----------------------|
-| Naive       | O(1)       | O(nm)    | O(1)   | Very short patterns   |
-| **KMP**     | O(m)       | O(n)     | O(m)   | Single pattern search |
-| Rabin-Karp  | O(m)       | O(n)*    | O(1)   | Multiple patterns     |
-| Z-function  | O(n+m)     | O(n+m)   | O(n+m) | Alternative to KMP    |
+```
+Pattern:  A B A B
+Fail:     0 0 1 2
 
-*Average case; worst case O(nm)
+Text:     A B A B D ...
+           ^^^^
 
-## Complexity Analysis
+Mismatch at D:
+  Instead of restarting from pattern[0],
+  we set j = fail[3] = 2 and continue with "AB" already matched.
+```
 
-- **Time**: O(n + m) - linear in input size
-- **Space**: O(m) - only stores failure function
+## Complexity
 
-The key insight is that `i` never decreases, and `j` can only decrease
-a total of O(n) times (since it increases at most n times). This gives
-the linear time bound.
+| Step | Time | Space |
+|------|------|-------|
+| Build fail | O(m) | O(m) |
+| Search | O(n) | O(1) + fail |
+| Total | O(n + m) | O(m) |
+
+## Common Pitfalls
+
+- **Empty pattern**: this implementation returns an empty match list.
+- **Unicode details**: indexing in MoonBit strings is by UTF‑16 code units.
+  For grapheme‑level matching, preprocess into code points.
+- **Case sensitivity**: comparisons are exact; normalize if needed.
+
+## When to Use KMP
+
+- You need all occurrences of one pattern
+- The text is large and repeated scanning is expensive
+- You want linear time guarantees
+
+## KMP vs Alternatives
+
+| Algorithm | Preprocess | Search | Notes |
+|----------|------------|--------|------|
+| Naive | O(1) | O(nm) | tiny patterns only |
+| **KMP** | O(m) | O(n) | single pattern |
+| Z-function | O(n+m) | O(n+m) | alternative to KMP |
+| Rabin–Karp | O(m) | O(n) average | multiple patterns |
+
+KMP is the classic choice for a single pattern with linear guarantees.
