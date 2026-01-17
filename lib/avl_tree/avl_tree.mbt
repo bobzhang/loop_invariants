@@ -224,44 +224,55 @@ fn[T : Compare] AVLTree::delete_rec(
   self : AVLTree[T],
   node : Int,
   key : T,
-) -> Int {
+) -> (Int, Bool) {
   if node < 0 {
-    return -1
+    return (-1, false)
   }
   if key < self.nodes[node].key {
-    self.nodes[node].left = self.delete_rec(self.nodes[node].left, key)
-  } else if key > self.nodes[node].key {
-    self.nodes[node].right = self.delete_rec(self.nodes[node].right, key)
-  } else {
-    // Found node to delete
-    if self.nodes[node].left < 0 || self.nodes[node].right < 0 {
-      let child = if self.nodes[node].left >= 0 {
-        self.nodes[node].left
-      } else {
-        self.nodes[node].right
-      }
-      // Free node
-      self.nodes[node].left = self.free_list
-      self.free_list = node
-      return child
+    let (new_left, deleted) = self.delete_rec(self.nodes[node].left, key)
+    if !deleted {
+      return (node, false)
     }
-
-    // Node has two children: replace with inorder successor
-    let successor = self.find_min(self.nodes[node].right)
-    self.nodes[node].key = self.nodes[successor].key
-    self.nodes[node].right = self.delete_rec(
-      self.nodes[node].right,
-      self.nodes[successor].key,
-    )
+    self.nodes[node].left = new_left
+    return (self.balance(node), true)
+  } else if key > self.nodes[node].key {
+    let (new_right, deleted) = self.delete_rec(self.nodes[node].right, key)
+    if !deleted {
+      return (node, false)
+    }
+    self.nodes[node].right = new_right
+    return (self.balance(node), true)
   }
-  self.balance(node)
+
+  // Found node to delete
+  if self.nodes[node].left < 0 || self.nodes[node].right < 0 {
+    let child = if self.nodes[node].left >= 0 {
+      self.nodes[node].left
+    } else {
+      self.nodes[node].right
+    }
+    // Free node
+    self.nodes[node].left = self.free_list
+    self.free_list = node
+    return (child, true)
+  }
+
+  // Node has two children: replace with inorder successor
+  let successor = self.find_min(self.nodes[node].right)
+  self.nodes[node].key = self.nodes[successor].key
+  let (new_right, _) = self.delete_rec(
+    self.nodes[node].right,
+    self.nodes[successor].key,
+  )
+  self.nodes[node].right = new_right
+  (self.balance(node), true)
 }
 
 ///|
 fn[T : Compare] AVLTree::delete(self : AVLTree[T], key : T) -> Bool {
-  let old_root = self.root
-  self.root = self.delete_rec(self.root, key)
-  old_root != self.root || self.root >= 0
+  let (new_root, deleted) = self.delete_rec(self.root, key)
+  self.root = new_root
+  deleted
 }
 
 ///|
@@ -420,8 +431,9 @@ test "avl delete" {
   tree.insert(1L)
   tree.insert(4L)
   inspect(tree.search(3L), content="true")
-  let _ = tree.delete(3L)
+  inspect(tree.delete(3L), content="true")
   inspect(tree.search(3L), content="false")
+  inspect(tree.delete(42L), content="false")
   inspect(tree.is_balanced(), content="true")
 }
 
@@ -450,7 +462,9 @@ test "avl size" {
 ///|
 test "avl many insertions" {
   let tree = AVLTree::new()
-  Array::makei(100, i => i).each(i => tree.insert(i.to_int64()))
+  for i in 0..<100 {
+    tree.insert(i.to_int64())
+  }
   inspect(tree.is_balanced(), content="true")
   inspect(tree.size(), content="100")
   // Height should be around log2(100) ≈ 7

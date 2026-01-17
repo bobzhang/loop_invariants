@@ -2,11 +2,14 @@
 
 ## Revision pass (more descriptive, more examples)
 
+- Note: Spend more than one hour per package. No rush. Be very descriptive with enough examples.
+- Note: Work one package at a time; do not pause to ask for confirmation—just continue.
+
 - [x] . (root)
 - [ ] cmd/main (in progress)
 - [x] lib/aho_corasick
-- [ ] lib/avl_tree (in progress)
-- [ ] lib/bellman_ford
+- [x] lib/avl_tree
+- [ ] lib/bellman_ford (in progress)
 - [ ] lib/berlekamp_massey
 - [ ] lib/biconnected_components
 - [ ] lib/binary_trie_xor
