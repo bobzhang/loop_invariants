@@ -14,7 +14,6 @@ fn build_adj(n : Int, edges : ArrayView[(Int, Int)]) -> Array[Array[Int]] {
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn bfs(adj : Array[Array[Int]], start : Int) -> (Int, Array[Int]) {
   let n = adj.length()
   let dist = Array::make(n, -1)
@@ -54,7 +53,6 @@ fn bfs(adj : Array[Array[Int]], start : Int) -> (Int, Array[Int]) {
 
 ///|
 /// Return the length of the tree diameter.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn tree_diameter(n : Int, edges : ArrayView[(Int, Int)]) -> Int {
   if n == 0 {
     return 0
