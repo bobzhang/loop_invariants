@@ -108,8 +108,8 @@
 - [x] lib/challenge_prefix_sum
 - [x] lib/challenge_scc_kosaraju
 - [x] lib/challenge_scc_tarjan
-- [ ] lib/challenge_sliding_window_min (in progress)
-- [ ] lib/challenge_sparse_table_rmq
+- [x] lib/challenge_sliding_window_min
+- [ ] lib/challenge_sparse_table_rmq (in progress)
 - [ ] lib/challenge_sqrt_decomposition_sum
 - [ ] lib/challenge_ternary_search
 - [ ] lib/challenge_toposort_kahn
