@@ -205,7 +205,7 @@
 - [x] lib/two_sat
 - [x] lib/union_find
 - [x] lib/virtual_tree
-- [ ] lib/wavelet
+- [x] lib/wavelet
 - [ ] lib/wildcard_matching
 - [ ] lib/xor_basis
 - [ ] lib/z_algorithm
