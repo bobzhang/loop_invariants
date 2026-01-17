@@ -136,8 +136,8 @@
 - [x] lib/fenwick_range_add_range_sum
 - [x] lib/fft
 - [x] lib/floor_sum
-- [ ] lib/fwht (in progress)
-- [ ] lib/gauss
+- [x] lib/fwht
+- [ ] lib/gauss (in progress)
 - [ ] lib/gomory_hu_tree
 - [ ] lib/graph
 - [ ] lib/halfplane_intersection

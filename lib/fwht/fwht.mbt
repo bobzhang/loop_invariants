@@ -23,21 +23,11 @@ pub fn fwht_xor(values : ArrayView[Int64], inverse : Bool) -> Array[Int64] {
   let a = values.to_array()
   for len = 1; len < n; len = len * 2 {
     for i = 0; i < n; i = i + 2 * len {
-      for j = 0; j < len; j = j + 1 {
+      for j in 0..<len {
         let u = a[i + j]
         let v = a[i + j + len]
         a[i + j] = u + v
         a[i + j + len] = u - v
-      } where {
-        invariant: j >= 0 && j <= len,
-        reasoning: (
-          #|INVARIANT (butterfly inner):
-          #|Positions i..i+j-1 have been updated with XOR butterflies.
-          #|MAINTENANCE:
-          #|Apply the butterfly at offset j within the current block.
-          #|TERMINATION:
-          #|At j = len, the block [i, i+2*len) is fully processed.
-        ),
       }
     } where {
       invariant: i >= 0 && i <= n,
@@ -62,18 +52,8 @@ pub fn fwht_xor(values : ArrayView[Int64], inverse : Bool) -> Array[Int64] {
     ),
   }
   if inverse {
-    for i = 0; i < n; i = i + 1 {
+    for i in 0..<n {
       a[i] = a[i] / n.to_int64()
-    } where {
-      invariant: i >= 0 && i <= n,
-      reasoning: (
-        #|INVARIANT (inverse scaling):
-        #|a[0..i) has been divided by n.
-        #|MAINTENANCE:
-        #|Scale a[i] by 1/n.
-        #|TERMINATION:
-        #|At i = n, the inverse transform is complete.
-      ),
     }
   }
   a
@@ -106,46 +86,16 @@ pub fn xor_convolution(
   }
   let fa = Array::make(n, 0L)
   let fb = Array::make(n, 0L)
-  for i = 0; i < a.length(); i = i + 1 {
+  for i in 0..<a.length() {
     fa[i] = a[i]
-  } where {
-    invariant: i >= 0 && i <= a.length(),
-    reasoning: (
-      #|INVARIANT (copy a):
-      #|fa[0..i) matches a[0..i).
-      #|MAINTENANCE:
-      #|Copy a[i] into fa.
-      #|TERMINATION:
-      #|At i = len, all elements of a are copied.
-    ),
   }
-  for i = 0; i < b.length(); i = i + 1 {
+  for i in 0..<b.length() {
     fb[i] = b[i]
-  } where {
-    invariant: i >= 0 && i <= b.length(),
-    reasoning: (
-      #|INVARIANT (copy b):
-      #|fb[0..i) matches b[0..i).
-      #|MAINTENANCE:
-      #|Copy b[i] into fb.
-      #|TERMINATION:
-      #|At i = len, all elements of b are copied.
-    ),
   }
   let ta = fwht_xor(fa[:], false)
   let tb = fwht_xor(fb[:], false)
-  for i = 0; i < n; i = i + 1 {
+  for i in 0..<n {
     ta[i] = ta[i] * tb[i]
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (pointwise multiply):
-      #|ta[0..i) holds the product of transformed coefficients.
-      #|MAINTENANCE:
-      #|Multiply coefficient i.
-      #|TERMINATION:
-      #|At i = n, pointwise multiplication is complete.
-    ),
   }
   fwht_xor(ta[:], true)
 }

@@ -104,6 +104,17 @@ fwht(a, inverse):
       a[i] /= n
 ```
 
+## Padding to Power of Two
+
+```
+FWHT requires length = 2^k.
+If your array is shorter, pad with zeros.
+
+Example:
+  a = [1, 2, 3]
+  pad to length 4: [1, 2, 3, 0]
+```
+
 ## Example Usage
 
 ```mbt check
@@ -204,10 +215,15 @@ XOR convolution (this package): c[k] = Σ a[i]·b[j] where i XOR j = k
   Butterfly: (a, b) → (a + b, a - b)
 ```
 
+## Common Pitfalls
+
+- **Length not power of two**: pad with zeros before transform.
+- **Inverse scaling**: divide by n after inverse FWHT.
+- **Overflow**: use `Int64` or modular arithmetic for large values.
+
 ## Implementation Notes
 
 - Array length must be a power of 2 (pad with zeros if needed)
 - Inverse transform divides by n
 - For modular arithmetic, ensure division is valid
 - In-place algorithm modifies the input array
-
