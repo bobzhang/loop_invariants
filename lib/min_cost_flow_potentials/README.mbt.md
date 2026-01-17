@@ -10,6 +10,9 @@ Given a directed graph where each edge has:
 Find the **maximum flow** from source `s` to sink `t`, and among all maximum
 flows choose the one with **minimum total cost**.
 
+Think of it as shipping goods: you want to send as much as possible, and pay
+as little as possible per unit.
+
 ## 2. Why potentials are needed
 
 In the residual graph, every forward edge has cost `+w`, and every reverse edge
@@ -23,6 +26,20 @@ reduced_cost(u,v) = cost(u,v) + pi[u] - pi[v]
 
 If the potential `pi[v]` is a shortest-path distance from `s`, then every
 reduced cost is **non-negative**, and Dijkstra works.
+
+### Tiny reweighting example
+
+Suppose we have:
+
+```
+pi[u] = 5, pi[v] = 8, cost(u,v) = 2
+
+reduced_cost = 2 + 5 - 8 = -1
+```
+
+If `pi` is chosen as shortest-path distances in the **current residual graph**,
+then reduced costs become non-negative. This is why we update `pi` after each
+Dijkstra run.
 
 ## 3. Residual graph diagram
 
@@ -59,6 +76,30 @@ Key invariant:
 reduced_cost(u,v) >= 0 for all residual edges
 ```
 
+### Why the invariant holds
+
+After Dijkstra in reduced costs:
+
+```
+dist[v] = shortest reduced-cost distance from s to v
+```
+
+Update:
+
+```
+pi'[v] = pi[v] + dist[v]
+```
+
+Then for any edge (u,v):
+
+```
+reduced_cost'(u,v) = cost(u,v) + pi'[u] - pi'[v]
+                   = cost(u,v) + pi[u] - pi[v] + dist[u] - dist[v]
+                   >= 0
+```
+
+So the next Dijkstra run is safe again.
+
 ## 5. Worked example (same as test)
 
 Edges:
@@ -91,6 +132,16 @@ Shortest augmenting paths by cost:
 
 Total: flow 3, cost 10.
 
+### Another tiny example: two paths, different costs
+
+```
+0 -> 1 -> 3  (cost 1 + 1)
+0 -> 2 -> 3  (cost 5 + 5)
+All capacities = 1
+```
+
+Min-cost flow sends the single unit through the cheap path 0-1-3.
+
 ## 6. Public API
 
 From `pkg.generated.mbti`:
@@ -114,6 +165,22 @@ test "min-cost flow basics" {
   let (flow, cost) = mcf.compute(0, 3)
   inspect(flow, content="3")
   inspect(cost, content="10")
+}
+```
+
+```mbt check
+///|
+test "min-cost flow picks cheaper path" {
+  let mcf = @min_cost_flow_potentials.MinCostFlowPotentials::new(4)
+  // Cheap path
+  mcf.add_edge(0, 1, 1L, 1L)
+  mcf.add_edge(1, 3, 1L, 1L)
+  // Expensive path
+  mcf.add_edge(0, 2, 1L, 5L)
+  mcf.add_edge(2, 3, 1L, 5L)
+  let (flow, cost) = mcf.compute_with_limit(0, 3, 1L)
+  inspect(flow, content="1")
+  inspect(cost, content="2")
 }
 ```
 
@@ -161,12 +228,24 @@ If your graph has negative costs, you should either:
 - Run a Bellman-Ford/SPFA pass to initialize potentials, or
 - Use the SPFA-based MCMF package (`lib/mcmf`).
 
+### Quick rule of thumb
+
+```
+All costs >= 0 -> this package (Dijkstra + potentials)
+Costs can be negative -> use lib/mcmf (SPFA)
+```
+
 ## 10. Common pitfalls
 
 - Forgetting reverse edges -> residual graph is wrong
 - Overflow in `cost += flow * path_cost` for large flows
 - Using this without non-negative costs (Dijkstra may fail)
 - Not resetting distance/parent arrays each iteration
+
+### Another pitfall
+
+If capacities are zero, Dijkstra still sees the edge but cannot traverse it.
+Always check residual capacity before relaxing.
 
 ## 11. Summary
 
