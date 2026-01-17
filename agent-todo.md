@@ -208,5 +208,5 @@
 - [x] lib/wavelet
 - [x] lib/wildcard_matching
 - [x] lib/xor_basis
-- [ ] lib/z_algorithm
+- [x] lib/z_algorithm
 - [ ] lib/zero_one_bfs

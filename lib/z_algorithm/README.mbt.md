@@ -1,113 +1,122 @@
-# Z-Algorithm
+# Z-Algorithm (Beginner-Friendly Guide)
 
-## Overview
+The Z-algorithm computes, for each position `i`, how long the substring
+starting at `i` matches the **prefix** of the string. This gives fast pattern
+matching in **linear time**.
 
-The **Z-Algorithm** computes the Z-array in linear time, where `Z[i]` is the
-length of the longest substring starting at position i that matches a prefix
-of the string. This enables O(n) pattern matching.
-
-- **Time**: O(n)
-- **Space**: O(n)
-
-## Core Idea
-
-- Maintain a **Z-box** `[l, r]` that matches the prefix.
-- Reuse mirrored values inside the box; only expand when needed.
-- The right boundary `r` advances at most n steps.
-
-## The Z-Array
+This package provides:
 
 ```
-String: a a b c a a b
-Index:  0 1 2 3 4 5 6
-
-Z-array:
-Z[0] = 7  (entire string matches prefix - by definition)
-Z[1] = 1  ("a" matches prefix "a")
-Z[2] = 0  ("b" doesn't match "a")
-Z[3] = 0  ("c" doesn't match "a")
-Z[4] = 3  ("aab" matches prefix "aab")
-Z[5] = 1  ("a" matches prefix "a")
-Z[6] = 0  ("b" doesn't match "a")
+@z_algorithm.compute_z(s)
+@z_algorithm.z_function(s)       // alias
+@z_algorithm.find_pattern(text, pattern)
+@z_algorithm.z_search(text, pattern) // alias
+@z_algorithm.count_pattern(text, pattern)
 ```
 
-## The Key Insight: Z-Box
+---
 
-Maintain a "Z-box" `[l, r]` where the substring `s[l..r]` matches the prefix `s[0..r-l]`.
+## 1) What is the Z-array?
 
-```
-String: a a b c a a b
-              [-----]  Z-box when i=4
-              l     r
+For a string `s`, `Z[i]` = length of the longest prefix match starting at `i`.
 
-If position i is inside the Z-box (i <= r):
-  - Mirror position k = i - l tells us about s[i..]
-  - s[i..] starts the same as s[k..] (within the Z-box)
-  - We can reuse Z[k] to initialize Z[i]!
-```
-
-## Algorithm Walkthrough
+Example:
 
 ```
-String: a a b c a a b
+s = "aabcaab"
+index: 0 1 2 3 4 5 6
+char:  a a b c a a b
 
-i=1: Outside Z-box (r=0)
-     Compare s[0..] with s[1..]
-     "a" matches "a" → Z[1] = 1
-     New Z-box: l=1, r=1
-
-i=2: Outside Z-box (i > r)
-     "b" ≠ "a" → Z[2] = 0
-
-i=3: Outside Z-box
-     "c" ≠ "a" → Z[3] = 0
-
-i=4: Outside Z-box
-     Compare: "aab" matches "aab" → Z[4] = 3
-     New Z-box: l=4, r=6
-
-i=5: Inside Z-box (l=4, r=6)
-     k = 5 - 4 = 1
-     Z[k] = Z[1] = 1
-     Remaining in Z-box: r - i + 1 = 2
-     Since Z[k] < remaining, Z[5] = Z[1] = 1
-
-i=6: Inside Z-box
-     k = 6 - 4 = 2
-     Z[k] = Z[2] = 0
-     Since Z[k] < remaining (1), Z[6] = 0
-
-Result: [7, 1, 0, 0, 3, 1, 0]
+Z = [7, 1, 0, 0, 3, 1, 0]
 ```
 
-## Pattern Matching
+Why?
 
-To find pattern P in text T, compute Z-array of `P + "$" + T`:
+- `Z[1] = 1` because `"abcaab"` matches prefix `"a"` for 1 char.
+- `Z[4] = 3` because `"aab"` matches prefix `"aab"`.
+
+By convention, `Z[0] = n` (full string length).
+
+---
+
+## 2) The Z-box idea (the trick)
+
+We keep a window `[l, r]` where `s[l..r]` matches the prefix `s[0..r-l]`.
 
 ```
-Pattern: "ab"
-Text:    "ababab"
-Concat:  "ab$ababab"
-
-Z-array: [9, 0, 0, 2, 0, 2, 0, 2, 0]
-                  ^     ^     ^
-               indices where Z[i] = |P| = 2
-
-Matches at positions: 0, 2, 4 in original text
-(Subtract |P| + 1 from concatenated indices)
+s = a a b c a a b
+          [-----]   (when i = 4, l = 4, r = 6)
 ```
 
-## Example Usage
+If `i` is inside the box, we can reuse information:
+
+```
+k = i - l
+Z[i] is at least min(Z[k], r - i + 1)
+```
+
+Only when we hit the boundary do we expand further.
+
+---
+
+## 3) Walkthrough example
+
+```
+s = "aabcaab"
+
+i=1 (outside box): match "a" -> Z[1]=1, box=[1,1]
+i=2 (outside): Z[2]=0
+i=3 (outside): Z[3]=0
+i=4 (outside): match "aab" -> Z[4]=3, box=[4,6]
+i=5 (inside):  k=1, Z[1]=1, r-i+1=2 -> Z[5]=1
+i=6 (inside):  k=2, Z[2]=0 -> Z[6]=0
+
+Result: [7,1,0,0,3,1,0]
+```
+
+---
+
+## 4) Pattern matching with Z
+
+To find a pattern `P` inside text `T`, build:
+
+```
+S = P + "$" + T
+```
+
+Compute Z on `S`.  
+Any position `i` with `Z[i] == |P|` is a match.
+
+Example:
+
+```
+P = "ab"
+T = "ababab"
+S = "ab$ababab"
+
+Z = [9,0,0,2,0,2,0,2,0]
+          ^   ^   ^
+Matches at indices 3,5,7 in S
+=> positions 0,2,4 in T
+```
+
+---
+
+## 5) Example usage
 
 ```mbt check
 ///|
-test "z algorithm example" {
+test "z array and search" {
   let z = @z_algorithm.compute_z("aabcaab")
   inspect(z, content="[7, 1, 0, 0, 3, 1, 0]")
   let hits = @z_algorithm.find_pattern("aabcaabxaab", "aab")
   inspect(hits, content="[0, 4, 8]")
+}
+```
 
-  // Alias names are also available
+```mbt check
+///|
+test "z aliases" {
   let z2 = @z_algorithm.z_function("aaaaa")
   inspect(z2, content="[5, 4, 3, 2, 1]")
   let hits2 = @z_algorithm.z_search("ababa", "aba")
@@ -115,93 +124,51 @@ test "z algorithm example" {
 }
 ```
 
-## Why O(n)?
-
-The key insight is that `r` (right boundary of Z-box) only increases:
-
-```
-- When we expand past r, we do new comparisons
-- Each comparison advances r by 1
-- r goes from 0 to n-1 at most once
-- Total comparisons ≤ n
-
-Even though there's a while loop inside the for loop,
-total work is bounded by n.
+```mbt check
+///|
+test "count pattern" {
+  let cnt = @z_algorithm.count_pattern("aaaaa", "aa")
+  inspect(cnt, content="4") // overlaps allowed: "aa" at 0,1,2,3
+}
 ```
 
-## Common Applications
+---
 
-### 1. Pattern Matching
-```
-Find all occurrences of pattern in text: O(n + m)
-Faster than naive O(n*m) approach
-```
+## 6) Why it is O(n)
 
-### 2. Longest Prefix-Suffix (Border)
-```
-If Z[i] + i == n, then s[i..n-1] is both a prefix and suffix.
-These are called "borders" of the string.
+The right boundary `r` only moves forward.
+Each time we expand, `r` increases. It can only increase `n` times.
 
-Example: "abcab"
-Z = [5, 0, 0, 2, 0]
-Z[3] + 3 = 2 + 3 = 5 = n
-So "ab" is a border (prefix = suffix)
-```
+So the total work across all expansions is **O(n)**.
 
-### 3. String Period
-```
-Period p means s[i] = s[i mod p] for all i.
-Find smallest p where Z[p] >= n - p.
+---
 
-Example: "abab" has period 2
-Z = [4, 0, 2, 0]
-Z[2] = 2 >= 4 - 2 = 2 ✓
-```
-
-### 4. Counting Distinct Substrings
-```
-Combined with suffix arrays for advanced string algorithms.
-```
-
-## Z-Algorithm vs KMP
-
-| Feature | Z-Algorithm | KMP |
-|---------|-------------|-----|
-| Builds | Z-array | Failure function |
-| Concept | Prefix matching | Failure links |
-| Pattern matching | O(n + m) | O(n + m) |
-| Coding complexity | Simpler | More complex |
-| Additional uses | Period, borders | Automaton |
-
-**Choose Z-Algorithm when**: You want simple code for pattern matching.
-
-## Complexity Analysis
-
-| Operation | Time | Space |
-|-----------|------|-------|
-| Compute Z-array | O(n) | O(n) |
-| Pattern search | O(n + m) | O(n + m) |
-| Find all borders | O(n) | O(n) |
-| String period | O(n) | O(n) |
-
-## The Three Cases
+## 7) Common applications
 
 ```
-Case 1: i > r (outside Z-box)
-  - No information available
-  - Expand naively from position 0
-
-Case 2a: i <= r and Z[k] < r - i + 1
-  - Mirror value fits entirely in Z-box
-  - Z[i] = Z[k] (direct copy)
-
-Case 2b: i <= r and Z[k] >= r - i + 1
-  - Mirror value reaches or exceeds Z-box boundary
-  - Start from r - i + 1, expand naively
+Pattern matching (find all occurrences)
+String borders (prefix = suffix)
+String period detection
+Counting repeated prefixes
 ```
 
-## Implementation Notes
+---
 
-- Z[0] is defined as n (entire string)
-- Use a sentinel character ($) for pattern matching
-- Watch for integer types when computing mirror indices
+## 8) Z vs KMP
+
+Both do pattern matching in O(n).
+
+```
+Z: compares prefixes
+KMP: uses failure links
+```
+
+Z is often simpler to implement.
+
+---
+
+## 9) Common pitfalls
+
+- Forgetting that `Z[0] = n`.
+- Off-by-one in [l, r] vs [l, r) range.
+- Not using a separator between pattern and text.
