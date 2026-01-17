@@ -16,7 +16,6 @@ fn dsu_make(n : Int) -> DSU {
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn dsu_find(dsu : DSU, x : Int) -> Int {
   for cur = x {
     let p = dsu.parent[cur]
@@ -60,7 +59,6 @@ fn dsu_union(dsu : DSU, a : Int, b : Int) -> Bool {
 
 ///|
 /// Return the MST total weight if the graph is connected; otherwise None.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn mst_weight(n : Int, edges : ArrayView[(Int, Int, Int)]) -> Int? {
   if n <= 1 {
     return Some(0)
