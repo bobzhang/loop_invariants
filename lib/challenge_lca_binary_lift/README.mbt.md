@@ -1,28 +1,104 @@
 # Challenge: LCA (Binary Lifting)
 
-Lowest common ancestor with O(log n) queries after preprocessing.
+The **lowest common ancestor (LCA)** of two nodes in a tree is the deepest
+node that is an ancestor of both. Binary lifting answers LCA queries in O(log n)
+after O(n log n) preprocessing.
 
-## Core Idea
+## Problem statement
 
-Precompute `up[k][v]` = the 2^k-th ancestor of node v, along with depths.
-To answer LCA(u, v):
+Given a rooted tree, answer queries:
 
-1. Lift the deeper node up to the same depth.
-2. Lift both nodes from highest power to lowest so they stay below the LCA.
-3. Their parents then match and give the LCA.
+```
+lca(u, v) = lowest common ancestor of u and v
+```
 
-## Example
+## Core idea: binary lifting
+
+Precompute a jump table:
+
+```
+up[k][v] = the 2^k-th ancestor of v
+```
+
+Then to answer LCA(u, v):
+
+1. If depths differ, lift the deeper node upward to match depths.
+2. Lift both nodes together from highest power to lowest, keeping them just
+   below the LCA.
+3. The parent of either node is the LCA.
+
+## Diagram: example tree
+
+```
+        0
+      /   \
+     1     2
+    / \     \
+   3   4     5
+      /
+     6
+```
+
+- LCA(3, 4) = 1
+- LCA(6, 5) = 0
+- LCA(4, 6) = 4 (ancestor of itself)
+
+## Example jump table (partial)
+
+For node 6 in the tree above:
+
+```
+up[0][6] = 4   (1 step)
+up[1][6] = 1   (2 steps)
+up[2][6] = 0   (4 steps)
+```
+
+So lifting 6 by 3 steps uses 2 + 1: 6 -> 1 -> 0.
+
+## Examples
+
+### Example 1: basic queries
 
 ```mbt check
 ///|
 test "lca example" {
-  let edges : Array[(Int, Int)] = [(0, 1), (0, 2), (1, 3), (1, 4), (2, 5)]
-  let tree = @challenge_lca_binary_lift.build_lca(6, edges[:], 0)
+  let edges : Array[(Int, Int)] = [
+    (0, 1),
+    (0, 2),
+    (1, 3),
+    (1, 4),
+    (2, 5),
+    (4, 6),
+  ]
+  let tree = @challenge_lca_binary_lift.build_lca(7, edges[:], 0)
   inspect(@challenge_lca_binary_lift.lca(tree, 3, 4), content="1")
+  inspect(@challenge_lca_binary_lift.lca(tree, 6, 5), content="0")
 }
 ```
 
-## Another Example
+### Example 2: same node
+
+```mbt check
+///|
+test "lca same node" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 3)]
+  let tree = @challenge_lca_binary_lift.build_lca(4, edges[:], 0)
+  inspect(@challenge_lca_binary_lift.lca(tree, 2, 2), content="2")
+}
+```
+
+### Example 3: ancestor relationship
+
+```mbt check
+///|
+test "lca ancestor" {
+  let edges : Array[(Int, Int)] = [(0, 1), (1, 2), (2, 3)]
+  let tree = @challenge_lca_binary_lift.build_lca(4, edges[:], 0)
+  inspect(@challenge_lca_binary_lift.lca(tree, 1, 3), content="1")
+}
+```
+
+### Example 4: across subtrees
 
 ```mbt check
 ///|
@@ -33,11 +109,18 @@ test "lca across subtrees" {
 }
 ```
 
-## Notes
+## Complexity
 
-- Preprocessing is O(n log n).
-- Each query is O(log n).
+- Preprocessing: O(n log n)
+- Query: O(log n)
+- Space: O(n log n)
 
-## Tips
+## Practical notes and pitfalls
 
-- Root choice only affects depths, not correctness.
+- The input should be a **tree** (connected and acyclic).
+- The root only affects depths; LCA results are still correct.
+- If nodes are in different components, LCA is undefined; avoid such queries.
+
+## When to use it
+
+Use binary lifting when you need many LCA queries on a static tree.

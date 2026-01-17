@@ -42,7 +42,6 @@ pub struct Lca {
 
 ///|
 /// Precompute binary lifting tables for LCA queries.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn build_lca(n : Int, edges : ArrayView[(Int, Int)], root : Int) -> Lca {
   if n == 0 {
     return { up: [], depth: [] }
@@ -87,7 +86,6 @@ pub fn build_lca(n : Int, edges : ArrayView[(Int, Int)], root : Int) -> Lca {
 
 ///|
 /// Return the lowest common ancestor of u and v.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn lca(tree : Lca, u : Int, v : Int) -> Int {
   let log = tree.up.length()
   let mut a = u

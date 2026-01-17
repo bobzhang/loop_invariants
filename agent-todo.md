@@ -55,8 +55,8 @@
 - [x] lib/challenge_interval_scheduling
 - [x] lib/challenge_knapsack_01
 - [x] lib/challenge_knapsack_unbounded
-- [ ] lib/challenge_lca_binary_lift (in progress)
-- [ ] lib/challenge_lcs
+- [x] lib/challenge_lca_binary_lift
+- [ ] lib/challenge_lcs (in progress)
 - [ ] lib/challenge_line_sweep
 - [ ] lib/challenge_lis_nlogn
 - [ ] lib/challenge_matrix_chain
