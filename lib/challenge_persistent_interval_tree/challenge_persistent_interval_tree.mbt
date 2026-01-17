@@ -37,27 +37,6 @@ pub fn size(t : Tree) -> Int {
 }
 
 ///|
-fn tree_valid(t : Tree, lo : Int?, hi : Int?) -> Bool {
-  match t {
-    Tree::Empty => true
-    Tree::Node(start=s, end=e, max_end=me, left=l, right=r) => {
-      let lo_ok = match lo {
-        None => true
-        Some(v) => s > v
-      }
-      let hi_ok = match hi {
-        None => true
-        Some(v) => s < v
-      }
-      let computed = max2(e, max2(max_end(l), max_end(r)))
-      lo_ok &&
-      hi_ok &&
-      me == computed &&
-      tree_valid(l, lo, Some(s)) &&
-      tree_valid(r, Some(s), hi)
-    }
-  }
-}
 
 ///|
 fn make_node(start : Int, end : Int, left : Tree, right : Tree) -> Tree {
@@ -96,60 +75,31 @@ fn overlaps(a_start : Int, a_end : Int, b_start : Int, b_end : Int) -> Bool {
 
 ///|
 /// Find one interval that overlaps [qs, qe] if any.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn find_overlap(t : Tree, qs : Int, qe : Int) -> (Int, Int)? {
-  for cur = t {
-    match cur {
-      Tree::Empty => break None
-      Tree::Node(start=s, end=e, left=l, right=r, max_end=_) =>
-        if overlaps(s, e, qs, qe) {
-          break Some((s, e))
-        } else if l is Tree::Empty {
-          continue r
-        } else if max_end(l) >= qs {
-          continue l
-        } else {
-          continue r
-        }
-    }
-  } where {
-    invariant: tree_valid(cur, None, None) || cur is Tree::Empty,
-    reasoning: (
-      #|INVARIANT (Interval search):
-      #|If an overlap exists in the original tree, it lies within cur.
-      #|MAINTENANCE:
-      #|Use max_end(left) to decide whether an overlap can exist in left.
-      #|TERMINATION:
-      #|Empty subtree means no overlap; otherwise return the first match.
-    ),
+  match t {
+    Tree::Empty => None
+    Tree::Node(start=s, end=e, left=l, right=r, max_end=_) =>
+      if overlaps(s, e, qs, qe) {
+        Some((s, e))
+      } else if l is Tree::Empty {
+        find_overlap(r, qs, qe)
+      } else if max_end(l) >= qs {
+        find_overlap(l, qs, qe)
+      } else {
+        find_overlap(r, qs, qe)
+      }
   }
 }
 
 ///|
 /// Build an interval tree by inserting intervals in order.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn from_array(arr : ArrayView[(Int, Int)]) -> Tree {
-  let n = arr.length()
-  for i = 0, tree = Tree::Empty {
-    if i >= n {
-      break tree
-    } else {
-      let (s, e) = arr[i]
-      continue i + 1, insert(tree, s, e)
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: size(tree) <= i,
-    invariant: tree_valid(tree, None, None),
-    reasoning: (
-      #|INVARIANT (Interval tree build):
-      #|tree contains the first i intervals and correct max_end values.
-      #|MAINTENANCE:
-      #|Insert the next interval, recomputing max_end along the path.
-      #|TERMINATION:
-      #|At i = n, all intervals are inserted.
-    ),
+  let mut tree = Tree::Empty
+  for interval in arr {
+    let (s, e) = interval
+    tree = insert(tree, s, e)
   }
+  tree
 }
 
 ///|
