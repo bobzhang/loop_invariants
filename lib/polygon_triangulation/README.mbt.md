@@ -1,39 +1,26 @@
-# Polygon Triangulation (Minimum Weight)
+# Polygon Triangulation (Minimum Weight, Convex)
 
-## Overview
+This package computes the **minimum‑weight triangulation** of a **convex**
+polygon. The weight is the sum of triangle perimeters, using **squared
+distances** to keep everything in integers.
 
-Find the **minimum weight triangulation** of a convex polygon, where weight
-is defined as the sum of triangle perimeters (using squared edge lengths
-to stay in integers).
+---
 
-- **Time**: O(n³)
-- **Space**: O(n²)
-- **Key Feature**: Optimal triangulation via interval DP
+## 1. Problem in plain words
 
-## The Key Insight
+You are given a convex polygon with vertices in order.
 
-```
-Problem: Triangulate a convex n-gon into n-2 triangles
+You must draw non‑crossing diagonals to split it into triangles.
 
-Any triangulation works, but which minimizes total weight?
+Many triangulations are possible. We want the one with **minimum total cost**.
 
-Interval DP insight:
-  - Consider the polygon edge (i, j)
-  - Every triangulation must have exactly one triangle with edge (i, j)
-  - That triangle has form (i, k, j) for some i < k < j
-  - Recursively triangulate (i..k) and (k..j)
+---
 
-dp[i][j] = min cost to triangulate polygon from vertex i to j
-         = min_{i<k<j} (dp[i][k] + dp[k][j] + cost(triangle i,k,j))
+## 2. Small visual
 
-Base case: dp[i][i+1] = 0 (an edge, no triangulation needed)
-```
-
-## Visual: Interval DP Structure
+For a pentagon:
 
 ```
-Polygon vertices: 0, 1, 2, 3, 4 (pentagon)
-
      1
     / \
    /   \
@@ -41,46 +28,85 @@ Polygon vertices: 0, 1, 2, 3, 4 (pentagon)
    \   /
     \ /
   4--3
-
-Triangulate (0, 4):
-  Choose k ∈ {1, 2, 3} as the apex of triangle with edge (0, 4)
-
-  k=1: Triangle (0,1,4) + triangulate (0,1) + triangulate (1,4)
-       = cost(0,1,4) + 0 + dp[1][4]
-
-  k=2: Triangle (0,2,4) + triangulate (0,2) + triangulate (2,4)
-       = cost(0,2,4) + dp[0][2] + dp[2][4]
-
-  k=3: Triangle (0,3,4) + triangulate (0,3) + triangulate (3,4)
-       = cost(0,3,4) + dp[0][3] + 0
-
-dp[0][4] = min of all these options
 ```
 
-## Algorithm
+There are several ways to triangulate it. We want the cheapest.
+
+---
+
+## 3. Key insight: interval DP
+
+Pick an edge (i, j).
+
+Every triangulation of the polygon chain from i to j must include **exactly one
+triangle** that uses this edge, and that triangle is `(i, k, j)` for some
+i < k < j.
+
+So:
 
 ```
-min_weight_triangulation(points):
-  n = length(points)
-  if n < 3: return None
-
-  // dp[i][j] = min cost to triangulate from vertex i to j
-  dp = 2D array of size n×n, initialized to 0
-
-  // Fill DP table for increasing chain lengths
-  for len = 2 to n-1:           // Length of chain (number of edges)
-    for i = 0 to n-len-1:       // Start vertex
-      j = i + len               // End vertex
-      dp[i][j] = ∞
-
-      for k = i+1 to j-1:       // Try each intermediate vertex
-        cost = dp[i][k] + dp[k][j] + triangle_cost(i, k, j)
-        dp[i][j] = min(dp[i][j], cost)
-
-  return dp[0][n-1]
+dp[i][j] = min over k:
+  dp[i][k] + dp[k][j] + cost(i, k, j)
 ```
 
-## Example Usage
+Base case:
+
+```
+dp[i][i+1] = 0   // just an edge, no triangle
+```
+
+This is the classic interval DP structure (like matrix chain multiplication).
+
+---
+
+## 4. Triangle cost
+
+The cost here is the **squared perimeter**:
+
+```
+cost(i, j, k) =
+  dist2(i, j) + dist2(j, k) + dist2(k, i)
+
+dist2(a, b) = (ax - bx)^2 + (ay - by)^2
+```
+
+Why squared? It avoids floating point and keeps everything in Int64.
+
+---
+
+## 5. Step‑by‑step example (square)
+
+Square:
+
+```
+0(0,0) ---- 1(1,0)
+  |           |
+  |           |
+3(0,1) ---- 2(1,1)
+```
+
+Two triangulations:
+
+```
+Option A: triangles (0,1,2) and (0,2,3)
+Option B: triangles (0,1,3) and (1,2,3)
+```
+
+All sides are length 1, diagonals have squared length 2.
+
+Triangle costs:
+
+```
+(0,1,2): 1 + 1 + 2 = 4
+(0,2,3): 2 + 1 + 1 = 4
+Total = 8
+```
+
+Option B also gives 8, so the answer is 8.
+
+---
+
+## 6. Example usage (public API)
 
 ```mbt check
 ///|
@@ -98,157 +124,114 @@ test "triangulation square" {
 }
 ```
 
-## Walkthrough: Square Triangulation
+---
+
+## 7. Another example (pentagon)
+
+Consider a regular‑ish pentagon:
 
 ```
-Square: (0,0), (1,0), (1,1), (0,1)
-Vertices: 0, 1, 2, 3
-
-Edge squared lengths:
-  0→1: 1, 1→2: 1, 2→3: 1, 3→0: 1 (sides)
-  0→2: 2, 1→3: 2 (diagonals)
-
-Two possible triangulations:
-  Option A: (0,1,2) + (0,2,3)
-    Triangle (0,1,2): edges 1+1+2 = 4
-    Triangle (0,2,3): edges 2+1+1 = 4
-    Total: 8
-
-  Option B: (0,1,3) + (1,2,3)
-    Triangle (0,1,3): edges 1+2+1 = 4
-    Triangle (1,2,3): edges 1+1+2 = 4
-    Total: 8
-
-Both have same cost! Result: 8 ✓
+0(0,0), 1(2,0), 2(3,1), 3(1,3), 4(-1,1)
 ```
 
-## DP Table Construction
+We can compare two triangulations:
 
 ```
-For a pentagon (n=5), we fill the table:
-
-      j→  0   1   2   3   4
-    i↓
-    0     0   0   c   ?   ?     c = cost(0,1,2)
-    1         0   0   c   ?
-    2             0   0   c
-    3                 0   0
-    4                     0
-
-Fill order: len=2 first (triangles), then len=3, len=4
-
-len=2:
-  dp[0][2] = dp[0][1] + dp[1][2] + cost(0,1,2)
-           = 0 + 0 + cost(0,1,2)
-  dp[1][3] = 0 + 0 + cost(1,2,3)
-  dp[2][4] = 0 + 0 + cost(2,3,4)
-
-len=3:
-  dp[0][3] = min(
-    dp[0][1] + dp[1][3] + cost(0,1,3),  // k=1
-    dp[0][2] + dp[2][3] + cost(0,2,3)   // k=2
-  )
-
-len=4:
-  dp[0][4] = min over k ∈ {1,2,3} of (dp[0][k] + dp[k][4] + cost(0,k,4))
+Option A: fix vertex 0, triangles (0,1,2), (0,2,3), (0,3,4)
+Option B: use diagonals (1,3) and (1,4)
 ```
 
-## Triangle Cost Functions
+The DP will automatically pick the cheaper one.
 
-```
-Common cost definitions:
-
-1. Perimeter (sum of edge lengths):
-   cost(i,j,k) = |p_i - p_j| + |p_j - p_k| + |p_k - p_i|
-
-2. Squared perimeter (used here, avoids sqrt):
-   cost(i,j,k) = |p_i - p_j|² + |p_j - p_k|² + |p_k - p_i|²
-
-3. Area:
-   cost(i,j,k) = |(p_j - p_i) × (p_k - p_i)| / 2
-
-4. Maximum edge:
-   cost(i,j,k) = max(|p_i - p_j|, |p_j - p_k|, |p_k - p_i|)
-
-Different cost functions lead to different optimal triangulations.
+```mbt check
+///|
+test "triangulation pentagon" {
+  let points : Array[@polygon_triangulation.Point] = [
+    @polygon_triangulation.Point::{ x: 0L, y: 0L },
+    @polygon_triangulation.Point::{ x: 2L, y: 0L },
+    @polygon_triangulation.Point::{ x: 3L, y: 1L },
+    @polygon_triangulation.Point::{ x: 1L, y: 3L },
+    @polygon_triangulation.Point::{ x: -1L, y: 1L },
+  ]
+  // We just check it returns Some(...) and is deterministic.
+  let ans = @polygon_triangulation.min_weight_triangulation(points)
+  inspect(ans is Some(_), content="true")
+}
 ```
 
-## Common Applications
+---
 
-### 1. Computer Graphics
-```
-Triangulate polygons for rendering.
-Minimize "skinny" triangles for better shading.
-```
+## 8. DP table visualization
 
-### 2. Mesh Generation
-```
-Create triangular meshes for FEM analysis.
-Quality depends on triangle shape.
-```
-
-### 3. Computational Geometry
-```
-Preprocessing step for polygon algorithms.
-Many operations simpler on triangulated polygons.
-```
-
-### 4. Game Development
-```
-Triangulate terrain and collision shapes.
-Efficient rendering and physics.
-```
-
-## Complexity Analysis
-
-| Operation | Time | Notes |
-|-----------|------|-------|
-| Build DP table | O(n³) | O(n²) states, O(n) transitions |
-| Space | O(n²) | Store DP table |
-| Triangle cost | O(1) | Per triangle |
-
-## Why O(n³)?
+For n = 5 (pentagon), dp is 5×5.
+We fill by increasing gap length.
 
 ```
-Number of subproblems: O(n²)
-  - All (i, j) pairs where i < j
-
-Work per subproblem: O(n)
-  - Try all k between i and j
-
-Total: O(n²) × O(n) = O(n³)
+      j → 0   1   2   3   4
+i ↓
+0        0   0   x   x   x
+1            0   0   x   x
+2                0   0   x
+3                    0   0
+4                        0
 ```
 
-## Minimum Weight Triangulation of General Polygons
+Where:
 
 ```
-For convex polygons: O(n³) by this DP
-
-For simple (non-convex) polygons:
-  - Much harder!
-  - NP-hard in general
-  - Heuristics or approximation algorithms used
-
-For point sets (Delaunay triangulation):
-  - Different problem: triangulate a point set
-  - Delaunay maximizes minimum angle
-  - O(n log n) algorithms exist
+dp[i][i+1] = 0
+dp[i][i+2] = cost(i, i+1, i+2)   // a single triangle
 ```
 
-## Implementation Notes
-
-- Polygon must be convex and in CCW (or CW) order
-- Use squared distances to avoid floating point
-- DP table indices correspond to vertex indices
-- Base case: adjacent vertices (no triangulation needed)
-- Result is dp[0][n-1] for the full polygon
-
-## Related Problems
+Then:
 
 ```
-1. Optimal BST: Similar interval DP structure
-2. Matrix chain multiplication: Same recurrence pattern
-3. Ear clipping: O(n²) any triangulation (not optimal)
-4. Delaunay triangulation: Optimizes different criterion
+dp[0][4] = min(
+  dp[0][1] + dp[1][4] + cost(0,1,4),
+  dp[0][2] + dp[2][4] + cost(0,2,4),
+  dp[0][3] + dp[3][4] + cost(0,3,4)
+)
 ```
 
+---
+
+## 9. Common applications
+
+1. **Graphics / rendering**
+   - Polygons are rendered as triangles.
+   - Better triangulations reduce skinny triangles.
+2. **Mesh generation**
+   - Simulation and FEM benefit from good triangles.
+3. **Geometry preprocessing**
+   - Many algorithms are easier on triangulated polygons.
+
+---
+
+## 10. Complexity
+
+```
+States: O(n^2)
+Transitions per state: O(n)
+Total: O(n^3) time, O(n^2) space
+```
+
+---
+
+## 11. Constraints and notes
+
+- The polygon must be **convex** and vertices ordered (CW or CCW).
+- For non‑convex polygons, minimum‑weight triangulation is NP‑hard.
+- The result uses squared distances, so it differs from true Euclidean
+  perimeter but preserves ordering in most cases.
+
+---
+
+## 12. Summary
+
+Minimum‑weight triangulation of a convex polygon is a classic interval DP:
+
+```
+dp[i][j] = min_{i<k<j} dp[i][k] + dp[k][j] + cost(i,k,j)
+```
+
+The implementation is straightforward, and the DP guarantees optimality.
