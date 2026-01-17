@@ -165,7 +165,7 @@
 - [x] lib/min_cut_st
 - [x] lib/minimum_cyclic_rotation
 - [x] lib/mo_algorithm
-- [ ] lib/monotonic_stack
+- [x] lib/monotonic_stack
 - [ ] lib/mos_algorithm
 - [ ] lib/mst
 - [ ] lib/persistent
