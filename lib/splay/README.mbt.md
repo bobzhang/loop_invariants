@@ -1,283 +1,197 @@
-# Splay Tree
+# Splay Tree (Self‑Adjusting BST)
 
-## Overview
+This package documents **splay trees**, a self‑adjusting binary search tree.
+Every access **splays** the node to the root using rotations.
 
-A **Splay Tree** is a self-adjusting binary search tree that moves accessed nodes
-to the root via rotations. It provides O(log n) amortized time for all operations
-without storing balance information.
+Key idea: the tree adapts to access patterns — frequently accessed keys stay
+near the top.
 
-- **Operations**: O(log n) amortized
-- **Space**: O(n)
-- **Key Feature**: Recently accessed elements are near the root
+---
 
-## The Key Insight
+## 1. Why splay trees?
 
-```
-Traditional BSTs: Access patterns can degrade to O(n) per operation
-                  (e.g., accessing elements in sorted order)
+A plain BST can become a chain (O(n) per operation).  
+Splay trees fix this **without storing balance info**:
 
-Splay tree insight: "Move to front"
-  - Every access rotates the node to the root
-  - Frequently accessed nodes stay near the top
-  - The tree self-balances over time
+- every search/insert/delete splays to the root,
+- amortized **O(log n)** per operation,
+- great when access patterns are skewed.
 
-Amortized O(log n) for any access sequence!
-```
+---
 
-## Understanding Tree Rotations
+## 2. Basic rotation reminder
+
+Right rotation at x:
 
 ```
-Right rotation at x:          Left rotation at y:
-
-      y                              x
-     / \                            / \
-    x   C    ──────────►          A   y
-   / \       Right rotate            / \
-  A   B      at x                   B   C
-
-              ◄──────────
-              Left rotate
-              at y
-
-Key property: BST order is preserved after rotation
-  A < x < B < y < C (unchanged)
+      y                x
+     / \              / \
+    x   C   --->     A   y
+   / \                  / \
+  A   B                B   C
 ```
 
-## The Three Splay Cases
+Left rotation is symmetric.
 
-### Case 1: Zig (Parent is Root)
+BST order is preserved.
+
+---
+
+## 3. The three splay cases
+
+### Zig (parent is root)
+
 ```
-When x's parent is the root, do a single rotation:
-
-Before:              After zig:
-      p (root)             x (root)
-     / \                  / \
-    x   C      ─────►    A   p
-   / \                      / \
-  A   B                    B   C
-
-Only happens at the last step (once per splay).
-```
-
-### Case 2: Zig-Zig (Same Direction)
-```
-When x and parent are both left children (or both right):
-
-Before:              After zig-zig:
-        g                   x
-       / \                 / \
-      p   D               A   p
-     / \        ─────►       / \
-    x   C                   B   g
-   / \                         / \
-  A   B                       C   D
-
-IMPORTANT: Rotate grandparent first, then parent!
-This is what gives the O(log n) amortized bound.
+Before:            After:
+   p                 x
+  / \               / \
+ x   C   --->      A   p
+/ \                   / \
+A  B                 B   C
 ```
 
-### Case 3: Zig-Zag (Different Directions)
-```
-When x is left child and parent is right child (or vice versa):
+Single rotation.
 
-Before:              After zig-zag:
+---
+
+### Zig‑Zig (same direction)
+
+```
+Before:                  After:
       g                     x
      / \                   / \
-    A   p                 g   p
-       / \     ─────►    / \ / \
-      x   D             A  B C  D
-     / \
-    B   C
-
-Rotate x twice: first with parent, then with grandparent.
+    p   D   --->          A   p
+   / \                       / \
+  x   C                     B   g
+ / \                           / \
+A  B                          C   D
 ```
 
-## Splay Algorithm Walkthrough
+Rotate **grandparent first**, then parent.
+
+---
+
+### Zig‑Zag (different direction)
 
 ```
+Before:                  After:
+    g                        x
+   / \                      / \
+  A   p        --->         g   p
+     / \                   / \ / \
+    x   D                 A  B C  D
+   / \
+  B   C
+```
+
+Rotate x with parent, then with grandparent.
+
+---
+
+## 4. Why zig‑zig is important
+
+Zig‑zig reduces tree depth faster than a single rotation.
+That is what gives splay trees their amortized O(log n) guarantee.
+
+---
+
+## 5. Step‑by‑step example
+
 Tree before splay(30):
 
-           50
-          /  \
-        25    70
+```
+          50
+         /  \
+       25    70
+      /  \
+     10   30
+         /  \
+        27   40
+```
+
+30 is a **right child** of 25, and 25 is a **left child** of 50 → zig‑zag.
+
+After zig‑zag:
+
+```
+          50
+         /  \
+       30    70
+      /  \
+     25   40
+    /  \
+   10   27
+```
+
+Now 30’s parent is root → zig:
+
+```
+        30
        /  \
-      10   30    ← we want to splay this node
-          /  \
-         27   40
-
-Step 1: Zig-Zag (30 is right child, 25 is left child)
-  - 30 and 25 have different directions
-  - Rotate 30 left, then rotate 30 right
-
-After step 1:
-           50
-          /  \
-        30    70
-       /  \
-      25   40
-     /  \
-    10   27
-
-Step 2: Zig (30's parent 50 is root)
-  - Single right rotation
-
-After step 2:
-        30  ← now root!
-       /  \
-      25   50
-     /  \    \
-    10   27   70
-            /
-           40
+     25    50
+    / \      \
+   10 27      70
+          /
+         40
 ```
 
-## Visual: Why Zig-Zig Rotates Grandparent First
+30 is now at the root.
+
+---
+
+## 6. Amortized O(log n) intuition
+
+Splaying may take O(depth) rotations, but it also **improves** the tree:
 
 ```
-WRONG way (rotate parent first):
-      g              g            x
-     /              /            / \
-    p    ───►      x    ───►    A   g
-   /              / \              /
-  x              A   p            p
- /                    \          /
-A                      B        B
-
-This doesn't improve tree balance!
-
-RIGHT way (rotate grandparent first):
-      g              p              x
-     /              / \            / \
-    p    ───►      x   g   ───►   A   p
-   /              /                  / \
-  x              A                  B   g
- /
-A
-
-This path-halving is key to O(log n) amortized time!
+deep nodes move up
+shallow nodes move down
 ```
 
-## Why Splay Trees Work
+Over many operations, total cost averages to O(log n).
+
+---
+
+## 7. Typical operations
+
+1. **Search**: find node, splay it to root.
+2. **Insert**: BST insert, then splay new node.
+3. **Delete**: splay node, remove root, merge subtrees.
+4. **Split/Join**: splay pivot, then split at root.
+
+---
+
+## 8. Common applications
+
+1. **Dynamic sequences** (split, join, reverse)
+2. **Link‑cut trees** (splay trees inside)
+3. **Adaptive caches** (frequent keys stay near root)
+
+---
+
+## 9. Complexity
 
 ```
-The potential function argument:
-
-Define potential Φ(T) = Σ log(size(subtree(v))) for all v
-
-Key insight: Splaying a deep node to the root
-  - Does O(depth) rotations
-  - But ALSO improves the tree structure
-  - The "cost" is paid by reducing potential
-
-Amortized cost = actual cost + ΔΦ ≤ 3 log n
-
-Even if we access the deepest node repeatedly,
-the tree restructures to make future accesses cheap!
+Search / Insert / Delete: O(log n) amortized
+Worst‑case for one op:    O(n)
+Space:                   O(n)
 ```
 
-## Common Applications
+---
 
-### 1. Dynamic Sequences
-```
-Splay trees can implement sequences with:
-- Split at position k: O(log n) amortized
-- Concatenate two sequences: O(log n) amortized
-- Reverse a range: O(log n) amortized (with lazy propagation)
-```
+## 10. Beginner checklist
 
-### 2. Link-Cut Trees
-```
-The auxiliary trees in link-cut trees are splay trees.
-Splaying makes path operations efficient.
-```
+1. Always splay after access.
+2. Zig‑zig: rotate grandparent first.
+3. Zig‑zag: rotate node twice.
+4. Amortized ≠ worst case; one operation can still be slow.
 
-### 3. Cache-Friendly Access
-```
-If some elements are accessed more frequently:
-- They naturally migrate toward the root
-- Access time adapts to the access pattern
-- No need to know the pattern in advance!
-```
+---
 
-### 4. Optimal BST Approximation
-```
-Splay trees achieve within a constant factor of
-the optimal static BST for any access sequence.
-(Dynamic Optimality Conjecture - still unproven!)
-```
+## 11. Summary
 
-## Rotation Cases (Summary)
+Splay trees are simple, adaptive BSTs:
 
-- **Zig**: parent is root; single rotation.
-- **Zig-Zig**: node and parent are both left or both right children; rotate
-  parent, then rotate node.
-- **Zig-Zag**: node is a left child and parent is a right child (or vice versa);
-  rotate node twice.
-
-## Pseudocode
-
-```mbt nocheck
-///|
-fn splay(x : Node) -> Unit {
-  while x is not root {
-    let p = x.parent
-    if p is root {
-      // Zig case
-      if x is left_child { rotate_right(p) }
-      else { rotate_left(p) }
-    } else {
-      let g = p.parent
-      if same_direction(x, p) {
-        // Zig-Zig: rotate grandparent first!
-        if x is left_child {
-          rotate_right(g)
-          rotate_right(p)
-        } else {
-          rotate_left(g)
-          rotate_left(p)
-        }
-      } else {
-        // Zig-Zag: rotate parent, then grandparent
-        if x is left_child {
-          rotate_right(p)
-          rotate_left(g)
-        } else {
-          rotate_left(p)
-          rotate_right(g)
-        }
-      }
-    }
-  }
-}
-```
-
-## Complexity Analysis
-
-| Operation | Amortized Time |
-|-----------|----------------|
-| Search | O(log n) |
-| Insert | O(log n) |
-| Delete | O(log n) |
-| Split | O(log n) |
-| Join | O(log n) |
-
-## Splay Tree vs Other BSTs
-
-| Tree | Worst Case | Amortized | Extra Storage |
-|------|------------|-----------|---------------|
-| **Splay** | O(n) | O(log n) | None |
-| AVL | O(log n) | O(log n) | Balance factor |
-| Red-Black | O(log n) | O(log n) | Color bit |
-| Treap | O(n) | O(log n) expected | Priority |
-
-**Choose Splay when**: You want adaptive performance, simple implementation,
-or need split/join operations.
-
-## Implementation Notes
-
-- Amortized time: O(log n)
-- This package is a reference implementation with invariants
-- Maintain parent pointers for efficient bottom-up splaying
-- Keys are generic: operations require `T : Compare`
-- Top-down splaying is an alternative that avoids parent pointers
-
+- no balance factors,
+- good amortized performance,
+- excellent for access‑biased workloads.

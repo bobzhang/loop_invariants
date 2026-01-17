@@ -185,7 +185,7 @@
 - [x] lib/skiplist
 - [x] lib/sliding_window
 - [x] lib/sparse_table
-- [ ] lib/splay
+- [x] lib/splay
 - [ ] lib/splay_tree
 - [ ] lib/sqrt
 - [ ] lib/sqrt_decomposition
