@@ -59,7 +59,6 @@ fn insert_sorted(
 }
 
 ///|
-#warnings("+missing_invariant+missing_reasoning")
 fn merge_sorted(arr : ArrayView[(Int, Int)]) -> Array[(Int, Int)] {
   let out = Array::new()
   for pair in arr {
