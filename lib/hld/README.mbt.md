@@ -44,6 +44,13 @@ After k light edges: size <= n / 2^k
 
 So there are at most O(log n) light edges, and thus only O(log n) chain jumps.
 
+### Quick picture
+
+```
+Every time you cross a light edge, subtree size at least halves.
+So you can only do that about log2(n) times before reaching size 1.
+```
+
 ## Step 1: Compute Subtree Sizes and Heavy Children
 
 We do a DFS to get sizes and pick the heaviest child at each node.
@@ -93,6 +100,11 @@ Position: 0  1  2  3  4  5  6  7
 
 Notice each chain is a continuous slice.
 
+### Why heavy-first DFS matters
+
+Visiting the heavy child first ensures that the entire heavy chain is placed
+contiguously in the linear order. This is what lets a chain be a single range.
+
 ## Step 3: Decompose a Path into Ranges
 
 To query `u -> v`, you repeatedly climb the deeper chain head.
@@ -113,6 +125,14 @@ Ranges touched:
 
 Total = 2 segment tree queries.
 
+### Visual decomposition (same example)
+
+```
+Path 7 -> 6:
+  chain D: [pos(3) .. pos(6)] = [6..7]
+  chain A: [pos(0) .. pos(7)] = [0..3]
+```
+
 ## Subtree Queries Are One Range
 
 Because the heavy-first DFS assigns positions in a subtree contiguously:
@@ -122,6 +142,15 @@ subtree(u) == [position[u], position[u] + subtree_size[u] - 1]
 ```
 
 So subtree sums or subtree updates are just one range in the segment tree.
+
+### Subtree example
+
+```
+subtree(1) = nodes {1,4,5,7}
+positions  = [1..3] and [5] in the example ordering
+```
+
+In the heavy-first ordering shown above, subtree(1) is contiguous.
 
 ## Edge vs Vertex Values
 
@@ -147,6 +176,14 @@ return (deeper of u,v)
 ```
 
 This finds the LCA in O(log n) chain jumps.
+
+### Example
+
+```
+LCA(7, 6):
+  head[7]=0, head[6]=3 -> climb 6 to parent(head 3) = 0
+  now same head, LCA = 0
+```
 
 ## Example Usage (Conceptual)
 
@@ -180,6 +217,16 @@ while hld.get_chain_head(a) != hld.get_chain_head(b) {
 ans += segtree.query(min(pos[a],pos[b])..max(pos[a],pos[b]))
 ```
 
+### Micro example with explicit ranges
+
+```
+pos:  [0,1,4,6,2,5,7,3]  (from earlier example)
+head: [0,0,2,3,0,5,3,0]
+
+query path 7 -> 6:
+  range [6..7] + range [0..3]
+```
+
 ## Concrete Range Decomposition Example (Hardcoded)
 
 ```
@@ -199,6 +246,11 @@ Path 7 -> 6 produces ranges:
 - **Disconnected graph**: HLD is for a tree; handle components separately.
 - **Root choice**: any root works, but arrays depend on the root.
 - **Indices**: be consistent with 0-based indexing in arrays.
+
+### Beginner trap
+
+If you store edge values at `position[u]`, remember to exclude the LCA
+position when querying edge-paths.
 
 ## Complexity
 
