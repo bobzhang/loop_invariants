@@ -196,7 +196,7 @@
 - [x] lib/suffix_array
 - [x] lib/suffix_automaton
 - [x] lib/suffix_tree
-- [ ] lib/suurballe_disjoint_paths
+- [x] lib/suurballe_disjoint_paths
 - [ ] lib/techniques
 - [ ] lib/topological_sort_dfs
 - [ ] lib/treap

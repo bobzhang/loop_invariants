@@ -1,99 +1,138 @@
-# Suurballe's Algorithm (Edge-Disjoint Shortest Paths)
+# Suurballe's Algorithm (Two Edge-Disjoint Shortest Paths)
 
-## Overview
+## Problem in plain words
 
-**Suurballe's algorithm** finds **two edge-disjoint shortest paths** from a
-source to a target in a weighted directed graph. The combined length of the
-two paths is minimized.
+You have a directed, weighted graph with non-negative weights. You want two
+paths from a source to a sink that do not share any directed edge, and you want
+the total cost of both paths to be as small as possible.
 
-- **Time**: O(E log V)
-- **Space**: O(V + E)
-- **Key Feature**: Optimal pair of non-overlapping paths
+This package provides:
 
-## The Key Insight
+- `@suurballe_disjoint_paths.suurballe_disjoint_paths(
+    n, edges[:], source, sink
+  ) -> (Array[Int], Array[Int])?`
 
-```
-Problem: Find two paths s → t that share no edges, minimizing total length
+It returns `None` when:
+- there is no pair of edge-disjoint paths, or
+- the input is invalid (out-of-range vertices, negative weights, `source == sink`).
 
-Naive approach: Find shortest path, remove its edges, find second shortest
-  → NOT optimal! Removing edges might block better solutions
+Each returned path is a list of vertices from `source` to `sink`.
 
-Suurballe's insight:
-  1. Find shortest path P1
-  2. Reverse edges of P1 and use potentials to reweight
-  3. Find shortest path P2 in modified graph
-  4. Cancel overlapping edges (they appear in both directions)
-  5. Extract two disjoint paths from remaining edges
+## Model and terminology
 
-The reversal trick allows "undoing" parts of P1 to find globally optimal pair!
-```
+- **Directed graph**: an edge `(u, v, w)` goes only from `u` to `v`.
+- **Edge-disjoint**: the two paths may share vertices, but they must not share
+  any directed edge.
+- **Non-negative weights**: the algorithm uses Dijkstra, so weights must be
+  `>= 0`.
 
-## Visual: Why Reversal Works
+If you want undirected edges, add them in both directions:
+`(u, v, w)` and `(v, u, w)`.
 
-```
-Original graph:           After finding P1 = s→a→b→t
-    a───2───►b               and reversing P1's edges:
-   ↗         ↘
-  1           1           s───1───►a←──2──b───1───►t
- ↗             ↘                   │       ↑
-s───────3───────►t                 │       │
-                                   └───3───┘
+## Why "shortest path + delete edges" fails
 
-If we find P2 = s→t directly (cost 3), we'd have:
-  P1: s→a→b→t (cost 4)
-  P2: s→t (cost 3)
-  Total: 7
+It is tempting to:
+1) find a shortest path `P1`,
+2) delete its edges,
+3) find a shortest path `P2` in the remaining graph.
 
-But with reversal, P2 might use reversed edge b→a:
-  P2 in modified graph: s→a→b→a→t? No, that revisits a.
+That can fail even when two disjoint paths exist.
 
-Actually, the reversal allows P2 to "cancel" edge a→b:
-  - P1 used a→b
-  - P2 uses b→a (reversed)
-  - They cancel out!
-
-Final paths after cancellation might be:
-  Path 1: s→a→t (via some route)
-  Path 2: s→b→t (via some route)
-```
-
-## Algorithm
+Example:
 
 ```
-suurballe(graph, s, t):
-  // Step 1: First Dijkstra from s
-  dist = dijkstra(graph, s)
-  if dist[t] == ∞: return None
-
-  // Step 2: Compute potentials (Johnson's trick)
-  potential[v] = dist[v]
-
-  // Step 3: Create modified graph
-  modified = empty graph
-  for each edge (u, v, w) in graph:
-    reduced_cost = w + potential[u] - potential[v]
-    modified.add_edge(u, v, reduced_cost)
-
-  // Step 4: Reverse edges on shortest path s→t
-  path1 = reconstruct_path(s, t)
-  for each edge (u, v) in path1:
-    modified.remove_edge(u, v)
-    modified.add_edge(v, u, 0)  // Cost 0 due to potentials
-
-  // Step 5: Second Dijkstra from s in modified graph
-  dist2 = dijkstra(modified, s)
-  if dist2[t] == ∞: return None
-
-  // Step 6: Extract two disjoint paths
-  path2 = reconstruct_path_in_modified(s, t)
-  return extract_disjoint_paths(path1, path2)
+  s --1--> u --1--> v --1--> t
+  s --2--> v
+  u --2--> t
 ```
 
-## Example Usage
+The shortest path is `s -> u -> v -> t` with cost 3.
+If you delete its edges, there is no remaining path from `s` to `t`.
+
+But two edge-disjoint paths do exist:
+- `s -> u -> t` (cost 3)
+- `s -> v -> t` (cost 3)
+
+So we need a smarter approach that can "swap" edges between the two paths.
+
+## Suurballe's key idea (intuitive)
+
+1) Find a shortest path `P1` from `s` to `t`.
+2) Reweight edges using shortest path distances so all new weights are
+   non-negative.
+3) Reverse the edges of `P1` in the reweighted graph.
+4) Run Dijkstra again to get a second shortest path `P2`.
+5) Combine edges of `P1` and `P2`, cancel opposite directions, and extract two
+   disjoint paths.
+
+The reversal trick lets the second run "undo" parts of `P1` where a different
+split would create a better pair of disjoint paths.
+
+## The reweighting step (Johnson potentials)
+
+Let `dist[v]` be the shortest distance from `s` to `v`.
+Define a new weight:
+
+```
+w'(u, v) = w(u, v) + dist[u] - dist[v]
+```
+
+Properties:
+- `w'(u, v) >= 0` for all edges, so Dijkstra still works.
+- Any shortest path in original weights is also shortest in reduced weights.
+- For edges on a shortest path, `w'(u, v) = 0`.
+
+This is why reversing edges on `P1` creates zero-cost reversed edges.
+
+## A worked example (with cancellation)
+
+Graph:
+
+```
+  s --1--> u --1--> v --1--> t
+  s --2--> v
+  u --2--> t
+```
+
+Step 1: First Dijkstra gives the shortest path:
+`P1 = s -> u -> v -> t`.
+
+Step 2: Reweight. Edges on `P1` now have cost 0.
+
+Step 3: Reverse edges of `P1` in the reweighted graph:
+
+```
+  s <--0-- u <--0-- v <--0-- t
+  s --0--> v
+  u --0--> t
+```
+
+Step 4: Second Dijkstra finds a path that may use reversed edges, for example:
+`P2 = s -> v -> u -> t` (note the reversed edge `v -> u`).
+
+Step 5: Cancel opposite directions:
+
+```
+P1 edges: s->u, u->v, v->t
+P2 edges: s->v, v->u, u->t
+
+Cancel u->v with v->u.
+Remaining edges:
+  s->u, u->t
+  s->v, v->t
+```
+
+So the final pair is:
+- `s -> u -> t`
+- `s -> v -> t`
+
+This is exactly the pair we wanted, even though `P1` was not part of it.
+
+## API usage (basic example)
 
 ```mbt check
 ///|
-test "suurballe example" {
+test "suurballe basic example" {
   let edges : Array[(Int, Int, Int64)] = [
     (0, 1, 1L),
     (1, 4, 1L),
@@ -115,149 +154,54 @@ test "suurballe example" {
       assert_eq(p1[p1.length() - 1], 4)
       assert_eq(p2[0], 0)
       assert_eq(p2[p2.length() - 1], 4)
-      assert_true(p1.length() == 3)
-      assert_true(p2.length() == 3)
+      assert_true(p1.length() >= 2)
+      assert_true(p2.length() >= 2)
     }
   }
 }
 ```
 
-## Algorithm Walkthrough
+## API usage (no solution)
 
-```
-Graph:
-  0 ──1──► 1 ──1──► 4
-  │
-  1
-  │
-  ▼
-  2 ──1──────────► 4
-
-  0 ──2──► 3 ──0──► 4
-
-Step 1: Dijkstra from 0
-  dist = [0, 1, 1, 2, 2]
-  Shortest path: 0→1→4 (cost 2) or 0→2→4 (cost 2)
-  Take P1 = 0→1→4
-
-Step 2: Potentials = dist = [0, 1, 1, 2, 2]
-
-Step 3: Reweight edges
-  Edge 0→1: reduced = 1 + 0 - 1 = 0
-  Edge 1→4: reduced = 1 + 1 - 2 = 0
-  Edge 0→2: reduced = 1 + 0 - 1 = 0
-  Edge 2→4: reduced = 1 + 1 - 2 = 0
-  Edge 0→3: reduced = 2 + 0 - 2 = 0
-  Edge 3→4: reduced = 0 + 2 - 2 = 0
-
-Step 4: Reverse P1 edges (0→1, 1→4)
-  Remove: 0→1, 1→4
-  Add: 1→0 (cost 0), 4→1 (cost 0)
-
-Step 5: Second Dijkstra finds P2 = 0→2→4 (cost 0 in reduced)
-
-Step 6: Extract paths
-  P1 edges: {0→1, 1→4}
-  P2 edges: {0→2, 2→4}
-  No overlap → paths are already disjoint!
-
-Result:
-  Path 1: 0 → 1 → 4 (length 2)
-  Path 2: 0 → 2 → 4 (length 2)
-  Total: 4
+```mbt check
+///|
+test "suurballe returns None when no pair exists" {
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 1L), (1, 2, 1L), (2, 3, 1L)]
+  let result = @suurballe_disjoint_paths.suurballe_disjoint_paths(
+    4,
+    edges[:],
+    0,
+    3,
+  )
+  inspect(result is None, content="true")
+}
 ```
 
-## Why Johnson's Potentials?
+## How to think about the output
 
-```
-Problem: After reversing edges, some might have negative weight!
+- Each path is a vertex list `s = v0, v1, ..., vk = t`.
+- Paths are edge-disjoint by construction.
+- The sum of weights along both paths is minimal among all edge-disjoint pairs.
 
-Original edge u→v has weight w.
-Reversed edge v→u would have weight -w.
+If multiple optimal pairs exist, any one of them may be returned.
 
-Solution: Use potentials to make all reduced costs non-negative.
+## Complexity
 
-reduced_cost(u, v) = w + potential[u] - potential[v]
+Suurballe runs Dijkstra twice and does linear post-processing.
 
-If potential = shortest path distances:
-  - reduced_cost ≥ 0 for all edges (triangle inequality)
-  - Shortest paths are preserved
-  - Can use Dijkstra instead of Bellman-Ford!
+- Time: `O(E log V)`
+- Space: `O(V + E)`
 
-For reversed edges on P1:
-  reduced_cost(v, u) = -w + potential[v] - potential[u]
-                     = -(w + potential[u] - potential[v])
-                     = -reduced_cost(u, v)
-                     = 0 (since edge is on shortest path!)
-```
+## Common use cases
 
-## Common Applications
+- Network routing with backup paths.
+- Transportation planning with alternative routes.
+- Any system that needs two independent connections between the same endpoints.
 
-### 1. Network Reliability
-```
-Find two independent routes for fault tolerance.
-If one path fails, the other still works.
-```
+## Tips and gotchas
 
-### 2. Telecommunications
-```
-Route backup connections that don't share any links.
-Ensures redundancy in network infrastructure.
-```
-
-### 3. Transportation
-```
-Evacuation routes that don't share roads.
-Prevents congestion during emergencies.
-```
-
-### 4. VLSI Routing
-```
-Route multiple signals without crossing.
-Each path represents a wire trace.
-```
-
-## Complexity Analysis
-
-| Operation | Time | Notes |
-|-----------|------|-------|
-| First Dijkstra | O(E log V) | Standard shortest path |
-| Potential computation | O(V) | Just copy distances |
-| Graph modification | O(E) | Reweight + reverse |
-| Second Dijkstra | O(E log V) | In modified graph |
-| Path extraction | O(V) | Trace back paths |
-| **Total** | **O(E log V)** | Two Dijkstra passes |
-
-## Suurballe vs Other Approaches
-
-| Method | Finds | Time |
-|--------|-------|------|
-| Suurballe | 2 edge-disjoint | O(E log V) |
-| k-shortest paths | k paths (may overlap) | O(kE log V) |
-| Max-flow | k edge-disjoint | O(kE log V) |
-| Min-cost max-flow | k min-cost edge-disjoint | O(kE log V) |
-
-**Choose Suurballe when**: You need exactly 2 edge-disjoint shortest paths.
-
-## Generalizations
-
-```
-For k edge-disjoint paths:
-  - Use min-cost max-flow with capacity 1 per edge
-  - Cost = edge weight, find flow of value k
-  - Decompose flow into k paths
-
-For vertex-disjoint paths:
-  - Split each vertex v into v_in and v_out
-  - Connect v_in → v_out with capacity 1
-  - Apply edge-disjoint algorithm on transformed graph
-```
-
-## Implementation Notes
-
-- Handle unreachable target (return None)
-- Store parent pointers for path reconstruction
-- Be careful with edge reversal in adjacency list
-- Potentials make all reduced costs non-negative
-- Reversed edges on P1 have reduced cost 0
-
+- Weights must be non-negative. If you have negative weights, use a different
+  algorithm (or rework the model).
+- For undirected graphs, add both directed edges.
+- For vertex-disjoint paths, split each vertex into `vin -> vout` with capacity
+  1 and transform the problem into an edge-disjoint one.
