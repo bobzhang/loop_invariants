@@ -65,7 +65,6 @@ fn next_greater_right(a : ArrayView[Int]) -> Array[Int] {
   let n = a.length()
   let ans = Array::make(n, -1)
   let stack : Array[Int] = []
-
   for i in 0..<n {
     let ai = a[i]
     while stack.length() > 0 && a[stack[stack.length() - 1]] < ai {
@@ -98,11 +97,11 @@ fn prev_smaller_left(a : ArrayView[Int]) -> Array[Int] {
   let n = a.length()
   let ans = Array::make(n, -1)
   let stack : Array[Int] = []
-
   for i in 0..<n {
     let ai = a[i]
     while stack.length() > 0 && a[stack[stack.length() - 1]] >= ai {
       let _ = stack.pop()
+
     }
     if stack.length() > 0 {
       let top = stack[stack.length() - 1]
@@ -140,11 +139,11 @@ fn stock_span(prices : ArrayView[Int]) -> Array[Int] {
   let n = prices.length()
   let span = Array::make(n, 0)
   let stack : Array[Int] = []
-
   for i in 0..<n {
     let p = prices[i]
     while stack.length() > 0 && prices[stack[stack.length() - 1]] <= p {
       let _ = stack.pop()
+
     }
     if stack.length() == 0 {
       span[i] = i + 1
