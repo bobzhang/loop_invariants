@@ -101,6 +101,32 @@ Result: two SCCs {0,1,2} and {3}.
 
 ---
 
+## 5b. Kosaraju visual pass order
+
+Kosaraju is two DFS passes:
+
+1) Record finish order on original graph  
+2) DFS on reversed graph in reverse finish order
+
+Example graph:
+
+```
+0 -> 1 -> 2 -> 0
+2 -> 3
+```
+
+Finish order (one possible): `[3, 2, 1, 0]`  
+Reverse edges, then process in reverse: `0, 1, 2, 3`
+
+Result:
+
+- DFS from 0 reaches {0,1,2}
+- DFS from 3 reaches {3}
+
+Two SCCs found.
+
+---
+
 ## 6. Kosaraju’s algorithm (two passes)
 
 Steps:
@@ -150,6 +176,17 @@ scc_sizes   = size of each SCC
 scc_adj     = DAG of SCCs (condensation graph)
 ```
 
+### Example: condensation DAG
+
+```
+SCCs:  C0 = {0,1,2}, C1 = {3}
+Edges: C0 -> C1
+
+scc_adj:
+  scc_adj[0] = [1]
+  scc_adj[1] = []
+```
+
 ---
 
 ## 9. 2‑SAT with SCC (friendly version)
@@ -188,6 +225,17 @@ test "two sat example" {
 }
 ```
 
+### 2‑SAT mini diagram
+
+```
+Clause: (x OR y)
+Implications:
+  NOT x -> y
+  NOT y -> x
+
+If x and NOT x are in the same SCC -> impossible.
+```
+
 ---
 
 ## 11. Complexity
@@ -216,3 +264,29 @@ SCCs reveal the “cycle structure” of a directed graph.
 
 Tarjan is one‑pass and fast; Kosaraju is conceptually simple.
 Both are linear time and are essential for 2‑SAT and graph compression.
+
+---
+
+## 14. Extra example: DAG of components
+
+```mbt check
+///|
+test "scc condensation dag" {
+  let adj : Array[Array[Int]] = Array::makei(5, _ => [])
+  // SCC A: 0 <-> 1
+  adj[0].push(1)
+  adj[1].push(0)
+  // SCC B: 2 <-> 3
+  adj[2].push(3)
+  adj[3].push(2)
+  // Edge A -> B, and B -> 4
+  adj[1].push(2)
+  adj[3].push(4)
+  let res = @scc.find_sccs(5, adj)
+  inspect(res.num_sccs, content="3")
+  let c0 = res.component[0]
+  let c2 = res.component[2]
+  let c4 = res.component[4]
+  inspect(c0 != c2 && c2 != c4, content="true")
+}
+```
