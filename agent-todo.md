@@ -191,7 +191,7 @@
 - [x] lib/sqrt_decomposition
 - [x] lib/stoer_wagner_min_cut
 - [x] lib/string
-- [ ] lib/string_hash
+- [x] lib/string_hash
 - [ ] lib/subset_convolution
 - [ ] lib/suffix_array
 - [ ] lib/suffix_automaton
