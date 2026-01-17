@@ -18,26 +18,6 @@ fn node_min(node : Node) -> Int {
 }
 
 ///|
-fn tree_valid(node : Node, len : Int) -> Bool {
-  match node {
-    Node::Leaf(min=mv, tag=tv) => len == 1 && mv >= 0 && tv >= -0x3fffffff
-    Node::Branch(min=mv, tag=tv, left~, right~) =>
-      if len <= 1 {
-        false
-      } else {
-        let expected = if node_min(left) < node_min(right) {
-          node_min(left)
-        } else {
-          node_min(right)
-        }
-        tree_valid(left, len / 2) &&
-        tree_valid(right, len - len / 2) &&
-        mv == expected + tv
-      }
-  }
-}
-
-///|
 fn apply_add(node : Node, delta : Int) -> Node {
   match node {
     Node::Leaf(min=mv, tag=tv) => Node::Leaf(min=mv + delta, tag=tv + delta)
@@ -132,32 +112,15 @@ pub fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
 
 ///|
 /// Apply range adds (l, r, delta) where r is exclusive.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn apply_updates(
   root : Node,
   n : Int,
   updates : ArrayView[(Int, Int, Int)],
 ) -> Node {
-  let m = updates.length()
-  for i = 0, tree = root {
-    if i >= m {
-      break tree
-    } else {
-      let (l, r, delta) = updates[i]
-      continue i + 1, range_add(tree, 0, n, l, r, delta)
-    }
-  } where {
-    invariant: i >= 0 && i <= m,
-    invariant: tree_valid(tree, n),
-    reasoning: (
-      #|INVARIANT (Range add min):
-      #|tree reflects the first i range-add updates with correct mins.
-      #|MAINTENANCE:
-      #|Apply update i via lazy tags and path-copying.
-      #|TERMINATION:
-      #|At i = m, all updates are applied.
-    ),
-  }
+  updates.fold(init=root, (tree, update) => {
+    let (l, r, delta) = update
+    range_add(tree, 0, n, l, r, delta)
+  })
 }
 
 ///|

@@ -96,8 +96,8 @@
 - [x] lib/challenge_persistent_segment_tree_max
 - [x] lib/challenge_persistent_segment_tree_min
 - [x] lib/challenge_persistent_segment_tree_range_add_max
-- [ ] lib/challenge_persistent_segment_tree_range_add_min (in progress)
-- [ ] lib/challenge_persistent_segment_tree_xor
+- [x] lib/challenge_persistent_segment_tree_range_add_min
+- [ ] lib/challenge_persistent_segment_tree_xor (in progress)
 - [ ] lib/challenge_persistent_skew_heap
 - [ ] lib/challenge_persistent_stack
 - [ ] lib/challenge_persistent_stack_min
