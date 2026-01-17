@@ -1,242 +1,322 @@
 # Minimum Spanning Tree (MST)
 
-## Overview
+This package is a **tutorial** package (no exported functions). It explains
+minimum spanning trees and two classic algorithms: **Kruskal** and **Prim**.
 
-A **Minimum Spanning Tree** connects all vertices in a weighted graph with
-minimum total edge weight, using exactly V-1 edges.
+An MST connects all vertices of a weighted, undirected graph with the smallest
+possible total edge weight.
 
-- **Kruskal's Time**: O(E log E)
-- **Prim's Time**: O((V + E) log V)
-- **Space**: O(V + E)
+---
 
-## Core Idea
+## 1. What is a spanning tree?
 
-- Use the **cut property**: the lightest edge crossing any cut is safe.
-- Kruskal grows a forest by **adding light edges** that don't form cycles.
-- Prim grows a tree by **expanding the frontier** with the cheapest edge.
+A **spanning tree** of a graph:
 
-## The Problem
+- includes **all vertices**,
+- is **connected**,
+- has **no cycles**,
+- therefore uses exactly **V - 1 edges**.
 
-```
+If edges have weights, a **minimum** spanning tree is the spanning tree with
+the smallest total weight.
+
+---
+
+## 2. A tiny example by hand
+
 Graph:
-    A ──5── B
-    |\     /|
-    3 \   / 4
-    |  \ /  |
-    C ──2── D
-
-Edges: (A,B,5), (A,C,3), (A,D,4), (B,D,4), (C,D,2)
-
-Goal: Connect all vertices with minimum total weight
-
-MST (total weight = 9):
-    A       B
-    |       |
-    3       4
-    |       |
-    C ──2── D
-```
-
-## The Cut Property
 
 ```
-Key Theorem: For any cut dividing vertices into S and V-S,
-the minimum weight edge crossing the cut is in some MST.
-
-        Cut
-          |
-    A  B  |  C  D
-    ●──●  |  ●──●
-       ╲  |  ╱
-        ╲ | ╱
-         min edge → in MST!
-
-Why? If min edge not in MST, we can add it (creates cycle),
-then remove a heavier edge from the cycle that also crosses
-the cut. Result: valid spanning tree with lower weight.
-Contradiction!
+    A --5-- B
+    | \     |
+    3  4    4
+    |    \  |
+    C --2-- D
 ```
 
-## Kruskal's Algorithm
-
-### Idea: Greedy by Edge Weight
+Edges:
 
 ```
-1. Sort all edges by weight
-2. For each edge (u, v, w) in sorted order:
-   - If u and v are in different components:
-     - Add edge to MST
-     - Union their components
-3. Stop when MST has V-1 edges
+(A,B,5), (A,C,3), (A,D,4), (B,D,4), (C,D,2)
 ```
 
-### Walkthrough
+One MST is:
 
 ```
-Edges sorted: (C,D,2), (A,C,3), (A,D,4), (B,D,4), (A,B,5)
-
-Initial components: {A}, {B}, {C}, {D}
-
-(C,D,2): C and D different → add to MST
-         Components: {A}, {B}, {C,D}
-         MST edges: [(C,D)]
-
-(A,C,3): A and C different → add to MST
-         Components: {A,C,D}, {B}
-         MST edges: [(C,D), (A,C)]
-
-(A,D,4): A and D same → skip (would create cycle)
-
-(B,D,4): B and D different → add to MST
-         Components: {A,B,C,D}
-         MST edges: [(C,D), (A,C), (B,D)]
-
-3 edges = V-1 → done!
-MST weight = 2 + 3 + 4 = 9
+    A      B
+    |      |
+    3      4
+    |      |
+    C --2-- D
 ```
 
-## Prim's Algorithm
+Total weight = 3 + 2 + 4 = 9.
 
-### Idea: Grow Tree from Vertex
+There might be other MSTs if there are ties.
 
-```
-1. Start with any vertex in MST
-2. Repeat V-1 times:
-   - Find minimum weight edge from MST to non-MST vertex
-   - Add that vertex and edge to MST
-3. Result: MST with V-1 edges
-```
+---
 
-### Walkthrough
+## 3. Two key theorems (why greedy works)
 
-```
-Start from A:
-  MST = {A}
+### Cut property
 
-Step 1: Edges from A: (A,B,5), (A,C,3), (A,D,4)
-        Min = (A,C,3) → add C
-        MST = {A,C}, edges: [(A,C)]
-
-Step 2: Edges from {A,C}: (A,B,5), (A,D,4), (C,D,2)
-        Min = (C,D,2) → add D
-        MST = {A,C,D}, edges: [(A,C), (C,D)]
-
-Step 3: Edges from {A,C,D}: (A,B,5), (B,D,4)
-        Min = (B,D,4) → add B
-        MST = {A,B,C,D}, edges: [(A,C), (C,D), (B,D)]
-
-Done! MST weight = 3 + 2 + 4 = 9
-```
-
-## Visual Comparison
+For any cut (partition of vertices into S and V-S),
+the **lightest edge crossing the cut** is in *some* MST.
 
 ```
-Kruskal's (edge-centric):        Prim's (vertex-centric):
+Cut line:
 
-1. Sort edges globally          1. Start from vertex
-   ↓                               ↓
-2. Process edges in order       2. Find min edge to outside
-   ↓                               ↓
-3. Use Union-Find for cycles    3. Use priority queue
-   ↓                               ↓
-4. Stop at V-1 edges            4. Stop at V-1 edges
+  S side      |     V-S side
+  A   B       |     C   D
+  o---o       |     o---o
+     \        |        /
+      \_______|_______/
+        lightest edge
 
-Better for:                     Better for:
-- Sparse graphs (E ≈ V)         - Dense graphs (E ≈ V²)
-- Distributed computing         - When starting vertex matters
+If the lightest edge were not in the MST, you could swap it in and get a
+lighter tree, which is impossible.
 ```
 
-## Example Usage
+### Cycle property
 
-```mbt check
+In any cycle, the **heaviest edge** cannot be in *every* MST.
+
+So when Kruskal sees a cycle, it is safe to drop the heaviest edge.
+
+---
+
+## 4. Kruskal's algorithm (edge‑centric)
+
+**Idea**: sort edges by weight and add them if they do not form a cycle.
+
+### Steps
+
+```
+1. Sort edges by weight
+2. Use Union-Find to track components
+3. For each edge in order:
+     if it connects two different components, add it
+4. Stop after V-1 edges
+```
+
+### Walkthrough on the example
+
+Edges sorted:
+
+```
+(C,D,2), (A,C,3), (A,D,4), (B,D,4), (A,B,5)
+```
+
+Process:
+
+```
+Add (C,D,2) -> components: {C,D}, {A}, {B}
+Add (A,C,3) -> components: {A,C,D}, {B}
+Skip (A,D,4) -> would create cycle
+Add (B,D,4) -> components: {A,B,C,D}
+Stop (3 edges)
+```
+
+MST weight = 2 + 3 + 4 = 9.
+
+---
+
+## 5. Prim's algorithm (vertex‑centric)
+
+**Idea**: grow a tree from a start vertex, always taking the cheapest edge
+from the tree to an outside vertex.
+
+### Steps
+
+```
+1. Pick any start vertex
+2. Repeatedly add the cheapest edge connecting tree to outside
+3. Stop after V-1 edges
+```
+
+### Walkthrough on the same graph
+
+Start at A:
+
+```
+Step 1: edges from A: (A,B,5), (A,C,3), (A,D,4)
+        pick (A,C,3)
+Tree = {A,C}
+
+Step 2: edges crossing tree:
+        (A,B,5), (A,D,4), (C,D,2)
+        pick (C,D,2)
+Tree = {A,C,D}
+
+Step 3: edges crossing tree:
+        (A,B,5), (B,D,4)
+        pick (B,D,4)
+Tree = {A,B,C,D}
+```
+
+Total weight = 9.
+
+---
+
+## 6. Another example: multiple MSTs
+
+Square with equal weights:
+
+```
+  A ----1---- B
+  |          |
+  1          1
+  |          |
+  C ----1---- D
+```
+
+Any 3 edges form an MST. There are **four** different MSTs here.
+So MST is not always unique.
+
+---
+
+## 7. Disconnected graphs
+
+If the graph is disconnected, there is **no single MST**.
+Instead you get a **minimum spanning forest** (one tree per component).
+
+Example:
+
+```
+Component 1: A --1-- B
+Component 2: C --2-- D
+```
+
+There is no way to connect all 4 vertices, so MST does not exist.
+
+---
+
+## 8. ASCII diagram: Kruskal vs Prim
+
+```
+Kruskal (edge-driven)          Prim (vertex-driven)
+---------------------------------------------------
+Sort all edges                Start from one vertex
+Pick smallest edge            Pick cheapest outgoing edge
+Skip if cycle                 Expand tree by one vertex
+Repeat until V-1 edges        Repeat until V-1 edges
+```
+
+Kruskal is usually better for **sparse** graphs.
+Prim is usually better for **dense** graphs.
+
+---
+
+## 9. Conceptual MoonBit-style pseudocode
+
+These are **illustrations** (not part of public API).
+
+### Kruskal
+
+```mbt nocheck
 ///|
-test "mst concept" {
-  // Kruskal's: Sort edges, greedily add if no cycle
-  // Prim's: Grow tree by adding minimum outgoing edge
+struct Edge {
+  u : Int
+  v : Int
+  w : Int
+}
 
-  // Both produce MST with same total weight
-  // MST has exactly V-1 edges
-
-  inspect(true, content="true")
+///|
+fn kruskal(n : Int, edges : Array[Edge]) -> (Array[Edge], Int) {
+  edges.sort_by((a, b) => a.w - b.w)
+  let uf = UF::new(n)
+  let mst : Array[Edge] = []
+  let mut total = 0
+  for e in edges {
+    if uf.union(e.u, e.v) {
+      mst.push(e)
+      total = total + e.w
+      if mst.length() == n - 1 {
+        break
+      }
+    }
+  }
+  (mst, total)
 }
 ```
 
-## Common Applications
+### Prim (priority queue version)
 
-### 1. Network Design
+```mbt nocheck
+///|
+fn prim(n : Int, adj : Array[Array[(Int, Int)]]) -> Int {
+  let in_tree = Array::make(n, false)
+  let pq = MinHeap::new() // (weight, vertex)
+  pq.push((0, 0))
+  let mut total = 0
+
+  for _ in 0..<n {
+    let (w, v) = pq.pop_min()
+    if in_tree[v] { continue }
+    in_tree[v] = true
+    total = total + w
+    for (to, w2) in adj[v] {
+      if not(in_tree[to]) {
+        pq.push((w2, to))
+      }
+    }
+  }
+  total
+}
 ```
-Problem: Connect cities with minimum cable length
-Vertices = cities, edges = possible connections
+
+---
+
+## 10. Beginner-friendly checklist (how to solve an MST problem)
+
+1. **Check if the graph is connected**. If not, MST does not exist.
+2. **Pick the algorithm**:
+   - Sparse graph or edge list? -> Kruskal.
+   - Dense graph or adjacency matrix? -> Prim.
+3. **Compute total weight** or return the edges.
+4. **Confirm** the tree has exactly V-1 edges.
+
+---
+
+## 11. Common applications
+
+### Network design
+
+```
+Cities = vertices
+Cable cost = edge weight
 MST = cheapest way to connect all cities
 ```
 
-### 2. Clustering
-```
-Single-linkage clustering:
-1. Build MST of data points
-2. Remove k-1 heaviest edges
-3. Result: k clusters
-
-The MST captures minimum-distance connections.
-```
-
-### 3. Approximation Algorithms
-```
-MST-based 2-approximation for Traveling Salesman:
-1. Compute MST
-2. Double all edges (Eulerian graph)
-3. Find Euler tour
-4. Shortcut repeated vertices
-Result: Tour ≤ 2 × optimal
-```
-
-### 4. Image Segmentation
-```
-Pixels = vertices, edge weight = color difference
-Heavy MST edges indicate object boundaries.
-```
-
-## Complexity Analysis
-
-| Algorithm | Sort/PQ | Union-Find | Total |
-|-----------|---------|------------|-------|
-| Kruskal's | O(E log E) | O(E α(V)) | O(E log E) |
-| Prim's (binary heap) | O((V+E) log V) | - | O((V+E) log V) |
-| Prim's (Fibonacci heap) | O(E + V log V) | - | O(E + V log V) |
-
-## Kruskal vs Prim
-
-| Aspect | Kruskal | Prim |
-|--------|---------|------|
-| Approach | Edge-centric | Vertex-centric |
-| Data structure | Union-Find | Priority Queue |
-| Better for | Sparse graphs | Dense graphs |
-| Parallelizable | Yes (edge batching) | Less easily |
-| Online | No (needs all edges) | Yes (can add edges) |
-
-**Choose Kruskal when**: Graph is sparse or edges arrive in batches.
-**Choose Prim when**: Graph is dense or starting vertex matters.
-
-## Why Does Greedy Work?
+### Clustering (single linkage)
 
 ```
-Both algorithms exploit the cut property:
-
-Kruskal's: Each edge added crosses a cut (between components)
-           It's the minimum such edge (sorted order)
-           → In some MST by cut property
-
-Prim's:    Each edge added crosses the cut (MST vs non-MST)
-           It's the minimum such edge (priority queue)
-           → In some MST by cut property
-
-Greedy choice is always safe!
+Build MST of all points.
+Remove the (k-1) largest edges.
+Remaining components = k clusters.
 ```
 
-## Implementation Notes
+### TSP approximation
 
-- Kruskal: Use Union-Find with path compression + rank
-- Prim: Use binary heap or Fibonacci heap
-- Handle disconnected graphs (forest of MSTs)
-- For maximum spanning tree: negate weights or reverse comparisons
-- Multiple MSTs possible if equal-weight edges exist
+```
+MST gives a 2-approximation for the metric TSP.
+```
+
+---
+
+## 12. Complexity summary
+
+```
+Kruskal: O(E log E) + near-linear Union-Find
+Prim (binary heap): O((V + E) log V)
+Prim (O(V^2) version): good when V is small or dense graph
+```
+
+---
+
+## 13. Summary
+
+- MST connects all vertices with minimum total weight.
+- Kruskal = sort edges, add if no cycle.
+- Prim = grow tree, add cheapest outgoing edge.
+- Both rely on the **cut property**, which makes the greedy choice safe.
