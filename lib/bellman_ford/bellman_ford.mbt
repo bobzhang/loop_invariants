@@ -69,7 +69,7 @@ pub fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
   self.dist[source] = 0L
 
   // Relax all edges V-1 times
-  for iter = 0; iter < self.n - 1; iter = iter + 1 {
+  for _ in 0..<(self.n - 1) {
     let mut any_relaxed = false
     for edge in self.edges {
       let (u, v, w) = edge
@@ -83,18 +83,6 @@ pub fn BellmanFord::compute(self : BellmanFord, source : Int) -> BellmanFord {
     if not(any_relaxed) {
       break
     }
-  } where {
-    invariant: iter >= 0 && iter <= self.n - 1,
-    reasoning: (
-      #|INVARIANT (Bellman-Ford):
-      #|After iter iterations, dist[v] is the shortest path using at most iter
-      #|edges; dist[source] = 0 and others are upper bounds.
-      #|MAINTENANCE:
-      #|Relax all edges; any shorter path with <= iter+1 edges is discovered.
-      #|TERMINATION:
-      #|After V-1 iterations, all simple shortest paths are found (no simple
-      #|path uses more than V-1 edges).
-    ),
   }
 
   // Check for negative cycles

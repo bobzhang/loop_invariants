@@ -9,8 +9,8 @@
 - [ ] cmd/main (in progress)
 - [x] lib/aho_corasick
 - [x] lib/avl_tree
-- [ ] lib/bellman_ford (in progress)
-- [ ] lib/berlekamp_massey
+- [x] lib/bellman_ford
+- [ ] lib/berlekamp_massey (in progress)
 - [ ] lib/biconnected_components
 - [ ] lib/binary_trie_xor
 - [ ] lib/bipartite_matching
