@@ -40,7 +40,8 @@ Result: O(log m) iterations like GCD computation!
 ## Visual: Counting Lattice Points
 
 ```
-Sum = floor((2·i + 1) / 3) for i = 0, 1, 2, 3, 4
+Example: n=5, m=3, a=2, b=1
+S = Σ floor((2·i + 1) / 3), i = 0..4
 
 Line: y = (2x + 1) / 3
 
@@ -52,16 +53,7 @@ Line: y = (2x + 1) / 3
       └─●─●─●─●─●─► x
         0 1 2 3 4
 
-Lattice points below line:
-  i=0: j ∈ {0}                → 1 point
-  i=1: j ∈ {0, 1}             → floor(3/3) = 1
-  i=2: j ∈ {0, 1}             → floor(5/3) = 1
-  i=3: j ∈ {0, 1, 2}          → floor(7/3) = 2
-  i=4: j ∈ {0, 1, 2, 3}       → floor(9/3) = 3
-
-Sum = 0 + 1 + 1 + 2 + 3 = 7
-
-Wait, let me recalculate:
+Table:
   i=0: floor(1/3) = 0
   i=1: floor(3/3) = 1
   i=2: floor(5/3) = 1
@@ -74,7 +66,7 @@ Sum = 0 + 1 + 1 + 2 + 3 = 7
 ## Algorithm
 
 ```
-floor_sum(n, a, b, m):
+floor_sum(n, m, a, b):
   if n == 0: return 0
   result = 0
 
@@ -90,14 +82,16 @@ floor_sum(n, a, b, m):
     result += (b / m) * n
     b = b % m
 
-  // Base case: if a·(n-1) + b < m, all floors are 0
-  y_max = (a * n + b) / m
-  if y_max == 0: return result
+  // Base case: if a*n + b < m, all remaining floors are 0
+  y_max = a * n + b
+  if y_max < m: return result
 
-  // Coordinate swap: count lattice points differently
-  // (This is the clever Euclidean step)
-  x_max = (y_max * m - b)  // Solve for x where y = y_max
-  result += (n - 1) * y_max - floor_sum(y_max, m, m - b - 1, a)
+  // Coordinate swap (Euclidean step)
+  new_n = y_max / m
+  new_b = y_max % m
+  swap(a, m)
+  n = new_n
+  b = new_b
 
   return result
 ```
@@ -109,6 +103,7 @@ floor_sum(n, a, b, m):
 test "floor sum quick start" {
   inspect(@floor_sum.floor_sum(4L, 5L, 3L, 2L), content="4")
   inspect(@floor_sum.floor_sum(5L, 4L, 2L, 1L), content="4")
+  inspect(@floor_sum.floor_sum(5L, 3L, 2L, 1L), content="7")
 }
 ```
 
@@ -122,47 +117,45 @@ test "floor sum with reductions" {
 ## Algorithm Walkthrough
 
 ```
-floor_sum(n=4, a=5, b=3, m=2)
+Example: floor_sum(n=5, m=3, a=2, b=1)
 
-Step 1: a=5 ≥ m=2
-  result += (5/2) * 4 * 3 / 2 = 2 * 6 = 12
-  a = 5 % 2 = 1
+Step 1: a=2 < m=3, b=1 < m=3
+  y_max = a*n + b = 2*5 + 1 = 11
+  y_max >= m, so reduce:
+    new_n = 11 / 3 = 3
+    new_b = 11 % 3 = 2
+    swap(a, m) => a=3, m=2
+    n=3, b=2
 
-Step 2: b=3 ≥ m=2
-  result += (3/2) * 4 = 1 * 4 = 4
-  b = 3 % 2 = 1
+Step 2: a=3 ≥ m=2
+  result += (a/m) * n*(n-1)/2 = 1 * 3*2/2 = 3
+  a = 3 % 2 = 1
 
-Now: floor_sum(4, 1, 1, 2) with result = 12 + 4 = 16
+Step 3: b=2 ≥ m=2
+  result += (b/m) * n = 1 * 3 = 3
+  b = 0
+  result = 6
 
-  i=0: floor(1/2) = 0
-  i=1: floor(2/2) = 1
-  i=2: floor(3/2) = 1
-  i=3: floor(4/2) = 2
+Now y_max = a*n + b = 1*3 + 0 = 3
+  y_max >= m, reduce again:
+    new_n = 3 / 2 = 1
+    new_b = 3 % 2 = 1
+    swap(a, m) => a=2, m=1
+    n=1, b=1
 
-  Sum = 0 + 1 + 1 + 2 = 4
+Step 4: a=2 ≥ m=1
+  result += (a/m) * n*(n-1)/2 = 2 * 0 = 0
+  a = 0
 
-Wait, that doesn't add to 4. Let me recalculate the original:
+Step 5: b=1 ≥ m=1
+  result += (b/m) * n = 1 * 1 = 1
+  b = 0
+  result = 7
 
-Original: floor_sum(4, 5, 3, 2)
-  i=0: floor(3/2) = 1
-  i=1: floor(8/2) = 4
-  i=2: floor(13/2) = 6
-  i=3: floor(18/2) = 9
+Now y_max = a*n + b = 0*1 + 0 = 0
+  y_max < m, loop ends.
 
-  Sum = 1 + 4 + 6 + 9 = 20
-
-Hmm, the test says 4. Let me check the API...
-Actually floor_sum(n, m, a, b) might have different parameter order.
-The sum is Σ floor((a·i + b) / m).
-
-Checking: floor_sum(4, 5, 3, 2) = ?
-If parameters are (n, m, a, b):
-  Sum floor((3i + 2) / 5) for i = 0..3
-  i=0: floor(2/5) = 0
-  i=1: floor(5/5) = 1
-  i=2: floor(8/5) = 1
-  i=3: floor(11/5) = 2
-  Sum = 0 + 1 + 1 + 2 = 4 ✓
+Final answer: 7
 ```
 
 ## Why the Euclidean Reduction Works
@@ -216,7 +209,7 @@ Summation of harmonic-like series.
 | Operation | Time |
 |-----------|------|
 | Floor Sum | O(log min(a, m)) |
-| Space | O(log min(a, m)) for recursion |
+| Space | O(1) |
 
 The time complexity follows from the Euclidean algorithm's analysis.
 
@@ -232,6 +225,12 @@ For n = 10^9, m = 10^9:
 
 Speedup: 10^7 times faster!
 ```
+
+## Common Pitfalls
+
+- **Parameter order**: API is `floor_sum(n, m, a, b)`.
+- **Negative inputs**: this implementation assumes non-negative values.
+- **Overflow**: use 64-bit integers for large n, a, b, m.
 
 ## Implementation Notes
 
@@ -249,4 +248,3 @@ Speedup: 10^7 times faster!
 3. Lattice point counting: Pick's theorem for polygons
 4. Farey sequence: Fractions with floor properties
 ```
-
