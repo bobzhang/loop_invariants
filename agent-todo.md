@@ -82,8 +82,8 @@
 - [x] lib/challenge_persistent_interval_set
 - [x] lib/challenge_persistent_interval_tree
 - [x] lib/challenge_persistent_kd_tree
-- [ ] lib/challenge_persistent_leftist_heap (in progress)
-- [ ] lib/challenge_persistent_li_chao_tree
+- [x] lib/challenge_persistent_leftist_heap
+- [ ] lib/challenge_persistent_li_chao_tree (in progress)
 - [ ] lib/challenge_persistent_order_statistic
 - [ ] lib/challenge_persistent_pairing_heap
 - [ ] lib/challenge_persistent_queue

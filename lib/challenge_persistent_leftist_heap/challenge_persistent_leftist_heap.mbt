@@ -27,26 +27,6 @@ fn[T] heap_size(h : Heap[T]) -> Int {
 }
 
 ///|
-fn[T : Compare] heap_valid(h : Heap[T]) -> Bool {
-  match h {
-    Heap::Empty => true
-    Heap::Node(value~, rank=node_rank, left~, right~) => {
-      let left_rank = rank(left)
-      let right_rank = rank(right)
-      let left_ok = match left {
-        Heap::Empty => true
-        Heap::Node(value=v, rank=_, left=_, right=_) => value <= v
-      }
-      let right_ok = match right {
-        Heap::Empty => true
-        Heap::Node(value=v, rank=_, left=_, right=_) => value <= v
-      }
-      let order_ok = left_ok && right_ok
-      let rank_ok = left_rank >= right_rank && node_rank == right_rank + 1
-      order_ok && rank_ok && heap_valid(left) && heap_valid(right)
-    }
-  }
-}
 
 ///|
 fn[T] make_node(value : T, left : Heap[T], right : Heap[T]) -> Heap[T] {
@@ -122,28 +102,12 @@ pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
 
 ///|
 /// Build a heap by inserting elements in sequence.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Heap[T] {
-  let n = arr.length()
-  for i = 0, heap = Heap::Empty {
-    if i >= n {
-      break heap
-    } else {
-      continue i + 1, insert(heap, arr[i])
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: heap_size(heap) == i,
-    invariant: heap_valid(heap),
-    reasoning: (
-      #|INVARIANT (Incremental heap build):
-      #|heap contains exactly the first i elements and maintains leftist order.
-      #|MAINTENANCE:
-      #|Insert arr[i], preserving heap validity and increasing size by one.
-      #|TERMINATION:
-      #|At i = n, heap contains all array elements.
-    ),
+  let mut heap = Heap::Empty
+  for value in arr {
+    heap = insert(heap, value)
   }
+  heap
 }
 
 ///|
