@@ -1,215 +1,135 @@
-# String Algorithms
+# String Algorithms (Palindrome + LCS)
 
-## Overview
+This package exposes two classic string routines:
 
-A collection of classic string algorithms for pattern matching, palindrome
-detection, and sequence comparison. These algorithms form the foundation of
-text processing and bioinformatics.
+1. **Longest palindromic substring range**
+2. **Longest common subsequence length**
 
-- **Longest Palindrome**: O(n) with Manacher's algorithm
-- **LCS (Longest Common Subsequence)**: O(nm)
-- **Pattern Matching**: O(n + m) with KMP/Z-algorithm
+Both operate on `Array[Char]` inputs.
 
-## Core Idea
+---
 
-- Precompute **prefix/suffix relationships** to avoid rescanning text.
-- Use **linear-time scans** (KMP/Z/Manacher) by reusing previous matches.
-- Convert string problems into **DP or automata** when structure repeats.
+## 1. Longest palindromic substring range
 
-## The Key Insight: Prefix Functions
+**What it returns**
 
-```
-Many string algorithms share a core idea:
-Precompute how prefixes relate to suffixes.
+`longest_palindrome_range(s)` returns `(start, len)` where:
 
-For pattern P = "ABABC":
-  Failure function / prefix function:
-    π[0] = 0  (empty prefix)
-    π[1] = 0  (A has no proper prefix = suffix)
-    π[2] = 1  (AB: A = A)
-    π[3] = 2  (ABA: AB ≠ A, but A = A → check: ABA has prefix "A" = suffix "A", AB = prefix, BA = suffix? No. A = A ✓)
-    π[4] = 0  (ABAB: AB prefix, AB suffix ✓)
+- `start` is the starting index of the longest palindrome
+- `len` is its length
 
-Wait, let me recalculate:
-  π[i] = longest proper prefix of P[0..i] that is also a suffix
-
-  P = "ABABC"
-      01234
-
-  π[0] = 0 (by definition, single char)
-  π[1] = 0 (AB: no prefix = suffix)
-  π[2] = 1 (ABA: "A" prefix = "A" suffix)
-  π[3] = 2 (ABAB: "AB" prefix = "AB" suffix)
-  π[4] = 0 (ABABC: no match)
-```
-
-## Longest Palindromic Substring
+Example string:
 
 ```
-Expand around each center, or use Manacher's O(n):
+s = "abcbd"
+index: 0 1 2 3 4
+chars: a b c b d
 
-String: "abacaba"
-         0123456
-
-Centers and radii:
-  Position 0: "a" → radius 1
-  Position 1: "b" → radius 1
-  Position 2: "a" → try "aba" ✓, "cabac" no → radius 2
-  Position 3: "c" → try "aca" no → radius 1
-  Position 4: "a" → try "aba" ✓, "cabac" no, but try "bacab" no → radius 2
-  ...
-
-Manacher's trick: Use mirror property within known palindrome.
+Longest palindrome is "bcb" (indices 1..3)
 ```
 
-## LCS (Longest Common Subsequence)
+So the result is `(1, 3)`.
 
-```
-DP to find longest subsequence common to both strings.
+The implementation uses **Manacher's algorithm**, which finds the longest
+palindrome in **O(n)** time.
 
-A = "ABCDE"
-B = "ACE"
+---
 
-DP table (lcs[i][j] = LCS of A[0..i-1] and B[0..j-1]):
-
-      ""  A  C  E
-  ""   0  0  0  0
-  A    0  1  1  1
-  B    0  1  1  1
-  C    0  1  2  2
-  D    0  1  2  2
-  E    0  1  2  3
-
-If A[i-1] == B[j-1]: lcs[i][j] = lcs[i-1][j-1] + 1
-Else: lcs[i][j] = max(lcs[i-1][j], lcs[i][j-1])
-
-LCS = "ACE", length = 3
-```
-
-## Algorithm Walkthrough: Palindrome
-
-```
-Find longest palindrome in "babad":
-
-Expand around each center:
-
-Center 0 (b):
-  Check "b" → ✓ (length 1)
-
-Center 1 (a):
-  Check "a" → ✓
-  Check "bab" → ✓ (length 3)
-  Check "?bab?" → out of bounds
-
-Center 2 (b):
-  Check "b" → ✓
-  Check "aba" → ✓ (length 3)
-  Check "babad"? → 'd' ≠ 'b' ✗
-
-Center 3 (a):
-  Check "a" → ✓
-  Check "bad" → 'd' ≠ 'b' ✗
-
-Center 4 (d):
-  Check "d" → ✓
-
-Also check even-length centers (between characters):
-  Between 0-1: "ba" ✗
-  Between 1-2: "ab" ✗
-  Between 2-3: "ba" ✗
-  Between 3-4: "ad" ✗
-
-Longest: "bab" or "aba" at positions 0-2 or 1-3
-```
-
-## Example Usage
+### Example usage
 
 ```mbt check
 ///|
-test "string algorithms example" {
-  let s : Array[Char] = ['a', 'b', 'b', 'a']
-  let (start, len) = @string.longest_palindrome_range(s[:])
-  inspect((start, len), content="(0, 4)")
-  let a : Array[Char] = ['A', 'B', 'C']
-  let b : Array[Char] = ['A', 'C']
-  inspect(@string.lcs_length(a[:], b[:]), content="2")
+test "longest palindrome range" {
+  let s1 : Array[Char] = ['a', 'b', 'a', 'c', 'a', 'b', 'a']
+  inspect(@string.longest_palindrome_range(s1[:]), content="(0, 7)")
+  let s2 : Array[Char] = ['a', 'b', 'b', 'a']
+  inspect(@string.longest_palindrome_range(s2[:]), content="(0, 4)")
+  let s3 : Array[Char] = ['a', 'b', 'c', 'b', 'd']
+  inspect(@string.longest_palindrome_range(s3[:]), content="(1, 3)")
 }
 ```
 
-## Common Applications
+---
 
-### 1. Text Editors
-```
-Find and replace using pattern matching.
-Spell check with edit distance.
-Undo/redo with LCS for diff.
-```
+## 2. Longest common subsequence (LCS) length
 
-### 2. Bioinformatics
-```
-DNA sequence alignment (LCS variants).
-Finding repeated patterns in genomes.
-Palindrome detection for restriction sites.
-```
+The **LCS** is the longest sequence that appears in both strings **in order**,
+but not necessarily contiguously.
 
-### 3. Data Compression
-```
-LZ77/LZ78 use longest match finding.
-Burrows-Wheeler uses suffix sorting.
-```
-
-### 4. Plagiarism Detection
-```
-LCS to find common passages.
-Hashing for fingerprinting (Rabin-Karp).
-```
-
-## Complexity Analysis
-
-| Algorithm | Time | Space |
-|-----------|------|-------|
-| Longest Palindrome (naive) | O(n²) | O(1) |
-| Longest Palindrome (Manacher) | O(n) | O(n) |
-| LCS | O(nm) | O(nm) or O(min(n,m)) |
-| Edit Distance | O(nm) | O(nm) or O(min(n,m)) |
-| KMP | O(n + m) | O(m) |
-| Z-algorithm | O(n) | O(n) |
-
-## String Algorithm Comparison
-
-| Problem | Best Algorithm | Time |
-|---------|---------------|------|
-| Single pattern match | KMP / Z-algorithm | O(n + m) |
-| Multiple pattern match | Aho-Corasick | O(n + m + z) |
-| Longest palindrome | Manacher | O(n) |
-| All palindromes | Eertree | O(n) |
-| LCS | DP | O(nm) |
-| Edit distance | DP | O(nm) |
-| Substring search (hash) | Rabin-Karp | O(n + m) avg |
-
-## Pattern Matching Variants
+Example:
 
 ```
-KMP (Knuth-Morris-Pratt):
-  Build failure function, never backtrack in text.
+s1 = "ABCDEF"
+s2 = "ACBCF"
 
-Z-algorithm:
-  Z[i] = length of longest substring starting at i
-         that matches a prefix of the string.
-
-Boyer-Moore:
-  Skip characters based on bad character / good suffix rules.
-  Sublinear in practice for long patterns.
-
-Rabin-Karp:
-  Use rolling hash for O(1) comparison per position.
-  Best for multiple pattern search.
+One LCS is "ABCF" (length 4)
 ```
 
-## Implementation Notes
+The algorithm uses DP with a recurrence:
 
-- Handle edge cases: empty strings, single character
-- For LCS, can reconstruct the actual subsequence by backtracking
-- Manacher adds special characters between each position for even-length handling
-- Consider case sensitivity and Unicode for real applications
-- For very long strings, consider suffix arrays or FM-index
+```
+if s1[i-1] == s2[j-1]:
+  dp[i][j] = dp[i-1][j-1] + 1
+else:
+  dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+```
+
+---
+
+### Example usage
+
+```mbt check
+///|
+test "lcs length" {
+  let s1 : Array[Char] = ['A', 'B', 'C', 'D', 'E', 'F']
+  let s2 : Array[Char] = ['A', 'C', 'B', 'C', 'F']
+  inspect(@string.lcs_length(s1[:], s2[:]), content="4")
+  let s3 : Array[Char] = ['A', 'B', 'C']
+  let s4 : Array[Char] = ['D', 'E', 'F']
+  inspect(@string.lcs_length(s3[:], s4[:]), content="0")
+}
+```
+
+---
+
+## 3. Visual intuition (LCS table)
+
+For `s1 = "ABC"` and `s2 = "AC"`:
+
+```
+      ""  A  C
+  ""   0  0  0
+  A    0  1  1
+  B    0  1  1
+  C    0  1  2
+```
+
+The final cell is the LCS length.
+
+---
+
+## 4. Complexity
+
+```
+Longest palindrome (Manacher): O(n)
+LCS length (DP):              O(n*m)
+```
+
+---
+
+## 5. Typical applications
+
+1. **Palindrome detection** (DNA motifs, text cleaning)
+2. **Diff tools** (LCS for file comparison)
+3. **Bioinformatics** (sequence alignment)
+
+---
+
+## 6. Summary
+
+This package gives you two foundational string tools:
+
+- fast longest‑palindrome range,
+- classic LCS length DP.
+
+They are great building blocks for text and sequence problems.
