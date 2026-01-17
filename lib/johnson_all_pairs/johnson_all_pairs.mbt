@@ -42,18 +42,22 @@ fn MinHeap::new() -> MinHeap {
 ///|
 fn MinHeap::push(self : MinHeap, entry : HeapEntry) -> Unit {
   self.data.push(entry)
-  let mut i = self.data.length() - 1
-  while i > 0 {
-    let p = (i - 1) / 2
-    if self.data[i].dist < self.data[p].dist {
-      let tmp = self.data[i]
-      self.data[i] = self.data[p]
-      self.data[p] = tmp
-      i = p
-    } else {
-      break
+  let _ = loop self.data.length() - 1 {
+    i => {
+      if i <= 0 {
+        break ()
+      }
+      let p = (i - 1) / 2
+      if self.data[i].dist < self.data[p].dist {
+        let tmp = self.data[i]
+        self.data[i] = self.data[p]
+        self.data[p] = tmp
+        continue p
+      }
+      break ()
     }
   }
+
 }
 
 ///|
@@ -69,36 +73,28 @@ fn MinHeap::pop(self : MinHeap) -> HeapEntry? {
   }
   if self.data.length() > 0 {
     self.data[0] = last
-    let mut i = 0
     let len = self.data.length()
-    for {
-      let left = 2 * i + 1
-      let right = 2 * i + 2
-      let mut smallest = i
-      if left < len && self.data[left].dist < self.data[smallest].dist {
-        smallest = left
+    let _ = loop 0 {
+      i => {
+        let left = 2 * i + 1
+        let right = 2 * i + 2
+        let mut smallest = i
+        if left < len && self.data[left].dist < self.data[smallest].dist {
+          smallest = left
+        }
+        if right < len && self.data[right].dist < self.data[smallest].dist {
+          smallest = right
+        }
+        if smallest == i {
+          break ()
+        }
+        let tmp = self.data[i]
+        self.data[i] = self.data[smallest]
+        self.data[smallest] = tmp
+        continue smallest
       }
-      if right < len && self.data[right].dist < self.data[smallest].dist {
-        smallest = right
-      }
-      if smallest == i {
-        break
-      }
-      let tmp = self.data[i]
-      self.data[i] = self.data[smallest]
-      self.data[smallest] = tmp
-      i = smallest
-    } where {
-      invariant: i >= 0 && i < len,
-      reasoning: (
-        #|INVARIANT (heapify down):
-        #|All nodes outside the path from root to i satisfy heap order.
-        #|MAINTENANCE:
-        #|Swap with the smallest child when needed to restore min-heap property.
-        #|TERMINATION:
-        #|When smallest == i, the heap property holds for the whole array.
-      ),
     }
+
   }
   Some(result)
 }
@@ -127,8 +123,8 @@ fn dijkstra(
         if d != dist[u] {
           continue
         }
-        for i = 0; i < adj[u].length(); i = i + 1 {
-          let (v, w) = adj[u][i]
+        for edge in adj[u] {
+          let (v, w) = edge
           if d > INF64 - w {
             continue
           }
@@ -137,16 +133,6 @@ fn dijkstra(
             dist[v] = nd
             heap.push({ dist: nd, node: v })
           }
-        } where {
-          invariant: i >= 0 && i <= adj[u].length(),
-          reasoning: (
-            #|INVARIANT (relax edges):
-            #|All edges in adj[u][0..i) are relaxed with the finalized dist[u].
-            #|MAINTENANCE:
-            #|Try to improve dist[v] via u and push updates to the heap.
-            #|TERMINATION:
-            #|At i = deg(u), all outgoing edges are processed.
-          ),
         }
       }
     }
@@ -181,21 +167,11 @@ pub fn johnson_all_pairs(
   // Build Bellman-Ford graph with super-source
   let super_source = n
   let bf = @bellman_ford.BellmanFord::new(n + 1)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v, w) = edges[i]
+  for edge in edges {
+    let (u, v, w) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       bf.add_edge(u, v, w)
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (edge add):
-      #|Edges[0..i) are added to the Bellman-Ford graph.
-      #|MAINTENANCE:
-      #|Insert edge i when endpoints are in range.
-      #|TERMINATION:
-      #|At i = edges.length(), all edges are added.
-    ),
   }
   for v in 0..<n {
     bf.add_edge(super_source, v, 0L)
@@ -208,55 +184,25 @@ pub fn johnson_all_pairs(
 
   // Build reweighted adjacency list
   let adj = build_adj(n)
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v, w) = edges[i]
+  for edge in edges {
+    let (u, v, w) = edge
     if u >= 0 && u < n && v >= 0 && v < n {
       let w2 = w + h[u] - h[v]
       adj[u].push((v, w2))
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (reweight edges):
-      #|Edges[0..i) are reweighted using potentials h and inserted into adj.
-      #|MAINTENANCE:
-      #|Compute w' = w + h[u] - h[v] for each valid edge and add it.
-      #|TERMINATION:
-      #|At i = edges.length(), the reweighted graph is built.
-    ),
   }
 
   // Run Dijkstra from each vertex
   let result : Array[Array[Int64]] = Array::make(n, [])
-  for s = 0; s < n; s = s + 1 {
+  for s in 0..<n {
     let dist = dijkstra(n, adj, s)
     let row = Array::make(n, INF64)
-    for v = 0; v < n; v = v + 1 {
+    for v in 0..<n {
       if dist[v] < INF64 {
         row[v] = dist[v] - h[s] + h[v]
       }
-    } where {
-      invariant: v >= 0 && v <= n,
-      reasoning: (
-        #|INVARIANT (distance recovery):
-        #|row[0..v) contains original distances from s with potential correction.
-        #|MAINTENANCE:
-        #|Apply dist[v] - h[s] + h[v] to recover original weights.
-        #|TERMINATION:
-        #|At v = n, row holds all distances from s.
-      ),
     }
     result[s] = row
-  } where {
-    invariant: s >= 0 && s <= n,
-    reasoning: (
-      #|INVARIANT (all-pairs):
-      #|Rows for sources in [0..s) are computed and stored in result.
-      #|MAINTENANCE:
-      #|Run Dijkstra for source s and store the recovered distances.
-      #|TERMINATION:
-      #|At s = n, all-pairs distances are computed.
-    ),
   }
   Some(result)
 }

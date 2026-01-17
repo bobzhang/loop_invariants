@@ -237,3 +237,20 @@ loop (u, v) {
     }
   }
 }
+
+## 2026-01-21: Prefer for-in Over Index Loops on Edge Lists
+- Problem: Edge scans used indexed loops plus invariants for simple traversal.
+- Change: Use `for edge in edges` and destructure each tuple.
+- Result: Shorter code with no loop-spec overhead for simple scans.
+- Example:
+// Before
+for i = 0; i < edges.length(); i = i + 1 {
+  let (u, v, w) = edges[i]
+  add_edge(u, v, w)
+} where { ... }
+
+// After
+for edge in edges {
+  let (u, v, w) = edge
+  add_edge(u, v, w)
+}

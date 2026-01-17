@@ -143,8 +143,8 @@
 - [x] lib/halfplane_intersection
 - [x] lib/hld
 - [x] lib/implicit_treap
-- [ ] lib/johnson_all_pairs (in progress)
-- [ ] lib/k_shortest_paths_yen
+- [x] lib/johnson_all_pairs
+- [ ] lib/k_shortest_paths_yen (in progress)
 - [ ] lib/kmp
 - [ ] lib/lazy_segtree
 - [ ] lib/lca

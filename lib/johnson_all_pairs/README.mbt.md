@@ -1,104 +1,160 @@
-# Johnson's All-Pairs Shortest Paths
+# Johnson's All-Pairs Shortest Paths (APSP)
 
-## Overview
+## What Johnson's Algorithm Solves
 
-**Johnson's algorithm** computes shortest paths between **all pairs** of vertices
-in a sparse directed graph with possibly **negative edge weights** (but no
-negative cycles). Faster than Floyd-Warshall for sparse graphs.
+Johnson's algorithm computes **shortest paths between all pairs** of vertices in
+**sparse directed graphs** that may contain **negative edges** but **no negative
+cycles**.
 
-- **Time**: O(V·E·log V + V·E) ≈ O(V·E·log V)
-- **Space**: O(V²) for output, O(V + E) for computation
-- **Key Feature**: Handles negative weights via reweighting
+It combines:
 
-## The Key Insight
+- **Bellman-Ford** (to remove negatives)
+- **Dijkstra** (to do fast shortest paths afterward)
 
-```
-Problem: All-pairs shortest paths with negative weights
+If your graph is dense, Floyd-Warshall is usually simpler. If it is sparse and
+has negative edges, Johnson is the standard tool.
 
-Floyd-Warshall: O(V³) - doesn't use sparsity
-Dijkstra: O(V · (E + V log V)) - but needs non-negative weights!
+## Key Idea in One Sentence
 
-Johnson's insight: REWEIGHT edges to make them non-negative!
+Reweight every edge so all weights become non-negative **without changing which
+paths are shortest**.
 
-Key observation:
-  If we add a "potential" h(v) to each vertex, then:
+## The Potential Trick (Why Reweighting Works)
 
-  w'(u,v) = w(u,v) + h(u) - h(v)
-
-  For any path from s to t:
-  w'(path) = w(path) + h(s) - h(t)
-
-  All paths s→t shift by the SAME amount!
-  Shortest path is preserved!
-
-Finding good potentials:
-  Add super-source q connected to all vertices with weight 0.
-  Run Bellman-Ford from q.
-  h(v) = dist(q, v)
-
-  Then w'(u,v) = w(u,v) + h(u) - h(v) ≥ 0
-  (By triangle inequality from Bellman-Ford)
-```
-
-## Visual: Reweighting Process
+Pick a potential value `h(v)` for every vertex and redefine edge weights:
 
 ```
-Original graph (has negative edge):
-
-    0 ──1──► 1
-    │        │
-    4       -2    ← Negative!
-    │        │
-    ▼        ▼
-    2 ──1──► 3
-
-Step 1: Add super-source q with 0-weight edges
-
-    q ─0─► 0 ──1──► 1
-    │      │        │
-    0      4       -2
-    │      │        │
-    ▼      ▼        ▼
-    ├─0──► 2 ──1──► 3
-
-Step 2: Bellman-Ford from q
-    h[0] = 0, h[1] = 1, h[2] = 0, h[3] = -1
-
-Step 3: Reweight
-    w'(0,1) = 1 + h[0] - h[1] = 1 + 0 - 1 = 0
-    w'(0,2) = 4 + h[0] - h[2] = 4 + 0 - 0 = 4
-    w'(1,3) = -2 + h[1] - h[3] = -2 + 1 - (-1) = 0
-    w'(2,3) = 1 + h[2] - h[3] = 1 + 0 - (-1) = 2
-
-All non-negative! Now run Dijkstra from each vertex.
+w'(u, v) = w(u, v) + h(u) - h(v)
 ```
 
-## The Algorithm
+For a path `P = v0 -> v1 -> ... -> vk`:
 
 ```
-johnson_all_pairs(n, edges):
-  // Step 1: Add super-source q
-  extended_edges = edges + [(q, v, 0) for each v]
-
-  // Step 2: Bellman-Ford from q to get potentials h[]
-  h = bellman_ford(n+1, extended_edges, q)
-  if negative_cycle_detected:
-    return None
-
-  // Step 3: Reweight edges
-  for each edge (u, v, w):
-    w' = w + h[u] - h[v]  // Now w' >= 0
-
-  // Step 4: Dijkstra from each vertex
-  dist = new V×V matrix
-  for each source s:
-    d = dijkstra(reweighted_graph, s)
-    for each target t:
-      // Un-reweight: restore original distances
-      dist[s][t] = d[t] - h[s] + h[t]
-
-  return dist
+w'(P) = w(P) + h(v0) - h(vk)
 ```
+
+That last term is a constant shift for *all* paths between `v0` and `vk`. So the
+shortest path order does **not** change.
+
+### How We Pick h(v)
+
+Add a **super-source** `q` with 0-weight edges to every vertex and run
+Bellman-Ford from `q`:
+
+```
+h(v) = dist(q, v)
+```
+
+By the Bellman-Ford triangle inequality:
+
+```
+h(v) <= h(u) + w(u, v)
+=> w(u, v) + h(u) - h(v) >= 0
+```
+
+So all reweighted edges are non-negative and Dijkstra becomes valid.
+
+## Visual: Reweighting Example
+
+Original graph (has a negative edge):
+
+```
+0 --1--> 1 --(-2)--> 3
+|        |
+4        5
+|        |
+V        V
+2 --1--> 3
+```
+
+Add super-source `q`:
+
+```
+q --0--> 0
+q --0--> 1
+q --0--> 2
+q --0--> 3
+```
+
+Bellman-Ford from `q` gives potentials (one valid set):
+
+```
+h[0]=0, h[1]=0, h[2]=0, h[3]=-2
+```
+
+Reweight each edge:
+
+```
+w'(0,1) = 1 + 0 - 0  = 1
+w'(0,2) = 4 + 0 - 0  = 4
+w'(1,3) = -2 + 0 - (-2) = 0
+w'(2,3) = 1 + 0 - (-2)  = 3
+w'(1,3) is now 0, all edges >= 0
+```
+
+Now Dijkstra can be run from every source.
+
+## Algorithm Outline
+
+```
+1) Add super-source q with 0-weight edges to all vertices
+2) Run Bellman-Ford from q
+   - If a negative cycle exists: return None
+3) Reweight each edge: w'(u,v) = w(u,v) + h[u] - h[v]
+4) For each source s:
+     run Dijkstra on the reweighted graph
+     recover original distances:
+       dist[s][t] = d'[t] - h[s] + h[t]
+```
+
+## Step-by-Step Worked Example
+
+Graph:
+
+```
+0 -> 1 (1)
+0 -> 2 (4)
+1 -> 2 (-2)
+2 -> 3 (2)
+1 -> 3 (5)
+```
+
+### 1) Bellman-Ford from q
+
+```
+q -> every vertex with weight 0
+
+h starts as [0, 0, 0, 0]
+After relaxations:
+  h = [0, 0, -2, 0]
+```
+
+### 2) Reweight edges
+
+```
+0->1: 1 + 0 - 0   = 1
+0->2: 4 + 0 - (-2)= 6
+1->2: -2 + 0 - (-2)= 0
+2->3: 2 + (-2) - 0= 0
+1->3: 5 + 0 - 0   = 5
+```
+
+### 3) Dijkstra from 0
+
+Reweighted distances from 0:
+
+```
+d' = [0, 1, 1, 1]
+```
+
+Recover original distances:
+
+```
+original dist[0][v] = d'[v] - h[0] + h[v]
+= [0, 1, -1, 1]
+```
+
+This matches the true shortest paths in the original graph.
 
 ## Example Usage
 
@@ -119,172 +175,68 @@ test "johnson basic" {
 
 ```mbt check
 ///|
+test "johnson unreachable" {
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 2L), (1, 2, 3L)]
+  let dist = @johnson_all_pairs.johnson_all_pairs(4, edges[:]).unwrap()
+  // Node 3 is unreachable from 0
+  inspect(dist[0][3], content="4611686018427387903")
+}
+```
+
+```mbt check
+///|
 test "johnson negative cycle" {
   let edges : Array[(Int, Int, Int64)] = [(0, 1, 1L), (1, 2, -2L), (2, 1, -2L)]
   inspect(@johnson_all_pairs.johnson_all_pairs(3, edges[:]), content="None")
 }
 ```
 
-```mbt check
-///|
-test "johnson disconnected" {
-  let edges : Array[(Int, Int, Int64)] = [(0, 1, 1L)]
-  let dist = @johnson_all_pairs.johnson_all_pairs(3, edges[:]).unwrap()
-  inspect(dist[0][1], content="1")
-  // dist[0][2] = INF (unreachable)
-}
-```
-
-## Algorithm Walkthrough
+## Diagram: How the Potential Cancels
 
 ```
-Graph: 4 nodes
-Edges: 0→1(1), 0→2(4), 1→2(-2), 2→3(2), 1→3(5)
+Path P: v0 -> v1 -> v2 -> v3
 
-    0 ──1──► 1
-    │       /│
-    4    -2  5
-    │   /    │
-    ▼  ▼     ▼
-    2 ──2──► 3
+w'(P) = (w01 + h0 - h1)
+      + (w12 + h1 - h2)
+      + (w23 + h2 - h3)
+      = w(P) + h0 - h3
 
-Step 1: Add super-source q
-  q→0(0), q→1(0), q→2(0), q→3(0)
-
-Step 2: Bellman-Ford from q
-  Initial: h = [0, 0, 0, 0]
-
-  Relax edges:
-    0→1: h[1] = min(0, 0+1) = 0
-    0→2: h[2] = min(0, 0+4) = 0
-    1→2: h[2] = min(0, 0-2) = -2
-    2→3: h[3] = min(0, -2+2) = 0
-    1→3: h[3] = min(0, 0+5) = 0
-
-  Final: h = [0, 0, -2, 0]
-
-Step 3: Reweight edges
-  0→1: 1 + 0 - 0 = 1
-  0→2: 4 + 0 - (-2) = 6
-  1→2: -2 + 0 - (-2) = 0
-  2→3: 2 + (-2) - 0 = 0
-  1→3: 5 + 0 - 0 = 5
-
-  All ≥ 0 ✓
-
-Step 4: Dijkstra from each source
-
-  From 0: d' = [0, 1, 1, 1]
-  Un-reweight: dist[0][v] = d'[v] - h[0] + h[v]
-    dist[0][0] = 0 - 0 + 0 = 0
-    dist[0][1] = 1 - 0 + 0 = 1
-    dist[0][2] = 1 - 0 + (-2) = -1
-    dist[0][3] = 1 - 0 + 0 = 1
-
-Result: dist[0] = [0, 1, -1, 1] ✓
+All internal h terms cancel (telescoping).
 ```
 
-## Why Reweighting Preserves Shortest Paths
+## Common Pitfalls
 
-```
-Claim: Shortest paths are the same after reweighting.
+- **Negative cycles**: Johnson must return None if any exist.
+- **Overflow**: use Int64 and guard `dist + w` from overflow.
+- **Unreachable nodes**: keep INF to represent no path.
+- **Edge direction**: algorithm is for directed graphs. For undirected graphs,
+  add edges in both directions.
+- **Reweight recovery**: always use `d'[t] - h[s] + h[t]`.
 
-For any path P = v₀ → v₁ → ... → vₖ:
-
-Original cost:
-  w(P) = Σᵢ w(vᵢ, vᵢ₊₁)
-
-Reweighted cost:
-  w'(P) = Σᵢ [w(vᵢ, vᵢ₊₁) + h(vᵢ) - h(vᵢ₊₁)]
-        = Σᵢ w(vᵢ, vᵢ₊₁) + Σᵢ [h(vᵢ) - h(vᵢ₊₁)]
-        = w(P) + h(v₀) - h(vₖ)  // Telescoping sum!
-
-All paths from v₀ to vₖ change by same constant!
-So relative ordering is preserved.
-```
-
-## Why w'(u,v) ≥ 0
-
-```
-After Bellman-Ford: h[v] = shortest path from q to v
-
-Triangle inequality:
-  h[v] ≤ h[u] + w(u,v)
-
-Rearranging:
-  w(u,v) + h[u] - h[v] ≥ 0
-  w'(u,v) ≥ 0 ✓
-
-This is exactly the reweighted edge!
-Bellman-Ford guarantees this property.
-```
-
-## Common Applications
-
-### 1. Sparse Graphs with Negative Weights
-```
-When E << V² and negative weights exist.
-Faster than Floyd-Warshall's O(V³).
-```
-
-### 2. Network Analysis
-```
-Finding shortest paths between all node pairs.
-Detecting negative cycles (arbitrage opportunities).
-```
-
-### 3. Preprocessing for Path Queries
-```
-Build distance matrix once, answer queries in O(1).
-Trade space for query time.
-```
-
-### 4. Transportation Networks
-```
-Travel times with variable conditions.
-Some routes may have "negative" time (shortcuts).
-```
-
-## Complexity Analysis
+## Complexity
 
 | Phase | Time | Notes |
-|-------|------|-------|
-| Bellman-Ford | O(V·E) | Single source, V-1 iterations |
-| Reweight | O(E) | Visit each edge once |
-| Dijkstra × V | O(V·(E + V log V)) | With binary heap |
-| **Total** | **O(V·E + V²·log V)** | For sparse graphs |
+|------|------|-------|
+| Bellman-Ford | O(V·E) | One run from super-source |
+| Reweight edges | O(E) | Simple pass |
+| Dijkstra × V | O(V·(E + V log V)) | Binary heap |
+| Total | O(V·E·log V) | Best on sparse graphs |
 
-## Johnson's vs Floyd-Warshall
+## Johnson vs Floyd-Warshall
 
-| Aspect | Johnson's | Floyd-Warshall |
-|--------|-----------|----------------|
-| Time | O(V·E·log V) | O(V³) |
-| Space (working) | O(V + E) | O(V²) |
-| Negative weights | Yes | Yes |
-| Negative cycles | Detected | Detected |
-| Best for | Sparse graphs | Dense graphs |
+| Aspect | Johnson | Floyd-Warshall |
+|--------|---------|----------------|
+| Time | O(V·E·log V) | O(V^3) |
+| Space | O(V + E) + output | O(V^2) |
+| Negative edges | Yes | Yes |
+| Best for | Sparse | Dense |
 
-**Choose Johnson's when**: E << V² (sparse)
-**Choose Floyd-Warshall when**: E ≈ V² (dense)
+## Implementation Notes (This Package)
 
-## Negative Cycle Detection
+- Uses Bellman-Ford from `@bellman_ford` to get potentials.
+- Uses a custom binary heap for Dijkstra.
+- Distances are stored in `Int64`, with `INF64` for unreachable nodes.
+- The API returns `None` when a negative cycle exists.
 
-```
-Bellman-Ford detects negative cycles:
-  After V-1 iterations, run one more.
-  If any distance decreases → negative cycle exists.
-
-When negative cycle detected:
-  - No meaningful shortest paths exist
-  - Algorithm returns None
-  - The cycle can be extracted from Bellman-Ford
-```
-
-## Implementation Notes
-
-- Use a sentinel value (e.g., INF/2) for unreachable pairs
-- Be careful with overflow when adding potentials
-- Store h[] values for un-reweighting after Dijkstra
-- Can output actual paths by tracking predecessors
-- Super-source q doesn't need to be added explicitly
-
+If you need path reconstruction, store predecessor arrays inside Dijkstra and
+carry them through the recovery step.
