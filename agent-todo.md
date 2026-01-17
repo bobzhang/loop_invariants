@@ -148,8 +148,8 @@
 - [x] lib/kmp
 - [x] lib/lazy_segtree
 - [x] lib/lca
-- [ ] lib/lct (in progress)
-- [ ] lib/lichao
+- [x] lib/lct
+- [ ] lib/lichao (in progress)
 - [ ] lib/line_segment_intersection
 - [ ] lib/linear_recurrence
 - [ ] lib/linear_sieve
