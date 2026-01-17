@@ -150,8 +150,8 @@
 - [x] lib/lca
 - [x] lib/lct
 - [x] lib/lichao
-- [ ] lib/line_segment_intersection (in progress)
-- [ ] lib/linear_recurrence
+- [x] lib/line_segment_intersection
+- [ ] lib/linear_recurrence (in progress)
 - [ ] lib/linear_sieve
 - [ ] lib/linkcut
 - [ ] lib/longest_common_substring
