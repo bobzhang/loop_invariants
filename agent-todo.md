@@ -144,8 +144,8 @@
 - [x] lib/hld
 - [x] lib/implicit_treap
 - [x] lib/johnson_all_pairs
-- [ ] lib/k_shortest_paths_yen (in progress)
-- [ ] lib/kmp
+- [x] lib/k_shortest_paths_yen
+- [ ] lib/kmp (in progress)
 - [ ] lib/lazy_segtree
 - [ ] lib/lca
 - [ ] lib/lct

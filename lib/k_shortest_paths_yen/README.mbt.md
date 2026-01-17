@@ -1,104 +1,161 @@
-# Yen's K Shortest Paths Algorithm
+# Yen's K Shortest Paths (Loopless Paths)
 
-## Overview
+## What Yen's Algorithm Solves
 
-**Yen's algorithm** finds the **k shortest simple (loopless) paths** from a
-source to a target in a weighted directed graph.
+Yen's algorithm finds the **k shortest simple paths** from a source `s` to a
+target `t` in a **directed weighted graph**. “Simple” means no repeated
+vertices (loopless paths).
 
-- **Time**: O(k · n · (m + n log n))
-- **Space**: O(k · n)
-- **Key Feature**: Finds multiple alternative shortest paths
+It is especially useful when you want **multiple alternative routes**, not just
+one shortest path.
 
-## The Key Insight
+- **Works with**: non‑negative edge weights
+- **Guarantees**: paths are simple (no cycles)
+- **Returns**: up to `k` paths, in increasing cost order
+
+## Big Picture
+
+The shortest path is easy: just run Dijkstra. The challenge is to find the next
+shortest paths without enumerating all paths.
+
+Yen’s idea:
+
+1) Take the previous shortest path
+2) Break it at every node as a **spur point**
+3) Force a different edge at that spur point
+4) Collect all candidate deviations and pick the cheapest
+
+Repeat until you have `k` paths or no candidates remain.
+
+## Key Terms
 
 ```
-Problem: Find not just THE shortest path, but the k shortest paths
+A = shortest paths found so far (ordered)
+B = candidate paths not chosen yet (min-heap)
 
-Naive: Enumerate all paths and sort → Exponential!
-
-Yen's insight: Build paths incrementally using "spur" deviations
-
-Given the i-th shortest path Pᵢ:
-  For each node v on Pᵢ:
-    1. Keep the prefix (root path) from source to v
-    2. Block edges that would recreate paths P₁...Pᵢ with same prefix
-    3. Find shortest "spur" path from v to target
-    4. Combine prefix + spur as a candidate for (i+1)-th path
-
-The best candidate becomes the (i+1)-th shortest path!
+root path: prefix from s to spur node
+spur path: shortest path from spur node to t in a modified graph
+spur node: the node where we deviate
 ```
 
-## Visual: Spur Path Generation
+## Visual: Root + Spur Decomposition
 
 ```
+Path P = s -> a -> b -> c -> t
+
+Choose spur at b:
+root = s -> a -> b
+spur = b -> ... -> t
+
+New candidate = root + spur (without repeating b)
+```
+
+## Why We Block Edges and Nodes
+
+When we deviate at a spur node, we need two rules:
+
+1) **Block edges** that would recreate a previously found path with the same
+   root prefix.
+2) **Block root nodes** (except the spur node) so the new path stays simple.
+
+```
+Example path: A -> B -> C -> D
+Spur at B:
+  root = A -> B
+  block A  (avoid cycles back into root)
+  block edge B -> C (otherwise we recreate the same path)
+```
+
+## Worked Example (Step by Step)
+
 Graph:
-  0 ──1──► 1 ──1──► 3
-  │        │
-  3        1
-  │        │
-  ▼        ▼
-  2 ──────2──────► 3
-
-1st shortest path: 0 → 1 → 3 (cost 2)
-
-Generate candidates for 2nd path:
-  Spur at 0: Block edge 0→1, find path 0→2→3 (cost 5)
-  Spur at 1: Keep 0→1, block 1→3, find 0→1→2→3 (cost 4)
-
-Candidates: [0→2→3 (5), 0→1→2→3 (4)]
-2nd shortest: 0→1→2→3 (cost 4)
-
-Generate candidates for 3rd path:
-  From 2nd path (0→1→2→3):
-    Spur at 0: ... (already have 0→2→3 in candidates)
-    Spur at 1: ...
-    Spur at 2: Keep 0→1→2, find path to 3 (already at 3)
-
-3rd shortest: 0→2→3 (cost 5)
-```
-
-## Algorithm
 
 ```
-yen_k_shortest(graph, source, target, k):
-  // Find first shortest path
-  path1 = dijkstra(graph, source, target)
-  if path1 is None: return []
+0 --1--> 1 --1--> 3
+|        |
+3        1
+|        |
+V        V
+2 --2--> 3
+```
 
-  paths = [path1]
-  candidates = min-heap
+Edges: (0,1,1), (1,3,1), (0,2,3), (2,3,2), (1,2,1)
 
-  for i = 1 to k-1:
-    prev_path = paths[i-1]
+### Step 1: First shortest path
 
-    // Try each node as a spur point
-    for j = 0 to len(prev_path) - 2:
-      spur_node = prev_path[j]
-      root_path = prev_path[0..j]
+```
+P1 = 0 -> 1 -> 3  (cost 2)
+A = [P1]
+B = []
+```
 
-      // Temporarily modify graph
-      for each path P in paths:
-        if P[0..j] == root_path:
-          block edge P[j] → P[j+1]
+### Step 2: Generate candidates from P1
 
-      // Block nodes in root path (ensure loopless)
-      for node in root_path[0..j-1]:
-        block node
+Spur at node 0:
 
-      // Find spur path
-      spur = dijkstra(modified_graph, spur_node, target)
+```
+root = [0]
+block edge 0->1 (since P1 shares root)
+spur path: 0 -> 2 -> 3 (cost 5)
+candidate: [0,2,3] (cost 5)
+```
 
-      if spur exists:
-        candidate = root_path + spur
-        add candidate to candidates
+Spur at node 1:
 
-      // Restore graph
+```
+root = [0,1]
+block edge 1->3
+block node 0
+spur path: 1 -> 2 -> 3 (cost 3)
+candidate: [0,1,2,3] (cost 4)
+```
 
-    // Get next shortest path
-    if candidates is empty: break
-    paths.append(candidates.pop_min())
+Now:
 
-  return paths
+```
+B = {[0,1,2,3] cost 4, [0,2,3] cost 5}
+Pick min => P2 = [0,1,2,3] (cost 4)
+A = [P1, P2]
+```
+
+### Step 3: Generate candidates from P2
+
+Spur at node 0:
+
+```
+root = [0]
+block edge 0->1 (P1) and 0->1 (P2) still
+spur path: 0 -> 2 -> 3 (cost 5)  (already in B)
+```
+
+Spur at node 1:
+
+```
+root = [0,1]
+block 1->2 and 1->3
+no spur path
+```
+
+Spur at node 2:
+
+```
+root = [0,1,2]
+block 2->3
+no spur path
+```
+
+Remaining B gives:
+
+```
+P3 = [0,2,3] (cost 5)
+```
+
+Result:
+
+```
+1) 0 -> 1 -> 3  (2)
+2) 0 -> 1 -> 2 -> 3  (4)
+3) 0 -> 2 -> 3  (5)
 ```
 
 ## Example Usage
@@ -120,146 +177,78 @@ test "yen k shortest paths" {
 }
 ```
 
-## Algorithm Walkthrough
-
-```
-Graph: 4 nodes
-Edges: 0→1(1), 1→3(1), 0→2(3), 2→3(2), 1→2(1)
-
-Find 3 shortest paths from 0 to 3:
-
-Step 1: First shortest path (Dijkstra)
-  Path: 0 → 1 → 3, Cost: 2
-
-Step 2: Generate candidates from path 0→1→3
-  Spur at node 0:
-    Block edge 0→1 (used by path 1)
-    Find path 0→...→3 without 0→1
-    Path: 0 → 2 → 3, Cost: 5
-    Candidate: [0→2→3, cost 5]
-
-  Spur at node 1:
-    Root: 0 → 1, Block nodes: {0}
-    Block edge 1→3 (used by path 1)
-    Find path 1→...→3 without 1→3, avoiding node 0
-    Path: 1 → 2 → 3, Cost: 3
-    Candidate: [0→1→2→3, cost 4]
-
-  Candidates heap: [(0→1→2→3, 4), (0→2→3, 5)]
-
-Step 3: Second shortest = 0→1→2→3 (cost 4)
-
-Step 4: Generate candidates from path 0→1→2→3
-  Spur at node 0: Already have 0→2→3
-  Spur at node 1:
-    Block 1→2 (used), 1→3 already blocked from before
-    No valid spur
-  Spur at node 2:
-    Block 2→3, no other path to 3
-    No valid spur
-
-Step 5: Third shortest = 0→2→3 (cost 5)
-
-Result: [(0→1→3, 2), (0→1→2→3, 4), (0→2→3, 5)]
+```mbt check
+///|
+test "yen fewer than k" {
+  let edges : Array[(Int, Int, Int64)] = [(0, 1, 1L), (1, 2, 1L)]
+  let paths = @k_shortest_paths_yen.yen_k_shortest_paths(3, edges[:], 0, 2, 5)
+  // Only one simple path exists: 0->1->2
+  inspect(paths.length(), content="1")
+  inspect(paths[0].nodes, content="[0, 1, 2]")
+}
 ```
 
-## Why Block Edges and Nodes?
+## Pseudocode (Readable)
 
 ```
-Block edges with same root path:
-  - Prevents finding the same path again
-  - Each path P₁...Pᵢ that shares root[0..j] blocks its next edge
+A = [shortest path s->t]
+B = empty min-heap
 
-Block nodes in root path:
-  - Ensures paths are SIMPLE (no repeated vertices)
-  - Spur path can't go through nodes already in prefix
+for i in 1..k-1:
+  prev = A[i-1]
+  for each spur index j in prev:
+    root = prev[0..j]
 
-Example:
-  Path 1: A → B → C → D
-  Spur at B with root A → B:
-    Block A (in root path)
-    Block edge B → C (from path 1)
-    Find path B → ... → D not using A or edge B→C
+    block all edges that would recreate a path in A with same root
+    block all root nodes except spur node
+
+    spur = shortest path from spur node to t in modified graph
+    if spur exists:
+      candidate = root + spur
+      add to B if unique
+
+  if B empty: stop
+  A.append(B.pop_min())
+
+return A
 ```
 
-## Common Applications
+## Complexity
 
-### 1. Route Planning
-```
-Find alternative routes for navigation.
-"Show me 3 different ways to get there."
-```
-
-### 2. Network Routing
-```
-Backup paths for network traffic.
-If primary path fails, use 2nd or 3rd shortest.
-```
-
-### 3. Transportation
-```
-Multiple travel options for passengers.
-Different tradeoffs (cost, time, transfers).
-```
-
-### 4. Game AI
-```
-NPC pathfinding with variety.
-Avoid predictable movement patterns.
-```
-
-## Complexity Analysis
-
-| Operation | Time |
-|-----------|------|
-| First Dijkstra | O(m + n log n) |
-| Each spur search | O(m + n log n) |
-| Number of spurs | O(k · n) |
-| **Total** | **O(k · n · (m + n log n))** |
-
-## Yen's vs Other K-Shortest Algorithms
-
-| Algorithm | Paths | Time |
-|-----------|-------|------|
-| Yen's | Simple (loopless) | O(kn(m + n log n)) |
-| Eppstein's | May have cycles | O(m + n log n + k) |
-| Lazy Yen | Simple (optimized) | Often faster |
-
-**Choose Yen's when**: You need simple paths (no repeated vertices).
-
-## Optimizations
+Let `n` be vertices, `m` edges:
 
 ```
-1. Lazy candidate generation:
-   Don't generate all spur paths immediately.
-   Generate on demand when popping from heap.
+- Each spur search uses Dijkstra: O(m + n log n)
+- There are O(k * n) spur searches in the worst case
 
-2. Edge blocking with sets:
-   Use hash sets for O(1) edge lookup.
-
-3. Graph restoration:
-   Use undo stack instead of copying graph.
-
-4. Bidirectional Dijkstra:
-   For each spur search, use bidirectional search.
+Total: O(k * n * (m + n log n))
 ```
 
-## Implementation Notes
+## Common Pitfalls
 
-- Store paths as node lists, not edge lists
-- Use priority queue for candidates (avoid duplicates)
-- Handle case where fewer than k paths exist
-- Edges must have non-negative weights (for Dijkstra)
-- Block nodes and edges carefully, restore after each spur
+- **Negative weights** are not allowed (Dijkstra would fail).
+- **Duplicate paths**: you must de-duplicate candidates in B.
+- **Unreachable target**: stop when no candidate remains.
+- **Graph modification**: always restore blocked edges/nodes after each spur.
+- **Simple path requirement**: block root nodes to avoid loops.
 
-## Limitations
+## When to Use Yen
 
-```
-- Only works for simple (loopless) paths
-- Requires non-negative edge weights
-- Can be slow for large k or dense graphs
-- Memory grows with k (store all paths)
+- You need **multiple alternatives**, not just one shortest path
+- Graph is **sparse** and **weights are non‑negative**
+- You need **simple paths** (no repeated vertices)
 
-For paths with cycles, consider Eppstein's algorithm.
-```
+## Yen vs Other Algorithms
 
+| Algorithm | Path Type | Typical Use |
+|-----------|----------|-------------|
+| Yen | simple paths | alternative routing |
+| Eppstein | may include cycles | very large k |
+| Suurballe | disjoint paths | k=2 edge-disjoint |
+
+## Implementation Notes (This Package)
+
+- Uses `@dijkstra` for each spur path search
+- Blocks edges by root‑prefix matches in the already found paths
+- Blocks root prefix nodes to enforce loopless results
+- Returns fewer than `k` paths when the candidate set becomes empty

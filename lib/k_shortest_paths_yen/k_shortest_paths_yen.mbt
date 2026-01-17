@@ -95,25 +95,14 @@ fn build_adj(
   edges : ArrayView[(Int, Int, Int64)],
 ) -> Array[Array[(Int, Int64)]]? {
   let adj : Array[Array[(Int, Int64)]] = Array::makei(n, _ => [])
-  for i = 0; i < edges.length(); i = i + 1 {
-    let (u, v, w) = edges[i]
+  for edge in edges {
+    let (u, v, w) = edge
     if w < 0L {
       return None
     }
     if u >= 0 && u < n && v >= 0 && v < n {
       adj[u].push((v, w))
     }
-  } where {
-    invariant: i >= 0 && i <= edges.length(),
-    reasoning: (
-      #|INVARIANT (adj build):
-      #|For each processed edge index < i, its non-negative weight edge is added
-      #|to adj if endpoints are in range. Negative weights abort early.
-      #|MAINTENANCE:
-      #|Insert edge i into adj when valid; otherwise skip or return None.
-      #|TERMINATION:
-      #|At i = edges.length(), adj contains all valid edges.
-    ),
   }
   Some(adj)
 }
@@ -147,24 +136,14 @@ fn path_cost(adj : Array[Array[(Int, Int64)]], nodes : Array[Int]) -> Int64? {
     return Some(0L)
   }
   let mut total = 0L
-  for i = 0; i + 1 < nodes.length(); i = i + 1 {
+  let last = nodes.length() - 1
+  for i in 0..<last {
     let u = nodes[i]
     let v = nodes[i + 1]
     match min_edge_weight(adj, u, v) {
       None => return None
       Some(w) => total = total + w
     }
-  } where {
-    invariant: i >= 0 && i + 1 <= nodes.length(),
-    reasoning: (
-      #|INVARIANT (path cost):
-      #|total equals the sum of weights along nodes[0..i], and all required edges
-      #|for that prefix exist in adj.
-      #|MAINTENANCE:
-      #|Add the edge weight for (nodes[i], nodes[i+1]) to extend the sum.
-      #|TERMINATION:
-      #|At i = len-1, total is the full path cost.
-    ),
   }
   Some(total)
 }
@@ -172,18 +151,8 @@ fn path_cost(adj : Array[Array[(Int, Int64)]], nodes : Array[Int]) -> Int64? {
 ///|
 fn prefix_nodes(nodes : Array[Int], end_idx : Int) -> Array[Int] {
   let prefix : Array[Int] = []
-  for i = 0; i <= end_idx; i = i + 1 {
+  for i in 0 ..<= end_idx {
     prefix.push(nodes[i])
-  } where {
-    invariant: i >= 0 && i <= end_idx + 1,
-    reasoning: (
-      #|INVARIANT (prefix build):
-      #|prefix equals nodes[0..i) and preserves order.
-      #|MAINTENANCE:
-      #|Push nodes[i] to extend the prefix by one element.
-      #|TERMINATION:
-      #|At i = end_idx + 1, prefix has length end_idx + 1.
-    ),
   }
   prefix
 }
@@ -273,12 +242,12 @@ pub fn yen_k_shortest_paths(
   }
   let a_paths : Array[KPath] = [first.unwrap()]
   let b_candidates : Array[KPath] = []
-  for kth = 1; kth < k; kth = kth + 1 {
+  for kth in 1..<k {
     let prev = a_paths[kth - 1]
     if prev.nodes.length() <= 1 {
       break
     }
-    for i = 0; i < prev.nodes.length() - 1; i = i + 1 {
+    for i in 0..<(prev.nodes.length() - 1) {
       let root = prefix_nodes(prev.nodes, i)
       let root_cost = match path_cost(adj, root) {
         None => continue
@@ -291,19 +260,8 @@ pub fn yen_k_shortest_paths(
         }
       }
       let blocked_nodes = Array::make(n, false)
-      for j = 0; j < root.length() - 1; j = j + 1 {
+      for j in 0..<(root.length() - 1) {
         blocked_nodes[root[j]] = true
-      } where {
-        invariant: j >= 0 && j <= root.length() - 1,
-        reasoning: (
-          #|INVARIANT (block prefix nodes):
-          #|blocked_nodes marks exactly root[0..j) as unavailable for the spur
-          #|path, ensuring loopless concatenation with the root prefix.
-          #|MAINTENANCE:
-          #|Mark root[j] as blocked to extend the forbidden prefix.
-          #|TERMINATION:
-          #|At j = root.length() - 1, all nodes before the spur node are blocked.
-        ),
       }
       let spur_node = root[root.length() - 1]
       let spur = shortest_path_filtered(
@@ -317,20 +275,6 @@ pub fn yen_k_shortest_paths(
           b_candidates.push(candidate)
         }
       }
-    } where {
-      invariant: i >= 0 && i <= prev.nodes.length() - 1,
-      reasoning: (
-        #|INVARIANT (spur generation):
-        #|For each spur index in [0..i), all candidate paths formed by deviating
-        #|at that index from the previous shortest path have been generated and
-        #|added to B if unique. Each candidate is loopless because prefix nodes
-        #|before the spur are blocked.
-        #|MAINTENANCE:
-        #|Construct root prefix, block conflicting edges from A, compute spur
-        #|path, and append a new candidate if it exists.
-        #|TERMINATION:
-        #|At i = len-1, all spur deviations of the previous path are explored.
-      ),
     }
     if b_candidates.length() == 0 {
       break
@@ -342,18 +286,6 @@ pub fn yen_k_shortest_paths(
     a_paths.push(b_candidates[idx])
     let _ = b_candidates.remove(idx)
 
-  } where {
-    invariant: kth >= 1 && kth <= k,
-    reasoning: (
-      #|INVARIANT (Yen outer loop):
-      #|A contains the shortest loopless paths found so far in non-decreasing
-      #|order of cost. B contains unique candidate paths not yet chosen.
-      #|MAINTENANCE:
-      #|Generate spur deviations from the latest path, then select the smallest
-      #|candidate from B as the next shortest path.
-      #|TERMINATION:
-      #|Stop when k paths are found or no candidates remain.
-    ),
   }
   a_paths
 }
