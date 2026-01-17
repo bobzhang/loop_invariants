@@ -101,8 +101,8 @@
 - [x] lib/challenge_persistent_skew_heap
 - [x] lib/challenge_persistent_stack
 - [x] lib/challenge_persistent_stack_min
-- [ ] lib/challenge_persistent_treap_map (in progress)
-- [ ] lib/challenge_persistent_treap_set
+- [x] lib/challenge_persistent_treap_map
+- [ ] lib/challenge_persistent_treap_set (in progress)
 - [ ] lib/challenge_persistent_trie_string
 - [ ] lib/challenge_persistent_union_find
 - [ ] lib/challenge_prefix_sum

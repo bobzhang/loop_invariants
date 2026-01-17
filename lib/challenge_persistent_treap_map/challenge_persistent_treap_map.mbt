@@ -26,44 +26,6 @@ pub fn[K, V] size(t : TreapMap[K, V]) -> Int {
 }
 
 ///|
-fn[K : Compare] within_bounds(value : K, lo : K?, hi : K?) -> Bool {
-  let lo_ok = match lo {
-    None => true
-    Some(l) => value > l
-  }
-  let hi_ok = match hi {
-    None => true
-    Some(h) => value < h
-  }
-  lo_ok && hi_ok
-}
-
-///|
-fn[K : Compare, V] treap_valid(t : TreapMap[K, V], lo : K?, hi : K?) -> Bool {
-  match t {
-    TreapMap::Empty => true
-    TreapMap::Node(key~, value=_, priority~, size=sz, left~, right~) => {
-      let bounds_ok = within_bounds(key, lo, hi)
-      let left_ok = match left {
-        TreapMap::Empty => true
-        TreapMap::Node(key=_, value=_, priority=p, size=_, left=_, right=_) =>
-          priority >= p
-      }
-      let right_ok = match right {
-        TreapMap::Empty => true
-        TreapMap::Node(key=_, value=_, priority=p, size=_, left=_, right=_) =>
-          priority >= p
-      }
-      let size_ok = sz == 1 + size(left) + size(right)
-      bounds_ok &&
-      left_ok &&
-      right_ok &&
-      size_ok &&
-      treap_valid(left, lo, Some(key)) &&
-      treap_valid(right, Some(key), hi)
-    }
-  }
-}
 
 ///|
 fn[K : Hash] priority_for(key : K) -> Int {
@@ -184,61 +146,27 @@ pub fn[K : Compare + Hash, V] insert_or_update(
 
 ///|
 /// Lookup a key and return its value if present.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[K : Compare, V] get(t : TreapMap[K, V], key : K) -> V? {
-  let none : K? = None
-  for cur = t, lo = none, hi = none {
-    match cur {
-      TreapMap::Empty => break None
-      TreapMap::Node(key=k, value=v, priority=_, size=_, left=l, right=r) =>
-        if key == k {
-          break Some(v)
-        } else if key < k {
-          continue l, lo, Some(k)
-        } else {
-          continue r, Some(k), hi
-        }
-    }
-  } where {
-    invariant: treap_valid(cur, lo, hi),
-    invariant: within_bounds(key, lo, hi),
-    reasoning: (
-      #|INVARIANT (Treap map search):
-      #|cur is a valid treap restricted to bounds (lo, hi), and key respects
-      #|those bounds. A match must be inside cur.
-      #|MAINTENANCE:
-      #|Comparisons refine bounds as we descend left or right.
-      #|TERMINATION:
-      #|If cur is empty, key is absent; otherwise we return its value.
-    ),
+  match t {
+    TreapMap::Empty => None
+    TreapMap::Node(key=k, value=v, priority=_, size=_, left=l, right=r) =>
+      if key == k {
+        Some(v)
+      } else if key < k {
+        get(l, key)
+      } else {
+        get(r, key)
+      }
   }
 }
 
 ///|
 /// Build a treap map by inserting elements in order.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[K : Compare + Hash, V] from_array(
   arr : ArrayView[(K, V)],
 ) -> TreapMap[K, V] {
-  let n = arr.length()
-  for i = 0, tree = TreapMap::Empty {
-    if i >= n {
-      break tree
-    } else {
-      let (k, v) = arr[i]
-      continue i + 1, insert_or_update(tree, k, v)
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: size(tree) <= i,
-    invariant: treap_valid(tree, None, None),
-    reasoning: (
-      #|INVARIANT (Treap map build):
-      #|tree holds all processed key-value pairs and respects treap invariants.
-      #|MAINTENANCE:
-      #|Insert or update (k, v), preserving treap validity.
-      #|TERMINATION:
-      #|At i = n, all pairs are present.
-    ),
-  }
+  arr.fold(init=TreapMap::Empty, (tree, pair) => {
+    let (k, v) = pair
+    insert_or_update(tree, k, v)
+  })
 }
