@@ -192,7 +192,7 @@
 - [x] lib/stoer_wagner_min_cut
 - [x] lib/string
 - [x] lib/string_hash
-- [ ] lib/subset_convolution
+- [x] lib/subset_convolution
 - [ ] lib/suffix_array
 - [ ] lib/suffix_automaton
 - [ ] lib/suffix_tree
