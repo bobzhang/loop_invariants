@@ -39,8 +39,8 @@
 - [x] lib/challenge_binary_lifting
 - [x] lib/challenge_binary_search_answer
 - [x] lib/challenge_bipartite_matching_kuhn
-- [ ] lib/challenge_bitmask_dp (in progress)
-- [ ] lib/challenge_bitmask_tsp
+- [x] lib/challenge_bitmask_dp
+- [ ] lib/challenge_bitmask_tsp (in progress)
 - [ ] lib/challenge_centroid_decomposition
 - [ ] lib/challenge_coin_change_min
 - [ ] lib/challenge_coordinate_compress

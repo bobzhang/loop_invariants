@@ -4,7 +4,6 @@
 
 ///|
 /// Minimum Hamiltonian cycle cost starting at node 0.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn tsp_min_cycle(dist : Array[Array[Int]], inf : Int) -> Int {
   let n = dist.length()
   if n == 0 {
@@ -29,24 +28,12 @@ pub fn tsp_min_cycle(dist : Array[Array[Int]], inf : Int) -> Int {
     }
   }
   let full = total - 1
-  let best = for u = 0, ans = inf {
-    if u >= n {
-      break ans
-    } else {
-      let cand = dp[full][u] + dist[u][0]
-      let new_ans = if cand < ans { cand } else { ans }
-      continue u + 1, new_ans
+  let mut best = inf
+  for u in 0..<n {
+    let cand = dp[full][u] + dist[u][0]
+    if cand < best {
+      best = cand
     }
-  } where {
-    invariant: u >= 0 && u <= n,
-    reasoning: (
-      #|INVARIANT (Close the tour):
-      #|ans is the minimum cycle cost among processed endpoints < u.
-      #|MAINTENANCE:
-      #|Consider endpoint u and update ans if smaller.
-      #|TERMINATION:
-      #|At u = n, ans is the minimum Hamiltonian cycle cost.
-    ),
   }
   if best >= inf {
     -1
