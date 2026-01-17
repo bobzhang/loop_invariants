@@ -204,7 +204,7 @@
 - [x] lib/trie
 - [x] lib/two_sat
 - [x] lib/union_find
-- [ ] lib/virtual_tree
+- [x] lib/virtual_tree
 - [ ] lib/wavelet
 - [ ] lib/wildcard_matching
 - [ ] lib/xor_basis
