@@ -18,22 +18,6 @@ fn[T] heap_size(h : Heap[T]) -> Int {
 }
 
 ///|
-fn[T : Compare] heap_valid(h : Heap[T]) -> Bool {
-  match h {
-    Heap::Empty => true
-    Heap::Node(value~, left~, right~) => {
-      let left_ok = match left {
-        Heap::Empty => true
-        Heap::Node(value=v, left=_, right=_) => value <= v
-      }
-      let right_ok = match right {
-        Heap::Empty => true
-        Heap::Node(value=v, left=_, right=_) => value <= v
-      }
-      left_ok && right_ok && heap_valid(left) && heap_valid(right)
-    }
-  }
-}
 
 ///|
 /// Create an empty skew heap.
@@ -98,26 +82,6 @@ pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
 
 ///|
 /// Build a skew heap by inserting elements in sequence.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Heap[T] {
-  let n = arr.length()
-  for i = 0, heap = Heap::Empty {
-    if i >= n {
-      break heap
-    } else {
-      continue i + 1, insert(heap, arr[i])
-    }
-  } where {
-    invariant: i >= 0 && i <= n,
-    invariant: heap_size(heap) == i,
-    invariant: heap_valid(heap),
-    reasoning: (
-      #|INVARIANT (Skew heap build):
-      #|heap holds the first i elements and satisfies the min-heap order.
-      #|MAINTENANCE:
-      #|Melding in arr[i] preserves heap order and increases size by one.
-      #|TERMINATION:
-      #|At i = n, all elements are present in the heap.
-    ),
-  }
+  arr.fold(init=Heap::Empty, (heap, value) => insert(heap, value))
 }
