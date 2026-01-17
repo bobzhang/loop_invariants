@@ -169,24 +169,10 @@ fn BiconnectedFinder::dfs(
 ///|
 /// Run DFS on all connected components.
 fn BiconnectedFinder::run(self : BiconnectedFinder) -> Unit {
-  for v = 0; v < self.n; v = v + 1 {
+  for v in 0..<self.n {
     if self.disc[v] == -1 {
       self.dfs(v, -1)
     }
-  } where {
-    invariant: v >= 0 && v <= self.n,
-    reasoning: (
-      #|INVARIANT (component coverage):
-      #|  Vertices [0..v) are fully processed.
-      #|  All biconnected components involving only those vertices
-      #|  have been extracted.
-      #|
-      #|MAINTENANCE:
-      #|  If v is unvisited, start DFS to cover its connected component.
-      #|
-      #|TERMINATION:
-      #|  At v = n, entire graph processed.
-    ),
   }
 }
 
@@ -196,22 +182,10 @@ fn BiconnectedFinder::collect_articulation_points(
   self : BiconnectedFinder,
 ) -> Array[Int] {
   let result : Array[Int] = []
-  for i = 0; i < self.n; i = i + 1 {
+  for i in 0..<self.n {
     if self.articulation[i] {
       result.push(i)
     }
-  } where {
-    invariant: i >= 0 && i <= self.n,
-    reasoning: (
-      #|INVARIANT (AP collection):
-      #|  result contains articulation points from vertices [0..i).
-      #|
-      #|MAINTENANCE:
-      #|  If articulation[i], append i.
-      #|
-      #|TERMINATION:
-      #|  At i = n, all articulation points collected.
-    ),
   }
   result
 }
