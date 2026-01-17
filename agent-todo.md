@@ -195,7 +195,7 @@
 - [x] lib/subset_convolution
 - [x] lib/suffix_array
 - [x] lib/suffix_automaton
-- [ ] lib/suffix_tree
+- [x] lib/suffix_tree
 - [ ] lib/suurballe_disjoint_paths
 - [ ] lib/techniques
 - [ ] lib/topological_sort_dfs
