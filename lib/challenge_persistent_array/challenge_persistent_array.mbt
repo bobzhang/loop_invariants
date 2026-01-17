@@ -101,7 +101,6 @@ pub fn[T] set_at(arr : PArray[T], idx : Int, value : T) -> PArray[T] {
 
 ///|
 /// Materialize the persistent array to a mutable array.
-#warnings("+missing_invariant+missing_reasoning")
 pub fn[T] to_array(arr : PArray[T]) -> Array[T] {
   let out = Array::new()
   for i in 0..<arr.n {

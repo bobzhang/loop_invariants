@@ -67,8 +67,8 @@
 - [x] lib/challenge_palindrome_partition
 - [x] lib/challenge_persistent_23_tree
 - [x] lib/challenge_persistent_aa_tree
-- [ ] lib/challenge_persistent_array (in progress)
-- [ ] lib/challenge_persistent_avl_set
+- [x] lib/challenge_persistent_array
+- [ ] lib/challenge_persistent_avl_set (in progress)
 - [ ] lib/challenge_persistent_binary_trie
 - [ ] lib/challenge_persistent_binomial_heap
 - [ ] lib/challenge_persistent_bitset
