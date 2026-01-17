@@ -30,11 +30,37 @@
 const GAUSS_EPS : Double = 0.000000001
 
 ///|
-priv struct GaussResult {
+pub struct GaussResult {
   solution : Array[Double]
   rank : Int
   has_solution : Bool
   has_unique_solution : Bool
+}
+
+///|
+/// Solve Ax = b using Gaussian elimination.
+pub fn gauss_solve(a : Array[Array[Double]], b : Array[Double]) -> GaussResult {
+  let n = a.length()
+  if b.length() != n {
+    return {
+      solution: [],
+      rank: 0,
+      has_solution: false,
+      has_unique_solution: false,
+    }
+  }
+  let m = if n == 0 { 0 } else { a[0].length() }
+  for row in a {
+    if row.length() != m {
+      return {
+        solution: [],
+        rank: 0,
+        has_solution: false,
+        has_unique_solution: false,
+      }
+    }
+  }
+  gauss_eliminate(a, b)
 }
 
 ///|

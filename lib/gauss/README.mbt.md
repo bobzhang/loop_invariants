@@ -98,20 +98,52 @@ Before elimination in column k:
 This prevents division by very small numbers!
 ```
 
+## API
+
+```
+gauss_solve(a, b) -> GaussResult
+
+GaussResult fields:
+  solution            // one solution (free vars left at 0)
+  rank
+  has_solution
+  has_unique_solution
+```
+
 ## Example Usage
 
-```mbt nocheck
-// Solve system of linear equations
-
+```mbt check
 ///|
-let a = [[2.0, 1.0, -1.0], [-3.0, -1.0, 2.0], [-2.0, 1.0, 2.0]]
+test "gauss unique solution" {
+  let a = [[2.0, 1.0], [1.0, -1.0]]
+  let b = [5.0, 1.0]
+  let res = @gauss.gauss_solve(a, b)
+  inspect(res.has_unique_solution, content="true")
+  let ok = (res.solution[0] - 2.0).abs() < 0.000001 &&
+    (res.solution[1] - 1.0).abs() < 0.000001
+  inspect(ok, content="true")
+}
+```
 
+```mbt check
 ///|
-let b = [8.0, -11.0, -3.0]
+test "gauss no solution" {
+  let a = [[1.0, 1.0], [1.0, 1.0]]
+  let b = [1.0, 2.0]
+  let res = @gauss.gauss_solve(a, b)
+  inspect(res.has_solution, content="false")
+}
+```
 
+```mbt check
 ///|
-let solution = gauss_solve(a, b)
-// solution = Some([2.0, 3.0, -1.0])
+test "gauss infinite solutions" {
+  let a = [[1.0, 1.0], [2.0, 2.0]]
+  let b = [1.0, 2.0]
+  let res = @gauss.gauss_solve(a, b)
+  inspect(res.has_solution, content="true")
+  inspect(res.has_unique_solution, content="false")
+}
 ```
 
 ## Common Applications
@@ -213,6 +245,13 @@ Solutions:
 4. Iterative refinement
 ```
 
+## Common Pitfalls
+
+- **Mismatched dimensions**: b must have the same row count as A.
+- **Floating error**: compare with a tolerance, not exact equality.
+- **Singular matrices**: check `has_solution` / `has_unique_solution`.
+- **Poor pivoting**: skipping pivoting can explode rounding error.
+
 ## Implementation Notes
 
 - Use partial pivoting for numerical stability
@@ -221,4 +260,3 @@ Solutions:
 - Store elimination multipliers for LU decomposition
 - For sparse matrices, use specialized algorithms
 - Consider using existing library (BLAS/LAPACK) for production code
-
