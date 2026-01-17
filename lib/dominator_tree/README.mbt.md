@@ -129,6 +129,14 @@ test "dominator diamond" {
 }
 ```
 
+```mbt check
+///|
+test "dominator invalid root" {
+  let edges : Array[(Int, Int)] = [(0, 1)]
+  inspect(@dominator_tree.build_dominator_tree(2, edges[:], -1), content="None")
+}
+```
+
 ## Algorithm Walkthrough
 
 ```
@@ -284,4 +292,3 @@ Used for: SSA phi node placement
 | Uniqueness | Unique idom | Many predecessors |
 | Structure | Tree | DAG |
 | Query | O(log n) with LCA | O(1) with preprocessing |
-
