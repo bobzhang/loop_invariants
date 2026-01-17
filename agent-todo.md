@@ -176,7 +176,7 @@
 - [x] lib/prufer_code
 - [x] lib/push_relabel_max_flow
 - [x] lib/rabin_karp
-- [ ] lib/rolling_hash
+- [x] lib/rolling_hash
 - [ ] lib/rotating_calipers_diameter
 - [ ] lib/sam
 - [ ] lib/scc
