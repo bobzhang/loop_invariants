@@ -23,7 +23,6 @@ pub fn Fenwick2D::new(rows : Int, cols : Int) -> Fenwick2D {
 
 ///|
 /// Add delta at position (r, c).
-#warnings("+missing_invariant+missing_reasoning")
 pub fn Fenwick2D::add(self : Fenwick2D, r : Int, c : Int, delta : Int) -> Unit {
   let x = r + 1
   let y = c + 1
@@ -56,7 +55,6 @@ pub fn Fenwick2D::add(self : Fenwick2D, r : Int, c : Int, delta : Int) -> Unit {
 
 ///|
 /// Return prefix sum over rectangle [0, r) x [0, c).
-#warnings("+missing_invariant+missing_reasoning")
 pub fn Fenwick2D::prefix_sum(self : Fenwick2D, r : Int, c : Int) -> Int {
   for i = r, sum = 0 {
     if i <= 0 {

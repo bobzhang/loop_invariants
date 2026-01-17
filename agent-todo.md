@@ -50,8 +50,8 @@
 - [x] lib/challenge_disjoint_sparse_table
 - [x] lib/challenge_edit_distance
 - [x] lib/challenge_edmonds_karp
-- [ ] lib/challenge_fenwick_2d (in progress)
-- [ ] lib/challenge_floyd_warshall
+- [x] lib/challenge_fenwick_2d
+- [ ] lib/challenge_floyd_warshall (in progress)
 - [ ] lib/challenge_interval_scheduling
 - [ ] lib/challenge_knapsack_01
 - [ ] lib/challenge_knapsack_unbounded
