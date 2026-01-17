@@ -163,7 +163,7 @@
 - [x] lib/mcmf
 - [x] lib/min_cost_flow_potentials
 - [x] lib/min_cut_st
-- [ ] lib/minimum_cyclic_rotation
+- [x] lib/minimum_cyclic_rotation
 - [ ] lib/mo_algorithm
 - [ ] lib/monotonic_stack
 - [ ] lib/mos_algorithm

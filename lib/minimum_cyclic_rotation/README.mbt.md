@@ -1,99 +1,110 @@
 # Minimum Cyclic Rotation (Booth's Algorithm)
 
-## Overview
+This package finds the **lexicographically smallest rotation** of a string.
+It uses **Booth's algorithm**, which runs in linear time.
 
-The **minimum cyclic rotation** of a string is the lexicographically smallest
-rotation. Booth's algorithm finds it in O(n) time by comparing candidate
-rotations without generating all of them.
+If you imagine the string written on a ring, you can cut the ring at any
+position to read a rotation. The minimum cyclic rotation is the cut that gives
+the smallest string in dictionary order.
 
-- **Time**: O(n)
-- **Space**: O(n)
-- **Output**: Index of the minimum rotation
+## 1. Problem statement (plain language)
 
-## The Key Insight
-
-```
-A string of length n has n rotations:
-  "baca" → "baca", "acab", "caba", "abac"
-
-Naive: Generate all rotations, sort → O(n² log n)
-
-Booth's insight: Compare two candidates simultaneously
-  - Maintain two candidate start positions (i, j)
-  - Compare characters at matching positions
-  - Skip dominated candidates using failure information
-
-Only O(n) comparisons needed!
-```
-
-## Understanding Cyclic Rotations
+Given a string `s` of length `n`, consider all `n` rotations:
 
 ```
-String: "baca" (length 4)
-
-Rotation 0: baca  (start at index 0)
-Rotation 1: acab  (start at index 1)
-Rotation 2: caba  (start at index 2)
-Rotation 3: abac  (start at index 3)
-
-Sorted: "abac" < "acab" < "baca" < "caba"
-
-Minimum rotation starts at index 3!
+s = "baca"
+rotations:
+  start 0 -> "baca"
+  start 1 -> "acab"
+  start 2 -> "caba"
+  start 3 -> "abac"
 ```
 
-## Algorithm Walkthrough
+The minimum cyclic rotation is `"abac"` (start index `3`).
+
+If there are ties (e.g. `"abab"`), the algorithm returns the **smallest start
+index** among all minimal rotations.
+
+## 2. Visualizing rotations as a ring
 
 ```
-String s = "baca" (work with s+s = "bacabaca" for wraparound)
-
-Initialize: i = 0, j = 1, k = 0
-
-Step 1: Compare s[(i+k)%n] vs s[(j+k)%n]
-        s[0] = 'b' vs s[1] = 'a'
-        'b' > 'a' → i is worse, skip it
-        i = max(i + k + 1, j + 1) = max(1, 2) = 2
-        Reset k = 0
-
-Step 2: i=2, j=1, k=0
-        Compare s[2] vs s[1]
-        s[2] = 'c' vs s[1] = 'a'
-        'c' > 'a' → i is worse
-        i = max(2 + 0 + 1, 1 + 1) = 3
-        Reset k = 0
-
-Step 3: i=3, j=1, k=0
-        Compare s[3] vs s[1]
-        s[3] = 'a' vs s[1] = 'a'
-        Equal → extend k
-        k = 1
-
-Step 4: i=3, j=1, k=1
-        Compare s[(3+1)%4] vs s[(1+1)%4]
-        s[0] = 'b' vs s[2] = 'c'
-        'b' < 'c' → j is worse
-        j = max(1 + 1 + 1, 3 + 1) = 4
-        But j >= n, so we're done
-
-Winner: i = 3
-Minimum rotation: "abac" (starting at index 3)
+index:  0   1   2   3
+char :  b   a   c   a
+          \  |  /
+           \ | /
+             *
+          (wrap)
 ```
 
-## Visual: Comparing Rotations
+Reading the ring starting at index `i` produces rotation `i`.
+
+## 3. What this package provides
+
+From `pkg.generated.mbti`:
+
+- `min_cyclic_rotation(s : String) -> String`
+- `min_cyclic_rotation_index(s : String) -> Int`
+
+Behavior on edge cases:
+
+- Empty string: rotation is `""`, index is `0`.
+- Single character: rotation is the same character, index is `0`.
+
+## 4. Why Booth's algorithm works (intuition)
+
+Booth's algorithm compares **two candidate starts** `i` and `j`:
+
+- `k` is how many characters we have matched so far.
+- Compare `s[(i+k) % n]` and `s[(j+k) % n]`.
+- On a mismatch:
+  - if `s[i+k] > s[j+k]`, then **all starts in `i..i+k` are worse than `j`**
+  - if `s[i+k] < s[j+k]`, then **all starts in `j..j+k` are worse than `i`**
+  - so we skip an entire block of candidates at once
+
+This is what makes it O(n): we never re-check positions that are already
+dominated.
+
+### Tiny skip diagram
 
 ```
-Comparing rotation starting at i=0 vs j=3:
+Compare rotations at i and j:
 
-Position:  0   1   2   3
-           ↓   ↓   ↓   ↓
-Rot i=0:   b   a   c   a
-Rot j=3:   a   b   a   c
-           ^
-           First difference: 'b' > 'a'
+i: [i .......... i+k]  (mismatch at i+k)
+j: [j .......... j+k]
 
-Rotation j=3 is lexicographically smaller!
+If s[i+k] > s[j+k], then starts i..i+k are all worse.
+We jump i to i+k+1.
 ```
 
-## Example Usage
+## 5. Worked example (detailed)
+
+Let `s = "baca"`, `n = 4`.
+Booth compares rotations using the doubled string `"bacabaca"` to avoid
+manual wraparound.
+
+We show `(i, j, k)` and the compared characters:
+
+```
+Start: i=0, j=1, k=0
+  s[0] vs s[1] -> 'b' vs 'a' -> 'b' > 'a'
+  i is worse, so i = 2, k = 0
+
+Now:  i=2, j=1, k=0
+  s[2] vs s[1] -> 'c' vs 'a' -> 'c' > 'a'
+  i is worse, so i = 3, k = 0
+
+Now:  i=3, j=1, k=0
+  s[3] vs s[1] -> 'a' vs 'a' -> equal
+  k = 1
+
+Now:  i=3, j=1, k=1
+  s[0] vs s[2] -> 'b' vs 'c' -> 'b' < 'c'
+  j is worse, so j = 4 (>= n), stop
+```
+
+Winner is `i = 3`, and the minimum rotation is `"abac"`.
+
+## 6. Example usage (basic)
 
 ```mbt check
 ///|
@@ -106,101 +117,113 @@ test "min rotation basic" {
 }
 ```
 
-## More Examples
+## 7. Example: repeated patterns and ties
+
+`"abab"` has two minimal rotations: `"abab"` (start 0) and `"abab"` (start 2).
+The smallest index is `0`.
 
 ```mbt check
 ///|
-test "min rotation examples" {
-  // Single character
-  inspect(@minimum_cyclic_rotation.min_cyclic_rotation("a"), content="a")
-
-  // Already minimum
-  inspect(@minimum_cyclic_rotation.min_cyclic_rotation("abc"), content="abc")
-
-  // Need to rotate
-  inspect(@minimum_cyclic_rotation.min_cyclic_rotation("cab"), content="abc")
-
-  // Repeated pattern
+test "min rotation repeated patterns" {
   inspect(@minimum_cyclic_rotation.min_cyclic_rotation("abab"), content="abab")
+  inspect(
+    @minimum_cyclic_rotation.min_cyclic_rotation_index("abab"),
+    content="0",
+  )
+  inspect(@minimum_cyclic_rotation.min_cyclic_rotation("aaaa"), content="aaaa")
+  inspect(
+    @minimum_cyclic_rotation.min_cyclic_rotation_index("aaaa"),
+    content="0",
+  )
 }
 ```
 
-## Common Applications
-
-### 1. String Canonicalization
-```
-Problem: Are two strings cyclic rotations of each other?
-
-Solution:
-  canon(s1) = min_rotation(s1)
-  canon(s2) = min_rotation(s2)
-  s1 and s2 are rotations iff canon(s1) == canon(s2)
-
-Example:
-  "abc" and "bca" → both canonicalize to "abc" → YES
-  "abc" and "acb" → "abc" vs "acb" → NO
-```
-
-### 2. Necklace Problems
-```
-A necklace is an equivalence class of strings under rotation.
-Minimum rotation gives the canonical representative.
-
-Necklace of {"abc", "bca", "cab"} → representative "abc"
-```
-
-### 3. Circular String Comparison
-```
-Compare circular DNA sequences.
-Align by minimum rotation, then compare.
-```
-
-### 4. Pattern Matching in Circular Strings
-```
-Find pattern in circular text:
-  1. Compute min_rotation_index
-  2. Search in linearized form
-```
-
-## Algorithm Insight: Why O(n)?
+## 8. Example: a clear winner
 
 ```
-Key observation: Each position is visited at most twice.
-
-When we advance i or j by k+1, we skip positions that
-are guaranteed to be suboptimal.
-
-If s[(i+k)%n] > s[(j+k)%n]:
-  - All rotations starting at i, i+1, ..., i+k are worse
-    than the rotation starting at j
-  - So we can skip directly to i+k+1
-
-Total increments to i and j: at most 2n
-Total comparisons: at most 2n
-Overall: O(n)
+s = "caaab"
+rotations:
+  0: caaab
+  1: aaabc   <- minimum
+  2: aabca
+  3: abcaa
+  4: bcaaa
 ```
 
-## Complexity Analysis
+```mbt check
+///|
+test "min rotation clear winner" {
+  inspect(
+    @minimum_cyclic_rotation.min_cyclic_rotation("caaab"),
+    content="aaabc",
+  )
+  inspect(
+    @minimum_cyclic_rotation.min_cyclic_rotation_index("caaab"),
+    content="1",
+  )
+}
+```
 
-| Operation | Time |
-|-----------|------|
-| Find min rotation index | O(n) |
-| Get rotated string | O(n) |
-| Compare two cyclic strings | O(n) |
+## 9. Example: canonicalizing cyclic strings (necklace view)
 
-## Related Algorithms
+Two strings are rotations of each other iff their minimum rotations match.
 
-| Algorithm | Purpose | Time |
-|-----------|---------|------|
-| **Booth's** | Min rotation | O(n) |
-| Duval | Lyndon factorization | O(n) |
-| KMP on s+s | Find rotation | O(n) |
+```mbt check
+///|
+fn canon(s : String) -> String {
+  @minimum_cyclic_rotation.min_cyclic_rotation(s)
+}
 
-## Implementation Notes
+///|
+test "canonicalization by minimum rotation" {
+  inspect(canon("abc"), content="abc")
+  inspect(canon("bca"), content="abc")
+  inspect(canon("acb"), content="acb")
+}
+```
 
-- Work with s+s (doubled string) for easy wraparound
-- Or use modular indexing: s[(i+k) % n]
-- Handle empty string and single character cases
-- The algorithm is similar to failure function computation
-- Can be adapted for maximum rotation by reversing comparisons
+## 10. Example: use the index to rotate parallel data
 
+Sometimes you want the **index** so you can rotate other arrays the same way.
+
+```mbt check
+///|
+fn[T] rotate_array(xs : ArrayView[T], start : Int) -> Array[T] {
+  let n = xs.length()
+  if n == 0 {
+    Array::new()
+  } else {
+    let shift = start % n
+    Array::makei(n, i => xs[(shift + i) % n])
+  }
+}
+
+///|
+test "rotate parallel data by min rotation index" {
+  let s = "baca"
+  let idx = @minimum_cyclic_rotation.min_cyclic_rotation_index(s)
+  let weights : Array[Int] = [10, 20, 30, 40]
+  let rotated = rotate_array(weights[:], idx)
+  inspect(rotated, content="[40, 10, 20, 30]")
+}
+```
+
+## 11. Complexity
+
+Booth's algorithm does only O(n) comparisons:
+
+```
+Time:  O(n)
+Space: O(n)   (uses the doubled string)
+```
+
+## 12. Implementation notes
+
+- The algorithm works on `s + s` for easy wraparound.
+- Lexicographic order follows the string's code unit order (UTF-16).
+- The index result is stable for repeated patterns: it picks the smallest start.
+
+## 13. Related tools
+
+- **Duval's algorithm** (Lyndon factorization) can also find minimum rotation.
+- **KMP on s+s** can be used to test if two strings are rotations.
