@@ -203,7 +203,7 @@
 - [x] lib/tree
 - [x] lib/trie
 - [x] lib/two_sat
-- [ ] lib/union_find
+- [x] lib/union_find
 - [ ] lib/virtual_tree
 - [ ] lib/wavelet
 - [ ] lib/wildcard_matching

@@ -1,220 +1,208 @@
-# Union-Find (Disjoint Set Union)
+# Union-Find (Disjoint Set Union) - Beginner-Friendly Guide
 
-## Overview
+Union-Find (also called DSU) manages **disjoint sets** and supports two fast
+operations:
 
-**Union-Find** (also called DSU - Disjoint Set Union) maintains a collection of
-disjoint sets and supports:
-- **Union**: Merge two sets in **O(α(n))** amortized
-- **Find**: Find which set an element belongs to in **O(α(n))** amortized
+- **Find**: which set is this element in?
+- **Union**: merge two sets.
 
-Where α(n) is the inverse Ackermann function, effectively constant (< 5 for all practical n).
+With path compression and union-by-rank, both operations are **almost O(1)**.
 
-## Core Idea
+---
 
-- Represent each set as a **tree** with a root identifier.
-- **Path compression** flattens trees during find.
-- **Union by size/rank** keeps trees shallow.
+## 1) The problem it solves
 
-## The Data Structure
-
-Union-Find uses a forest of trees where each tree is one set:
+You have items that slowly become connected:
 
 ```
-Initial state (4 elements, each in its own set):
-
-  [0]   [1]   [2]   [3]
-   |     |     |     |
-  (0)   (1)   (2)   (3)
-
-parent[i] = i for all elements (each is its own root)
+union(0, 1)
+union(1, 2)
+union(3, 4)
 ```
 
-## How Union Works
-
-Union(0, 1) - merge sets containing 0 and 1:
+Now you want to answer:
 
 ```
-Before:           After:
-  [0]   [1]         [0]
-   |     |         /  \
-  (0)   (1)      (0)  (1)
-
-parent[1] = 0  (1's parent is now 0)
+connected(0, 2)?  -> yes
+connected(0, 4)?  -> no (until we connect them)
 ```
 
-Union(2, 3), then Union(0, 2):
+Union-Find answers these in nearly constant time.
+
+---
+
+## 2) The data structure (forest of trees)
+
+Each set is stored as a tree.  
+The root represents the set ID.
+
+Initial state (each node is its own root):
 
 ```
-Step 1: Union(2,3)      Step 2: Union(0,2)
-    [0]     [2]              [0]
-   /  \      |              / | \
-  (0) (1)   (3)           (0)(1)(2)
-                               |
-                              (3)
-
-With union by size, smaller tree attaches to larger.
+0   1   2   3   4
+|   |   |   |   |
+0   1   2   3   4
 ```
 
-## Path Compression
+`parent[i] = i` means "i is a root".
 
-The key optimization: when finding a root, make all nodes point directly to it:
+---
 
-```
-Before find(3):          After find(3):
-      [0]                     [0]
-       |                    / | \ \
-      (1)                 (1)(2)(3)(4)
-       |
-      (2)
-       |
-      (3)
-       |
-      (4)
+## 3) Union: merge two sets
 
-All nodes now point directly to root!
-```
-
-## Visualization of Operations
+Suppose we union(0, 1) and union(2, 3):
 
 ```
-Initial: 6 elements in 6 sets
-
-Step 1: union(0, 1)     [0]─(1)
-Step 2: union(2, 3)     [0]─(1)  [2]─(3)
-Step 3: union(4, 5)     [0]─(1)  [2]─(3)  [4]─(5)
-Step 4: union(0, 2)     [0]┬(1)  [4]─(5)
-                           └(2)─(3)
-Step 5: union(0, 4)     [0]┬(1)
-                           ├(2)─(3)
-                           └(4)─(5)
-
-Now all 6 elements are in one set!
+Before:             After:
+0   1   2   3       0       2
+|   |   |   |       |       |
+0   1   2   3       1       3
 ```
 
-## Use Cases
+Now union(0, 2):
 
-### 1. Connectivity Queries
+```
+   0             0
+   |             |
+   1             1
+
+   2       ->    2
+   |             |
+   3             3
+
+After union:
+     0
+   /   \
+  1     2
+         \
+          3
+```
+
+---
+
+## 4) Path compression (why find is fast)
+
+Every `find(x)` shortens the path to the root:
+
+```
+Before find(3):        After find(3):
+0                       0
+|                     / | \
+1                    1  2  3
+|
+2
+|
+3
+```
+
+After compression, future finds are almost instant.
+
+---
+
+## 5) Union by rank (or size)
+
+When merging two trees, attach the **smaller** one under the larger one.
+
+This keeps trees shallow and speeds up future queries.
+
+---
+
+## 6) Example: connectivity queries
 
 ```mbt check
 ///|
-test "connectivity" {
+test "union find connectivity" {
   let uf = @union_find.UnionFind::new(5)
-
-  // Initially disconnected
   inspect(uf.connected(0, 4), content="false")
-
-  // Build connections
   let _ = uf.union(0, 1)
   let _ = uf.union(1, 2)
   let _ = uf.union(3, 4)
-
-  // Check connectivity
-  inspect(uf.connected(0, 2), content="true") // 0-1-2
-  inspect(uf.connected(0, 4), content="false") // Different components
+  inspect(uf.connected(0, 2), content="true")
+  inspect(uf.connected(0, 4), content="false")
   let _ = uf.union(2, 3)
-  inspect(uf.connected(0, 4), content="true") // Now connected!
+  inspect(uf.connected(0, 4), content="true")
 }
 ```
 
-### 2. Counting Components
+---
+
+## 7) Example: counting components
 
 ```mbt check
 ///|
-test "counting components" {
+test "union find count sets" {
   let uf = @union_find.UnionFind::new(6)
-  inspect(uf.count_sets(), content="6") // 6 singletons
+  inspect(uf.count_sets(), content="6")
   let _ = uf.union(0, 1)
   let _ = uf.union(2, 3)
-  inspect(uf.count_sets(), content="4") // {0,1}, {2,3}, {4}, {5}
+  inspect(uf.count_sets(), content="4")
   let _ = uf.union(0, 2)
-  inspect(uf.count_sets(), content="3") // {0,1,2,3}, {4}, {5}
+  inspect(uf.count_sets(), content="3")
 }
 ```
 
-### 3. Kruskal's MST Algorithm
+---
+
+## 8) Example: sizes of components
+
+```mbt check
+///|
+test "union find set size" {
+  let uf = @union_find.UnionFind::new(5)
+  let _ = uf.union(0, 1)
+  let _ = uf.union(1, 2)
+  inspect(uf.set_size(0), content="3")
+  inspect(uf.set_size(3), content="1")
+  let _ = uf.union(2, 3)
+  inspect(uf.set_size(3), content="4")
+}
+```
+
+---
+
+## 9) Typical use cases
 
 ```
-Kruskal's Algorithm for Minimum Spanning Tree:
+Connectivity in graphs
+Kruskal's minimum spanning tree
+Connected components in images
+Grouping friends in social networks
+Equivalence classes (A = B, B = C)
+```
+
+---
+
+## 10) Kruskal's MST (how DSU fits)
+
+Kruskal's algorithm:
+
+```
 1. Sort edges by weight
 2. For each edge (u, v):
    if not connected(u, v):
      union(u, v)
      add edge to MST
-
-Union-Find makes step 2 nearly O(1)!
 ```
 
-## Common Applications
+Union-Find makes step 2 extremely fast.
 
-1. **Network Connectivity**: Are two computers connected?
-2. **Image Processing**: Connected component labeling
-3. **Social Networks**: Find friend groups
-4. **Kruskal's MST**: Build minimum spanning tree
-5. **Equivalence Classes**: Merge equivalent items
-6. **Percolation**: Does water flow from top to bottom?
+---
 
-## Complexity Analysis
-
-| Operation    | Naive | With Optimizations |
-|--------------|-------|-------------------|
-| Find         | O(n)  | O(α(n)) ≈ O(1)    |
-| Union        | O(n)  | O(α(n)) ≈ O(1)    |
-| Connected    | O(n)  | O(α(n)) ≈ O(1)    |
-
-**Two key optimizations:**
-1. **Path compression**: Flatten tree during find
-2. **Union by size/rank**: Attach smaller tree under larger
-
-Together they achieve nearly constant time!
-
-## The Inverse Ackermann Function
-
-α(n) grows incredibly slowly:
-- α(10^80) < 5 (more atoms than in universe)
-- For all practical purposes, α(n) ≤ 4
-
-This makes Union-Find one of the most efficient data structures!
-
-## Variants
-
-### Weighted Union-Find
-Track relationships between elements (e.g., "A is 3 units from B"):
+## 11) Complexity
 
 ```
-Used in: Puzzle solving, physics simulations
+Operation      Cost (amortized)
+find           O(α(n))
+union          O(α(n))
+connected      O(α(n))
 ```
 
-### Union-Find with Rollback
-Undo union operations:
+`α(n)` is the inverse Ackermann function (so small it is < 5 for any real input).
 
-```
-Used in: Offline graph algorithms, divide-and-conquer
-```
+---
 
-## Why Trees?
+## 12) Common pitfalls
 
-The tree structure allows efficient merging:
-
-```
-Merging two arrays: O(n)
-Merging two trees:  O(1) - just change one pointer!
-
-     [A]        [B]
-    / | \        |
-   .  .  .      ...
-
-After union(A, B):
-
-         [A]
-        / | \ \
-       .  .  . [B]
-                |
-               ...
-```
-
-## Implementation Notes
-
-- Use 0-indexed elements
-- `parent[i] = i` means i is a root
-- `size[i]` is only valid when i is a root
-- Path compression happens during `find()`, not `union()`
+- Forgetting to call `find` before comparing roots.
+- Assuming `set_size(x)` works on non-roots (this implementation handles it).
+- Mixing up 0-indexed and 1-indexed element IDs.
