@@ -46,6 +46,24 @@ Non-examples:
 Key property: Lyndon words are primitive (not a repetition of a shorter string)
 ```
 
+### Rotations as a Wheel
+
+```
+Take "abac" and rotate it by cutting at different positions:
+
+  cut at 0: abac
+  cut at 1: baca
+  cut at 2: acab
+  cut at 3: caba
+
+The smallest rotation is "abac" itself, so "abac" is Lyndon.
+
+Now take "abab":
+  rotations: abab, baba, abab, baba
+  "abab" repeats, so it is NOT strictly smaller than all rotations.
+  Therefore "abab" is NOT Lyndon.
+```
+
 ## The Unique Factorization
 
 ```
@@ -104,6 +122,26 @@ Step 5: Output: "a"
 Result: ["b", "an", "an", "a"]
 ```
 
+### Pointer Trace Table (banana)
+
+```
+String: banana
+Index : 0 1 2 3 4 5
+Char  : b a n a n a
+
+Step | i  j  k | compare s[k] vs s[j] | action
+-----+---------+----------------------|-------------------------------
+  1  | 0  1  0 | b > a                | stop scan, period = 1
+     |         |                      | emit "b", i = 1
+  2  | 1  2  1 | a < n                | j = 3, k = i
+  3  | 1  3  1 | a = a                | j = 4, k = 2
+  4  | 1  4  2 | n = n                | j = 5, k = 3
+  5  | 1  5  3 | a = a                | j = 6, k = 4
+  6  | 1  6  4 | end                  | period = 2
+     |         |                      | emit "an", "an", i = 5
+  7  | 5  6  5 | end                  | emit "a"
+```
+
 ## Visual: Pattern Detection
 
 ```
@@ -121,6 +159,27 @@ Output: ["ab", "ab", "ab"]
 
 Key insight: When s[j] = s[k], we're detecting repetition.
 The Lyndon word is s[i..i+period], repeated as many times as it fits.
+```
+
+## Why the Period Is `j - k`
+
+```
+At the moment we stop scanning, we know:
+  - s[i..j) is the current candidate block
+  - k points inside that block where the comparison last matched
+
+So the distance (j - k) is the length of the repeating pattern.
+
+Example: s = "abcabcab"
+Indices:   0 1 2 3 4 5 6 7
+Chars:     a b c a b c a b
+
+At the end of the scan:
+  i = 0, j = 8, k = 5
+  period = j - k = 3
+
+That means the Lyndon word is "abc" and we can emit it repeatedly:
+  "abc" + "abc" + "ab"
 ```
 
 ## API
@@ -163,16 +222,50 @@ test "duval already lyndon" {
 }
 ```
 
+```mbt check
+///|
+test "duval repeating with tail" {
+  let factors = @duval_lyndon.duval_factorization("abcabcab")
+  inspect(factors, content="[\"abc\", \"abc\", \"ab\"]")
+}
+```
+
+```mbt check
+///|
+test "duval decreasing" {
+  let factors = @duval_lyndon.duval_factorization("dcba")
+  inspect(factors, content="[\"d\", \"c\", \"b\", \"a\"]")
+}
+```
+
+```mbt check
+///|
+test "duval mixed tail" {
+  let factors = @duval_lyndon.duval_factorization("cabca")
+  inspect(factors, content="[\"c\", \"abc\", \"a\"]")
+}
+```
+
+```mbt check
+///|
+test "duval empty" {
+  let factors = @duval_lyndon.duval_factorization("")
+  inspect(factors, content="[]")
+}
+```
+
 ## Common Applications
 
 ### 1. Minimum Rotation
 ```
-The minimum rotation of a string starts at the first character
-of the last Lyndon factor.
+Duval's algorithm is a building block for minimum-rotation routines.
+A common approach is to run Duval on s + s and pick the smallest
+starting position within the first n characters, then take length n.
 
-For "baca": factors = ["b", "ac", "a"]
-Last factor "a" starts at position 3
-Minimum rotation: "abac"
+Example: s = "baca"
+All rotations:
+  baca, acab, caba, abac
+Minimum rotation is "abac".
 ```
 
 ### 2. Lexicographically Smallest Suffix
@@ -191,6 +284,22 @@ the string has period |L|.
 ```
 Lyndon words are the "prime" building blocks of strings.
 Used in bijective BWT, necklace enumeration, etc.
+```
+
+## Edge Cases to Remember
+
+```
+Empty string:
+  "" -> []
+
+All equal characters:
+  "aaaa" -> ["a", "a", "a", "a"]
+
+Strictly decreasing:
+  "dcba" -> ["d", "c", "b", "a"]
+
+Already Lyndon:
+  "abcd" -> ["abcd"]
 ```
 
 ## Properties of Lyndon Factorization
@@ -233,4 +342,5 @@ Used in bijective BWT, necklace enumeration, etc.
 - When s[j] = s[k]: continue comparing within the period
 - When s[j] < s[k]: output complete Lyndon words, restart
 - Handle empty string and single characters as edge cases
-
+- This implementation slices with a StringBuilder to avoid repeated substring copies
+- Comparisons are by String code units (usual lexicographic order for ASCII)

@@ -145,3 +145,34 @@ updates.fold(
     range_add(tree, 0, n, l, r, delta)
   },
 )
+
+## 2026-01-18: Prefer While for Pointer Scans
+- Problem: Pointer-driven scans used nested functional `for` loops with invariants, obscuring the algorithm flow.
+- Change: Use `while` loops for the scan and emission phases when loop indices mutate together.
+- Result: Same O(n) behavior with less loop-spec noise.
+- Example:
+// Before
+for {
+  if j < n && s[k] <= s[j] {
+    if s[k] < s[j] {
+      k = i
+    } else {
+      k = k + 1
+    }
+    j = j + 1
+    continue
+  }
+  break
+} where {
+  invariant: i >= 0 && i < n && i <= k && k < j && j <= n,
+}
+
+// After
+while j < n && s[k] <= s[j] {
+  if s[k] < s[j] {
+    k = i
+  } else {
+    k = k + 1
+  }
+  j = j + 1
+}

@@ -30,67 +30,22 @@ pub fn duval_factorization(s : String) -> Array[String] {
   let n = s.length()
   let factors : Array[String] = []
   let mut i = 0
-  for {
-    if i >= n {
-      break
-    }
+  while i < n {
     let mut j = i + 1
     let mut k = i
-    for {
-      if j < n && s[k] <= s[j] {
-        if s[k] < s[j] {
-          k = i
-        } else {
-          k = k + 1
-        }
-        j = j + 1
-        continue
+    while j < n && s[k] <= s[j] {
+      if s[k] < s[j] {
+        k = i
+      } else {
+        k = k + 1
       }
-      break
-    } where {
-      invariant: i >= 0 && i < n && i <= k && k < j && j <= n,
-      reasoning: (
-        #|INVARIANT (Duval scan):
-        #|s[i..j) is the current candidate, and k tracks the comparison position
-        #|within the prefix. The condition s[k] <= s[j] preserves lexicographic
-        #|minimality for Lyndon word detection.
-        #|MAINTENANCE:
-        #|Advance j, resetting k to i on strict increase or moving k forward on
-        #|equality, which matches the standard Duval comparison logic.
-        #|TERMINATION:
-        #|When j reaches n or s[k] > s[j], the Lyndon word length is (j - k).
-      ),
+      j = j + 1
     }
     let period = j - k
-    for {
-      if i <= k {
-        factors.push(slice_string(s, i, i + period))
-        i = i + period
-        continue
-      }
-      break
-    } where {
-      invariant: i >= 0 && i <= n,
-      reasoning: (
-        #|INVARIANT (emit factors):
-        #|All positions before i have been emitted as Lyndon factors of length
-        #|period, and each factor equals s[i..i+period) in the current block.
-        #|MAINTENANCE:
-        #|Emit one factor and advance i by period.
-        #|TERMINATION:
-        #|When i > k, the current Lyndon block is fully emitted.
-      ),
+    while i <= k {
+      factors.push(slice_string(s, i, i + period))
+      i = i + period
     }
-  } where {
-    invariant: i >= 0 && i <= n,
-    reasoning: (
-      #|INVARIANT (outer factorization):
-      #|factors concatenated equal s[0..i), and each is a Lyndon word.
-      #|MAINTENANCE:
-      #|Use Duval scan to find the next Lyndon word block and emit its factors.
-      #|TERMINATION:
-      #|At i = n, the entire string is factorized.
-    ),
   }
   factors
 }

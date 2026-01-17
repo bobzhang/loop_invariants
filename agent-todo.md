@@ -126,8 +126,8 @@
 - [x] lib/dominator_tree
 - [x] lib/dp
 - [x] lib/dsu_on_tree
-- [ ] lib/duval_lyndon (in progress)
-- [ ] lib/edmonds_arborescence
+- [x] lib/duval_lyndon
+- [ ] lib/edmonds_arborescence (in progress)
 - [ ] lib/eertree
 - [ ] lib/euler_tour
 - [ ] lib/eulerian_path
