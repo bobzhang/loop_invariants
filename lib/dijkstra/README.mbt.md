@@ -193,6 +193,21 @@ With heap:       Extract min in O(log V)
                  Total: O((V + E) log V)
 ```
 
+## Stale Entries and the Visited Array
+
+This implementation allows multiple entries for the same vertex in the heap.
+When a shorter path is found, a new entry is pushed. Later, an older entry may
+be popped; we skip it if the vertex is already marked visited.
+
+This keeps the heap logic simple and still guarantees correctness because the
+first time a vertex is popped, it has the smallest possible distance.
+
+## Edge Cases to Keep in Mind
+
+- **Unreachable nodes** keep distance = INF.
+- **Zero-weight edges** are fine; Dijkstra still works with non-negative edges.
+- **Invalid source** returns default distances (all INF).
+
 ## Bidirectional Dijkstra
 
 For point-to-point queries, search from both ends:
