@@ -170,7 +170,7 @@
 - [x] lib/mst
 - [x] lib/persistent
 - [x] lib/persistent_segtree
-- [ ] lib/point_in_polygon
+- [x] lib/point_in_polygon
 - [ ] lib/pollard_rho
 - [ ] lib/polygon_triangulation
 - [ ] lib/prufer_code
