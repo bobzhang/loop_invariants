@@ -1,53 +1,138 @@
-# Loop Invariants in MoonBit (Gentle Guide)
+# Loop Invariants in MoonBit
 
-This repository is a teaching collection: each package explains **a problem** and the **simplest correct way to solve it**, with loop invariants that make the reasoning explicit. Think of it as a cookbook for algorithms where every recipe shows *why it works*.
+This repository is a **learning library** for algorithms. Each package explains
+one topic in clear, beginner-friendly language and shows *why it works* using
+loop invariants.
 
-## How to Use This Repo
+If you are new to algorithms, you can read these packages like a book. Each
+README is designed to be understandable without heavy math.
 
-Each package follows the same learning flow:
+## What You Will Learn
 
-1. **Problem statement** in the package README
-2. **Key idea** in plain language
+- How to translate a problem into a step-by-step algorithm
+- How to reason about correctness with loop invariants
+- How to write clean, testable MoonBit implementations
+
+## How the Tutorials Are Written
+
+Each package README follows this structure:
+
+1. **Problem statement** in simple terms
+2. **Core idea** (the intuition)
 3. **Step-by-step algorithm**
-4. **Loop invariants** that justify correctness
-5. **Complexity** and common pitfalls
+4. **Multiple examples**
+5. **Complexity and pitfalls**
 
-If you are new, start with small packages like:
-- `lib/union_find`
-- `lib/fenwick`
-- `lib/segment_tree`
-- `lib/dp`
+Think of the README as a Wikipedia article: definition, motivation, examples,
+then implementation notes.
+
+## How Examples Are Tested
+
+`README.mbt.md` files include code blocks tagged `mbt check`. These blocks are
+compiled and run by `moon test`, so documentation stays correct.
+
+If you want a snippet that should not run, use `mbt nocheck` instead.
+
+```mbt check
+///|
+test "doc example runs" {
+  inspect(1 + 1, content="2")
+}
+```
 
 ## What Is a Loop Invariant?
 
-A loop invariant is a statement that stays true every time the loop repeats. It lets you explain correctness in three easy steps:
+A loop invariant is a sentence that stays true every time the loop repeats.
+It connects code to reasoning.
 
-- **Before** the loop starts: the statement is true
-- **During** each iteration: the statement stays true
-- **After** the loop ends: the statement implies the answer is correct
+A good invariant explains:
 
-You do not need formal math to use invariants. A good invariant is often just a sentence like:
+- what has been computed so far
+- what remains to be processed
+- why the algorithm will be correct at the end
 
-> "After processing the first i items, the partial result matches the best answer for those items."
+### Example 1: Sum of an Array
 
-## Example (No-Frills)
+We want the sum of all elements. The invariant is:
 
-Below is the shape of a loop with an invariant. You will see this structure across the packages.
+> "After processing the first i elements, sum equals their total."
 
-```mbt nocheck
+```mbt check
 ///|
-fn example(xs : ArrayView[Int]) -> Int {
+test "invariant sum example" {
+  let xs : Array[Int] = [1, 2, 3, 4]
   let n = xs.length()
-  for i = 0, acc = 0; i < n; {
-    continue i + 1, acc + xs[i]
+  let total = for i = 0, sum = 0; i < n; {
+    continue i + 1, sum + xs[i]
   } else {
-    acc
+    sum
   } where {
     invariant: 0 <= i && i <= n,
-    reasoning: "acc holds the sum of xs[0..i).",
+    reasoning: "sum equals the total of xs[0..i).",
   }
+  inspect(total, content="10")
 }
 ```
+
+### Example 2: Maximum Value
+
+We keep a running maximum. The invariant is:
+
+> "best is the maximum of elements seen so far."
+
+```mbt check
+///|
+test "invariant max example" {
+  let xs : Array[Int] = [2, 7, 1, 5]
+  let n = xs.length()
+  let best = for i = 0, best = xs[0]; i < n; {
+    let v = xs[i]
+    continue i + 1, if v > best { v } else { best }
+  } else {
+    best
+  } where {
+    invariant: 0 <= i && i <= n,
+    reasoning: "best is max of xs[0..i).",
+  }
+  inspect(best, content="7")
+}
+```
+
+### Example 3: Simple Loop Without Invariants
+
+For very simple loops, a `for .. in` loop is clearer and needs no invariant.
+
+```mbt check
+///|
+test "simple loop example" {
+  let xs : Array[Int] = [1, 2, 3]
+  let mut sum = 0
+  for v in xs {
+    sum = sum + v
+  }
+  inspect(sum, content="6")
+}
+```
+
+## How to Read a Package
+
+Each package lives in `lib/<name>/` and has:
+
+- `README.mbt.md` (the tutorial)
+- `.mbt` source files (the implementation)
+- tests (often inside the README itself)
+
+If a README feels too advanced, pick an easier package first and return later.
+
+## Suggested Learning Path
+
+Start small and build up:
+
+- **Basics**: `lib/union_find`, `lib/fenwick`, `lib/segment_tree`
+- **Dynamic Programming**: `lib/dp`, `lib/linear_recurrence`
+- **Strings**: `lib/kmp`, `lib/aho_corasick`, `lib/suffix_array`
+- **Graphs**: `lib/dijkstra`, `lib/bellman_ford`, `lib/mst`
+- **Advanced**: `lib/centroid`, `lib/linkcut`, `lib/segment_tree_beats`
 
 ## Running the Code
 
@@ -55,25 +140,17 @@ fn example(xs : ArrayView[Int]) -> Int {
 moon test
 moon check
 moon fmt
+moon run cmd/main
 ```
-
-## Repository Map
-
-- `lib/` contains the main algorithms, grouped by topic
-- Each `lib/<package>/README.mbt.md` is the package tutorial
-- `examples*.mbt` files show stand-alone demonstrations
 
 ## Contributing
 
-When adding or improving a package tutorial:
+When improving a tutorial:
 
-1. Describe the **problem** in one short paragraph
-2. Explain the **core idea** in simple words
-3. Give a **step-by-step algorithm**
-4. Show the **loop invariant** used in the implementation
-5. Note **time and space complexity**
-
-If a loop is simple, a `for .. in` loop is preferred and no invariant is needed.
+- Keep it beginner-friendly
+- Add multiple examples
+- Explain *why* the algorithm works
+- Mention complexity and pitfalls
 
 ## License
 
