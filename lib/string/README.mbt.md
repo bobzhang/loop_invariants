@@ -33,6 +33,26 @@ So the result is `(1, 3)`.
 The implementation uses **Manacher's algorithm**, which finds the longest
 palindrome in **O(n)** time.
 
+### Visual intuition (expand around centers)
+
+Manacher treats palindromes as expanding around a center:
+
+```
+odd-length center at index 2:
+  a b c b d
+      ^
+  expand: c
+  expand: b c b
+  stop (a != d)
+
+even-length center between 1 and 2:
+  a b | c b d
+      ^
+  expand: (no match)
+```
+
+Manacher does this efficiently by reusing previous expansions.
+
 ---
 
 ### Example usage
@@ -105,6 +125,18 @@ For `s1 = "ABC"` and `s2 = "AC"`:
 ```
 
 The final cell is the LCS length.
+
+### Traceback idea (how to recover the sequence)
+
+If you also want the **actual subsequence**, you can trace back:
+
+```
+if chars match: move diagonally (take char)
+else move to the larger neighbor (up or left)
+```
+
+This package only returns the length, but the DP table shows how to recover
+the sequence if needed.
 
 ---
 
