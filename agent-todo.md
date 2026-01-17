@@ -177,7 +177,7 @@
 - [x] lib/push_relabel_max_flow
 - [x] lib/rabin_karp
 - [x] lib/rolling_hash
-- [ ] lib/rotating_calipers_diameter
+- [x] lib/rotating_calipers_diameter
 - [ ] lib/sam
 - [ ] lib/scc
 - [ ] lib/segment_tree
