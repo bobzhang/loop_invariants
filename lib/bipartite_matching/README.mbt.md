@@ -33,24 +33,28 @@ matching size by 1.
 
 If no augmenting path exists, the matching is maximum.
 
-## Algorithm used here (Kuhn / DFS)
+## Algorithms
 
-The public function `max_matching` uses the classic DFS-based algorithm:
+Two algorithms are provided:
 
-1. Start with an empty matching.
-2. For each left vertex `u`, try to find an augmenting path with DFS.
-3. If found, update the matching.
-
-This is simple to implement and works well for medium-sized graphs.
+- **Hungarian (Kuhn's)**: O(V * E) - Simple DFS-based augmentation
+- **Hopcroft-Karp**: O(E * sqrt(V)) - Faster for large graphs
 
 ## Public API
 
 ```
-@bipartite_matching.max_matching(n_left, n_right, edges)
-```
+// Build a bipartite graph
+let graph = BipartiteGraph::new(n_left, n_right)
+graph.add_edge(u, v)
 
-Returns an array of `(left, right)` pairs that form a maximum matching.
-The order of pairs is not guaranteed.
+// Choose algorithm and compute
+let matcher = graph.hungarian()      // or graph.hopcroft_karp()
+let size = matcher.max_matching()    // returns matching size
+let pairs = matcher.get_matching()   // returns Array[(Int, Int)]
+
+// Minimum vertex cover (HopcroftKarp only; runs max_matching internally)
+let (left_cover, right_cover) = matcher.min_vertex_cover()
+```
 
 ## Examples
 
@@ -59,12 +63,12 @@ The order of pairs is not guaranteed.
 ```mbt check
 ///|
 test "small matching" {
-  let edges : Array[(Int, Int)] = [(0, 0), (0, 1), (1, 1)]
-  let matching = @bipartite_matching.max_matching(2, 2, edges[:])
-  let sorted = matching.copy()
-  sorted.sort_by((a, b) => a.0 - b.0)
-  inspect(sorted, content="[(0, 0), (1, 1)]")
-  inspect(matching.length(), content="2")
+  let graph = @bipartite_matching.BipartiteGraph::new(2, 2)
+  graph.add_edge(0, 0)
+  graph.add_edge(0, 1)
+  graph.add_edge(1, 1)
+  let matcher = graph.hungarian()
+  inspect(matcher.max_matching(), content="2")
 }
 ```
 
@@ -73,9 +77,13 @@ test "small matching" {
 ```mbt check
 ///|
 test "unbalanced sets" {
-  let edges : Array[(Int, Int)] = [(0, 0), (1, 0), (2, 1), (3, 1)]
-  let matching = @bipartite_matching.max_matching(4, 2, edges[:])
-  inspect(matching.length(), content="2")
+  let graph = @bipartite_matching.BipartiteGraph::new(4, 2)
+  graph.add_edge(0, 0)
+  graph.add_edge(1, 0)
+  graph.add_edge(2, 1)
+  graph.add_edge(3, 1)
+  let matcher = graph.hopcroft_karp()
+  inspect(matcher.max_matching(), content="2")
 }
 ```
 
@@ -88,9 +96,14 @@ Workers on the left, jobs on the right. An edge means a worker can do a job.
 ```mbt check
 ///|
 test "assignment example" {
-  let edges : Array[(Int, Int)] = [(0, 0), (0, 2), (1, 0), (1, 1), (2, 1)]
-  let matching = @bipartite_matching.max_matching(3, 3, edges[:])
-  inspect(matching.length(), content="3")
+  let graph = @bipartite_matching.BipartiteGraph::new(3, 3)
+  graph.add_edge(0, 0)
+  graph.add_edge(0, 2)
+  graph.add_edge(1, 0)
+  graph.add_edge(1, 1)
+  graph.add_edge(2, 1)
+  let matcher = graph.hungarian()
+  inspect(matcher.max_matching(), content="3")
 }
 ```
 

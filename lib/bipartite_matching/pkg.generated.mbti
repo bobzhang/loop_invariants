@@ -2,11 +2,24 @@
 package "bobzhang/loop_invariants/lib/bipartite_matching"
 
 // Values
-pub fn max_matching(Int, Int, ArrayView[(Int, Int)]) -> Array[(Int, Int)]
 
 // Errors
 
 // Types and methods
+type BipartiteGraph
+pub fn BipartiteGraph::add_edge(Self, Int, Int) -> Unit
+pub fn BipartiteGraph::hopcroft_karp(Self) -> HopcroftKarp
+pub fn BipartiteGraph::hungarian(Self) -> Hungarian
+pub fn BipartiteGraph::new(Int, Int) -> Self
+
+type HopcroftKarp
+pub fn HopcroftKarp::get_matching(Self) -> Array[(Int, Int)]
+pub fn HopcroftKarp::max_matching(Self) -> Int
+pub fn HopcroftKarp::min_vertex_cover(Self) -> (Array[Int], Array[Int])
+
+type Hungarian
+pub fn Hungarian::get_matching(Self) -> Array[(Int, Int)]
+pub fn Hungarian::max_matching(Self) -> Int
 
 // Type aliases
 
