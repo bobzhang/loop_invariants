@@ -25,20 +25,20 @@ pub struct RangeFenwick {
 ///|
 fn build_zero(l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(value=0)
+    Leaf(value=0)
   } else {
     let mid = (l + r) / 2
     let left = build_zero(l, mid)
     let right = build_zero(mid, r)
-    Node::Branch(left~, right~)
+    Branch(left~, right~)
   }
 }
 
 ///|
 fn array_get(node : Node, l : Int, r : Int, idx : Int) -> Int {
   match node {
-    Node::Leaf(value~) => value
-    Node::Branch(left~, right~) => {
+    Leaf(value~) => value
+    Branch(left~, right~) => {
       let mid = (l + r) / 2
       if idx < mid {
         array_get(left, l, mid, idx)
@@ -52,16 +52,16 @@ fn array_get(node : Node, l : Int, r : Int, idx : Int) -> Int {
 ///|
 fn array_set(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(value~)
+    Leaf(value~)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(value=_) => Node::Leaf(value~)
-      Node::Branch(left~, right~) =>
+      Leaf(value=_) => Leaf(value~)
+      Branch(left~, right~) =>
         if idx < mid {
-          Node::Branch(left=array_set(left, l, mid, idx, value), right~)
+          Branch(left=array_set(left, l, mid, idx, value), right~)
         } else {
-          Node::Branch(left~, right=array_set(right, mid, r, idx, value))
+          Branch(left~, right=array_set(right, mid, r, idx, value))
         }
     }
   }

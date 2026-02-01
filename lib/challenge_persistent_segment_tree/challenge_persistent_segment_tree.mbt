@@ -12,8 +12,8 @@ pub enum Node {
 ///|
 fn node_sum(node : Node) -> Int {
   match node {
-    Node::Leaf(sum~) => sum
-    Node::Branch(sum~, left=_, right=_) => sum
+    Leaf(sum~) => sum
+    Branch(sum~, left=_, right=_) => sum
   }
 }
 
@@ -29,12 +29,12 @@ pub fn total(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(sum=arr[l])
+    Leaf(sum=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
     let right = build(arr, mid, r)
-    Node::Branch(sum=node_sum(left) + node_sum(right), left~, right~)
+    Branch(sum=node_sum(left) + node_sum(right), left~, right~)
   }
 }
 
@@ -42,22 +42,22 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 /// Add delta at index idx and return the new tree.
 pub fn add(node : Node, l : Int, r : Int, idx : Int, delta : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(sum=node_sum(node) + delta)
+    Leaf(sum=node_sum(node) + delta)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(sum=_) => Node::Leaf(sum=node_sum(node) + delta)
-      Node::Branch(left~, right~, sum=_) =>
+      Leaf(sum=_) => Leaf(sum=node_sum(node) + delta)
+      Branch(left~, right~, sum=_) =>
         if idx < mid {
           let new_left = add(left, l, mid, idx, delta)
-          Node::Branch(
+          Branch(
             sum=node_sum(new_left) + node_sum(right),
             left=new_left,
             right~,
           )
         } else {
           let new_right = add(right, mid, r, idx, delta)
-          Node::Branch(
+          Branch(
             sum=node_sum(left) + node_sum(new_right),
             left~,
             right=new_right,
@@ -77,8 +77,8 @@ pub fn query(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(sum=_) => node_sum(node)
-      Node::Branch(left~, right~, sum=_) =>
+      Leaf(sum=_) => node_sum(node)
+      Branch(left~, right~, sum=_) =>
         query(left, l, mid, ql, qr) + query(right, mid, r, ql, qr)
     }
   }

@@ -112,10 +112,10 @@ Option B also gives 8, so the answer is 8.
 ///|
 test "triangulation square" {
   let points : Array[@polygon_triangulation.Point] = [
-    @polygon_triangulation.Point::{ x: 0L, y: 0L },
-    @polygon_triangulation.Point::{ x: 1L, y: 0L },
-    @polygon_triangulation.Point::{ x: 1L, y: 1L },
-    @polygon_triangulation.Point::{ x: 0L, y: 1L },
+    { x: 0L, y: 0L },
+    { x: 1L, y: 0L },
+    { x: 1L, y: 1L },
+    { x: 0L, y: 1L },
   ]
   inspect(
     @polygon_triangulation.min_weight_triangulation(points).unwrap(),
@@ -147,11 +147,11 @@ The DP will automatically pick the cheaper one.
 ///|
 test "triangulation pentagon" {
   let points : Array[@polygon_triangulation.Point] = [
-    @polygon_triangulation.Point::{ x: 0L, y: 0L },
-    @polygon_triangulation.Point::{ x: 2L, y: 0L },
-    @polygon_triangulation.Point::{ x: 3L, y: 1L },
-    @polygon_triangulation.Point::{ x: 1L, y: 3L },
-    @polygon_triangulation.Point::{ x: -1L, y: 1L },
+    { x: 0L, y: 0L },
+    { x: 2L, y: 0L },
+    { x: 3L, y: 1L },
+    { x: 1L, y: 3L },
+    { x: -1L, y: 1L },
   ]
   // We just check it returns Some(...) and is deterministic.
   let ans = @polygon_triangulation.min_weight_triangulation(points)

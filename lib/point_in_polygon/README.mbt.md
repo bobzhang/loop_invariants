@@ -136,27 +136,27 @@ Crossings = 1 -> Inside.
 ///|
 test "point in polygon square" {
   let poly : Array[@point_in_polygon.Point] = [
-    @point_in_polygon.Point::{ x: 0L, y: 0L },
-    @point_in_polygon.Point::{ x: 4L, y: 0L },
-    @point_in_polygon.Point::{ x: 4L, y: 4L },
-    @point_in_polygon.Point::{ x: 0L, y: 4L },
+    { x: 0L, y: 0L },
+    { x: 4L, y: 0L },
+    { x: 4L, y: 4L },
+    { x: 0L, y: 4L },
   ]
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 2L,
       y: 2L,
     }),
     content="Inside",
   )
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 5L,
       y: 2L,
     }),
     content="Outside",
   )
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 4L,
       y: 2L,
     }),
@@ -198,28 +198,28 @@ R = (3,4)  -> Outside (above the dent)
 ///|
 test "point in concave polygon" {
   let poly : Array[@point_in_polygon.Point] = [
-    @point_in_polygon.Point::{ x: 0L, y: 0L },
-    @point_in_polygon.Point::{ x: 4L, y: 0L },
-    @point_in_polygon.Point::{ x: 4L, y: 4L },
-    @point_in_polygon.Point::{ x: 2L, y: 2L },
-    @point_in_polygon.Point::{ x: 0L, y: 4L },
+    { x: 0L, y: 0L },
+    { x: 4L, y: 0L },
+    { x: 4L, y: 4L },
+    { x: 2L, y: 2L },
+    { x: 0L, y: 4L },
   ]
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 1L,
       y: 1L,
     }),
     content="Inside",
   )
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 3L,
       y: 3L,
     }),
     content="Boundary",
   )
   inspect(
-    @point_in_polygon.point_in_polygon(poly, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(poly, {
       x: 3L,
       y: 4L,
     }),
@@ -238,12 +238,12 @@ Points exactly equal to a polygon vertex are on the boundary.
 ///|
 test "point on vertex" {
   let tri : Array[@point_in_polygon.Point] = [
-    @point_in_polygon.Point::{ x: 0L, y: 0L },
-    @point_in_polygon.Point::{ x: 4L, y: 0L },
-    @point_in_polygon.Point::{ x: 0L, y: 3L },
+    { x: 0L, y: 0L },
+    { x: 4L, y: 0L },
+    { x: 0L, y: 3L },
   ]
   inspect(
-    @point_in_polygon.point_in_polygon(tri, @point_in_polygon.Point::{
+    @point_in_polygon.point_in_polygon(tri, {
       x: 0L,
       y: 0L,
     }),

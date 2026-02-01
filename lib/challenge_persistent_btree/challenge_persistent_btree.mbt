@@ -42,8 +42,8 @@ fn[T] node_size(node : BNode[T]) -> Int {
 ///|
 fn[T] tree_size(t : Tree[T]) -> Int {
   match t {
-    Tree::Empty => 0
-    Tree::Node(node=n) => node_size(n)
+    Empty => 0
+    Node(node=n) => node_size(n)
   }
 }
 
@@ -137,31 +137,31 @@ fn[T] split_node(
 fn[T : Compare] insert_node(node : BNode[T], key : T) -> InsertResult[T] {
   let (pos, exists) = find_pos(node.keys, key)
   if exists {
-    InsertResult::Done(node~)
+    Done(node~)
   } else if is_leaf(node) {
     let new_keys = insert_key(node.keys, pos, key)
     if new_keys.length() <= 3 {
-      InsertResult::Done(node={ keys: new_keys, children: [] })
+      Done(node={ keys: new_keys, children: [] })
     } else {
       let (promote, left, right) = split_node(new_keys, [])
-      InsertResult::Split(key=promote, left~, right~)
+      Split(key=promote, left~, right~)
     }
   } else {
     let child = node.children[pos]
     match insert_node(child, key) {
-      InsertResult::Done(node=updated_child) => {
+      Done(node=updated_child) => {
         let new_children = node.children.copy()
         new_children[pos] = updated_child
-        InsertResult::Done(node={ keys: node.keys, children: new_children })
+        Done(node={ keys: node.keys, children: new_children })
       }
-      InsertResult::Split(key=pk, left=pl, right=pr) => {
+      Split(key=pk, left=pl, right=pr) => {
         let new_keys = insert_key(node.keys, pos, pk)
         let new_children = insert_children(node.children, pos, pl, pr)
         if new_keys.length() <= 3 {
-          InsertResult::Done(node={ keys: new_keys, children: new_children })
+          Done(node={ keys: new_keys, children: new_children })
         } else {
           let (promote, left, right) = split_node(new_keys, new_children)
-          InsertResult::Split(key=promote, left~, right~)
+          Split(key=promote, left~, right~)
         }
       }
     }
@@ -171,7 +171,7 @@ fn[T : Compare] insert_node(node : BNode[T], key : T) -> InsertResult[T] {
 ///|
 /// Create an empty B-tree.
 pub fn[T] empty() -> Tree[T] {
-  Tree::Empty
+  Empty
 }
 
 ///|
@@ -184,12 +184,12 @@ pub fn[T] size(t : Tree[T]) -> Int {
 /// Insert key and return the new tree.
 pub fn[T : Compare] insert(t : Tree[T], key : T) -> Tree[T] {
   match t {
-    Tree::Empty => Tree::Node(node={ keys: [key], children: [] })
-    Tree::Node(node=n) =>
+    Empty => Node(node={ keys: [key], children: [] })
+    Node(node=n) =>
       match insert_node(n, key) {
-        InsertResult::Done(node=done) => Tree::Node(node=done)
-        InsertResult::Split(key=pk, left=pl, right=pr) =>
-          Tree::Node(node={ keys: [pk], children: [pl, pr] })
+        Done(node=done) => Node(node=done)
+        Split(key=pk, left=pl, right=pr) =>
+          Node(node={ keys: [pk], children: [pl, pr] })
       }
   }
 }
@@ -198,15 +198,15 @@ pub fn[T : Compare] insert(t : Tree[T], key : T) -> Tree[T] {
 /// Check whether a key exists in the tree.
 pub fn[T : Compare] contains(t : Tree[T], key : T) -> Bool {
   match t {
-    Tree::Empty => false
-    Tree::Node(node=n) => {
+    Empty => false
+    Node(node=n) => {
       let (pos, exists) = find_pos(n.keys, key)
       if exists {
         true
       } else if is_leaf(n) {
         false
       } else {
-        contains(Tree::Node(node=n.children[pos]), key)
+        contains(Node(node=n.children[pos]), key)
       }
     }
   }
@@ -215,7 +215,7 @@ pub fn[T : Compare] contains(t : Tree[T], key : T) -> Bool {
 ///|
 /// Build a B-tree by inserting keys in order.
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Tree[T] {
-  let mut tree = Tree::Empty
+  let mut tree = Empty
   for key in arr {
     tree = insert(tree, key)
   }

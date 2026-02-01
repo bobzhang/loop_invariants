@@ -23,29 +23,29 @@ fn eval(line : Line, x : Int) -> Int {
 ///|
 fn line_count(t : Node) -> Int {
   match t {
-    Node::Empty => 0
-    Node::Node(line=_, left=l, right=r) => 1 + line_count(l) + line_count(r)
+    Empty => 0
+    Node(line=_, left=l, right=r) => 1 + line_count(l) + line_count(r)
   }
 }
 
 ///|
 fn insert_line(node : Node, line : Line, l : Int, r : Int) -> Node {
   match node {
-    Node::Empty => Node::Node(line~, left=Node::Empty, right=Node::Empty)
-    Node::Node(line=cur, left~, right~) => {
+    Empty => Node(line~, left=Empty, right=Empty)
+    Node(line=cur, left~, right~) => {
       let mid = (l + r) / 2
       let left_better = eval(line, l) < eval(cur, l)
       let mid_better = eval(line, mid) < eval(cur, mid)
       let best = if mid_better { line } else { cur }
       let other = if mid_better { cur } else { line }
       if r - l == 1 {
-        Node::Node(line=best, left~, right~)
+        Node(line=best, left~, right~)
       } else if left_better != mid_better {
         let new_left = insert_line(left, other, l, mid)
-        Node::Node(line=best, left=new_left, right~)
+        Node(line=best, left=new_left, right~)
       } else {
         let new_right = insert_line(right, other, mid, r)
-        Node::Node(line=best, left~, right=new_right)
+        Node(line=best, left~, right=new_right)
       }
     }
   }
@@ -54,7 +54,7 @@ fn insert_line(node : Node, line : Line, l : Int, r : Int) -> Node {
 ///|
 /// Create an empty Li Chao tree.
 pub fn empty() -> Node {
-  Node::Empty
+  Empty
 }
 
 ///|
@@ -73,8 +73,8 @@ pub fn insert(tree : Node, line : Line, l : Int, r : Int) -> Node {
 /// Query the minimum value at x over domain [l, r).
 pub fn query(node : Node, x : Int, l : Int, r : Int) -> Int {
   match node {
-    Node::Empty => 0x3fffffff
-    Node::Node(line=ln, left~, right~) => {
+    Empty => 0x3fffffff
+    Node(line=ln, left~, right~) => {
       let mid = (l + r) / 2
       let best = eval(ln, x)
       if r - l == 1 {
@@ -101,7 +101,7 @@ pub fn query(node : Node, x : Int, l : Int, r : Int) -> Int {
 ///|
 /// Build a Li Chao tree by inserting lines in order.
 pub fn from_array(lines : ArrayView[Line], l : Int, r : Int) -> Node {
-  let mut tree = Node::Empty
+  let mut tree = Empty
   for line in lines {
     tree = insert(tree, line, l, r)
   }
@@ -111,9 +111,9 @@ pub fn from_array(lines : ArrayView[Line], l : Int, r : Int) -> Node {
 ///|
 test "persistent_li_chao_tree" {
   let lines = [
-    Line::{ m: 1, b: 0 },
-    Line::{ m: -1, b: 10 },
-    Line::{ m: 2, b: -5 },
+    { m: 1, b: 0 },
+    { m: -1, b: 10 },
+    { m: 2, b: -5 },
   ]
   let tree = from_array(lines[:], 0, 10)
   assert_eq(query(tree, 0, 0, 10), -5)

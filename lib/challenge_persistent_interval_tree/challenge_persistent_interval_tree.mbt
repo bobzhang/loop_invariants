@@ -21,8 +21,8 @@ fn max2(a : Int, b : Int) -> Int {
 ///|
 fn max_end(t : Tree) -> Int {
   match t {
-    Tree::Empty => -0x3fffffff
-    Tree::Node(start=_, end=_, max_end~, left=_, right=_) => max_end
+    Empty => -0x3fffffff
+    Node(start=_, end=_, max_end~, left=_, right=_) => max_end
   }
 }
 
@@ -30,8 +30,8 @@ fn max_end(t : Tree) -> Int {
 /// Return the number of intervals in the tree.
 pub fn size(t : Tree) -> Int {
   match t {
-    Tree::Empty => 0
-    Tree::Node(start=_, end=_, max_end=_, left~, right~) =>
+    Empty => 0
+    Node(start=_, end=_, max_end=_, left~, right~) =>
       1 + size(left) + size(right)
   }
 }
@@ -41,22 +41,22 @@ pub fn size(t : Tree) -> Int {
 ///|
 fn make_node(start : Int, end : Int, left : Tree, right : Tree) -> Tree {
   let me = max2(end, max2(max_end(left), max_end(right)))
-  Tree::Node(start~, end~, max_end=me, left~, right~)
+  Node(start~, end~, max_end=me, left~, right~)
 }
 
 ///|
 /// Create an empty interval tree.
 pub fn empty() -> Tree {
-  Tree::Empty
+  Empty
 }
 
 ///|
 /// Insert an interval and return the new tree.
 pub fn insert(t : Tree, start : Int, end : Int) -> Tree {
   match t {
-    Tree::Empty =>
-      Tree::Node(start~, end~, max_end=end, left=Tree::Empty, right=Tree::Empty)
-    Tree::Node(start=s, end=e, left=l, right=r, max_end=_) =>
+    Empty =>
+      Node(start~, end~, max_end=end, left=Empty, right=Empty)
+    Node(start=s, end=e, left=l, right=r, max_end=_) =>
       if start == s {
         let new_end = if end > e { end } else { e }
         make_node(s, new_end, l, r)
@@ -77,11 +77,11 @@ fn overlaps(a_start : Int, a_end : Int, b_start : Int, b_end : Int) -> Bool {
 /// Find one interval that overlaps [qs, qe] if any.
 pub fn find_overlap(t : Tree, qs : Int, qe : Int) -> (Int, Int)? {
   match t {
-    Tree::Empty => None
-    Tree::Node(start=s, end=e, left=l, right=r, max_end=_) =>
+    Empty => None
+    Node(start=s, end=e, left=l, right=r, max_end=_) =>
       if overlaps(s, e, qs, qe) {
         Some((s, e))
-      } else if l is Tree::Empty {
+      } else if l is Empty {
         find_overlap(r, qs, qe)
       } else if max_end(l) >= qs {
         find_overlap(l, qs, qe)
@@ -94,7 +94,7 @@ pub fn find_overlap(t : Tree, qs : Int, qe : Int) -> (Int, Int)? {
 ///|
 /// Build an interval tree by inserting intervals in order.
 pub fn from_array(arr : ArrayView[(Int, Int)]) -> Tree {
-  let mut tree = Tree::Empty
+  let mut tree = Empty
   for interval in arr {
     let (s, e) = interval
     tree = insert(tree, s, e)

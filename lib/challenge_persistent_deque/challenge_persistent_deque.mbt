@@ -18,8 +18,8 @@ pub struct Deque[T] {
 ///|
 fn[T] size_stack(s : Stack[T]) -> Int {
   match s {
-    Stack::Nil => 0
-    Stack::Cons(head=_, tail~) => 1 + size_stack(tail)
+    Nil => 0
+    Cons(head=_, tail~) => 1 + size_stack(tail)
   }
 }
 
@@ -32,21 +32,21 @@ pub fn[T] size(d : Deque[T]) -> Int {
 ///|
 fn[T] reverse_stack_acc(cur : Stack[T], acc : Stack[T]) -> Stack[T] {
   match cur {
-    Stack::Nil => acc
-    Stack::Cons(head~, tail~) =>
-      reverse_stack_acc(tail, Stack::Cons(head~, tail=acc))
+    Nil => acc
+    Cons(head~, tail~) =>
+      reverse_stack_acc(tail, Cons(head~, tail=acc))
   }
 }
 
 ///|
 fn[T] reverse_stack(s : Stack[T]) -> Stack[T] {
-  reverse_stack_acc(s, Stack::Nil)
+  reverse_stack_acc(s, Nil)
 }
 
 ///|
 fn[T] normalize_front(d : Deque[T]) -> Deque[T] {
   match d.front {
-    Stack::Nil => { front: reverse_stack(d.back), back: Stack::Nil }
+    Nil => { front: reverse_stack(d.back), back: Nil }
     _ => d
   }
 }
@@ -54,7 +54,7 @@ fn[T] normalize_front(d : Deque[T]) -> Deque[T] {
 ///|
 fn[T] normalize_back(d : Deque[T]) -> Deque[T] {
   match d.back {
-    Stack::Nil => { front: Stack::Nil, back: reverse_stack(d.front) }
+    Nil => { front: Nil, back: reverse_stack(d.front) }
     _ => d
   }
 }
@@ -62,19 +62,19 @@ fn[T] normalize_back(d : Deque[T]) -> Deque[T] {
 ///|
 /// Create an empty persistent deque.
 pub fn[T] empty() -> Deque[T] {
-  { front: Stack::Nil, back: Stack::Nil }
+  { front: Nil, back: Nil }
 }
 
 ///|
 /// Push a value to the front and return the new deque.
 pub fn[T] push_front(d : Deque[T], value : T) -> Deque[T] {
-  { front: Stack::Cons(head=value, tail=d.front), back: d.back }
+  { front: Cons(head=value, tail=d.front), back: d.back }
 }
 
 ///|
 /// Push a value to the back and return the new deque.
 pub fn[T] push_back(d : Deque[T], value : T) -> Deque[T] {
-  { front: d.front, back: Stack::Cons(head=value, tail=d.back) }
+  { front: d.front, back: Cons(head=value, tail=d.back) }
 }
 
 ///|
@@ -82,8 +82,8 @@ pub fn[T] push_back(d : Deque[T], value : T) -> Deque[T] {
 pub fn[T] peek_front(d : Deque[T]) -> T? {
   let norm = normalize_front(d)
   match norm.front {
-    Stack::Nil => None
-    Stack::Cons(head~, tail=_) => Some(head)
+    Nil => None
+    Cons(head~, tail=_) => Some(head)
   }
 }
 
@@ -92,8 +92,8 @@ pub fn[T] peek_front(d : Deque[T]) -> T? {
 pub fn[T] peek_back(d : Deque[T]) -> T? {
   let norm = normalize_back(d)
   match norm.back {
-    Stack::Nil => None
-    Stack::Cons(head~, tail=_) => Some(head)
+    Nil => None
+    Cons(head~, tail=_) => Some(head)
   }
 }
 
@@ -102,8 +102,8 @@ pub fn[T] peek_back(d : Deque[T]) -> T? {
 pub fn[T] pop_front(d : Deque[T]) -> (T, Deque[T])? {
   let norm = normalize_front(d)
   match norm.front {
-    Stack::Nil => None
-    Stack::Cons(head~, tail~) => Some((head, { front: tail, back: norm.back }))
+    Nil => None
+    Cons(head~, tail~) => Some((head, { front: tail, back: norm.back }))
   }
 }
 
@@ -112,7 +112,7 @@ pub fn[T] pop_front(d : Deque[T]) -> (T, Deque[T])? {
 pub fn[T] pop_back(d : Deque[T]) -> (T, Deque[T])? {
   let norm = normalize_back(d)
   match norm.back {
-    Stack::Nil => None
-    Stack::Cons(head~, tail~) => Some((head, { front: norm.front, back: tail }))
+    Nil => None
+    Cons(head~, tail~) => Some((head, { front: norm.front, back: tail }))
   }
 }

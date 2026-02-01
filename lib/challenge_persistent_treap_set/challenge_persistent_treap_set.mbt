@@ -19,8 +19,8 @@ pub enum Treap[T] {
 /// Return the number of keys in the treap.
 pub fn[T] size(t : Treap[T]) -> Int {
   match t {
-    Treap::Empty => 0
-    Treap::Node(key=_, priority=_, size~, left=_, right=_) => size
+    Empty => 0
+    Node(key=_, priority=_, size~, left=_, right=_) => size
   }
 }
 
@@ -39,21 +39,21 @@ fn[T] make_node(
   right : Treap[T],
 ) -> Treap[T] {
   let sz = 1 + size(left) + size(right)
-  Treap::Node(key~, priority~, size=sz, left~, right~)
+  Node(key~, priority~, size=sz, left~, right~)
 }
 
 ///|
 /// Create an empty treap.
 pub fn[T] empty() -> Treap[T] {
-  Treap::Empty
+  Empty
 }
 
 ///|
 /// Split the treap into (< key) and (>= key).
 pub fn[T : Compare] split(t : Treap[T], key : T) -> (Treap[T], Treap[T]) {
   match t {
-    Treap::Empty => (Treap::Empty, Treap::Empty)
-    Treap::Node(key=k, priority=p, size=_, left=l, right=r) =>
+    Empty => (Empty, Empty)
+    Node(key=k, priority=p, size=_, left=l, right=r) =>
       if key <= k {
         let (l1, l2) = split(l, key)
         (l1, make_node(k, p, l2, r))
@@ -68,11 +68,11 @@ pub fn[T : Compare] split(t : Treap[T], key : T) -> (Treap[T], Treap[T]) {
 /// Merge two treaps assuming all keys in a are < keys in b.
 pub fn[T] merge(a : Treap[T], b : Treap[T]) -> Treap[T] {
   match (a, b) {
-    (Treap::Empty, _) => b
-    (_, Treap::Empty) => a
+    (Empty, _) => b
+    (_, Empty) => a
     (
-      Treap::Node(key=ka, priority=pa, size=_, left=la, right=ra),
-      Treap::Node(key=kb, priority=pb, size=_, left=lb, right=rb),
+      Node(key=ka, priority=pa, size=_, left=la, right=ra),
+      Node(key=kb, priority=pb, size=_, left=lb, right=rb),
     ) =>
       if pa >= pb {
         make_node(ka, pa, la, merge(ra, b))
@@ -86,8 +86,8 @@ pub fn[T] merge(a : Treap[T], b : Treap[T]) -> Treap[T] {
 /// Check whether key exists in the treap.
 pub fn[T : Compare] contains(t : Treap[T], key : T) -> Bool {
   match t {
-    Treap::Empty => false
-    Treap::Node(key=k, priority=_, size=_, left=l, right=r) =>
+    Empty => false
+    Node(key=k, priority=_, size=_, left=l, right=r) =>
       if key == k {
         true
       } else if key < k {
@@ -105,7 +105,7 @@ pub fn[T : Compare + Hash] insert(t : Treap[T], key : T) -> Treap[T] {
     t
   } else {
     let (l, r) = split(t, key)
-    let node = make_node(key, priority_for(key), Treap::Empty, Treap::Empty)
+    let node = make_node(key, priority_for(key), Empty, Empty)
     merge(merge(l, node), r)
   }
 }
@@ -113,5 +113,5 @@ pub fn[T : Compare + Hash] insert(t : Treap[T], key : T) -> Treap[T] {
 ///|
 /// Build a treap by inserting elements in order.
 pub fn[T : Compare + Hash] from_array(arr : ArrayView[T]) -> Treap[T] {
-  arr.fold(init=Treap::Empty, (tree, key) => insert(tree, key))
+  arr.fold(init=Empty, (tree, key) => insert(tree, key))
 }

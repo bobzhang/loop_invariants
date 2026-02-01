@@ -18,8 +18,8 @@ pub struct Bitset {
 ///|
 fn node_count(node : Node) -> Int {
   match node {
-    Node::Leaf(count~) => count
-    Node::Branch(count~, left=_, right=_) => count
+    Leaf(count~) => count
+    Branch(count~, left=_, right=_) => count
   }
 }
 
@@ -28,34 +28,34 @@ fn node_count(node : Node) -> Int {
 ///|
 fn build_zero(l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(count=0)
+    Leaf(count=0)
   } else {
     let mid = (l + r) / 2
     let left = build_zero(l, mid)
     let right = build_zero(mid, r)
-    Node::Branch(count=0, left~, right~)
+    Branch(count=0, left~, right~)
   }
 }
 
 ///|
 fn set_bit(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(count=value)
+    Leaf(count=value)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(count=_) => Node::Leaf(count=value)
-      Node::Branch(left~, right~, count=_) =>
+      Leaf(count=_) => Leaf(count=value)
+      Branch(left~, right~, count=_) =>
         if idx < mid {
           let new_left = set_bit(left, l, mid, idx, value)
-          Node::Branch(
+          Branch(
             count=node_count(new_left) + node_count(right),
             left=new_left,
             right~,
           )
         } else {
           let new_right = set_bit(right, mid, r, idx, value)
-          Node::Branch(
+          Branch(
             count=node_count(left) + node_count(new_right),
             left~,
             right=new_right,
@@ -68,8 +68,8 @@ fn set_bit(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
 ///|
 fn get_bit(node : Node, l : Int, r : Int, idx : Int) -> Int {
   match node {
-    Node::Leaf(count~) => count
-    Node::Branch(left~, right~, count=_) => {
+    Leaf(count~) => count
+    Branch(left~, right~, count=_) => {
       let mid = (l + r) / 2
       if idx < mid {
         get_bit(left, l, mid, idx)
@@ -89,8 +89,8 @@ fn count_range_node(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(count=_) => node_count(node)
-      Node::Branch(left~, right~, count=_) =>
+      Leaf(count=_) => node_count(node)
+      Branch(left~, right~, count=_) =>
         count_range_node(left, l, mid, ql, qr) +
         count_range_node(right, mid, r, ql, qr)
     }

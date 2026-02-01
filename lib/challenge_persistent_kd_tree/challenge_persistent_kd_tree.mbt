@@ -19,8 +19,8 @@ pub enum Kd {
 /// Return the number of points stored in the tree.
 pub fn size(t : Kd) -> Int {
   match t {
-    Kd::Empty => 0
-    Kd::Node(point=_, axis=_, left~, right~) => 1 + size(left) + size(right)
+    Empty => 0
+    Node(point=_, axis=_, left~, right~) => 1 + size(left) + size(right)
   }
 }
 
@@ -36,14 +36,14 @@ fn coord(p : Point, axis : Int) -> Int {
 ///|
 fn insert_node(t : Kd, p : Point, axis : Int) -> Kd {
   match t {
-    Kd::Empty => Kd::Node(point=p, axis~, left=Kd::Empty, right=Kd::Empty)
-    Kd::Node(point=pt, axis=ax, left=l, right=r) =>
+    Empty => Node(point=p, axis~, left=Empty, right=Empty)
+    Node(point=pt, axis=ax, left=l, right=r) =>
       if p == pt {
         t
       } else if coord(p, ax) < coord(pt, ax) {
-        Kd::Node(point=pt, axis=ax, left=insert_node(l, p, 1 - ax), right=r)
+        Node(point=pt, axis=ax, left=insert_node(l, p, 1 - ax), right=r)
       } else {
-        Kd::Node(point=pt, axis=ax, left=l, right=insert_node(r, p, 1 - ax))
+        Node(point=pt, axis=ax, left=l, right=insert_node(r, p, 1 - ax))
       }
   }
 }
@@ -51,7 +51,7 @@ fn insert_node(t : Kd, p : Point, axis : Int) -> Kd {
 ///|
 /// Create an empty KD-tree.
 pub fn empty() -> Kd {
-  Kd::Empty
+  Empty
 }
 
 ///|
@@ -64,8 +64,8 @@ pub fn insert(t : Kd, p : Point) -> Kd {
 /// Check whether a point exists in the tree.
 pub fn contains(t : Kd, p : Point) -> Bool {
   match t {
-    Kd::Empty => false
-    Kd::Node(point=pt, axis=ax, left=l, right=r) =>
+    Empty => false
+    Node(point=pt, axis=ax, left=l, right=r) =>
       if p == pt {
         true
       } else if coord(p, ax) < coord(pt, ax) {
@@ -80,8 +80,8 @@ pub fn contains(t : Kd, p : Point) -> Bool {
 /// Iterative containment with reasoning on split axis.
 pub fn contains_iter(t : Kd, p : Point) -> Bool {
   match t {
-    Kd::Empty => false
-    Kd::Node(point=pt, axis=ax, left=l, right=r) =>
+    Empty => false
+    Node(point=pt, axis=ax, left=l, right=r) =>
       if p == pt {
         true
       } else if coord(p, ax) < coord(pt, ax) {
@@ -95,7 +95,7 @@ pub fn contains_iter(t : Kd, p : Point) -> Bool {
 ///|
 /// Build a KD-tree by inserting points in order.
 pub fn from_array(arr : ArrayView[Point]) -> Kd {
-  let mut tree = Kd::Empty
+  let mut tree = Empty
   for point in arr {
     tree = insert(tree, point)
   }

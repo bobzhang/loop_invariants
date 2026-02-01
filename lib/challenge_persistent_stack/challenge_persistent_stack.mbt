@@ -12,27 +12,27 @@ pub enum Stack[T] {
 ///|
 /// Create an empty persistent stack.
 pub fn[T] empty() -> Stack[T] {
-  Stack::Nil
+  Nil
 }
 
 ///|
 /// Return true if the stack is empty.
 pub fn[T] is_empty(s : Stack[T]) -> Bool {
-  s is Stack::Nil
+  s is Nil
 }
 
 ///|
 /// Push a value onto the stack and return the new stack.
 pub fn[T] push(s : Stack[T], value : T) -> Stack[T] {
-  Stack::Cons(head=value, tail=s)
+  Cons(head=value, tail=s)
 }
 
 ///|
 /// Pop the top element and return (value, rest), or None if empty.
 pub fn[T] pop(s : Stack[T]) -> (T, Stack[T])? {
   match s {
-    Stack::Nil => None
-    Stack::Cons(head~, tail~) => Some((head, tail))
+    Nil => None
+    Cons(head~, tail~) => Some((head, tail))
   }
 }
 
@@ -40,8 +40,8 @@ pub fn[T] pop(s : Stack[T]) -> (T, Stack[T])? {
 /// Peek the top element without removing it.
 pub fn[T] peek(s : Stack[T]) -> T? {
   match s {
-    Stack::Nil => None
-    Stack::Cons(head~, tail=_) => Some(head)
+    Nil => None
+    Cons(head~, tail=_) => Some(head)
   }
 }
 
@@ -49,15 +49,15 @@ pub fn[T] peek(s : Stack[T]) -> T? {
 /// Return the number of elements in the stack.
 pub fn[T] size(s : Stack[T]) -> Int {
   match s {
-    Stack::Nil => 0
-    Stack::Cons(head=_, tail~) => 1 + size(tail)
+    Nil => 0
+    Cons(head=_, tail~) => 1 + size(tail)
   }
 }
 
 ///|
 /// Build a stack that preserves array order (top is arr[0]).
 pub fn[T] from_array(arr : ArrayView[T]) -> Stack[T] {
-  arr.rev_fold(init=Stack::Nil, (st, value) => Stack::Cons(head=value, tail=st))
+  arr.rev_fold(init=Nil, (st, value) => Cons(head=value, tail=st))
 }
 
 ///|
@@ -71,8 +71,8 @@ pub fn[T] to_array(s : Stack[T]) -> Array[T] {
 ///|
 fn[T] fill_to_array(cur : Stack[T], out : Array[T]) -> Unit {
   match cur {
-    Stack::Nil => ()
-    Stack::Cons(head~, tail~) => {
+    Nil => ()
+    Cons(head~, tail~) => {
       out.push(head)
       fill_to_array(tail, out)
     }

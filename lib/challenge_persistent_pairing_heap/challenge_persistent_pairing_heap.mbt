@@ -18,16 +18,16 @@ pub enum Heap[T] {
 ///|
 fn[T] heap_size(h : Heap[T]) -> Int {
   match h {
-    Heap::Empty => 0
-    Heap::Node(value=_, children~) => 1 + children_size(children)
+    Empty => 0
+    Node(value=_, children~) => 1 + children_size(children)
   }
 }
 
 ///|
 fn[T] children_size(children : ChildList[T]) -> Int {
   match children {
-    ChildList::Nil => 0
-    ChildList::Cons(head~, tail~) => heap_size(head) + children_size(tail)
+    Nil => 0
+    Cons(head~, tail~) => heap_size(head) + children_size(tail)
   }
 }
 
@@ -36,7 +36,7 @@ fn[T] children_size(children : ChildList[T]) -> Int {
 ///|
 /// Create an empty pairing heap.
 pub fn[T] empty() -> Heap[T] {
-  Heap::Empty
+  Empty
 }
 
 ///|
@@ -49,20 +49,20 @@ pub fn[T] size(h : Heap[T]) -> Int {
 /// Merge two heaps and return the result.
 pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
   match (a, b) {
-    (Heap::Empty, _) => b
-    (_, Heap::Empty) => a
-    (Heap::Node(value=va, children=ca), Heap::Node(value=vb, children=cb)) =>
+    (Empty, _) => b
+    (_, Empty) => a
+    (Node(value=va, children=ca), Node(value=vb, children=cb)) =>
       if va <= vb {
-        Heap::Node(value=va, children=ChildList::Cons(head=b, tail=ca))
+        Node(value=va, children=Cons(head=b, tail=ca))
       } else {
-        Heap::Node(value=vb, children=ChildList::Cons(head=a, tail=cb))
+        Node(value=vb, children=Cons(head=a, tail=cb))
       }
   }
 }
 
 ///|
 fn[T] singleton(value : T) -> Heap[T] {
-  Heap::Node(value~, children=ChildList::Nil)
+  Node(value~, children=Nil)
 }
 
 ///|
@@ -75,8 +75,8 @@ pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
 /// Return the minimum value, or None if empty.
 pub fn[T] find_min(h : Heap[T]) -> T? {
   match h {
-    Heap::Empty => None
-    Heap::Node(value~, children=_) => Some(value)
+    Empty => None
+    Node(value~, children=_) => Some(value)
   }
 }
 
@@ -89,12 +89,12 @@ fn[T : Compare] merge_pairs(children : ChildList[T]) -> Heap[T] {
 ///|
 fn[T : Compare] merge_pairs_list(children : ChildList[T]) -> ChildList[T] {
   match children {
-    ChildList::Nil => ChildList::Nil
-    ChildList::Cons(head~, tail~) =>
+    Nil => Nil
+    Cons(head~, tail~) =>
       match tail {
-        ChildList::Nil => ChildList::Cons(head~, tail=ChildList::Nil)
-        ChildList::Cons(head=second, tail=rest) =>
-          ChildList::Cons(head=merge(head, second), tail=merge_pairs_list(rest))
+        Nil => Cons(head~, tail=Nil)
+        Cons(head=second, tail=rest) =>
+          Cons(head=merge(head, second), tail=merge_pairs_list(rest))
       }
   }
 }
@@ -102,8 +102,8 @@ fn[T : Compare] merge_pairs_list(children : ChildList[T]) -> ChildList[T] {
 ///|
 fn[T : Compare] merge_all(children : ChildList[T]) -> Heap[T] {
   match children {
-    ChildList::Nil => Heap::Empty
-    ChildList::Cons(head~, tail~) => merge(head, merge_all(tail))
+    Nil => Empty
+    Cons(head~, tail~) => merge(head, merge_all(tail))
   }
 }
 
@@ -111,14 +111,14 @@ fn[T : Compare] merge_all(children : ChildList[T]) -> Heap[T] {
 /// Delete the minimum element and return the new heap.
 pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
   match h {
-    Heap::Empty => None
-    Heap::Node(value=_, children~) => Some(merge_pairs(children))
+    Empty => None
+    Node(value=_, children~) => Some(merge_pairs(children))
   }
 }
 
 ///|
 test "persistent_pairing_heap" {
-  let h0 : Heap[Int] = Heap::Empty
+  let h0 : Heap[Int] = Empty
   let h1 = insert(h0, 8)
   let h2 = insert(h1, 3)
   let h3 = insert(h2, 6)

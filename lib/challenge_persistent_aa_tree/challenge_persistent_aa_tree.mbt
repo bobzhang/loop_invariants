@@ -12,8 +12,8 @@ pub enum Aa[T] {
 ///|
 fn[T] level(t : Aa[T]) -> Int {
   match t {
-    Aa::Empty => 0
-    Aa::Node(key=_, level~, left=_, right=_) => level
+    Empty => 0
+    Node(key=_, level~, left=_, right=_) => level
   }
 }
 
@@ -21,8 +21,8 @@ fn[T] level(t : Aa[T]) -> Int {
 /// Return the number of keys in the AA tree.
 pub fn[T] size(t : Aa[T]) -> Int {
   match t {
-    Aa::Empty => 0
-    Aa::Node(key=_, level=_, left~, right~) => 1 + size(left) + size(right)
+    Empty => 0
+    Node(key=_, level=_, left~, right~) => 1 + size(left) + size(right)
   }
 }
 
@@ -42,13 +42,13 @@ fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
 ///|
 fn[T : Compare] aa_valid(t : Aa[T], lo : T?, hi : T?) -> Bool {
   match t {
-    Aa::Empty => true
-    Aa::Node(key=k, level=lv, left=l, right=r) => {
+    Empty => true
+    Node(key=k, level=lv, left=l, right=r) => {
       let left_ok = level(l) < lv
       let right_ok = level(r) <= lv
       let rr_ok = match r {
-        Aa::Empty => true
-        Aa::Node(key=_, level=rv, left=_, right=rr) =>
+        Empty => true
+        Node(key=_, level=rv, left=_, right=rr) =>
           level(rr) < lv && rv <= lv
       }
       within_bounds(k, lo, hi) &&
@@ -63,16 +63,16 @@ fn[T : Compare] aa_valid(t : Aa[T], lo : T?, hi : T?) -> Bool {
 
 ///|
 fn[T] make_node(key : T, lv : Int, left : Aa[T], right : Aa[T]) -> Aa[T] {
-  Aa::Node(key~, level=lv, left~, right~)
+  Node(key~, level=lv, left~, right~)
 }
 
 ///|
 fn[T] skew(t : Aa[T]) -> Aa[T] {
   match t {
-    Aa::Node(
+    Node(
       key=k,
       level=lv,
-      left=Aa::Node(key=lk, level=llv, left=ll, right=lr),
+      left=Node(key=lk, level=llv, left=ll, right=lr),
       right=r
     ) =>
       if llv == lv {
@@ -87,14 +87,14 @@ fn[T] skew(t : Aa[T]) -> Aa[T] {
 ///|
 fn[T] split(t : Aa[T]) -> Aa[T] {
   match t {
-    Aa::Node(
+    Node(
       key=k,
       level=lv,
       left=l,
-      right=Aa::Node(key=rk, level=_, left=rl, right=rr)
+      right=Node(key=rk, level=_, left=rl, right=rr)
     ) =>
       match rr {
-        Aa::Node(key=rrk, level=rrlv, left=rrl, right=rrr) =>
+        Node(key=rrk, level=rrlv, left=rrl, right=rrr) =>
           if rrlv == lv {
             make_node(
               rk,
@@ -105,7 +105,7 @@ fn[T] split(t : Aa[T]) -> Aa[T] {
           } else {
             t
           }
-        Aa::Empty => t
+        Empty => t
       }
     _ => t
   }
@@ -114,15 +114,15 @@ fn[T] split(t : Aa[T]) -> Aa[T] {
 ///|
 /// Create an empty AA tree.
 pub fn[T] empty() -> Aa[T] {
-  Aa::Empty
+  Empty
 }
 
 ///|
 /// Insert key and return the new AA tree.
 pub fn[T : Compare] insert(t : Aa[T], key : T) -> Aa[T] {
   match t {
-    Aa::Empty => Aa::Node(key~, level=1, left=Aa::Empty, right=Aa::Empty)
-    Aa::Node(key=k, level=lv, left=l, right=r) =>
+    Empty => Node(key~, level=1, left=Empty, right=Empty)
+    Node(key=k, level=lv, left=l, right=r) =>
       if key == k {
         t
       } else if key < k {
@@ -141,8 +141,8 @@ pub fn[T : Compare] contains(t : Aa[T], key : T) -> Bool {
   let none : T? = None
   for cur = t, lo = none, hi = none {
     match cur {
-      Aa::Empty => break false
-      Aa::Node(key=k, level=_, left=l, right=r) =>
+      Empty => break false
+      Node(key=k, level=_, left=l, right=r) =>
         if key == k {
           break true
         } else if key < k {
@@ -169,8 +169,8 @@ pub fn[T : Compare] contains(t : Aa[T], key : T) -> Bool {
 /// Return an in-order traversal (sorted keys).
 pub fn[T] inorder(t : Aa[T]) -> Array[T] {
   match t {
-    Aa::Empty => []
-    Aa::Node(key=k, level=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
+    Empty => []
+    Node(key=k, level=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
   }
 }
 
@@ -178,7 +178,7 @@ pub fn[T] inorder(t : Aa[T]) -> Array[T] {
 /// Build an AA tree by inserting elements in order.
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Aa[T] {
   let n = arr.length()
-  for i = 0, tree = Aa::Empty {
+  for i = 0, tree = Empty {
     if i >= n {
       break tree
     } else {

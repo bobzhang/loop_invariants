@@ -12,16 +12,16 @@ pub enum Node {
 ///|
 fn node_sum(node : Node) -> Int {
   match node {
-    Node::Leaf(sum~, tag=_) => sum
-    Node::Branch(sum~, tag=_, left=_, right=_) => sum
+    Leaf(sum~, tag=_) => sum
+    Branch(sum~, tag=_, left=_, right=_) => sum
   }
 }
 
 ///|
 fn node_tag(node : Node) -> Int {
   match node {
-    Node::Leaf(sum=_, tag~) => tag
-    Node::Branch(sum=_, tag~, left=_, right=_) => tag
+    Leaf(sum=_, tag~) => tag
+    Branch(sum=_, tag~, left=_, right=_) => tag
   }
 }
 
@@ -37,21 +37,21 @@ pub fn total(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(sum=arr[l], tag=0)
+    Leaf(sum=arr[l], tag=0)
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
     let right = build(arr, mid, r)
-    Node::Branch(sum=node_sum(left) + node_sum(right), tag=0, left~, right~)
+    Branch(sum=node_sum(left) + node_sum(right), tag=0, left~, right~)
   }
 }
 
 ///|
 fn apply(node : Node, len : Int, delta : Int) -> Node {
   match node {
-    Node::Leaf(sum~, tag~) => Node::Leaf(sum=sum + delta * len, tag=tag + delta)
-    Node::Branch(sum~, tag~, left~, right~) =>
-      Node::Branch(sum=sum + delta * len, tag=tag + delta, left~, right~)
+    Leaf(sum~, tag~) => Leaf(sum=sum + delta * len, tag=tag + delta)
+    Branch(sum~, tag~, left~, right~) =>
+      Branch(sum=sum + delta * len, tag=tag + delta, left~, right~)
   }
 }
 
@@ -72,8 +72,8 @@ pub fn range_add(
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(sum=_, tag=_) => apply(node, r - l, delta)
-      Node::Branch(left~, right~, sum=_, tag=_) => {
+      Leaf(sum=_, tag=_) => apply(node, r - l, delta)
+      Branch(left~, right~, sum=_, tag=_) => {
         let left_len = mid - l
         let right_len = r - mid
         let tag = node_tag(node)
@@ -81,7 +81,7 @@ pub fn range_add(
         let right0 = apply(right, right_len, tag)
         let new_left = range_add(left0, l, mid, ql, qr, delta)
         let new_right = range_add(right0, mid, r, ql, qr, delta)
-        Node::Branch(
+        Branch(
           sum=node_sum(new_left) + node_sum(new_right),
           tag=0,
           left=new_left,
@@ -102,8 +102,8 @@ pub fn range_sum(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(sum=_, tag=_) => node_sum(node)
-      Node::Branch(left~, right~, sum=_, tag=_) => {
+      Leaf(sum=_, tag=_) => node_sum(node)
+      Branch(left~, right~, sum=_, tag=_) => {
         let left_len = mid - l
         let right_len = r - mid
         let tag = node_tag(node)

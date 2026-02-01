@@ -12,8 +12,8 @@ pub enum Node {
 ///|
 fn node_min(node : Node) -> Int {
   match node {
-    Node::Leaf(min~) => min
-    Node::Branch(min~, left=_, right=_) => min
+    Leaf(min~) => min
+    Branch(min~, left=_, right=_) => min
   }
 }
 
@@ -29,7 +29,7 @@ pub fn min_value(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(min=arr[l])
+    Leaf(min=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
@@ -39,7 +39,7 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
     } else {
       node_min(right)
     }
-    Node::Branch(min=m, left~, right~)
+    Branch(min=m, left~, right~)
   }
 }
 
@@ -47,12 +47,12 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 /// Set index idx to value and return the new tree.
 pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(min=value)
+    Leaf(min=value)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(min=_) => Node::Leaf(min=value)
-      Node::Branch(left~, right~, min=_) =>
+      Leaf(min=_) => Leaf(min=value)
+      Branch(left~, right~, min=_) =>
         if idx < mid {
           let new_left = set_value(left, l, mid, idx, value)
           let m = if node_min(new_left) < node_min(right) {
@@ -60,7 +60,7 @@ pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node 
           } else {
             node_min(right)
           }
-          Node::Branch(min=m, left=new_left, right~)
+          Branch(min=m, left=new_left, right~)
         } else {
           let new_right = set_value(right, mid, r, idx, value)
           let m = if node_min(left) < node_min(new_right) {
@@ -68,7 +68,7 @@ pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node 
           } else {
             node_min(new_right)
           }
-          Node::Branch(min=m, left~, right=new_right)
+          Branch(min=m, left~, right=new_right)
         }
     }
   }
@@ -84,8 +84,8 @@ pub fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(min=_) => node_min(node)
-      Node::Branch(left~, right~, min=_) => {
+      Leaf(min=_) => node_min(node)
+      Branch(left~, right~, min=_) => {
         let left_min = range_min(left, l, mid, ql, qr)
         let right_min = range_min(right, mid, r, ql, qr)
         if left_min < right_min {

@@ -127,10 +127,10 @@ DiameterResult {
 ///|
 test "diameter square" {
   let points : Array[@rotating_calipers_diameter.Point] = [
-    @rotating_calipers_diameter.Point::{ x: 0L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 2L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 2L, y: 2L },
-    @rotating_calipers_diameter.Point::{ x: 0L, y: 2L },
+    { x: 0L, y: 0L },
+    { x: 2L, y: 0L },
+    { x: 2L, y: 2L },
+    { x: 0L, y: 2L },
   ]
   let result = @rotating_calipers_diameter.convex_diameter(points).unwrap()
   inspect(result.dist2, content="8")
@@ -150,9 +150,9 @@ Longest edge is 0↔1 (length 4, dist2 = 16)
 ///|
 test "diameter triangle" {
   let points : Array[@rotating_calipers_diameter.Point] = [
-    @rotating_calipers_diameter.Point::{ x: 0L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 4L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 2L, y: 3L },
+    { x: 0L, y: 0L },
+    { x: 4L, y: 0L },
+    { x: 2L, y: 3L },
   ]
   let result = @rotating_calipers_diameter.convex_diameter(points).unwrap()
   inspect(result.dist2, content="16")
@@ -173,10 +173,10 @@ diagonal^2 = 3^2 + 1^2 = 10
 ///|
 test "diameter rectangle" {
   let points : Array[@rotating_calipers_diameter.Point] = [
-    @rotating_calipers_diameter.Point::{ x: 0L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 3L, y: 0L },
-    @rotating_calipers_diameter.Point::{ x: 3L, y: 1L },
-    @rotating_calipers_diameter.Point::{ x: 0L, y: 1L },
+    { x: 0L, y: 0L },
+    { x: 3L, y: 0L },
+    { x: 3L, y: 1L },
+    { x: 0L, y: 1L },
   ]
   let result = @rotating_calipers_diameter.convex_diameter(points).unwrap()
   inspect(result.dist2, content="10")

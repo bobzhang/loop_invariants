@@ -33,8 +33,8 @@ pub enum Node {
 ///|
 fn node_gcd(node : Node) -> Int {
   match node {
-    Node::Leaf(g~) => g
-    Node::Branch(g~, left=_, right=_) => g
+    Leaf(g~) => g
+    Branch(g~, left=_, right=_) => g
   }
 }
 
@@ -50,12 +50,12 @@ pub fn gcd_value(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(g=arr[l])
+    Leaf(g=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
     let right = build(arr, mid, r)
-    Node::Branch(g=gcd(node_gcd(left), node_gcd(right)), left~, right~)
+    Branch(g=gcd(node_gcd(left), node_gcd(right)), left~, right~)
   }
 }
 
@@ -63,22 +63,22 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 /// Set index idx to value and return the new tree.
 pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(g=value)
+    Leaf(g=value)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(g=_) => Node::Leaf(g=value)
-      Node::Branch(left~, right~, g=_) =>
+      Leaf(g=_) => Leaf(g=value)
+      Branch(left~, right~, g=_) =>
         if idx < mid {
           let new_left = set_value(left, l, mid, idx, value)
-          Node::Branch(
+          Branch(
             g=gcd(node_gcd(new_left), node_gcd(right)),
             left=new_left,
             right~,
           )
         } else {
           let new_right = set_value(right, mid, r, idx, value)
-          Node::Branch(
+          Branch(
             g=gcd(node_gcd(left), node_gcd(new_right)),
             left~,
             right=new_right,
@@ -98,8 +98,8 @@ pub fn range_gcd(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(g=_) => node_gcd(node)
-      Node::Branch(left~, right~, g=_) =>
+      Leaf(g=_) => node_gcd(node)
+      Branch(left~, right~, g=_) =>
         gcd(range_gcd(left, l, mid, ql, qr), range_gcd(right, mid, r, ql, qr))
     }
   }

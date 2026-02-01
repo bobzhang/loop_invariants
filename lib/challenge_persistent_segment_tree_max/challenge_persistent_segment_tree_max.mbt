@@ -12,8 +12,8 @@ pub enum Node {
 ///|
 fn node_max(node : Node) -> Int {
   match node {
-    Node::Leaf(max~) => max
-    Node::Branch(max~, left=_, right=_) => max
+    Leaf(max~) => max
+    Branch(max~, left=_, right=_) => max
   }
 }
 
@@ -29,7 +29,7 @@ pub fn max_value(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(max=arr[l])
+    Leaf(max=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
@@ -39,7 +39,7 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
     } else {
       node_max(right)
     }
-    Node::Branch(max=m, left~, right~)
+    Branch(max=m, left~, right~)
   }
 }
 
@@ -47,12 +47,12 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 /// Set index idx to value and return the new tree.
 pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(max=value)
+    Leaf(max=value)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(max=_) => Node::Leaf(max=value)
-      Node::Branch(left~, right~, max=_) =>
+      Leaf(max=_) => Leaf(max=value)
+      Branch(left~, right~, max=_) =>
         if idx < mid {
           let new_left = set_value(left, l, mid, idx, value)
           let m = if node_max(new_left) > node_max(right) {
@@ -60,7 +60,7 @@ pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node 
           } else {
             node_max(right)
           }
-          Node::Branch(max=m, left=new_left, right~)
+          Branch(max=m, left=new_left, right~)
         } else {
           let new_right = set_value(right, mid, r, idx, value)
           let m = if node_max(left) > node_max(new_right) {
@@ -68,7 +68,7 @@ pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node 
           } else {
             node_max(new_right)
           }
-          Node::Branch(max=m, left~, right=new_right)
+          Branch(max=m, left~, right=new_right)
         }
     }
   }
@@ -84,8 +84,8 @@ pub fn range_max(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(max=_) => node_max(node)
-      Node::Branch(left~, right~, max=_) => {
+      Leaf(max=_) => node_max(node)
+      Branch(left~, right~, max=_) => {
         let left_max = range_max(left, l, mid, ql, qr)
         let right_max = range_max(right, mid, r, ql, qr)
         if left_max > right_max {

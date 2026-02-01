@@ -119,10 +119,10 @@ Old version:               New version:
 ```mbt check
 ///|
 test "persistent li chao" {
-  let lines = [
-    @challenge_persistent_li_chao_tree.Line::{ m: 1, b: 0 },
-    @challenge_persistent_li_chao_tree.Line::{ m: -1, b: 10 },
-    @challenge_persistent_li_chao_tree.Line::{ m: 2, b: -5 },
+  let lines : Array[@challenge_persistent_li_chao_tree.Line] = [
+    { m: 1, b: 0 },
+    { m: -1, b: 10 },
+    { m: 2, b: -5 },
   ]
   let tree = @challenge_persistent_li_chao_tree.from_array(lines[:], 0, 10)
   inspect(
@@ -143,19 +143,19 @@ test "persistent li chao insert" {
   let t0 = @challenge_persistent_li_chao_tree.empty()
   let t1 = @challenge_persistent_li_chao_tree.insert(
     t0,
-    @challenge_persistent_li_chao_tree.Line::{ m: 1, b: 0 },
+    { m: 1, b: 0 },
     0,
     5,
   )
   let t2 = @challenge_persistent_li_chao_tree.insert(
     t1,
-    @challenge_persistent_li_chao_tree.Line::{ m: -1, b: 4 },
+    { m: -1, b: 4 },
     0,
     5,
   )
   let t3 = @challenge_persistent_li_chao_tree.insert(
     t2,
-    @challenge_persistent_li_chao_tree.Line::{ m: 0, b: 1 },
+    { m: 0, b: 1 },
     0,
     5,
   )
@@ -172,13 +172,13 @@ test "persistent li chao versions" {
   let t0 = @challenge_persistent_li_chao_tree.empty()
   let t1 = @challenge_persistent_li_chao_tree.insert(
     t0,
-    @challenge_persistent_li_chao_tree.Line::{ m: 2, b: 0 },
+    { m: 2, b: 0 },
     0,
     6,
   )
   let t2 = @challenge_persistent_li_chao_tree.insert(
     t1,
-    @challenge_persistent_li_chao_tree.Line::{ m: -1, b: 7 },
+    { m: -1, b: 7 },
     0,
     6,
   )

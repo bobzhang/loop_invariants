@@ -12,8 +12,8 @@ pub enum Tree {
 ///|
 fn inorder(t : Tree) -> Array[(Int, Int)] {
   match t {
-    Tree::Empty => []
-    Tree::Node(start=s, end=e, left=l, right=r) =>
+    Empty => []
+    Node(start=s, end=e, left=l, right=r) =>
       inorder(l) + [(s, e)] + inorder(r)
   }
 }
@@ -21,11 +21,11 @@ fn inorder(t : Tree) -> Array[(Int, Int)] {
 ///|
 fn build(arr : ArrayView[(Int, Int)], l : Int, r : Int) -> Tree {
   if l >= r {
-    Tree::Empty
+    Empty
   } else {
     let mid = (l + r) / 2
     let (s, e) = arr[mid]
-    Tree::Node(
+    Node(
       start=s,
       end=e,
       left=build(arr, l, mid),
@@ -82,7 +82,7 @@ fn merge_sorted(arr : ArrayView[(Int, Int)]) -> Array[(Int, Int)] {
 ///|
 /// Create an empty interval set.
 pub fn empty() -> Tree {
-  Tree::Empty
+  Empty
 }
 
 ///|
@@ -104,8 +104,8 @@ pub fn insert_interval(t : Tree, start : Int, end : Int) -> Tree {
 /// Check whether point x is contained in any interval.
 pub fn contains_point(t : Tree, x : Int) -> Bool {
   match t {
-    Tree::Empty => false
-    Tree::Node(start=s, end=e, left=l, right=r) =>
+    Empty => false
+    Node(start=s, end=e, left=l, right=r) =>
       if x < s {
         contains_point(l, x)
       } else if x > e {
@@ -118,7 +118,7 @@ pub fn contains_point(t : Tree, x : Int) -> Bool {
 
 ///|
 test "persistent_interval_set" {
-  let t0 = Tree::Empty
+  let t0 = Empty
   let t1 = insert_interval(t0, 2, 5)
   let t2 = insert_interval(t1, 8, 9)
   let t3 = insert_interval(t2, 4, 7)

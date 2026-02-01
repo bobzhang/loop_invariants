@@ -12,17 +12,17 @@ pub enum Node {
 ///|
 fn node_min(node : Node) -> Int {
   match node {
-    Node::Leaf(min~, tag=_) => min
-    Node::Branch(min~, tag=_, left=_, right=_) => min
+    Leaf(min~, tag=_) => min
+    Branch(min~, tag=_, left=_, right=_) => min
   }
 }
 
 ///|
 fn apply_add(node : Node, delta : Int) -> Node {
   match node {
-    Node::Leaf(min=mv, tag=tv) => Node::Leaf(min=mv + delta, tag=tv + delta)
-    Node::Branch(min=mv, tag=tv, left~, right~) =>
-      Node::Branch(min=mv + delta, tag=tv + delta, left~, right~)
+    Leaf(min=mv, tag=tv) => Leaf(min=mv + delta, tag=tv + delta)
+    Branch(min=mv, tag=tv, left~, right~) =>
+      Branch(min=mv + delta, tag=tv + delta, left~, right~)
   }
 }
 
@@ -36,7 +36,7 @@ pub fn min_value(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(min=arr[l], tag=0)
+    Leaf(min=arr[l], tag=0)
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
@@ -46,7 +46,7 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
     } else {
       node_min(right)
     }
-    Node::Branch(min=m, tag=0, left~, right~)
+    Branch(min=m, tag=0, left~, right~)
   }
 }
 
@@ -67,8 +67,8 @@ pub fn range_add(
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(min=_, tag=_) => apply_add(node, delta)
-      Node::Branch(min=_, tag=tv, left~, right~) => {
+      Leaf(min=_, tag=_) => apply_add(node, delta)
+      Branch(min=_, tag=tv, left~, right~) => {
         let left0 = if tv == 0 { left } else { apply_add(left, tv) }
         let right0 = if tv == 0 { right } else { apply_add(right, tv) }
         let new_left = range_add(left0, l, mid, ql, qr, delta)
@@ -78,7 +78,7 @@ pub fn range_add(
         } else {
           node_min(new_right)
         }
-        Node::Branch(min=m, tag=0, left=new_left, right=new_right)
+        Branch(min=m, tag=0, left=new_left, right=new_right)
       }
     }
   }
@@ -94,8 +94,8 @@ pub fn range_min(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(min=_, tag=_) => node_min(node)
-      Node::Branch(min=_, tag=tv, left~, right~) => {
+      Leaf(min=_, tag=_) => node_min(node)
+      Branch(min=_, tag=tv, left~, right~) => {
         let left0 = if tv == 0 { left } else { apply_add(left, tv) }
         let right0 = if tv == 0 { right } else { apply_add(right, tv) }
         let left_min = range_min(left0, l, mid, ql, qr)

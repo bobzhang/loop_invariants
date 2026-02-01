@@ -12,16 +12,16 @@ pub enum Heap[T] {
 ///|
 fn[T] rank(h : Heap[T]) -> Int {
   match h {
-    Heap::Empty => 0
-    Heap::Node(value=_, rank~, left=_, right=_) => rank
+    Empty => 0
+    Node(value=_, rank~, left=_, right=_) => rank
   }
 }
 
 ///|
 fn[T] heap_size(h : Heap[T]) -> Int {
   match h {
-    Heap::Empty => 0
-    Heap::Node(value=_, rank=_, left~, right~) =>
+    Empty => 0
+    Node(value=_, rank=_, left~, right~) =>
       1 + heap_size(left) + heap_size(right)
   }
 }
@@ -33,16 +33,16 @@ fn[T] make_node(value : T, left : Heap[T], right : Heap[T]) -> Heap[T] {
   let left_rank = rank(left)
   let right_rank = rank(right)
   if left_rank < right_rank {
-    Heap::Node(value~, rank=left_rank + 1, left=right, right=left)
+    Node(value~, rank=left_rank + 1, left=right, right=left)
   } else {
-    Heap::Node(value~, rank=right_rank + 1, left~, right~)
+    Node(value~, rank=right_rank + 1, left~, right~)
   }
 }
 
 ///|
 /// Create an empty leftist heap.
 pub fn[T] empty() -> Heap[T] {
-  Heap::Empty
+  Empty
 }
 
 ///|
@@ -55,11 +55,11 @@ pub fn[T] size(h : Heap[T]) -> Int {
 /// Merge two heaps and return the result.
 pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
   match (a, b) {
-    (Heap::Empty, _) => b
-    (_, Heap::Empty) => a
+    (Empty, _) => b
+    (_, Empty) => a
     (
-      Heap::Node(value=va, rank=_, left=la, right=ra),
-      Heap::Node(value=vb, rank=_, left=lb, right=rb),
+      Node(value=va, rank=_, left=la, right=ra),
+      Node(value=vb, rank=_, left=lb, right=rb),
     ) =>
       if va <= vb {
         let merged = merge(ra, b)
@@ -73,7 +73,7 @@ pub fn[T : Compare] merge(a : Heap[T], b : Heap[T]) -> Heap[T] {
 
 ///|
 fn[T] singleton(value : T) -> Heap[T] {
-  Heap::Node(value~, rank=1, left=Heap::Empty, right=Heap::Empty)
+  Node(value~, rank=1, left=Empty, right=Empty)
 }
 
 ///|
@@ -86,8 +86,8 @@ pub fn[T : Compare] insert(h : Heap[T], value : T) -> Heap[T] {
 /// Return the minimum value, or None if empty.
 pub fn[T] find_min(h : Heap[T]) -> T? {
   match h {
-    Heap::Empty => None
-    Heap::Node(value~, rank=_, left=_, right=_) => Some(value)
+    Empty => None
+    Node(value~, rank=_, left=_, right=_) => Some(value)
   }
 }
 
@@ -95,15 +95,15 @@ pub fn[T] find_min(h : Heap[T]) -> T? {
 /// Delete the minimum element and return the new heap.
 pub fn[T : Compare] delete_min(h : Heap[T]) -> Heap[T]? {
   match h {
-    Heap::Empty => None
-    Heap::Node(value=_, rank=_, left~, right~) => Some(merge(left, right))
+    Empty => None
+    Node(value=_, rank=_, left~, right~) => Some(merge(left, right))
   }
 }
 
 ///|
 /// Build a heap by inserting elements in sequence.
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Heap[T] {
-  let mut heap = Heap::Empty
+  let mut heap = Empty
   for value in arr {
     heap = insert(heap, value)
   }
@@ -112,7 +112,7 @@ pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Heap[T] {
 
 ///|
 test "persistent_leftist_heap" {
-  let h0 : Heap[Int] = Heap::Empty
+  let h0 : Heap[Int] = Empty
   let h1 = insert(h0, 5)
   let h2 = insert(h1, 3)
   let h3 = insert(h2, 7)

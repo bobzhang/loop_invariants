@@ -18,20 +18,20 @@ pub struct PArray[T] {
 ///|
 fn[T] build(arr : ArrayView[T], l : Int, r : Int) -> Node[T] {
   if r - l == 1 {
-    Node::Leaf(value=arr[l])
+    Leaf(value=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
     let right = build(arr, mid, r)
-    Node::Branch(left~, right~)
+    Branch(left~, right~)
   }
 }
 
 ///|
 fn[T] get_node(node : Node[T], l : Int, r : Int, idx : Int) -> T {
   match node {
-    Node::Leaf(value~) => value
-    Node::Branch(left~, right~) => {
+    Leaf(value~) => value
+    Branch(left~, right~) => {
       let mid = (l + r) / 2
       if idx < mid {
         get_node(left, l, mid, idx)
@@ -51,16 +51,16 @@ fn[T] set_node(
   value : T,
 ) -> Node[T] {
   if r - l == 1 {
-    Node::Leaf(value~)
+    Leaf(value~)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(value=_) => Node::Leaf(value~)
-      Node::Branch(left~, right~) =>
+      Leaf(value=_) => Leaf(value~)
+      Branch(left~, right~) =>
         if idx < mid {
-          Node::Branch(left=set_node(left, l, mid, idx, value), right~)
+          Branch(left=set_node(left, l, mid, idx, value), right~)
         } else {
-          Node::Branch(left~, right=set_node(right, mid, r, idx, value))
+          Branch(left~, right=set_node(right, mid, r, idx, value))
         }
     }
   }

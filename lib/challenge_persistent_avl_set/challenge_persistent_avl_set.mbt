@@ -21,8 +21,8 @@ fn max2(a : Int, b : Int) -> Int {
 ///|
 fn[T] height(t : Avl[T]) -> Int {
   match t {
-    Avl::Empty => 0
-    Avl::Node(key=_, height~, left=_, right=_) => height
+    Empty => 0
+    Node(key=_, height~, left=_, right=_) => height
   }
 }
 
@@ -30,8 +30,8 @@ fn[T] height(t : Avl[T]) -> Int {
 /// Return the number of keys in the AVL set.
 pub fn[T] size(t : Avl[T]) -> Int {
   match t {
-    Avl::Empty => 0
-    Avl::Node(key=_, height=_, left~, right~) => 1 + size(left) + size(right)
+    Empty => 0
+    Node(key=_, height=_, left~, right~) => 1 + size(left) + size(right)
   }
 }
 
@@ -51,8 +51,8 @@ fn[T : Compare] within_bounds(value : T, lo : T?, hi : T?) -> Bool {
 ///|
 fn[T : Compare] avl_valid(t : Avl[T], lo : T?, hi : T?) -> Bool {
   match t {
-    Avl::Empty => true
-    Avl::Node(key=k, height=h, left=l, right=r) => {
+    Empty => true
+    Node(key=k, height=h, left=l, right=r) => {
       let diff = height(l) - height(r)
       within_bounds(k, lo, hi) &&
       avl_valid(l, lo, Some(k)) &&
@@ -67,17 +67,17 @@ fn[T : Compare] avl_valid(t : Avl[T], lo : T?, hi : T?) -> Bool {
 ///|
 fn[T] make_node(key : T, left : Avl[T], right : Avl[T]) -> Avl[T] {
   let h = 1 + max2(height(left), height(right))
-  Avl::Node(key~, height=h, left~, right~)
+  Node(key~, height=h, left~, right~)
 }
 
 ///|
 fn[T] rotate_left(t : Avl[T]) -> Avl[T] {
   match t {
-    Avl::Node(
+    Node(
       key=k,
       height=_,
       left=l,
-      right=Avl::Node(key=rk, height=_, left=rl, right=rr)
+      right=Node(key=rk, height=_, left=rl, right=rr)
     ) => {
       let new_left = make_node(k, l, rl)
       make_node(rk, new_left, rr)
@@ -89,10 +89,10 @@ fn[T] rotate_left(t : Avl[T]) -> Avl[T] {
 ///|
 fn[T] rotate_right(t : Avl[T]) -> Avl[T] {
   match t {
-    Avl::Node(
+    Node(
       key=k,
       height=_,
-      left=Avl::Node(key=lk, height=_, left=ll, right=lr),
+      left=Node(key=lk, height=_, left=ll, right=lr),
       right=r
     ) => {
       let new_right = make_node(k, lr, r)
@@ -105,28 +105,28 @@ fn[T] rotate_right(t : Avl[T]) -> Avl[T] {
 ///|
 fn[T] balance(t : Avl[T]) -> Avl[T] {
   match t {
-    Avl::Empty => t
-    Avl::Node(key=k, height=_, left=l, right=r) => {
+    Empty => t
+    Node(key=k, height=_, left=l, right=r) => {
       let bf = height(l) - height(r)
       if bf > 1 {
         match l {
-          Avl::Node(key=_, height=_, left=ll, right=lr) =>
+          Node(key=_, height=_, left=ll, right=lr) =>
             if height(ll) >= height(lr) {
               rotate_right(t)
             } else {
               rotate_right(make_node(k, rotate_left(l), r))
             }
-          Avl::Empty => t
+          Empty => t
         }
       } else if bf < -1 {
         match r {
-          Avl::Node(key=_, height=_, left=rl, right=rr) =>
+          Node(key=_, height=_, left=rl, right=rr) =>
             if height(rr) >= height(rl) {
               rotate_left(t)
             } else {
               rotate_left(make_node(k, l, rotate_right(r)))
             }
-          Avl::Empty => t
+          Empty => t
         }
       } else {
         t
@@ -138,15 +138,15 @@ fn[T] balance(t : Avl[T]) -> Avl[T] {
 ///|
 /// Create an empty AVL set.
 pub fn[T] empty() -> Avl[T] {
-  Avl::Empty
+  Empty
 }
 
 ///|
 /// Insert key and return the new AVL set.
 pub fn[T : Compare] insert(t : Avl[T], key : T) -> Avl[T] {
   match t {
-    Avl::Empty => Avl::Node(key~, height=1, left=Avl::Empty, right=Avl::Empty)
-    Avl::Node(key=k, height=_, left=l, right=r) =>
+    Empty => Node(key~, height=1, left=Empty, right=Empty)
+    Node(key=k, height=_, left=l, right=r) =>
       if key == k {
         t
       } else if key < k {
@@ -163,8 +163,8 @@ pub fn[T : Compare] contains(t : Avl[T], key : T) -> Bool {
   let none : T? = None
   for cur = t, lo = none, hi = none {
     match cur {
-      Avl::Empty => break false
-      Avl::Node(key=k, height=_, left=l, right=r) =>
+      Empty => break false
+      Node(key=k, height=_, left=l, right=r) =>
         if key == k {
           break true
         } else if key < k {
@@ -191,8 +191,8 @@ pub fn[T : Compare] contains(t : Avl[T], key : T) -> Bool {
 /// Return an in-order traversal (sorted keys).
 pub fn[T] inorder(t : Avl[T]) -> Array[T] {
   match t {
-    Avl::Empty => []
-    Avl::Node(key=k, height=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
+    Empty => []
+    Node(key=k, height=_, left=l, right=r) => inorder(l) + [k] + inorder(r)
   }
 }
 
@@ -200,7 +200,7 @@ pub fn[T] inorder(t : Avl[T]) -> Array[T] {
 /// Build an AVL set by inserting elements in order.
 pub fn[T : Compare] from_array(arr : ArrayView[T]) -> Avl[T] {
   let n = arr.length()
-  for i = 0, tree = Avl::Empty {
+  for i = 0, tree = Empty {
     if i >= n {
       break tree
     } else {

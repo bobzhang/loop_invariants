@@ -20,8 +20,8 @@ pub enum TreapMap[K, V] {
 /// Return the number of entries in the map.
 pub fn[K, V] size(t : TreapMap[K, V]) -> Int {
   match t {
-    TreapMap::Empty => 0
-    TreapMap::Node(key=_, value=_, priority=_, size~, left=_, right=_) => size
+    Empty => 0
+    Node(key=_, value=_, priority=_, size~, left=_, right=_) => size
   }
 }
 
@@ -41,13 +41,13 @@ fn[K, V] make_node(
   right : TreapMap[K, V],
 ) -> TreapMap[K, V] {
   let sz = 1 + size(left) + size(right)
-  TreapMap::Node(key~, value~, priority~, size=sz, left~, right~)
+  Node(key~, value~, priority~, size=sz, left~, right~)
 }
 
 ///|
 /// Create an empty treap map.
 pub fn[K, V] empty() -> TreapMap[K, V] {
-  TreapMap::Empty
+  Empty
 }
 
 ///|
@@ -57,8 +57,8 @@ pub fn[K : Compare, V] split(
   key : K,
 ) -> (TreapMap[K, V], TreapMap[K, V]) {
   match t {
-    TreapMap::Empty => (TreapMap::Empty, TreapMap::Empty)
-    TreapMap::Node(key=k, value=v, priority=p, size=_, left=l, right=r) =>
+    Empty => (Empty, Empty)
+    Node(key=k, value=v, priority=p, size=_, left=l, right=r) =>
       if key <= k {
         let (l1, l2) = split(l, key)
         (l1, make_node(k, v, p, l2, r))
@@ -73,11 +73,11 @@ pub fn[K : Compare, V] split(
 /// Merge two maps assuming all keys in a are < keys in b.
 pub fn[K, V] merge(a : TreapMap[K, V], b : TreapMap[K, V]) -> TreapMap[K, V] {
   match (a, b) {
-    (TreapMap::Empty, _) => b
-    (_, TreapMap::Empty) => a
+    (Empty, _) => b
+    (_, Empty) => a
     (
-      TreapMap::Node(key=ka, value=va, priority=pa, size=_, left=la, right=ra),
-      TreapMap::Node(key=kb, value=vb, priority=pb, size=_, left=lb, right=rb),
+      Node(key=ka, value=va, priority=pa, size=_, left=la, right=ra),
+      Node(key=kb, value=vb, priority=pb, size=_, left=lb, right=rb),
     ) =>
       if pa >= pb {
         make_node(ka, va, pa, la, merge(ra, b))
@@ -91,8 +91,8 @@ pub fn[K, V] merge(a : TreapMap[K, V], b : TreapMap[K, V]) -> TreapMap[K, V] {
 /// Check whether key exists in the map.
 pub fn[K : Compare, V] contains(t : TreapMap[K, V], key : K) -> Bool {
   match t {
-    TreapMap::Empty => false
-    TreapMap::Node(key=k, value=_, priority=_, size=_, left=l, right=r) =>
+    Empty => false
+    Node(key=k, value=_, priority=_, size=_, left=l, right=r) =>
       if key == k {
         true
       } else if key < k {
@@ -110,8 +110,8 @@ fn[K : Compare, V] update_value(
   value : V,
 ) -> TreapMap[K, V] {
   match t {
-    TreapMap::Empty => TreapMap::Empty
-    TreapMap::Node(key=k, value=v, priority=p, size=_, left=l, right=r) =>
+    Empty => Empty
+    Node(key=k, value=v, priority=p, size=_, left=l, right=r) =>
       if key == k {
         make_node(k, value, p, l, r)
       } else if key < k {
@@ -137,8 +137,8 @@ pub fn[K : Compare + Hash, V] insert_or_update(
       key,
       value,
       priority_for(key),
-      TreapMap::Empty,
-      TreapMap::Empty,
+      Empty,
+      Empty,
     )
     merge(merge(l, node), r)
   }
@@ -148,8 +148,8 @@ pub fn[K : Compare + Hash, V] insert_or_update(
 /// Lookup a key and return its value if present.
 pub fn[K : Compare, V] get(t : TreapMap[K, V], key : K) -> V? {
   match t {
-    TreapMap::Empty => None
-    TreapMap::Node(key=k, value=v, priority=_, size=_, left=l, right=r) =>
+    Empty => None
+    Node(key=k, value=v, priority=_, size=_, left=l, right=r) =>
       if key == k {
         Some(v)
       } else if key < k {
@@ -165,7 +165,7 @@ pub fn[K : Compare, V] get(t : TreapMap[K, V], key : K) -> V? {
 pub fn[K : Compare + Hash, V] from_array(
   arr : ArrayView[(K, V)],
 ) -> TreapMap[K, V] {
-  arr.fold(init=TreapMap::Empty, (tree, pair) => {
+  arr.fold(init=Empty, (tree, pair) => {
     let (k, v) = pair
     insert_or_update(tree, k, v)
   })

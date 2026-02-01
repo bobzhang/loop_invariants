@@ -33,8 +33,8 @@ pub fn add_edge(g : FlowGraph, u : Int, v : Int, cap : Int) -> Unit {
   }
   let rev_u = g.adj[v].length()
   let rev_v = g.adj[u].length()
-  g.adj[u].push(Edge::{ to: v, rev: rev_u, cap })
-  g.adj[v].push(Edge::{ to: u, rev: rev_v, cap: 0 })
+  g.adj[u].push({ to: v, rev: rev_u, cap })
+  g.adj[v].push({ to: u, rev: rev_v, cap: 0 })
 }
 
 ///|
@@ -123,10 +123,10 @@ pub fn max_flow(g : FlowGraph, s : Int, t : Int) -> Int {
       } else {
         let (pu, ei) = parent[cur]
         let e = g.adj[pu][ei]
-        g.adj[pu][ei] = Edge::{ to: e.to, rev: e.rev, cap: e.cap - aug }
+        g.adj[pu][ei] = { to: e.to, rev: e.rev, cap: e.cap - aug }
         let rev = e.rev
         let back = g.adj[cur][rev]
-        g.adj[cur][rev] = Edge::{
+        g.adj[cur][rev] = {
           to: back.to,
           rev: back.rev,
           cap: back.cap + aug,

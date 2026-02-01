@@ -21,7 +21,7 @@ pub struct HashMap[K, V] {
 /// Create an empty hash map with the given capacity (min 1).
 pub fn[K, V] make(capacity : Int) -> HashMap[K, V] {
   let cap = if capacity <= 0 { 1 } else { capacity }
-  { buckets: Array::make(cap, Bucket::Nil), size: 0 }
+  { buckets: Array::make(cap, Nil), size: 0 }
 }
 
 ///|
@@ -37,8 +37,8 @@ fn[K : Hash] index_for(key : K, cap : Int) -> Int {
 ///|
 fn[K : Eq, V] bucket_get(bucket : Bucket[K, V], key : K) -> V? {
   match bucket {
-    Bucket::Nil => None
-    Bucket::Cons(key=k, value=v, tail=t) =>
+    Nil => None
+    Cons(key=k, value=v, tail=t) =>
       if k == key {
         Some(v)
       } else {
@@ -54,13 +54,13 @@ fn[K : Eq, V] bucket_insert(
   value : V,
 ) -> (Bucket[K, V], Bool) {
   match bucket {
-    Bucket::Nil => (Bucket::Cons(key~, value~, tail=Bucket::Nil), true)
-    Bucket::Cons(key=k, value=v, tail=t) =>
+    Nil => (Cons(key~, value~, tail=Nil), true)
+    Cons(key=k, value=v, tail=t) =>
       if k == key {
-        (Bucket::Cons(key~, value~, tail=t), false)
+        (Cons(key~, value~, tail=t), false)
       } else {
         let (new_tail, added) = bucket_insert(t, key, value)
-        (Bucket::Cons(key=k, value=v, tail=new_tail), added)
+        (Cons(key=k, value=v, tail=new_tail), added)
       }
   }
 }

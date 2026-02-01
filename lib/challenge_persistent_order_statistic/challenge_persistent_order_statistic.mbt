@@ -19,8 +19,8 @@ pub struct OrderStat {
 ///|
 fn count(node : Node) -> Int {
   match node {
-    Node::Empty => 0
-    Node::Node(count~, left=_, right=_) => count
+    Empty => 0
+    Node(count~, left=_, right=_) => count
   }
 }
 
@@ -32,26 +32,26 @@ fn insert(node : Node, l : Int, r : Int, value : Int) -> Node {
     node
   } else if r - l == 1 {
     let new_count = count(node) + 1
-    Node::Node(count=new_count, left=Node::Empty, right=Node::Empty)
+    Node(count=new_count, left=Empty, right=Empty)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Empty => {
-        let left = insert(Node::Empty, l, mid, value)
-        let right = insert(Node::Empty, mid, r, value)
-        Node::Node(count=count(left) + count(right), left~, right~)
+      Empty => {
+        let left = insert(Empty, l, mid, value)
+        let right = insert(Empty, mid, r, value)
+        Node(count=count(left) + count(right), left~, right~)
       }
-      Node::Node(count=_, left~, right~) =>
+      Node(count=_, left~, right~) =>
         if value < mid {
           let new_left = insert(left, l, mid, value)
-          Node::Node(
+          Node(
             count=count(new_left) + count(right),
             left=new_left,
             right~,
           )
         } else {
           let new_right = insert(right, mid, r, value)
-          Node::Node(
+          Node(
             count=count(left) + count(new_right),
             left~,
             right=new_right,
@@ -64,7 +64,7 @@ fn insert(node : Node, l : Int, r : Int, value : Int) -> Node {
 ///|
 /// Create an empty multiset for values in [lo, hi).
 pub fn make(lo : Int, hi : Int) -> OrderStat {
-  { root: Node::Empty, lo, hi }
+  { root: Empty, lo, hi }
 }
 
 ///|
@@ -86,7 +86,7 @@ pub fn kth(os : OrderStat, k : Int) -> Int? {
     return None
   }
   match os.root {
-    Node::Empty => None
+    Empty => None
     _ => kth_node(os.root, os.lo, os.hi, k)
   }
 }
@@ -94,8 +94,8 @@ pub fn kth(os : OrderStat, k : Int) -> Int? {
 ///|
 fn kth_node(node : Node, l : Int, r : Int, k : Int) -> Int? {
   match node {
-    Node::Empty => None
-    Node::Node(left~, right~, count=_) =>
+    Empty => None
+    Node(left~, right~, count=_) =>
       if r - l == 1 {
         Some(l)
       } else {

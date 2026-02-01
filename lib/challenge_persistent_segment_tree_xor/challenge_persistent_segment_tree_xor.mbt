@@ -12,8 +12,8 @@ pub enum Node {
 ///|
 fn node_xor(node : Node) -> Int {
   match node {
-    Node::Leaf(xor~) => xor
-    Node::Branch(xor~, left=_, right=_) => xor
+    Leaf(xor~) => xor
+    Branch(xor~, left=_, right=_) => xor
   }
 }
 
@@ -29,12 +29,12 @@ pub fn xor_value(node : Node) -> Int {
 /// Build a segment tree over arr[l..r).
 pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(xor=arr[l])
+    Leaf(xor=arr[l])
   } else {
     let mid = (l + r) / 2
     let left = build(arr, l, mid)
     let right = build(arr, mid, r)
-    Node::Branch(xor=node_xor(left) ^ node_xor(right), left~, right~)
+    Branch(xor=node_xor(left) ^ node_xor(right), left~, right~)
   }
 }
 
@@ -42,22 +42,22 @@ pub fn build(arr : ArrayView[Int], l : Int, r : Int) -> Node {
 /// Set index idx to value and return the new tree.
 pub fn set_value(node : Node, l : Int, r : Int, idx : Int, value : Int) -> Node {
   if r - l == 1 {
-    Node::Leaf(xor=value)
+    Leaf(xor=value)
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(xor=_) => Node::Leaf(xor=value)
-      Node::Branch(left~, right~, xor=_) =>
+      Leaf(xor=_) => Leaf(xor=value)
+      Branch(left~, right~, xor=_) =>
         if idx < mid {
           let new_left = set_value(left, l, mid, idx, value)
-          Node::Branch(
+          Branch(
             xor=node_xor(new_left) ^ node_xor(right),
             left=new_left,
             right~,
           )
         } else {
           let new_right = set_value(right, mid, r, idx, value)
-          Node::Branch(
+          Branch(
             xor=node_xor(left) ^ node_xor(new_right),
             left~,
             right=new_right,
@@ -77,8 +77,8 @@ pub fn range_xor(node : Node, l : Int, r : Int, ql : Int, qr : Int) -> Int {
   } else {
     let mid = (l + r) / 2
     match node {
-      Node::Leaf(xor=_) => node_xor(node)
-      Node::Branch(left~, right~, xor=_) =>
+      Leaf(xor=_) => node_xor(node)
+      Branch(left~, right~, xor=_) =>
         range_xor(left, l, mid, ql, qr) ^ range_xor(right, mid, r, ql, qr)
     }
   }

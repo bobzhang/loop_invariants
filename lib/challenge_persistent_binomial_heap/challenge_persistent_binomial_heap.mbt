@@ -23,9 +23,9 @@ fn[T] tree_rank(t : Tree[T]) -> Int {
 ///|
 fn[T : Compare] link(a : Tree[T], b : Tree[T]) -> Tree[T] {
   if a.value <= b.value {
-    Tree::{ value: a.value, rank: a.rank + 1, children: a.children + [b] }
+    { value: a.value, rank: a.rank + 1, children: a.children + [b] }
   } else {
-    Tree::{ value: b.value, rank: b.rank + 1, children: b.children + [a] }
+    { value: b.value, rank: b.rank + 1, children: b.children + [a] }
   }
 }
 
@@ -134,7 +134,7 @@ fn max2(a : Int, b : Int) -> Int {
 
 ///|
 fn[T] singleton(value : T) -> Heap[T] {
-  let tree = Tree::{ value, rank: 0, children: [] }
+  let tree = { value, rank: 0, children: [] }
   { trees: [Some(tree)] }
 }
 
